@@ -20,6 +20,8 @@ InputParameters
 validParams<UserForcingFunction>()
 {
   InputParameters params = validParams<Kernel>();
+  params.addClassDescription("Provides a body force or source term that is a function of space and "
+                             "time. Weak form: $(\\psi_i, -f)$.");
   params.addRequiredParam<FunctionName>("function", "The forcing function");
   return params;
 }
