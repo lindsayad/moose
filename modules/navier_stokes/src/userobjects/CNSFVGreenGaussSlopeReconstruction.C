@@ -35,11 +35,11 @@ validParams<CNSFVGreenGaussSlopeReconstruction>()
 CNSFVGreenGaussSlopeReconstruction::CNSFVGreenGaussSlopeReconstruction(
     const InputParameters & parameters)
   : SlopeReconstructionMultiD(parameters),
-    _rho(getVar("rho", 0)),
-    _rhou(getVar("rhou", 0)),
-    _rhov(isCoupled("rhov") ? getVar("rhov", 0) : nullptr),
-    _rhow(isCoupled("rhow") ? getVar("rhow", 0) : nullptr),
-    _rhoe(getVar("rhoe", 0)),
+    _rho(dynamic_cast<MooseVariable *>(getVar("rho", 0))),
+    _rhou(dynamic_cast<MooseVariable *>(getVar("rhou", 0))),
+    _rhov(isCoupled("rhov") ? dynamic_cast<MooseVariable *>(getVar("rhov", 0)) : nullptr),
+    _rhow(isCoupled("rhow") ? dynamic_cast<MooseVariable *>(getVar("rhow", 0)) : nullptr),
+    _rhoe(dynamic_cast<MooseVariable *>(getVar("rhoe", 0))),
     _fp(getUserObject<SinglePhaseFluidProperties>("fluid_properties"))
 {
 }

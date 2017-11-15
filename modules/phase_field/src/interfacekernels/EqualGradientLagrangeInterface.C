@@ -25,7 +25,7 @@ validParams<EqualGradientLagrangeInterface>()
 EqualGradientLagrangeInterface::EqualGradientLagrangeInterface(const InputParameters & parameters)
   : InterfaceKernel(parameters),
     _component(getParam<unsigned int>("component")),
-    _lambda(getVar("lambda", 0)->sln()),
+    _lambda((dynamic_cast<MooseVariable *>(getVar("lambda", 0)))->sln()),
     _lambda_jvar(getVar("lambda", 0)->number())
 {
 }

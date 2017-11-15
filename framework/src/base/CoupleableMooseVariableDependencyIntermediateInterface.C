@@ -13,16 +13,31 @@
 /****************************************************************/
 
 #include "CoupleableMooseVariableDependencyIntermediateInterface.h"
+#include "MooseObject.h"
+#include "InputParameters.h"
+#include "SubProblem.h"
 
 CoupleableMooseVariableDependencyIntermediateInterface::
     CoupleableMooseVariableDependencyIntermediateInterface(const MooseObject * moose_object,
                                                            bool nodal)
-  : Coupleable(moose_object, nodal),
-    ScalarCoupleable(moose_object),
-    MooseVariableInterface(moose_object, nodal)
+  : Coupleable(moose_object, nodal), ScalarCoupleable(moose_object)
 {
-  for (MooseVariable * coupled_var : getCoupledMooseVars())
-    addMooseVariableDependency(coupled_var);
+  const std::vector<MooseVariableFE *> & coupled_vars = getCoupledMooseVars();
+  for (unsigned int i = 0; i < coupled_vars.size(); i++)
+    addMooseVariableDependency(coupled_vars[i]);
 
-  addMooseVariableDependency(mooseVariable());
+  const InputParameters & parameters = moose_object->parameters();
+
+  SubProblem & problem = *parameters.get<SubProblem *>("_subproblem");
+
+  THREAD_ID tid = parameters.get<THREAD_ID>("_tid");
+
+  // Try the scalar version first
+  std::string variable_name = parameters.getMooseType("variable");
+  if (variable_name == "")
+    // When using vector variables, we are only going to use the first one in the list at the
+    // interface level...
+    variable_name = parameters.getVecMooseType("variable")[0];
+
+  addMooseVariableDependency(&problem.getVariable(tid, variable_name));
 }

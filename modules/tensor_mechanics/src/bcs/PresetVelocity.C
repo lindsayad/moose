@@ -20,7 +20,7 @@ validParams<PresetVelocity>()
 
 PresetVelocity::PresetVelocity(const InputParameters & parameters)
   : PresetNodalBC(parameters),
-    _u_old(valueOld()),
+    _u_old(_var.nodalValueOld()),
     _velocity(parameters.get<Real>("velocity")),
     _function(getFunction("function"))
 {

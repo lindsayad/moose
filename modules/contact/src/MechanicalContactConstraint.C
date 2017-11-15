@@ -125,7 +125,7 @@ MechanicalContactConstraint::MechanicalContactConstraint(const InputParameters &
     _residual_copy(_sys.residualGhosted()),
     _mesh_dimension(_mesh.dimension()),
     _vars(3, libMesh::invalid_uint),
-    _nodal_area_var(getVar("nodal_area", 0)),
+    _nodal_area_var(dynamic_cast<MooseVariable *>(getVar("nodal_area", 0))),
     _aux_system(_nodal_area_var->sys()),
     _aux_solution(_aux_system.currentSolution()),
     _master_slave_jacobian(getParam<bool>("master_slave_jacobian")),
@@ -1712,7 +1712,7 @@ MechanicalContactConstraint::getConnectedDofIndices(unsigned int var_num)
     else
     {
       _connected_dof_indices.clear();
-      MooseVariable & var = _sys.getVariable(0, var_num);
+      MooseVariableFE & var = _sys.getVariable(0, var_num);
       _connected_dof_indices.push_back(var.nodalDofIndex());
     }
   }

@@ -23,7 +23,9 @@ validParams<LaplacianJumpIndicator>()
 }
 
 LaplacianJumpIndicator::LaplacianJumpIndicator(const InputParameters & parameters)
-  : InternalSideIndicator(parameters), _second_u(second()), _second_u_neighbor(neighborSecond())
+  : InternalSideIndicator(parameters),
+    _second_u(_var.secondSln()),
+    _second_u_neighbor(_var.secondSlnNeighbor())
 {
 }
 

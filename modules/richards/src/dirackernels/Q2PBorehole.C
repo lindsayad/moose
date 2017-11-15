@@ -67,7 +67,7 @@ Q2PBorehole::prepareNodalValues()
   {
     for (unsigned int nodenum = 0; nodenum < _num_nodes; ++nodenum)
     {
-      _pp[nodenum] = _var.nodalSln()[nodenum];
+      _pp[nodenum] = _var.nodalValue()[nodenum];
       _sat[nodenum] = _other_var_nodal[nodenum];
     }
   }
@@ -76,7 +76,7 @@ Q2PBorehole::prepareNodalValues()
     for (unsigned int nodenum = 0; nodenum < _num_nodes; ++nodenum)
     {
       _pp[nodenum] = _other_var_nodal[nodenum];
-      _sat[nodenum] = _var.nodalSln()[nodenum];
+      _sat[nodenum] = _var.nodalValue()[nodenum];
     }
   }
 

@@ -47,7 +47,7 @@ RichardsFlux::RichardsFlux(const InputParameters & parameters)
     _second_u(getParam<bool>("linear_shape_fcns")
                   ? _second_zero
                   : (_is_implicit ? _var.secondSln() : _var.secondSlnOld())),
-    _second_phi(getParam<bool>("linear_shape_fcns") ? _second_phi_zero : secondPhi()),
+    _second_phi(getParam<bool>("linear_shape_fcns") ? _second_phi_zero : _var.secondPhi()),
 
     _tauvel_SUPG(getMaterialProperty<std::vector<RealVectorValue>>("tauvel_SUPG")),
     _dtauvel_SUPG_dgradv(

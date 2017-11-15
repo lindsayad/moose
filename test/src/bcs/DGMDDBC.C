@@ -16,7 +16,7 @@
 
 // MOOSE includes
 #include "Function.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 
 // C++ includes
 #include <cmath>

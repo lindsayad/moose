@@ -26,12 +26,18 @@ validParams<ElementIntegralVariablePostprocessor>()
 ElementIntegralVariablePostprocessor::ElementIntegralVariablePostprocessor(
     const InputParameters & parameters)
   : ElementIntegralPostprocessor(parameters),
-    MooseVariableInterface(this, false),
     _u(coupledValue("variable")),
     _grad_u(coupledGradient("variable")),
     _u_dot(coupledDot("variable"))
 {
-  addMooseVariableDependency(mooseVariable());
+  // Try the scalar version first
+  std::string variable_name = parameters.getMooseType("variable");
+  if (variable_name == "")
+    // When using vector variables, we are only going to use the first one in the list at the
+    // interface level...
+    variable_name = parameters.getVecMooseType("variable")[0];
+
+  addMooseVariableDependency(&_subproblem.getVariable(_tid, variable_name));
 }
 
 Real

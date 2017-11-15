@@ -18,7 +18,7 @@
 #include "Assembly.h"
 #include "MooseEnum.h"
 #include "MooseMesh.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "PenetrationLocator.h"
 #include "SystemBase.h"
 
@@ -65,11 +65,11 @@ NodeFaceConstraint::NodeFaceConstraint(const InputParameters & parameters)
 
     _current_node(_var.node()),
     _current_master(_var.neighbor()),
-    _u_slave(_var.nodalSln()),
+    _u_slave(_var.nodalValue()),
     _phi_slave(1),  // One entry
     _test_slave(1), // One entry
 
-    _master_var(*getVar("master_variable", 0)),
+    _master_var(dynamic_cast<MooseVariable &>(*getVar("master_variable", 0))),
     _master_var_num(_master_var.number()),
 
     _phi_master(_assembly.phiFaceNeighbor()),
@@ -239,7 +239,7 @@ NodeFaceConstraint::computeOffDiagJacobian(unsigned int jvar)
 void
 NodeFaceConstraint::getConnectedDofIndices(unsigned int var_num)
 {
-  MooseVariable & var = _sys.getVariable(0, var_num);
+  MooseVariableFE & var = _sys.getVariable(0, var_num);
 
   _connected_dof_indices.clear();
   std::set<dof_id_type> unique_dof_indices;

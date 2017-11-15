@@ -31,6 +31,8 @@ protected:
   std::map<unsigned, unsigned> _commMap;
   std::vector<Real> _commVec;
 
+  MooseVariable * _var;
+
   const VariablePhiValue & _phi;
 
   SystemBase & _system;

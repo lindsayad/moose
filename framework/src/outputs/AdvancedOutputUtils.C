@@ -23,6 +23,9 @@ OutputOnWarehouse::OutputOnWarehouse(const MultiMooseEnum & execute_on,
   : OutputMapWrapper<MultiMooseEnum>()
 {
   // Initialize each of the 'execute_on' settings for the various types of outputs
+  if (parameters.have_parameter<MultiMooseEnum>("execute_vector_on"))
+    _map.insert(std::make_pair("vector", execute_on));
+
   if (parameters.have_parameter<MultiMooseEnum>("execute_nodal_on"))
     _map.insert(std::make_pair("nodal", execute_on));
 
@@ -49,6 +52,7 @@ OutputOnWarehouse::OutputOnWarehouse(const MultiMooseEnum & execute_on,
 // output types
 OutputDataWarehouse::OutputDataWarehouse() : OutputMapWrapper<OutputData>(), _has_show_list(false)
 {
+  _map["vector"] = OutputData();
   _map["nodal"] = OutputData();
   _map["elemental"] = OutputData();
   _map["scalars"] = OutputData();

@@ -17,7 +17,7 @@
 // MOOSE includes
 #include "Assembly.h"
 #include "FEProblem.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "SubProblem.h"
 #include "SystemBase.h"
 
@@ -40,7 +40,8 @@ ElementDamper::ElementDamper(const InputParameters & parameters)
     _tid(parameters.get<THREAD_ID>("_tid")),
     _assembly(_subproblem.assembly(_tid)),
     _coord_sys(_assembly.coordSystem()),
-    _var(_sys.getVariable(_tid, parameters.get<NonlinearVariableName>("variable"))),
+    _var(dynamic_cast<MooseVariable &>(
+        _sys.getVariable(_tid, parameters.get<NonlinearVariableName>("variable")))),
 
     _current_elem(_var.currentElem()),
     _q_point(_assembly.qPoints()),

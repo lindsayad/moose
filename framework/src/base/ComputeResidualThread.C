@@ -17,7 +17,7 @@
 #include "Problem.h"
 #include "FEProblem.h"
 #include "KernelBase.h"
-#include "IntegratedBC.h"
+#include "IntegratedBCBase.h"
 #include "DGKernel.h"
 #include "InterfaceKernel.h"
 #include "Material.h"
@@ -60,7 +60,7 @@ ComputeResidualThread::subdomainChanged()
   _fe_problem.subdomainSetup(_subdomain, _tid);
 
   // Update variable Dependencies
-  std::set<MooseVariable *> needed_moose_vars;
+  std::set<MooseVariableFE *> needed_moose_vars;
   _kernels.updateBlockVariableDependency(_subdomain, needed_moose_vars, _tid);
   _integrated_bcs.updateBoundaryVariableDependency(needed_moose_vars, _tid);
   _dg_kernels.updateBlockVariableDependency(_subdomain, needed_moose_vars, _tid);

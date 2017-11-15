@@ -295,7 +295,7 @@ GapHeatTransfer::computeGapValues()
 
       const Elem * slave_side = pinfo->_side;
       std::vector<std::vector<Real>> & slave_side_phi = pinfo->_side_phi;
-      _gap_temp = _variable->getValue(slave_side, slave_side_phi);
+      _gap_temp = _var.getValue(slave_side, slave_side_phi);
 
       Real tangential_tolerance = _penetration_locator->getTangentialTolerance();
       if (tangential_tolerance != 0.0)

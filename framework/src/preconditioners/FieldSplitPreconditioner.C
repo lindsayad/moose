@@ -19,7 +19,7 @@
 // MOOSE includes
 #include "FEProblem.h"
 #include "MooseEnum.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "NonlinearSystem.h"
 #include "PetscSupport.h"
 

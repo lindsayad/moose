@@ -17,7 +17,7 @@ validParams<SecondDerivativeImplicitEuler>()
 }
 
 SecondDerivativeImplicitEuler::SecondDerivativeImplicitEuler(const InputParameters & parameters)
-  : TimeKernel(parameters), _u_old(valueOld()), _u_older(valueOlder())
+  : TimeKernel(parameters), _u_old(_var.slnOld()), _u_older(_var.slnOlder())
 {
 }
 

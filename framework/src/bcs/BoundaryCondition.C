@@ -16,7 +16,7 @@
 #include "Problem.h"
 #include "SubProblem.h"
 #include "SystemBase.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 
 template <>
 InputParameters
@@ -62,15 +62,9 @@ BoundaryCondition::BoundaryCondition(const InputParameters & parameters, bool no
     _sys(*parameters.get<SystemBase *>("_sys")),
     _tid(parameters.get<THREAD_ID>("_tid")),
     _assembly(_subproblem.assembly(_tid)),
-    _var(_sys.getVariable(_tid, parameters.get<NonlinearVariableName>("variable"))),
-    _mesh(_subproblem.mesh())
+    _mesh(_subproblem.mesh()),
+    _base_var(_sys.getVariable(_tid, parameters.get<NonlinearVariableName>("variable")))
 {
-}
-
-MooseVariable &
-BoundaryCondition::variable()
-{
-  return _var;
 }
 
 SubProblem &

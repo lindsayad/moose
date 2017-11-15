@@ -24,7 +24,7 @@ validParams<PresetDisplacement>()
 
 PresetDisplacement::PresetDisplacement(const InputParameters & parameters)
   : PresetNodalBC(parameters),
-    _u_old(valueOld()),
+    _u_old(_var.nodalValueOld()),
     _scale_factor(parameters.get<Real>("scale_factor")),
     _function(getFunction("function")),
     _vel_old(coupledValueOld("velocity")),

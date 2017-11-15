@@ -21,7 +21,6 @@
 
 // MOOSE includes
 #include "MultiAppTransfer.h"
-#include "MooseVariableInterface.h"
 #include "MultiAppDTKUserObjectEvaluator.h"
 
 #include "libmesh/dtk_adapter.h"
@@ -64,7 +63,7 @@ InputParameters validParams<MultiAppDTKUserObjectTransfer>();
 /**
  * Transfers from spatially varying UserObjects in a MultiApp to the "master" system.
  */
-class MultiAppDTKUserObjectTransfer : public MultiAppTransfer, public MooseVariableInterface
+class MultiAppDTKUserObjectTransfer : public MultiAppTransfer
 {
 public:
   MultiAppDTKUserObjectTransfer(const InputParameters & parameters);

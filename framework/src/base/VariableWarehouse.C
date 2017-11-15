@@ -13,7 +13,7 @@
 /****************************************************************/
 
 #include "VariableWarehouse.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "MooseVariableScalar.h"
 #include "MooseTypes.h"
 
@@ -32,34 +32,39 @@ VariableWarehouse::add(const std::string & var_name, MooseVariableBase * var)
   _var_name[var_name] = var;
   _all_objects.push_back(var);
 
-  if (dynamic_cast<MooseVariable *>(var) != NULL)
+  if (dynamic_cast<MooseVariableFE *>(var) != NULL)
   {
-    _vars.push_back(dynamic_cast<MooseVariable *>(var));
+    _vars.push_back(dynamic_cast<MooseVariableFE *>(var));
+    if (dynamic_cast<MooseVariable *>(var) != NULL)
+      _regular_vars.push_back(dynamic_cast<MooseVariable *>(var));
+    else if (dynamic_cast<MooseVariableVector *>(var) != NULL)
+      _vector_vars.push_back(dynamic_cast<MooseVariableVector *>(var));
+    else
+      mooseError("Unknown variable class passed into VariableWarehouse. Attempt to hack us?");
   }
   else if (dynamic_cast<MooseVariableScalar *>(var) != NULL)
-  {
     _scalar_vars.push_back(dynamic_cast<MooseVariableScalar *>(var));
-  }
   else
     mooseError("Unknown variable class passed into VariableWarehouse. Attempt to hack us?");
 }
 
 void
-VariableWarehouse::addBoundaryVar(BoundaryID bnd, MooseVariable * var)
+VariableWarehouse::addBoundaryVar(BoundaryID bnd, MooseVariableFE * var)
 {
   _boundary_vars[bnd].insert(var);
 }
 
 void
-VariableWarehouse::addBoundaryVar(const std::set<BoundaryID> & boundary_ids, MooseVariable * var)
+VariableWarehouse::addBoundaryVar(const std::set<BoundaryID> & boundary_ids, MooseVariableFE * var)
 {
   for (const auto & bid : boundary_ids)
     addBoundaryVar(bid, var);
 }
 
 void
-VariableWarehouse::addBoundaryVars(const std::set<BoundaryID> & boundary_ids,
-                                   const std::map<std::string, std::vector<MooseVariable *>> & vars)
+VariableWarehouse::addBoundaryVars(
+    const std::set<BoundaryID> & boundary_ids,
+    const std::map<std::string, std::vector<MooseVariableFE *>> & vars)
 {
   for (const auto & bid : boundary_ids)
     for (const auto & it : vars)
@@ -88,10 +93,22 @@ VariableWarehouse::names() const
   return _names;
 }
 
-const std::vector<MooseVariable *> &
+const std::vector<MooseVariableFE *> &
 VariableWarehouse::variables()
 {
   return _vars;
+}
+
+const std::vector<MooseVariable *> &
+VariableWarehouse::regularVariables()
+{
+  return _regular_vars;
+}
+
+const std::vector<MooseVariableVector *> &
+VariableWarehouse::vectorVariables()
+{
+  return _vector_vars;
 }
 
 const std::vector<MooseVariableScalar *> &
@@ -100,7 +117,7 @@ VariableWarehouse::scalars()
   return _scalar_vars;
 }
 
-const std::set<MooseVariable *> &
+const std::set<MooseVariableFE *> &
 VariableWarehouse::boundaryVars(BoundaryID bnd)
 {
   return _boundary_vars[bnd];

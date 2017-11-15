@@ -22,7 +22,9 @@ validParams<AEFVSlopeLimitingOneD>()
 }
 
 AEFVSlopeLimitingOneD::AEFVSlopeLimitingOneD(const InputParameters & parameters)
-  : SlopeLimitingBase(parameters), _u(getVar("u", 0)), _scheme(getParam<MooseEnum>("scheme"))
+  : SlopeLimitingBase(parameters),
+    _u(dynamic_cast<MooseVariable *>(getVar("u", 0))),
+    _scheme(getParam<MooseEnum>("scheme"))
 {
 }
 

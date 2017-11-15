@@ -16,7 +16,6 @@
 #define INTERNALSIDEJUMP_H
 
 #include "InternalSidePostprocessor.h"
-#include "MooseVariableInterface.h"
 
 // Forward Declarations
 class InternalSideJump;
@@ -24,7 +23,7 @@ class InternalSideJump;
 template <>
 InputParameters validParams<InternalSideJump>();
 
-class InternalSideJump : public InternalSidePostprocessor, public MooseVariableInterface
+class InternalSideJump : public InternalSidePostprocessor
 {
 public:
   InternalSideJump(const InputParameters & parameters);

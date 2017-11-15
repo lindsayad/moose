@@ -15,7 +15,7 @@
 
 // MOOSE includes
 #include "InitialCondition.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 
 InitialConditionWarehouse::InitialConditionWarehouse()
   : MooseObjectWarehouseBase<InitialCondition>(),
@@ -36,7 +36,7 @@ void
 InitialConditionWarehouse::addObject(std::shared_ptr<InitialCondition> object, THREAD_ID tid)
 {
   // Check that when object is boundary restricted that the variable is nodal
-  const MooseVariable & var = object->variable();
+  const MooseVariableFE & var = object->variable();
 
   // Boundary Restricted
   if (object->boundaryRestricted())

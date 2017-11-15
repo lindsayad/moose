@@ -17,7 +17,7 @@
 #include "FEProblem.h"
 #include "MooseMesh.h"
 #include "Assembly.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "MooseEnum.h"
 #include "InputParameters.h"
 

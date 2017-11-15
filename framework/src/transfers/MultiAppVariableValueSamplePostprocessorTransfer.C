@@ -18,7 +18,7 @@
 #include "FEProblem.h"
 #include "MooseMesh.h"
 #include "MooseTypes.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "MultiApp.h"
 #include "SystemBase.h"
 
@@ -56,7 +56,8 @@ MultiAppVariableValueSamplePostprocessorTransfer::execute()
     case TO_MULTIAPP:
     {
       FEProblemBase & from_problem = _multi_app->problemBase();
-      MooseVariable & from_var = from_problem.getVariable(0, _from_var_name);
+      MooseVariable & from_var =
+          dynamic_cast<MooseVariable &>(from_problem.getVariable(0, _from_var_name));
       SystemBase & from_system_base = from_var.sys();
       SubProblem & from_sub_problem = from_system_base.subproblem();
 

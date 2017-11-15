@@ -11,23 +11,30 @@
 /*                                                              */
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
+#ifndef VECTORFEWAVE_H
+#define VECTORFEWAVE_H
 
-#include "FDDiffusion.h"
+#include "VectorKernel.h"
+#include "MaterialProperty.h"
+
+// Forward Declaration
+class VectorFEWave;
 
 template <>
-InputParameters
-validParams<FDDiffusion>()
+InputParameters validParams<VectorFEWave>();
+
+class VectorFEWave : public VectorKernel
 {
-  InputParameters p = validParams<FDKernel>();
-  return p;
-}
+public:
+  VectorFEWave(const InputParameters & parameters);
 
-FDDiffusion::FDDiffusion(const InputParameters & parameters) : FDKernel(parameters) {}
+protected:
+  virtual Real computeQpResidual() override;
+  virtual Real computeQpJacobian() override;
 
-FDDiffusion::~FDDiffusion() {}
+  Function & _x_ffn;
+  Function & _y_ffn;
+  Function & _z_ffn;
+};
 
-Real
-FDDiffusion::computeQpResidual()
-{
-  return _grad_u[_qp] * _grad_test[_i][_qp];
-}
+#endif // VECTORFEWAVE_H

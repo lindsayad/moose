@@ -68,6 +68,21 @@
 #endif
 
 /**
+ * forward declarations
+ */
+namespace libMesh
+{
+template <typename>
+class VectorValue;
+template <typename>
+class TensorValue;
+template <unsigned int, typename>
+class TypeNTensor;
+}
+template <typename>
+class MooseArray;
+
+/**
  * MOOSE typedefs
  */
 typedef Real PostprocessorValue;
@@ -77,9 +92,65 @@ typedef unsigned int InterfaceID;
 typedef subdomain_id_type SubdomainID;
 typedef unsigned int MooseObjectID;
 typedef unsigned int THREAD_ID;
+typedef VectorValue<Real> RealVectorValue;
 
 typedef StoredRange<std::vector<dof_id_type>::iterator, dof_id_type> NodeIdRange;
 typedef StoredRange<std::vector<const Elem *>::iterator, const Elem *> ConstElemPointerRange;
+
+template <typename OutputType>
+struct OutputTools
+{
+  typedef OutputType OutputShape;
+  typedef OutputType OutputValue;
+  typedef typename TensorTools::IncrementRank<OutputShape>::type OutputGradient;
+  typedef typename TensorTools::IncrementRank<OutputGradient>::type OutputSecond;
+  typedef typename TensorTools::DecrementRank<OutputShape>::type OutputDivergence;
+
+  typedef MooseArray<OutputShape> VariableValue;
+  typedef MooseArray<OutputGradient> VariableGradient;
+  typedef MooseArray<OutputSecond> VariableSecond;
+  typedef MooseArray<OutputShape> VariableCurl;
+  typedef MooseArray<OutputDivergence> VariableDivergence;
+
+  typedef MooseArray<std::vector<OutputShape>> VariablePhiValue;
+  typedef MooseArray<std::vector<OutputGradient>> VariablePhiGradient;
+  typedef MooseArray<std::vector<OutputSecond>> VariablePhiSecond;
+  typedef MooseArray<std::vector<OutputShape>> VariablePhiCurl;
+  typedef MooseArray<std::vector<OutputDivergence>> VariablePhiDivergence;
+
+  typedef MooseArray<std::vector<OutputShape>> VariableTestValue;
+  typedef MooseArray<std::vector<OutputGradient>> VariableTestGradient;
+  typedef MooseArray<std::vector<OutputSecond>> VariableTestSecond;
+  typedef MooseArray<std::vector<OutputShape>> VariableTestCurl;
+  typedef MooseArray<std::vector<OutputDivergence>> VariableTestDivergence;
+};
+
+typedef MooseArray<Real> VariableValue;
+typedef MooseArray<VectorValue<Real>> VariableGradient;
+typedef MooseArray<TensorValue<Real>> VariableSecond;
+
+typedef MooseArray<std::vector<Real>> VariablePhiValue;
+typedef MooseArray<std::vector<VectorValue<Real>>> VariablePhiGradient;
+typedef MooseArray<std::vector<TensorValue<Real>>> VariablePhiSecond;
+
+typedef MooseArray<std::vector<Real>> VariableTestValue;
+typedef MooseArray<std::vector<VectorValue<Real>>> VariableTestGradient;
+typedef MooseArray<std::vector<TensorValue<Real>>> VariableTestSecond;
+
+typedef MooseArray<VectorValue<Real>> VectorVariableValue;
+typedef MooseArray<TensorValue<Real>> VectorVariableGradient;
+typedef MooseArray<TypeNTensor<3, Real>> VectorVariableSecond;
+typedef MooseArray<VectorValue<Real>> VectorVariableCurl;
+
+typedef MooseArray<std::vector<VectorValue<Real>>> VectorVariablePhiValue;
+typedef MooseArray<std::vector<TensorValue<Real>>> VectorVariablePhiGradient;
+typedef MooseArray<std::vector<TypeNTensor<3, Real>>> VectorVariablePhiSecond;
+typedef MooseArray<std::vector<VectorValue<Real>>> VectorVariablePhiCurl;
+
+typedef MooseArray<std::vector<VectorValue<Real>>> VectorVariableTestValue;
+typedef MooseArray<std::vector<TensorValue<Real>>> VectorVariableTestGradient;
+typedef MooseArray<std::vector<TypeNTensor<3, Real>>> VectorVariableTestSecond;
+typedef MooseArray<std::vector<VectorValue<Real>>> VectorVariableTestCurl;
 
 /// Execution flags - when is the object executed/evaluated
 // Note: If this enum is changed, make sure to modify:

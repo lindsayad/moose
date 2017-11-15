@@ -15,7 +15,7 @@
 // MOOSE includes
 #include "Indicator.h"
 #include "Assembly.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "Problem.h"
 #include "SubProblem.h"
 #include "SystemBase.h"

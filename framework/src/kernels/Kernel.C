@@ -16,11 +16,10 @@
 
 // MOOSE includes
 #include "Assembly.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "MooseVariableScalar.h"
-#include "Problem.h"
 #include "SubProblem.h"
-#include "SystemBase.h"
+#include "NonlinearSystem.h"
 
 #include "libmesh/threads.h"
 #include "libmesh/quadrature.h"
@@ -36,17 +35,67 @@ validParams<Kernel>()
 
 Kernel::Kernel(const InputParameters & parameters)
   : KernelBase(parameters),
+    _var(dynamic_cast<MooseVariable &>(_base_var)),
+    _test(_var.phi()),
+    _grad_test(_var.gradPhi()),
+
+    _phi(_assembly.phi()),
+    _grad_phi(_assembly.gradPhi()),
     _u(_is_implicit ? _var.sln() : _var.slnOld()),
     _grad_u(_is_implicit ? _var.gradSln() : _var.gradSlnOld()),
     _u_dot(_var.uDot()),
     _du_dot_du(_var.duDotDu())
 {
+  _save_in.resize(_save_in_strings.size());
+  _diag_save_in.resize(_diag_save_in_strings.size());
+
+  for (unsigned int i = 0; i < _save_in_strings.size(); i++)
+  {
+    MooseVariable * var =
+        dynamic_cast<MooseVariable *>(&_subproblem.getVariable(_tid, _save_in_strings[i]));
+
+    if (_fe_problem.getNonlinearSystemBase().hasVariable(_save_in_strings[i]))
+      mooseError("Trying to use solution variable " + _save_in_strings[i] +
+                 " as a save_in variable in " + name());
+
+    if (var->feType() != _var.feType())
+      mooseError("Error in " + name() + ". When saving residual values in an Auxiliary variable "
+                                        "the AuxVariable must be the same type as the nonlinear "
+                                        "variable the object is acting on.");
+
+    _save_in[i] = var;
+    var->sys().addVariableToZeroOnResidual(_save_in_strings[i]);
+    addMooseVariableDependency(var);
+  }
+
+  _has_save_in = _save_in.size() > 0;
+
+  for (unsigned int i = 0; i < _diag_save_in_strings.size(); i++)
+  {
+    MooseVariable * var =
+        dynamic_cast<MooseVariable *>(&_subproblem.getVariable(_tid, _diag_save_in_strings[i]));
+
+    if (_fe_problem.getNonlinearSystemBase().hasVariable(_diag_save_in_strings[i]))
+      mooseError("Trying to use solution variable " + _diag_save_in_strings[i] +
+                 " as a diag_save_in variable in " + name());
+
+    if (var->feType() != _var.feType())
+      mooseError("Error in " + name() + ". When saving diagonal Jacobian values in an Auxiliary "
+                                        "variable the AuxVariable must be the same type as the "
+                                        "nonlinear variable the object is acting on.");
+
+    _diag_save_in[i] = var;
+    var->sys().addVariableToZeroOnJacobian(_diag_save_in_strings[i]);
+    addMooseVariableDependency(var);
+  }
+
+  _has_diag_save_in = _diag_save_in.size() > 0;
 }
 
 void
 Kernel::computeResidual()
 {
-  DenseVector<Number> & re = _assembly.residualBlock(_var.number());
+  DenseVector<Number> & re = _assembly.residualBlock(_base_var.number());
   _local_re.resize(re.size());
   _local_re.zero();
 
@@ -68,7 +117,7 @@ Kernel::computeResidual()
 void
 Kernel::computeJacobian()
 {
-  DenseMatrix<Number> & ke = _assembly.jacobianBlock(_var.number(), _var.number());
+  DenseMatrix<Number> & ke = _assembly.jacobianBlock(_base_var.number(), _base_var.number());
   _local_ke.resize(ke.m(), ke.n());
   _local_ke.zero();
 
@@ -96,11 +145,11 @@ Kernel::computeJacobian()
 void
 Kernel::computeOffDiagJacobian(unsigned int jvar)
 {
-  if (jvar == _var.number())
+  if (jvar == _base_var.number())
     computeJacobian();
   else
   {
-    DenseMatrix<Number> & ke = _assembly.jacobianBlock(_var.number(), jvar);
+    DenseMatrix<Number> & ke = _assembly.jacobianBlock(_base_var.number(), jvar);
 
     precalculateOffDiagJacobian(jvar);
     for (_i = 0; _i < _test.size(); _i++)
@@ -113,28 +162,11 @@ Kernel::computeOffDiagJacobian(unsigned int jvar)
 void
 Kernel::computeOffDiagJacobianScalar(unsigned int jvar)
 {
-  DenseMatrix<Number> & ke = _assembly.jacobianBlock(_var.number(), jvar);
+  DenseMatrix<Number> & ke = _assembly.jacobianBlock(_base_var.number(), jvar);
   MooseVariableScalar & jv = _sys.getScalarVariable(_tid, jvar);
 
   for (_i = 0; _i < _test.size(); _i++)
     for (_j = 0; _j < jv.order(); _j++)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
         ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar);
-}
-
-Real
-Kernel::computeQpJacobian()
-{
-  return 0;
-}
-
-Real
-Kernel::computeQpOffDiagJacobian(unsigned int /*jvar*/)
-{
-  return 0;
-}
-
-void
-Kernel::precalculateResidual()
-{
 }

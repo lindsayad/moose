@@ -15,13 +15,14 @@
 #ifndef COUPLEABLE_H
 #define COUPLEABLE_H
 
-// MOOSE includes
-#include "MooseVariableBase.h"
+#include <map>
+#include "MooseTypes.h"
+#include "MooseArray.h"
 
 // Forward declarations
 class InputParameters;
-class MooseVariable;
 class MooseObject;
+class MooseVariableFE;
 namespace libMesh
 {
 template <typename T>
@@ -51,7 +52,7 @@ public:
    * Get the list of coupled variables
    * @return The list of coupled variables
    */
-  const std::map<std::string, std::vector<MooseVariable *>> & getCoupledVars()
+  const std::map<std::string, std::vector<MooseVariableFE *>> & getCoupledVars()
   {
     return _coupled_vars;
   }
@@ -60,7 +61,7 @@ public:
    * Get the list of coupled variables
    * @return The list of coupled variables
    */
-  const std::vector<MooseVariable *> & getCoupledMooseVars() const { return _coupled_moose_vars; }
+  const std::vector<MooseVariableFE *> & getCoupledMooseVars() const { return _coupled_moose_vars; }
 
 protected:
   /**
@@ -97,6 +98,16 @@ protected:
    * @see Kernel::value
    */
   virtual const VariableValue & coupledValue(const std::string & var_name, unsigned int comp = 0);
+
+  /**
+   * Returns value of a coupled vector variable
+   * @param var_name Name of coupled vector variable
+   * @param comp Component number for vector of coupled vector variables
+   * @return Reference to a VariableValue for the coupled vector variable
+   * @see Kernel::value
+   */
+  virtual const VectorVariableValue & coupledVectorValue(const std::string & var_name,
+                                                         unsigned int comp = 0);
 
   /**
    * Returns a *writable* reference to a coupled variable.  Note: you
@@ -318,10 +329,10 @@ protected:
   FEProblemBase & _c_fe_problem;
 
   /// Coupled vars whose values we provide
-  std::map<std::string, std::vector<MooseVariable *>> _coupled_vars;
+  std::map<std::string, std::vector<MooseVariableFE *>> _coupled_vars;
 
   /// Vector of coupled variables
-  std::vector<MooseVariable *> _coupled_moose_vars;
+  std::vector<MooseVariableFE *> _coupled_moose_vars;
 
   /// True if we provide coupling to nodal values
   bool _c_nodal;
@@ -334,6 +345,9 @@ protected:
 
   /// Will hold the default value for optional coupled variables.
   std::map<std::string, VariableValue *> _default_value;
+
+  /// Will hold the default value for optional vector coupled variables.
+  std::map<std::string, VectorVariableValue *> _default_vector_value;
 
   /// This will always be zero because the default values for optionally coupled variables is always constant and this is used for time derivative info
   VariableValue _default_value_zero;
@@ -350,7 +364,7 @@ protected:
    * @param comp Component number of multiple coupled variables
    * @return Pointer to the desired variable
    */
-  MooseVariable * getVar(const std::string & var_name, unsigned int comp);
+  MooseVariableFE * getVar(const std::string & var_name, unsigned int comp);
 
   /**
    * Checks to make sure that the current Executioner has set "_it_transient" when old/older values
@@ -367,9 +381,17 @@ private:
    * Helper method to return (and insert if necessary) the default value
    * for an uncoupled variable.
    * @param var_name the name of the variable for which to retrieve a default value
-   * @return VariableValue * a pointer to the associated VarirableValue.
+   * @return VariableValue * a pointer to the associated VariableValue.
    */
   VariableValue * getDefaultValue(const std::string & var_name);
+
+  /**
+   * Helper method to return (and insert if necessary) the default value
+   * for an uncoupled vector variable.
+   * @param var_name the name of the vector variable for which to retrieve a default value
+   * @return VectorVariableValue * a pointer to the associated VectorVariableValue.
+   */
+  VectorVariableValue * getVectorDefaultValue(const std::string & var_name);
 
   /// Maximum qps for any element in this system
   unsigned int _coupleable_max_qps;

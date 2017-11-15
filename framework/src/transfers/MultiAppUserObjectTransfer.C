@@ -19,7 +19,7 @@
 #include "FEProblem.h"
 #include "MooseMesh.h"
 #include "MooseTypes.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "MultiApp.h"
 #include "UserObject.h"
 
@@ -159,7 +159,7 @@ MultiAppUserObjectTransfer::execute()
     case FROM_MULTIAPP:
     {
       FEProblemBase & to_problem = _multi_app->problemBase();
-      MooseVariable & to_var = to_problem.getVariable(0, _to_var_name);
+      MooseVariableFE & to_var = to_problem.getVariable(0, _to_var_name);
       SystemBase & to_system_base = to_var.sys();
 
       System & to_sys = to_system_base.system();

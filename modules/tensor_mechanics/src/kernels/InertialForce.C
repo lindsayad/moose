@@ -37,7 +37,7 @@ validParams<InertialForce>()
 InertialForce::InertialForce(const InputParameters & parameters)
   : Kernel(parameters),
     _density(getMaterialProperty<Real>("density")),
-    _u_old(valueOld()),
+    _u_old(_var.slnOld()),
     _vel_old(coupledValueOld("velocity")),
     _accel_old(coupledValueOld("acceleration")),
     _beta(getParam<Real>("beta")),

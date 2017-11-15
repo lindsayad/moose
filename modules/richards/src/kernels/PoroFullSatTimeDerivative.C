@@ -24,7 +24,7 @@ validParams<PoroFullSatTimeDerivative>()
 
 PoroFullSatTimeDerivative::PoroFullSatTimeDerivative(const InputParameters & parameters)
   : DerivativeMaterialInterface<TimeDerivative>(parameters),
-    _u_old(valueOld()),
+    _u_old(_var.slnOld()),
     _volstrain(getMaterialProperty<Real>("volumetric_strain")),
     _volstrain_old(getMaterialPropertyOld<Real>("volumetric_strain")),
 

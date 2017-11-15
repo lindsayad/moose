@@ -33,7 +33,7 @@ class ElementDamper;
 class NodalDamper;
 class GeneralDamper;
 class GeometricSearchData;
-class IntegratedBC;
+class IntegratedBCBase;
 class NodalBC;
 class PresetNodalBC;
 class DGKernel;
@@ -501,7 +501,10 @@ public:
   }
   const MooseObjectWarehouse<DiracKernel> & getDiracKernelWarehouse() { return _dirac_kernels; }
   const MooseObjectWarehouse<NodalKernel> & getNodalKernelWarehouse(THREAD_ID tid);
-  const MooseObjectWarehouse<IntegratedBC> & getIntegratedBCWarehouse() { return _integrated_bcs; }
+  const MooseObjectWarehouse<IntegratedBCBase> & getIntegratedBCWarehouse()
+  {
+    return _integrated_bcs;
+  }
   const MooseObjectWarehouse<ElementDamper> & getElementDamperWarehouse()
   {
     return _element_dampers;
@@ -612,7 +615,7 @@ protected:
 
   ///@{
   /// BoundaryCondition Warhouses
-  MooseObjectWarehouse<IntegratedBC> _integrated_bcs;
+  MooseObjectWarehouse<IntegratedBCBase> _integrated_bcs;
   MooseObjectWarehouse<NodalBC> _nodal_bcs;
   MooseObjectWarehouse<PresetNodalBC> _preset_nodal_bcs;
   ///@}

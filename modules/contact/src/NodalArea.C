@@ -26,8 +26,9 @@ validParams<NodalArea>()
 
 NodalArea::NodalArea(const InputParameters & parameters)
   : SideIntegralVariableUserObject(parameters),
-    _phi(getCoupledVars().find("variable")->second[0]->phiFace()),
-    _system(_variable->sys()),
+    _var(dynamic_cast<MooseVariable *>(getCoupledVars().find("variable")->second[0])),
+    _phi(_var->phiFace()),
+    _system(_var->sys()),
     _aux_solution(_system.solution())
 {
 }
@@ -88,7 +89,7 @@ NodalArea::finalize()
   for (std::map<const Node *, Real>::iterator it = _node_areas.begin(); it != it_end; ++it)
   {
     const Node * const node = it->first;
-    dof_id_type dof = node->dof_number(_system.number(), _variable->number(), 0);
+    dof_id_type dof = node->dof_number(_system.number(), _var->number(), 0);
     _aux_solution.set(dof, 0);
   }
   _aux_solution.close();
@@ -96,7 +97,7 @@ NodalArea::finalize()
   for (std::map<const Node *, Real>::iterator it = _node_areas.begin(); it != it_end; ++it)
   {
     const Node * const node = it->first;
-    dof_id_type dof = node->dof_number(_system.number(), _variable->number(), 0);
+    dof_id_type dof = node->dof_number(_system.number(), _var->number(), 0);
     _aux_solution.add(dof, it->second);
   }
   _aux_solution.close();

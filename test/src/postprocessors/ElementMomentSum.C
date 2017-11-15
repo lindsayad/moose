@@ -14,7 +14,7 @@
 
 #include "ElementMomentSum.h"
 
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 
 template <>
 InputParameters

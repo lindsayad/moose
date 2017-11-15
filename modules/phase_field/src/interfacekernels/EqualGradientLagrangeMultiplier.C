@@ -29,7 +29,7 @@ validParams<EqualGradientLagrangeMultiplier>()
 EqualGradientLagrangeMultiplier::EqualGradientLagrangeMultiplier(const InputParameters & parameters)
   : InterfaceKernel(parameters),
     _component(getParam<unsigned int>("component")),
-    _grad_element_value(getVar("element_var", 0)->gradSln()),
+    _grad_element_value((dynamic_cast<MooseVariable *>(getVar("element_var", 0)))->gradSln()),
     _element_jvar(getVar("element_var", 0)->number()),
     _neighbor_jvar(_neighbor_var.number()),
     _jacobian_fill(getParam<Real>("jacobian_fill"))

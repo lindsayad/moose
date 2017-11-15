@@ -15,7 +15,7 @@
 #include "TiedValueConstraint.h"
 
 // MOOSE includes
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "SystemBase.h"
 
 #include "libmesh/sparse_matrix.h"

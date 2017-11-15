@@ -17,7 +17,7 @@
 // MOOSE includes
 #include "MooseMesh.h"
 #include "MooseUtils.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 
 template <>
 InputParameters
@@ -48,7 +48,7 @@ FindValueOnLine::FindValueOnLine(const InputParameters & parameters)
     _target(getParam<Real>("target")),
     _depth(getParam<unsigned int>("depth")),
     _tol(getParam<Real>("tol")),
-    _coupled_var(getVar("v", 0)),
+    _coupled_var(dynamic_cast<MooseVariable *>(getVar("v", 0))),
     _position(0.0),
     _mesh(_subproblem.mesh()),
     _point_vec(1)

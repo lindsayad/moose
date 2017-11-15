@@ -44,7 +44,8 @@ LevelSetMeshRefinementTransfer::initialSetup()
     if (_multi_app->hasLocalApp(i))
     {
       FEProblemBase & to_problem = _multi_app->appProblemBase(i);
-      MooseVariable & to_var = to_problem.getVariable(0, _to_var_name);
+      MooseVariable & to_var =
+          dynamic_cast<MooseVariable &>(to_problem.getVariable(0, _to_var_name));
       Adaptivity & adapt = to_problem.adaptivity();
 
       adapt.setMarkerVariableName(to_var.name());

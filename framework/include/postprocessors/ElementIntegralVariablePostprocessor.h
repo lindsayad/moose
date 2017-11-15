@@ -16,7 +16,6 @@
 #define ELEMENTINTEGRALVARIABLEPOSTPROCESSOR_H
 
 #include "ElementIntegralPostprocessor.h"
-#include "MooseVariableInterface.h"
 
 // Forward Declarations
 class ElementIntegralVariablePostprocessor;
@@ -30,8 +29,7 @@ InputParameters validParams<ElementIntegralVariablePostprocessor>();
  * Note that specializations of this integral are possible by deriving from this
  * class and overriding computeQpIntegral().
  */
-class ElementIntegralVariablePostprocessor : public ElementIntegralPostprocessor,
-                                             public MooseVariableInterface
+class ElementIntegralVariablePostprocessor : public ElementIntegralPostprocessor
 {
 public:
   ElementIntegralVariablePostprocessor(const InputParameters & parameters);

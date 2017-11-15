@@ -16,7 +16,7 @@
 
 // MOOSE includes
 #include "Assembly.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "SystemBase.h"
 
 #include "libmesh/quadrature.h"

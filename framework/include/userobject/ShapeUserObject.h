@@ -18,7 +18,7 @@
 #include "Assembly.h"
 #include "Coupleable.h"
 #include "InputParameters.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "MooseObject.h"
 
 /**
@@ -55,7 +55,7 @@ public:
   /**
    * Returns the set of variables a Jacobian has been requested for
    */
-  const std::set<MooseVariable *> & jacobianMooseVariables() const
+  const std::set<MooseVariableFE *> & jacobianMooseVariables() const
   {
     return _jacobian_moose_variables;
   }
@@ -98,7 +98,7 @@ protected:
 
 private:
   const bool _compute_jacobians;
-  std::set<MooseVariable *> _jacobian_moose_variables;
+  std::set<MooseVariableFE *> _jacobian_moose_variables;
 };
 
 template <typename T>
@@ -127,7 +127,7 @@ template <typename T>
 unsigned int
 ShapeUserObject<T>::coupled(const std::string & var_name, unsigned int comp)
 {
-  MooseVariable * var = Coupleable::getVar(var_name, comp);
+  MooseVariableFE * var = Coupleable::getVar(var_name, comp);
 
   // add to the set of variables for which executeJacobian will be called
   if (_compute_jacobians && var->kind() == Moose::VAR_NONLINEAR)

@@ -16,7 +16,7 @@
 
 // MOOSE includes
 #include "Assembly.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "SystemBase.h"
 
 #include "libmesh/sparse_matrix.h"
@@ -36,8 +36,8 @@ validParams<NodalConstraint>()
 NodalConstraint::NodalConstraint(const InputParameters & parameters)
   : Constraint(parameters),
     NeighborCoupleableMooseVariableDependencyIntermediateInterface(this, true, true),
-    _u_slave(_var.nodalSlnNeighbor()),
-    _u_master(_var.nodalSln())
+    _u_slave(_var.nodalValueNeighbor()),
+    _u_master(_var.nodalValue())
 {
   MooseEnum temp_formulation = getParam<MooseEnum>("formulation");
   if (temp_formulation == "penalty")

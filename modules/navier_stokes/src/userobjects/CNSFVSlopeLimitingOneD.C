@@ -34,9 +34,9 @@ validParams<CNSFVSlopeLimitingOneD>()
 
 CNSFVSlopeLimitingOneD::CNSFVSlopeLimitingOneD(const InputParameters & parameters)
   : SlopeLimitingBase(parameters),
-    _rho(getVar("rho", 0)),
-    _rhou(getVar("rhou", 0)),
-    _rhoe(getVar("rhoe", 0)),
+    _rho(dynamic_cast<MooseVariable *>(getVar("rho", 0))),
+    _rhou(dynamic_cast<MooseVariable *>(getVar("rhou", 0))),
+    _rhoe(dynamic_cast<MooseVariable *>(getVar("rhoe", 0))),
     _fp(getUserObject<SinglePhaseFluidProperties>("fluid_properties")),
     _scheme(getParam<MooseEnum>("scheme"))
 {

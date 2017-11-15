@@ -24,7 +24,7 @@
 #include "libmesh/enum_quadrature_type.h"
 
 // Forward declarations
-class MooseVariable;
+class MooseVariableFE;
 class AssemblyData;
 class DisplacedProblem;
 class MooseMesh;
@@ -57,13 +57,6 @@ public:
   const std::vector<std::string> & getDisplacementVarNames() const { return _displacements; }
 
   virtual void createQRules(QuadratureType type, Order order, Order volume_order, Order face_order);
-
-  /**
-   * Whether or not this problem should utilize FE shape function caching.
-   *
-   * @param fe_cache True for using the cache false for not.
-   */
-  virtual void useFECache(bool fe_cache) override;
 
   virtual void init() override;
   virtual void solve() override;
@@ -108,7 +101,7 @@ public:
 
   // Variables /////
   virtual bool hasVariable(const std::string & var_name) override;
-  virtual MooseVariable & getVariable(THREAD_ID tid, const std::string & var_name) override;
+  virtual MooseVariableFE & getVariable(THREAD_ID tid, const std::string & var_name) override;
   virtual bool hasScalarVariable(const std::string & var_name) override;
   virtual MooseVariableScalar & getScalarVariable(THREAD_ID tid,
                                                   const std::string & var_name) override;

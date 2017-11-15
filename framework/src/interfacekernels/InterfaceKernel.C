@@ -16,7 +16,7 @@
 
 // MOOSE includes
 #include "Assembly.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "SystemBase.h"
 
 #include "libmesh/quadrature.h"
@@ -91,7 +91,8 @@ InterfaceKernel::InterfaceKernel(const InputParameters & parameters)
     _sys(*parameters.get<SystemBase *>("_sys")),
     _tid(parameters.get<THREAD_ID>("_tid")),
     _assembly(_subproblem.assembly(_tid)),
-    _var(_sys.getVariable(_tid, parameters.get<NonlinearVariableName>("variable"))),
+    _var(dynamic_cast<MooseVariable &>(
+        _sys.getVariable(_tid, parameters.get<NonlinearVariableName>("variable")))),
     _mesh(_subproblem.mesh()),
     _current_elem(_assembly.elem()),
     _current_elem_volume(_assembly.elemVolume()),
@@ -111,7 +112,7 @@ InterfaceKernel::InterfaceKernel(const InputParameters & parameters)
     _test(_var.phiFace()),
     _grad_test(_var.gradPhiFace()),
     _normals(_var.normals()),
-    _neighbor_var(*getVar("neighbor_var", 0)),
+    _neighbor_var(dynamic_cast<MooseVariable &>(*getVar("neighbor_var", 0))),
     _neighbor_value(_neighbor_var.slnNeighbor()),
     _grad_neighbor_value(_neighbor_var.gradSlnNeighbor()),
     _phi_neighbor(_assembly.phiFaceNeighbor()),
@@ -136,7 +137,8 @@ InterfaceKernel::InterfaceKernel(const InputParameters & parameters)
     {
       for (unsigned i = 0; i < _save_in_strings.size(); ++i)
       {
-        MooseVariable * var = &_subproblem.getVariable(_tid, _save_in_strings[i]);
+        MooseVariable * var =
+            dynamic_cast<MooseVariable *>(&_subproblem.getVariable(_tid, _save_in_strings[i]));
 
         if (_sys.hasVariable(_save_in_strings[i]))
           mooseError("Trying to use solution variable " + _save_in_strings[i] +
@@ -180,7 +182,8 @@ InterfaceKernel::InterfaceKernel(const InputParameters & parameters)
     {
       for (unsigned i = 0; i < _diag_save_in_strings.size(); ++i)
       {
-        MooseVariable * var = &_subproblem.getVariable(_tid, _diag_save_in_strings[i]);
+        MooseVariable * var =
+            dynamic_cast<MooseVariable *>(&_subproblem.getVariable(_tid, _diag_save_in_strings[i]));
 
         if (_sys.hasVariable(_diag_save_in_strings[i]))
           mooseError("Trying to use solution variable " + _diag_save_in_strings[i] +

@@ -66,6 +66,10 @@ public:
    */
   bool hasOutput(const ExecFlagType & type);
 
+  bool hasVectorVariableOutput();
+
+  const std::set<std::string> & getVectorVariableOutput();
+
   /**
    * Returns true if there exists nodal nonlinear variables for output
    * @return True if nonlinear variable output exists
@@ -205,6 +209,8 @@ protected:
    * @see outputNodalVariables outputElementalVariables outputScalarVariables outputPostprocessors
    */
   virtual void output(const ExecFlagType & type);
+
+  virtual void outputVectorVariables();
 
   /**
    * Performs output of nodal nonlinear variables

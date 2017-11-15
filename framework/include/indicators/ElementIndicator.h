@@ -20,13 +20,15 @@
 #include "PostprocessorInterface.h"
 #include "Coupleable.h"
 #include "ScalarCoupleable.h"
-#include "MooseVariableInterface.h"
 #include "MaterialPropertyInterface.h"
 #include "ZeroInterface.h"
 
 // Forward declarations
 class ElementIndicator;
-class MooseVariable;
+template <typename>
+class MooseVariableField;
+typedef MooseVariableField<Real> MooseVariable;
+typedef MooseVariableField<VectorValue<Real>> MooseVariableVector;
 
 template <>
 InputParameters validParams<ElementIndicator>();
@@ -36,14 +38,13 @@ class ElementIndicator : public Indicator,
                          public PostprocessorInterface,
                          public Coupleable,
                          public ScalarCoupleable,
-                         public MooseVariableInterface,
                          public ZeroInterface
 {
 public:
   ElementIndicator(const InputParameters & parameters);
 
 protected:
-  MooseVariable & _field_var;
+  MooseVariableFE & _field_var;
 
   const Elem *& _current_elem;
   /// Volume of the current element

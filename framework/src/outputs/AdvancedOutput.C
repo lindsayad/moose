@@ -24,7 +24,7 @@
 #include "InfixIterator.h"
 #include "MooseApp.h"
 #include "MooseUtils.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "Postprocessor.h"
 #include "Restartable.h"
 #include "VectorPostprocessor.h"
@@ -98,7 +98,7 @@ MultiMooseEnum
 AdvancedOutput::getOutputTypes()
 {
   return MultiMooseEnum("nodal=0 elemental=1 scalar=2 postprocessor=3 vector_postprocessor=4 "
-                        "input=5 system_information=6");
+                        "input=5 system_information=6 vector=7");
 }
 
 // Enables the output types (see getOutputTypes) for an AdvancedOutput object
@@ -181,6 +181,14 @@ AdvancedOutput::initialSetup()
 AdvancedOutput::~AdvancedOutput() {}
 
 void
+AdvancedOutput::outputVectorVariables()
+{
+  mooseError("Individual output of vector variables is not support for the output object named '",
+             name(),
+             "'");
+}
+
+void
 AdvancedOutput::outputNodalVariables()
 {
   mooseError("Individual output of nodal variables is not support for the output object named '",
@@ -252,6 +260,12 @@ void
 AdvancedOutput::output(const ExecFlagType & type)
 {
   // Call the various output types, if data exists
+  if (wantOutput("vector", type))
+  {
+    outputVectorVariables();
+    _last_execute_time["vector"] = _time;
+  }
+
   if (wantOutput("nodal", type))
   {
     outputNodalVariables();
@@ -387,9 +401,11 @@ AdvancedOutput::initAvailableLists()
   {
     if (_problem_ptr->hasVariable(var_name))
     {
-      MooseVariable & var = _problem_ptr->getVariable(0, var_name);
+      MooseVariableFE & var = _problem_ptr->getVariable(0, var_name);
       const FEType type = var.feType();
-      if (type.order == CONSTANT)
+      if (type.family == NEDELEC_ONE)
+        _execute_data["vector"].available.insert(var_name);
+      else if (type.order == CONSTANT)
         _execute_data["elemental"].available.insert(var_name);
       else
         _execute_data["nodal"].available.insert(var_name);
@@ -435,9 +451,11 @@ AdvancedOutput::initShowHideLists(const std::vector<VariableName> & show,
   {
     if (_problem_ptr->hasVariable(var_name))
     {
-      MooseVariable & var = _problem_ptr->getVariable(0, var_name);
+      MooseVariableFE & var = _problem_ptr->getVariable(0, var_name);
       const FEType type = var.feType();
-      if (type.order == CONSTANT)
+      if (type.family == NEDELEC_ONE)
+        _execute_data["vector"].show.insert(var_name);
+      else if (type.order == CONSTANT)
         _execute_data["elemental"].show.insert(var_name);
       else
         _execute_data["nodal"].show.insert(var_name);
@@ -457,9 +475,11 @@ AdvancedOutput::initShowHideLists(const std::vector<VariableName> & show,
   {
     if (_problem_ptr->hasVariable(var_name))
     {
-      MooseVariable & var = _problem_ptr->getVariable(0, var_name);
+      MooseVariableFE & var = _problem_ptr->getVariable(0, var_name);
       const FEType type = var.feType();
-      if (type.order == CONSTANT)
+      if (type.family == NEDELEC_ONE)
+        _execute_data["vector"].hide.insert(var_name);
+      else if (type.order == CONSTANT)
         _execute_data["elemental"].hide.insert(var_name);
       else
         _execute_data["nodal"].hide.insert(var_name);
@@ -538,6 +558,14 @@ AdvancedOutput::initOutputList(OutputData & data)
 void
 AdvancedOutput::addValidParams(InputParameters & params, const MultiMooseEnum & types)
 {
+  // Vector output
+  if (types.contains("vector"))
+  {
+    params.addParam<MultiMooseEnum>(
+        "execute_vector_on", getExecuteOptions(), "Control the output of vector variables");
+    params.addParamNamesToGroup("execute_vector_on", "Variables");
+  }
+
   // Nodal output
   if (types.contains("nodal"))
   {
@@ -632,6 +660,18 @@ AdvancedOutput::hasOutputHelper(const std::string & name)
 
   return !_execute_data[name].output.empty() && _advanced_execute_on.contains(name) &&
          _advanced_execute_on[name].isValid() && !_advanced_execute_on[name].contains("none");
+}
+
+bool
+AdvancedOutput::hasVectorVariableOutput()
+{
+  return hasOutputHelper("vector");
+}
+
+const std::set<std::string> &
+AdvancedOutput::getVectorVariableOutput()
+{
+  return _execute_data["vector"].output;
 }
 
 bool

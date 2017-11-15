@@ -26,7 +26,7 @@ public:
   virtual void timestepSetup();
 
 protected:
-  virtual bool globalDoFEnabled(MooseVariable & /*var*/, dof_id_type /*dof_index*/);
+  virtual bool globalDoFEnabled(MooseVariableFE & /*var*/, dof_id_type /*dof_index*/);
 
   virtual void precalculateResidual();
   virtual void precalculateJacobian();

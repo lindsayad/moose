@@ -13,7 +13,7 @@
 /****************************************************************/
 
 #include "NodalPostprocessor.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "SubProblem.h"
 #include "MooseTypes.h"
 

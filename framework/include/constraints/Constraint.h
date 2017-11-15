@@ -29,7 +29,10 @@
 // Forward Declarations
 class Assembly;
 class Constraint;
-class MooseVariable;
+template <typename>
+class MooseVariableField;
+typedef MooseVariableField<Real> MooseVariable;
+typedef MooseVariableField<VectorValue<Real>> MooseVariableVector;
 class SubProblem;
 class MooseMesh;
 

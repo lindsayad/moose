@@ -17,7 +17,7 @@
 // MOOSE includes
 #include "Assembly.h"
 #include "FEProblem.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "NearestNodeLocator.h"
 #include "PenetrationLocator.h"
 
@@ -46,10 +46,13 @@ FaceFaceConstraint::FaceFaceConstraint(const InputParameters & parameters)
     _coord(_assembly.coordTransformation()),
     _current_elem(_assembly.elem()),
 
-    _master_var(_subproblem.getVariable(_tid, getParam<VariableName>("master_variable"))),
+    _master_var(dynamic_cast<MooseVariable &>(
+        _subproblem.getVariable(_tid, getParam<VariableName>("master_variable")))),
     _slave_var(isParamValid("slave_variable")
-                   ? _subproblem.getVariable(_tid, getParam<VariableName>("slave_variable"))
-                   : _subproblem.getVariable(_tid, getParam<VariableName>("master_variable"))),
+                   ? dynamic_cast<MooseVariable &>(
+                         _subproblem.getVariable(_tid, getParam<VariableName>("slave_variable")))
+                   : dynamic_cast<MooseVariable &>(
+                         _subproblem.getVariable(_tid, getParam<VariableName>("master_variable")))),
     _lambda(_var.sln()),
 
     _iface(*_mesh.getMortarInterfaceByName(getParam<std::string>("interface"))),

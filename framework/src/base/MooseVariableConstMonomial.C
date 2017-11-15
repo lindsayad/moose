@@ -29,7 +29,7 @@ MooseVariableConstMonomial::MooseVariableConstMonomial(unsigned int var_num,
 }
 
 void
-MooseVariableConstMonomial::computeElemValuesHelper(const unsigned & nqp, const Real & phi)
+MooseVariableConstMonomial::computeMonomialValuesHelper(const unsigned & nqp, const Real & phi)
 {
   bool is_transient = _subproblem.isTransient();
 
@@ -72,22 +72,6 @@ MooseVariableConstMonomial::computeElemValuesHelper(const unsigned & nqp, const 
       _second_u_older.resize(nqp);
   }
 
-  if (_need_nodal_u)
-    _nodal_u.resize(1);
-
-  if (_need_nodal_u_previous_nl)
-    _nodal_u_previous_nl.resize(1);
-
-  if (is_transient)
-  {
-    if (_need_nodal_u_old)
-      _nodal_u_old.resize(1);
-    if (_need_nodal_u_older)
-      _nodal_u_older.resize(1);
-    if (_need_nodal_u_dot)
-      _nodal_u_dot.resize(1);
-  }
-
   if (_need_solution_dofs)
     _solution_dofs.resize(1);
 
@@ -105,37 +89,21 @@ MooseVariableConstMonomial::computeElemValuesHelper(const unsigned & nqp, const 
   Real u_dot;
   const Real & du_dot_du = _sys.duDotDu();
 
-  if (_need_nodal_u)
-    _nodal_u[0] = soln;
-
-  if (_need_u_previous_nl || _need_grad_previous_nl || _need_second_previous_nl ||
-      _need_nodal_u_previous_nl)
+  if (_need_u_previous_nl || _need_grad_previous_nl || _need_second_previous_nl)
     soln_previous_nl = (*_sys.solutionPreviousNewton())(idx);
-
-  if (_need_nodal_u_previous_nl)
-    _nodal_u_previous_nl[0] = soln_previous_nl;
 
   if (_need_solution_dofs)
     _solution_dofs(0) = soln;
 
   if (is_transient)
   {
-    if (_need_u_old || _need_grad_old || _need_second_old || _need_nodal_u_old)
+    if (_need_u_old || _need_grad_old || _need_second_old)
       soln_old = _sys.solutionOld()(idx);
 
-    if (_need_u_older || _need_grad_older || _need_second_older || _need_nodal_u_older)
+    if (_need_u_older || _need_grad_older || _need_second_older)
       soln_older = _sys.solutionOlder()(idx);
 
-    if (_need_nodal_u_old)
-      _nodal_u_old[0] = soln_old;
-
-    if (_need_nodal_u_older)
-      _nodal_u_older[0] = soln_older;
-
     u_dot = _sys.solutionUDot()(idx);
-
-    if (_need_nodal_u_dot)
-      _nodal_u_dot[0] = u_dot;
 
     if (_need_solution_dofs_old)
       _solution_dofs_old(0) = soln_old;
@@ -183,7 +151,8 @@ MooseVariableConstMonomial::computeElemValuesHelper(const unsigned & nqp, const 
 }
 
 void
-MooseVariableConstMonomial::computeNeighborValuesHelper(const unsigned & nqp, const Real & phi)
+MooseVariableConstMonomial::computeMonomialNeighborValuesHelper(const unsigned & nqp,
+                                                                const Real & phi)
 {
   bool is_transient = _subproblem.isTransient();
 
@@ -214,18 +183,6 @@ MooseVariableConstMonomial::computeNeighborValuesHelper(const unsigned & nqp, co
       _second_u_older_neighbor.resize(nqp);
   }
 
-  if (_need_nodal_u_neighbor)
-    _nodal_u_neighbor.resize(1);
-  if (is_transient)
-  {
-    if (_need_nodal_u_old_neighbor)
-      _nodal_u_old_neighbor.resize(1);
-    if (_need_nodal_u_older_neighbor)
-      _nodal_u_older_neighbor.resize(1);
-    if (_need_nodal_u_dot_neighbor)
-      _nodal_u_dot_neighbor.resize(1);
-  }
-
   if (_need_solution_dofs_neighbor)
     _solution_dofs_neighbor.resize(1);
 
@@ -241,9 +198,6 @@ MooseVariableConstMonomial::computeNeighborValuesHelper(const unsigned & nqp, co
   Real soln_older;
   Real u_dot;
 
-  if (_need_nodal_u_neighbor)
-    _nodal_u_neighbor[0] = soln;
-
   if (_need_solution_dofs_neighbor)
     _solution_dofs_neighbor(0) = soln;
 
@@ -255,15 +209,7 @@ MooseVariableConstMonomial::computeNeighborValuesHelper(const unsigned & nqp, co
     if (_need_u_older_neighbor)
       soln_older = _sys.solutionOlder()(idx);
 
-    if (_need_nodal_u_old_neighbor)
-      _nodal_u_old_neighbor[0] = soln_old;
-    if (_need_nodal_u_older_neighbor)
-      _nodal_u_older_neighbor[0] = soln_older;
-
     u_dot = _sys.solutionUDot()(idx);
-
-    if (_need_nodal_u_dot_neighbor)
-      _nodal_u_dot_neighbor[0] = u_dot;
 
     if (_need_solution_dofs_old_neighbor)
       _solution_dofs_old_neighbor(0) = soln_old;
@@ -304,7 +250,7 @@ MooseVariableConstMonomial::computeElemValues()
   if (_dof_indices.size() == 0)
     return;
 
-  computeElemValuesHelper(_qrule->n_points(), _phi[0][0]);
+  computeMonomialValuesHelper(_qrule->n_points(), _phi[0][0]);
 }
 
 void
@@ -313,7 +259,7 @@ MooseVariableConstMonomial::computeElemValuesFace()
   if (_dof_indices.size() == 0)
     return;
 
-  computeElemValuesHelper(_qrule_face->n_points(), _phi_face[0][0]);
+  computeMonomialValuesHelper(_qrule_face->n_points(), _phi_face[0][0]);
 }
 
 void
@@ -322,7 +268,7 @@ MooseVariableConstMonomial::computeNeighborValues()
   if (_dof_indices_neighbor.size() == 0)
     return;
 
-  computeNeighborValuesHelper(_qrule_neighbor->n_points(), _phi_neighbor[0][0]);
+  computeMonomialNeighborValuesHelper(_qrule_neighbor->n_points(), _phi_neighbor[0][0]);
 }
 
 void
@@ -331,5 +277,5 @@ MooseVariableConstMonomial::computeNeighborValuesFace()
   if (_dof_indices_neighbor.size() == 0)
     return;
 
-  computeNeighborValuesHelper(_qrule_neighbor->n_points(), _phi_face_neighbor[0][0]);
+  computeMonomialNeighborValuesHelper(_qrule_neighbor->n_points(), _phi_face_neighbor[0][0]);
 }

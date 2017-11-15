@@ -16,7 +16,7 @@
 
 #include "FEProblem.h"
 #include "MooseError.h" // mooseDeprecated
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "Problem.h"
 #include "SubProblem.h"
 
@@ -32,9 +32,9 @@ NeighborCoupleable::~NeighborCoupleable() {}
 const VariableValue &
 NeighborCoupleable::coupledNeighborValue(const std::string & var_name, unsigned int comp)
 {
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariable * var = dynamic_cast<MooseVariable *>(getVar(var_name, comp));
   if (_neighbor_nodal)
-    return (_c_is_implicit) ? var->nodalSlnNeighbor() : var->nodalSlnOldNeighbor();
+    return (_c_is_implicit) ? var->nodalValueNeighbor() : var->nodalValueOldNeighbor();
   else
     return (_c_is_implicit) ? var->slnNeighbor() : var->slnOldNeighbor();
 }
@@ -44,9 +44,9 @@ NeighborCoupleable::coupledNeighborValueOld(const std::string & var_name, unsign
 {
   validateExecutionerType(var_name);
 
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariable * var = dynamic_cast<MooseVariable *>(getVar(var_name, comp));
   if (_neighbor_nodal)
-    return (_c_is_implicit) ? var->nodalSlnOldNeighbor() : var->nodalSlnOlderNeighbor();
+    return (_c_is_implicit) ? var->nodalValueOldNeighbor() : var->nodalValueOlderNeighbor();
   else
     return (_c_is_implicit) ? var->slnOldNeighbor() : var->slnOlderNeighbor();
 }
@@ -56,11 +56,11 @@ NeighborCoupleable::coupledNeighborValueOlder(const std::string & var_name, unsi
 {
   validateExecutionerType(var_name);
 
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariable * var = dynamic_cast<MooseVariable *>(getVar(var_name, comp));
   if (_neighbor_nodal)
   {
     if (_c_is_implicit)
-      return var->nodalSlnOlderNeighbor();
+      return var->nodalValueOlderNeighbor();
     else
       mooseError("Older values not available for explicit schemes");
   }
@@ -79,7 +79,7 @@ NeighborCoupleable::coupledNeighborGradient(const std::string & var_name, unsign
   if (_neighbor_nodal)
     mooseError("Nodal variables do not have gradients");
 
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariable * var = dynamic_cast<MooseVariable *>(getVar(var_name, comp));
   return (_c_is_implicit) ? var->gradSlnNeighbor() : var->gradSlnOldNeighbor();
 }
 
@@ -90,7 +90,7 @@ NeighborCoupleable::coupledNeighborGradientOld(const std::string & var_name, uns
     mooseError("Nodal variables do not have gradients");
 
   validateExecutionerType(var_name);
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariable * var = dynamic_cast<MooseVariable *>(getVar(var_name, comp));
   return (_c_is_implicit) ? var->gradSlnOldNeighbor() : var->gradSlnOlderNeighbor();
 }
 
@@ -101,7 +101,7 @@ NeighborCoupleable::coupledNeighborGradientOlder(const std::string & var_name, u
     mooseError("Nodal variables do not have gradients");
 
   validateExecutionerType(var_name);
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariable * var = dynamic_cast<MooseVariable *>(getVar(var_name, comp));
   if (_c_is_implicit)
     return var->gradSlnOlderNeighbor();
   else
@@ -114,7 +114,7 @@ NeighborCoupleable::coupledNeighborSecond(const std::string & var_name, unsigned
   if (_neighbor_nodal)
     mooseError("Nodal variables do not have second derivatives");
 
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariable * var = dynamic_cast<MooseVariable *>(getVar(var_name, comp));
   return (_c_is_implicit) ? var->secondSlnNeighbor() : var->secondSlnOldNeighbor();
 }
 
@@ -124,7 +124,7 @@ NeighborCoupleable::coupledNeighborSolutionDoFs(const std::string & var_name, un
   if (_neighbor_nodal)
     mooseError("nodal objects should not call coupledSolutionDoFs");
 
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariable * var = dynamic_cast<MooseVariable *>(getVar(var_name, comp));
   return (_c_is_implicit) ? var->solutionDoFsNeighbor() : var->solutionDoFsOldNeighbor();
 }
 
@@ -134,7 +134,7 @@ NeighborCoupleable::coupledNeighborSolutionDoFsOld(const std::string & var_name,
   if (_neighbor_nodal)
     mooseError("nodal objects should not call coupledSolutionDoFsOld");
 
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariable * var = dynamic_cast<MooseVariable *>(getVar(var_name, comp));
   return (_c_is_implicit) ? var->solutionDoFsOldNeighbor() : var->solutionDoFsOlderNeighbor();
 }
 
@@ -145,7 +145,7 @@ NeighborCoupleable::coupledNeighborSolutionDoFsOlder(const std::string & var_nam
   if (_neighbor_nodal)
     mooseError("nodal objects should not call coupledSolutionDoFsOlder");
 
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariable * var = dynamic_cast<MooseVariable *>(getVar(var_name, comp));
   if (_c_is_implicit)
     return var->solutionDoFsOlderNeighbor();
   else

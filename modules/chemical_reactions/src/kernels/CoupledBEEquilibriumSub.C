@@ -34,7 +34,7 @@ CoupledBEEquilibriumSub::CoupledBEEquilibriumSub(const InputParameters & paramet
     _sto_u(getParam<Real>("sto_u")),
     _sto_v(getParam<std::vector<Real>>("sto_v")),
     _porosity(getMaterialProperty<Real>("porosity")),
-    _u_old(valueOld())
+    _u_old(_var.slnOld())
 {
   const unsigned int n = coupledComponents("v");
   _vars.resize(n);

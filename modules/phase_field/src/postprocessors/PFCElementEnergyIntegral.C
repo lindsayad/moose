@@ -23,14 +23,14 @@ validParams<PFCElementEnergyIntegral>()
 
 PFCElementEnergyIntegral::PFCElementEnergyIntegral(const InputParameters & parameters)
   : ElementIntegralPostprocessor(parameters),
-    MooseVariableInterface(this, false),
-    _var(_subproblem.getVariable(_tid, parameters.get<VariableName>("variable"))),
+    _var(dynamic_cast<MooseVariable &>(
+        _subproblem.getVariable(_tid, parameters.get<VariableName>("variable")))),
     _u(_var.sln()),
     _grad_u(_var.gradSln()),
     _u_dot(_var.uDot()),
     _temp(getParam<Real>("temp")) // K
 {
-  addMooseVariableDependency(mooseVariable());
+  addMooseVariableDependency(&_var);
 }
 
 Real

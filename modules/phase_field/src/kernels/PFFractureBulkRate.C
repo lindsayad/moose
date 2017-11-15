@@ -20,7 +20,7 @@ validParams<PFFractureBulkRate>()
 }
 
 PFFractureBulkRate::PFFractureBulkRate(const InputParameters & parameters)
-  : PFFractureBulkRateBase(parameters), _second_u(second())
+  : PFFractureBulkRateBase(parameters), _second_u(_var.secondSln())
 {
 }
 

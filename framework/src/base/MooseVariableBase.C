@@ -15,7 +15,6 @@
 #include "MooseVariableBase.h"
 #include "SubProblem.h"
 #include "SystemBase.h"
-#include "Assembly.h"
 #include "MooseMesh.h"
 
 #include "libmesh/variable.h"
@@ -24,7 +23,6 @@
 MooseVariableBase::MooseVariableBase(unsigned int var_num,
                                      const FEType & fe_type,
                                      SystemBase & sys,
-                                     Assembly & assembly,
                                      Moose::VarKindType var_kind)
   : _var_num(var_num),
     _fe_type(fe_type),
@@ -32,7 +30,6 @@ MooseVariableBase::MooseVariableBase(unsigned int var_num,
     _subproblem(sys.subproblem()),
     _sys(sys),
     _variable(sys.system().variable(_var_num)),
-    _assembly(assembly),
     _dof_map(sys.dofMap()),
     _mesh(_subproblem.mesh()),
     _scaling_factor(1.0)

@@ -16,7 +16,6 @@
 #define ELEMENTVARIABLEPOSTPROCESSOR_H
 
 #include "ElementPostprocessor.h"
-#include "MooseVariableInterface.h"
 
 // Forward Declarations
 class ElementVariablePostprocessor;
@@ -24,7 +23,7 @@ class ElementVariablePostprocessor;
 template <>
 InputParameters validParams<ElementVariablePostprocessor>();
 
-class ElementVariablePostprocessor : public ElementPostprocessor, public MooseVariableInterface
+class ElementVariablePostprocessor : public ElementPostprocessor
 {
 public:
   ElementVariablePostprocessor(const InputParameters & parameters);

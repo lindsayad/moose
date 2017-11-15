@@ -22,9 +22,9 @@ validParams<SimpleCHInterface>()
 
 SimpleCHInterface::SimpleCHInterface(const InputParameters & parameters)
   : Kernel(parameters),
-    _second_u(second()),
-    _second_test(secondTest()),
-    _second_phi(secondPhi()),
+    _second_u(_var.secondSln()),
+    _second_test(_var.secondPhi()),
+    _second_phi(_var.secondPhi()),
     _M(getMaterialProperty<Real>("mob_name")),
     _kappa_c(getMaterialProperty<Real>("kappa_name"))
 {

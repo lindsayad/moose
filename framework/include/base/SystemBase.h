@@ -31,7 +31,11 @@
 // Forward declarations
 class Factory;
 class MooseApp;
-class MooseVariable;
+class MooseVariableFE;
+template <typename>
+class MooseVariableField;
+typedef MooseVariableField<Real> MooseVariable;
+typedef MooseVariableField<VectorValue<Real>> MooseVariableVector;
 class MooseMesh;
 class SubProblem;
 class SystemBase;
@@ -228,7 +232,7 @@ public:
    * @param var_name variable name
    * @return reference the variable (class)
    */
-  virtual MooseVariable & getVariable(THREAD_ID tid, const std::string & var_name);
+  virtual MooseVariableFE & getVariable(THREAD_ID tid, const std::string & var_name);
 
   /**
    * Gets a reference to a variable with specified number
@@ -237,7 +241,7 @@ public:
    * @param var_number libMesh variable number
    * @return reference the variable (class)
    */
-  virtual MooseVariable & getVariable(THREAD_ID tid, unsigned int var_number);
+  virtual MooseVariableFE & getVariable(THREAD_ID tid, unsigned int var_number);
 
   /**
    * Gets a reference to a scalar variable with specified number
@@ -415,10 +419,11 @@ public:
                                  const std::string & source_name,
                                  const std::string & timestep);
 
-  const std::vector<MooseVariable *> & getVariables(THREAD_ID tid)
+  const std::vector<MooseVariableFE *> & getVariables(THREAD_ID tid)
   {
     return _vars[tid].variables();
   }
+
   const std::vector<MooseVariableScalar *> & getScalarVariables(THREAD_ID tid)
   {
     return _vars[tid].scalars();

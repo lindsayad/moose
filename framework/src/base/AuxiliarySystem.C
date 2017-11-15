@@ -512,7 +512,7 @@ Order
 AuxiliarySystem::getMinQuadratureOrder()
 {
   Order order = CONSTANT;
-  std::vector<MooseVariable *> vars = _vars[0].variables();
+  std::vector<MooseVariableFE *> vars = _vars[0].variables();
   for (const auto & var : vars)
   {
     if (!var->isNodal()) // nodal aux variables do not need quadrature

@@ -17,7 +17,6 @@
 
 #include "NeighborCoupleable.h"
 #include "ScalarCoupleable.h"
-#include "NeighborMooseVariableInterface.h"
 #include "MooseVariableDependencyInterface.h"
 
 /**
@@ -27,23 +26,12 @@
 class NeighborCoupleableMooseVariableDependencyIntermediateInterface
     : public NeighborCoupleable,
       public ScalarCoupleable,
-      public NeighborMooseVariableInterface,
       public MooseVariableDependencyInterface
 {
 public:
   NeighborCoupleableMooseVariableDependencyIntermediateInterface(const MooseObject * moose_object,
                                                                  bool nodal,
-                                                                 bool neighbor_nodal)
-    : NeighborCoupleable(moose_object, nodal, neighbor_nodal),
-      ScalarCoupleable(moose_object),
-      NeighborMooseVariableInterface(moose_object, nodal)
-  {
-    const std::vector<MooseVariable *> & coupled_vars = getCoupledMooseVars();
-    for (unsigned int i = 0; i < coupled_vars.size(); i++)
-      addMooseVariableDependency(coupled_vars[i]);
-
-    addMooseVariableDependency(mooseVariable());
-  }
+                                                                 bool neighbor_nodal);
 };
 
 #endif // NEIGHBORCOUPLEABLEMOOSEVARIABLEDEPENDENCYINTERMEDIATEINTERFACE_H

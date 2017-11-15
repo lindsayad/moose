@@ -86,7 +86,8 @@ DGKernel::DGKernel(const InputParameters & parameters)
     _sys(*parameters.get<SystemBase *>("_sys")),
     _tid(parameters.get<THREAD_ID>("_tid")),
     _assembly(_subproblem.assembly(_tid)),
-    _var(_sys.getVariable(_tid, parameters.get<NonlinearVariableName>("variable"))),
+    _var(dynamic_cast<MooseVariable &>(
+        _sys.getVariable(_tid, parameters.get<NonlinearVariableName>("variable")))),
     _mesh(_subproblem.mesh()),
 
     _current_elem(_assembly.elem()),
@@ -132,7 +133,7 @@ DGKernel::DGKernel(const InputParameters & parameters)
 
   for (unsigned int i = 0; i < _save_in_strings.size(); i++)
   {
-    MooseVariable * var = &_subproblem.getVariable(_tid, _save_in_strings[i]);
+    MooseVariableFE * var = &_subproblem.getVariable(_tid, _save_in_strings[i]);
 
     if (_sys.hasVariable(_save_in_strings[i]))
       mooseError("Trying to use solution variable " + _save_in_strings[i] +
@@ -152,7 +153,7 @@ DGKernel::DGKernel(const InputParameters & parameters)
 
   for (unsigned int i = 0; i < _diag_save_in_strings.size(); i++)
   {
-    MooseVariable * var = &_subproblem.getVariable(_tid, _diag_save_in_strings[i]);
+    MooseVariableFE * var = &_subproblem.getVariable(_tid, _diag_save_in_strings[i]);
 
     if (_sys.hasVariable(_diag_save_in_strings[i]))
       mooseError("Trying to use solution variable " + _diag_save_in_strings[i] +

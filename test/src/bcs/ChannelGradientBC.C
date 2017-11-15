@@ -12,7 +12,7 @@
 /*            See COPYRIGHT for full restrictions               */
 /****************************************************************/
 #include "ChannelGradientBC.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 
 template <>
 InputParameters

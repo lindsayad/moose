@@ -17,7 +17,7 @@
 #include "Assembly.h"
 #include "FEProblem.h"
 #include "MooseMesh.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "SystemBase.h"
 
 template <>
@@ -58,7 +58,7 @@ Marker::Marker(const InputParameters & parameters)
     _sys(*parameters.get<SystemBase *>("_sys")),
     _tid(parameters.get<THREAD_ID>("_tid")),
     _assembly(_subproblem.assembly(_tid)),
-    _field_var(_sys.getVariable(_tid, name())),
+    _field_var(dynamic_cast<MooseVariable &>(_sys.getVariable(_tid, name()))),
     _current_elem(_field_var.currentElem()),
 
     _mesh(_subproblem.mesh())
@@ -89,11 +89,11 @@ Marker::getErrorVector(std::string indicator)
   return _adaptivity.getErrorVector(indicator);
 }
 
-const VariableValue &
+const MooseArray<Real> &
 Marker::getMarkerValue(std::string name)
 {
   _depend.insert(name);
-  return _sys.getVariable(_tid, name).nodalSln();
+  return _sys.getVariable(_tid, name).dofValue();
 }
 
 bool

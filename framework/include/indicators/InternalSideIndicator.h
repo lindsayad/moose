@@ -19,11 +19,13 @@
 #include "Indicator.h"
 #include "NeighborCoupleable.h"
 #include "ScalarCoupleable.h"
-#include "NeighborMooseVariableInterface.h"
 
 // Forward Declarations
 class InternalSideIndicator;
-class MooseVariable;
+template <typename>
+class MooseVariableField;
+typedef MooseVariableField<Real> MooseVariable;
+typedef MooseVariableField<VectorValue<Real>> MooseVariableVector;
 
 template <>
 InputParameters validParams<InternalSideIndicator>();
@@ -33,10 +35,7 @@ InputParameters validParams<InternalSideIndicator>();
  * physics on internal sides (edges/faces).
  *
  */
-class InternalSideIndicator : public Indicator,
-                              public NeighborCoupleable,
-                              public ScalarCoupleable,
-                              public NeighborMooseVariableInterface
+class InternalSideIndicator : public Indicator, public NeighborCoupleable, public ScalarCoupleable
 {
 public:
   /**
@@ -53,7 +52,7 @@ public:
   virtual void finalize() override;
 
 protected:
-  MooseVariable & _field_var;
+  MooseVariableFE & _field_var;
 
   const Elem *& _current_elem;
   /// The neighboring element

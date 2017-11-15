@@ -15,7 +15,7 @@
 #include "DGDiffusion.h"
 
 // MOOSE includes
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 
 #include "libmesh/utility.h"
 

@@ -13,7 +13,7 @@
 /****************************************************************/
 
 #include "NodalVariablePostprocessor.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 #include "SubProblem.h"
 #include "MooseTypes.h"
 
@@ -28,6 +28,6 @@ validParams<NodalVariablePostprocessor>()
 }
 
 NodalVariablePostprocessor::NodalVariablePostprocessor(const InputParameters & parameters)
-  : NodalPostprocessor(parameters), MooseVariableInterface(this, true), _u(coupledValue("variable"))
+  : NodalPostprocessor(parameters), _u(coupledValue("variable"))
 {
 }

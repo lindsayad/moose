@@ -16,7 +16,7 @@
 
 // MOOSE includes
 #include "MooseMesh.h"
-#include "MooseVariable.h"
+#include "MooseVariableField.h"
 
 #include "libmesh/mesh_tools.h"
 
@@ -101,7 +101,8 @@ PointSamplerBase::execute()
         _subproblem.reinitElemPhys(elem, point_vec, 0); // Zero is for tid
 
         for (auto j = beginIndex(_coupled_moose_vars); j < _coupled_moose_vars.size(); ++j)
-          values[j] = _coupled_moose_vars[j]->sln()[0]; // The zero is for the "qp"
+          values[j] = (dynamic_cast<MooseVariable *>(_coupled_moose_vars[j]))
+                          ->sln()[0]; // The zero is for the "qp"
 
         _found_points[i] = true;
       }

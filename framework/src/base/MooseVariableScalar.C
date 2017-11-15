@@ -17,7 +17,6 @@
 #include "SystemBase.h"
 #include "Assembly.h"
 #include "SystemBase.h"
-#include "MooseVariable.h"
 
 // libMesh
 #include "libmesh/numeric_vector.h"
@@ -30,7 +29,7 @@ MooseVariableScalar::MooseVariableScalar(unsigned int var_num,
                                          SystemBase & sys,
                                          Assembly & assembly,
                                          Moose::VarKindType var_kind)
-  : MooseVariableBase(var_num, fe_type, sys, assembly, var_kind)
+  : MooseVariableBase(var_num, fe_type, sys, var_kind), _assembly(assembly)
 {
 }
 

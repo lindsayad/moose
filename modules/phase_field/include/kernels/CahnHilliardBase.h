@@ -100,7 +100,7 @@ CahnHilliardBase<T>::CahnHilliardBase(const InputParameters & parameters)
           &this->template getMaterialPropertyDerivative<Real>("f_name", _var.name(), iname, jname);
     }
 
-    _grad_vars[i + 1] = &(_coupled_moose_vars[i]->gradSln());
+    _grad_vars[i + 1] = &((dynamic_cast<MooseVariable *>(_coupled_moose_vars[i]))->gradSln());
   }
 }
 

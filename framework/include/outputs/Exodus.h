@@ -78,6 +78,7 @@ public:
   virtual void sequence(bool state);
 
 protected:
+  virtual void outputVectorVariables() override;
   /**
    * Outputs nodal, nonlinear variables
    */

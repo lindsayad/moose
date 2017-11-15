@@ -54,7 +54,8 @@ Constraint::Constraint(const InputParameters & parameters)
     _sys(*parameters.get<SystemBase *>("_sys")),
     _tid(parameters.get<THREAD_ID>("_tid")),
     _assembly(_subproblem.assembly(_tid)),
-    _var(_sys.getVariable(_tid, parameters.get<NonlinearVariableName>("variable"))),
+    _var(dynamic_cast<MooseVariable &>(
+        _sys.getVariable(_tid, parameters.get<NonlinearVariableName>("variable")))),
     _mesh(_subproblem.mesh())
 {
 }

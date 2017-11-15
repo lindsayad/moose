@@ -31,7 +31,7 @@ validParams<Exodus>()
 {
   // Get the base class parameters
   InputParameters params = validParams<OversampleOutput>();
-  params += AdvancedOutput::enableOutputTypes("nodal elemental scalar postprocessor input");
+  params += AdvancedOutput::enableOutputTypes("vector nodal elemental scalar postprocessor input");
 
   // Enable sequential file output (do not set default, the use_displace criteria relies on
   // isParamValid, see Constructor)
@@ -89,8 +89,8 @@ Exodus::initialSetup()
 
   // Test that some sort of variable output exists (case when all variables are disabled but input
   // output is still enabled
-  if (!hasNodalVariableOutput() && !hasElementalVariableOutput() && !hasPostprocessorOutput() &&
-      !hasScalarOutput())
+  if (!hasVectorVariableOutput() && !hasNodalVariableOutput() && !hasElementalVariableOutput() &&
+      !hasPostprocessorOutput() && !hasScalarOutput())
     mooseError("The current settings results in only the input file and no variables being output "
                "to the Exodus file, this is not supported.");
 }
@@ -193,6 +193,21 @@ Exodus::outputSetup()
     if (_es_ptr->get_mesh().mesh_dimension() != 1)
       _exodus_io_ptr->use_mesh_dimension_instead_of_spatial_dimension(true);
   }
+}
+
+void
+Exodus::outputVectorVariables()
+{
+  // std::vector<std::string> vector(getVectorVariableOutput().begin(),
+  // getVectorVariableOutput().end());
+
+  _exodus_io_ptr->write_equation_systems(filename(), *_es_ptr);
+
+  if (!_overwrite)
+    _exodus_num++;
+
+  // This satisfies the initialization of the ExodusII_IO object
+  _exodus_initialized = true;
 }
 
 void
