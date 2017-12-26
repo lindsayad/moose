@@ -54,13 +54,13 @@ class MooseVariableField : public MooseVariableFE
   typedef MooseArray<std::vector<OutputGradient>> FieldVariablePhiGradient;
   typedef MooseArray<std::vector<OutputSecond>> FieldVariablePhiSecond;
   typedef MooseArray<std::vector<OutputShape>> FieldVariablePhiCurl;
-  typedef MooseArray<std::vector<OutputDivergence>> FieldVariablePhiDivergence;
+  typedef MooseArray<std::vector<OutputDivergence>> FieldVariablePhiDiv;
 
   typedef MooseArray<std::vector<OutputShape>> FieldVariableTestValue;
   typedef MooseArray<std::vector<OutputGradient>> FieldVariableTestGradient;
   typedef MooseArray<std::vector<OutputSecond>> FieldVariableTestSecond;
   typedef MooseArray<std::vector<OutputShape>> FieldVariableTestCurl;
-  typedef MooseArray<std::vector<OutputDivergence>> FieldVariableTestDivergence;
+  typedef MooseArray<std::vector<OutputDivergence>> FieldVariableTestDiv;
 
 public:
   MooseVariableField(unsigned int var_num,
@@ -84,6 +84,11 @@ public:
     _curl_phi = &_assembly.feCurlPhi(_fe_type);
     return *_curl_phi;
   }
+  const FieldVariablePhiDiv & divPhi()
+  {
+    _div_phi = &_assembly.feDivPhi(_fe_type);
+    return *_div_phi;
+  }
 
   const FieldVariablePhiValue & phiFace() { return _phi_face; }
   const FieldVariablePhiGradient & gradPhiFace() { return _grad_phi_face; }
@@ -96,6 +101,11 @@ public:
   {
     _curl_phi_face = &_assembly.feCurlPhiFace(_fe_type);
     return *_curl_phi_face;
+  }
+  const FieldVariablePhiDiv & divPhiFace()
+  {
+    _div_phi_face = &_assembly.feDivPhiFace(_fe_type);
+    return *_div_phi_face;
   }
 
   const FieldVariablePhiValue & phiNeighbor() { return _phi_neighbor; }
@@ -187,6 +197,16 @@ public:
     _need_curl_old = true;
     return _curl_u_old;
   }
+  const FieldVariableValue & divSln()
+  {
+    _need_div = true;
+    return _div_u;
+  }
+  const FieldVariableValue & divSlnOld()
+  {
+    _need_div_old = true;
+    return _div_u_old;
+  }
 
   const FieldVariableValue & uDot() { return _u_dot; }
   const FieldVariableValue & duDotDu() { return _du_dot_du; }
@@ -258,7 +278,8 @@ public:
                                    const FieldVariablePhiValue & phi,
                                    const FieldVariablePhiGradient & grad_phi,
                                    const FieldVariablePhiSecond *& second_phi,
-                                   const FieldVariablePhiCurl *& curl_phi);
+                                   const FieldVariablePhiCurl *& curl_phi,
+                                   const FieldVariablePhiDiv *& div_phi);
 
   /**
    * Helper function for computing values
@@ -328,24 +349,28 @@ protected:
   const FieldVariablePhiGradient & _grad_phi;
   const FieldVariablePhiSecond * _second_phi;
   const FieldVariablePhiCurl * _curl_phi;
+  const FieldVariablePhiDiv * _div_phi;
 
   // Values, gradients and second derivatives of shape function on faces
   const FieldVariablePhiValue & _phi_face;
   const FieldVariablePhiGradient & _grad_phi_face;
   const FieldVariablePhiSecond * _second_phi_face;
   const FieldVariablePhiCurl * _curl_phi_face;
+  const FieldVariablePhiDiv * _div_phi_face;
 
   // Values, gradients and second derivatives of shape function
   const FieldVariablePhiValue & _phi_neighbor;
   const FieldVariablePhiGradient & _grad_phi_neighbor;
   const FieldVariablePhiSecond * _second_phi_neighbor;
   const FieldVariablePhiCurl * _curl_phi_neighbor;
+  const FieldVariablePhiDiv * _div_phi_neighbor;
 
   // Values, gradients and second derivatives of shape function on faces
   const FieldVariablePhiValue & _phi_face_neighbor;
   const FieldVariablePhiGradient & _grad_phi_face_neighbor;
   const FieldVariablePhiSecond * _second_phi_face_neighbor;
   const FieldVariablePhiCurl * _curl_phi_face_neighbor;
+  const FieldVariablePhiDiv * _div_phi_face_neighbor;
 
   FieldVariableValue _u, _u_bak;
   FieldVariableValue _u_old, _u_old_bak;
@@ -361,6 +386,8 @@ protected:
   FieldVariableSecond _second_u_previous_nl;
   FieldVariableCurl _curl_u, _curl_u_bak;
   FieldVariableCurl _curl_u_old, _curl_u_old_bak;
+  FieldVariableDivergence _div_u, _div_u_bak;
+  FieldVariableDivergence _div_u_old, _div_u_old_bak;
 
   FieldVariableValue _u_neighbor;
   FieldVariableValue _u_old_neighbor;
@@ -375,6 +402,7 @@ protected:
   FieldVariableSecond _second_u_older_neighbor;
   FieldVariableSecond _second_u_previous_nl_neighbor;
   FieldVariableCurl _curl_u_neighbor;
+  FieldVariableDivergence _div_u_neighbor;
 
   // time derivatives
 
@@ -610,7 +638,8 @@ MooseVariableField<OutputType>::computeValuesHelper(QBase *& qrule,
                                                     const FieldVariablePhiValue & phi,
                                                     const FieldVariablePhiGradient & grad_phi,
                                                     const FieldVariablePhiSecond *& second_phi,
-                                                    const FieldVariablePhiValue *& curl_phi)
+                                                    const FieldVariablePhiCurl *& curl_phi,
+                                                    const FieldVariablePhiDiv *& div_phi)
 
 {
   bool is_transient = _subproblem.isTransient();
@@ -624,6 +653,9 @@ MooseVariableField<OutputType>::computeValuesHelper(QBase *& qrule,
 
   if (_need_curl)
     _curl_u.resize(nqp);
+
+  if (_need_div)
+    _div_u.resize(nqp);
 
   if (_need_u_previous_nl)
     _u_previous_nl.resize(nqp);
@@ -657,6 +689,9 @@ MooseVariableField<OutputType>::computeValuesHelper(QBase *& qrule,
     if (_need_curl_old)
       _curl_u_old.resize(nqp);
 
+    if (_need_div_old)
+      _div_u_old.resize(nqp);
+
     if (_need_second_older)
       _second_u_older.resize(nqp);
   }
@@ -671,6 +706,9 @@ MooseVariableField<OutputType>::computeValuesHelper(QBase *& qrule,
 
     if (_need_curl)
       _curl_u[i] = 0;
+
+    if (_need_div)
+      _div_u[i] = 0;
 
     if (_need_u_previous_nl)
       _u_previous_nl[i] = 0;
@@ -706,6 +744,9 @@ MooseVariableField<OutputType>::computeValuesHelper(QBase *& qrule,
 
       if (_need_curl_old)
         _curl_u_old[i] = 0;
+
+      if (_need_div_old)
+        _div_u_old[i] = 0;
     }
   }
 
@@ -754,6 +795,7 @@ MooseVariableField<OutputType>::computeValuesHelper(QBase *& qrule,
   const typename OutputTools<OutputType>::OutputGradient * dphi_qp = NULL;
   const typename OutputTools<OutputType>::OutputSecond * d2phi_local = NULL;
   const OutputType * curl_phi_local = NULL;
+  const OutputType * div_phi_local = NULL;
 
   typename OutputTools<OutputType>::OutputGradient * grad_u_qp = NULL;
   typename OutputTools<OutputType>::OutputGradient * grad_u_old_qp = NULL;
@@ -861,6 +903,17 @@ MooseVariableField<OutputType>::computeValuesHelper(QBase *& qrule,
 
         if (is_transient && _need_curl_old)
           _curl_u_old[qp] += *curl_phi_local * soln_old_local;
+      }
+
+      if (_need_div || _need_div_old)
+      {
+        div_phi_local = &(*div_phi)[i][qp];
+
+        if (_need_div)
+          _div_u[qp] += *div_phi_local * soln_local;
+
+        if (is_transient && _need_div_old)
+          _div_u_old[qp] += *div_phi_local * soln_old_local;
       }
 
       _u[qp] += *phi_local * soln_local;

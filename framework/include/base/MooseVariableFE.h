@@ -271,6 +271,8 @@ protected:
 
   bool _need_curl;
   bool _need_curl_old;
+  bool _need_div;
+  bool _need_div_old;
 
   bool _need_u_old_neighbor;
   bool _need_u_older_neighbor;

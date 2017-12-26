@@ -629,16 +629,19 @@ public:
   const VectorVariablePhiGradient & vectorGradPhi() { return _vector_grad_phi; }
   const VectorVariablePhiSecond & vectorSecondPhi() { return _vector_second_phi; }
   const VectorVariablePhiCurl & vectorCurlPhi() { return _vector_curl_phi; }
+  const VectorVariablePhiDiv & vectorDivPhi() { return _vector_div_phi; }
 
   const VectorVariablePhiValue & vectorPhiFace() { return _vector_phi_face; }
   const VectorVariablePhiGradient & vectorGradPhiFace() { return _vector_grad_phi_face; }
   const VectorVariablePhiSecond & vectorSecondPhiFace() { return _vector_second_phi_face; }
   const VectorVariablePhiCurl & vectorCurlPhiFace() { return _vector_curl_phi_face; }
+  const VectorVariablePhiDiv & vectorDivPhiFace() { return _vector_div_phi_face; }
 
   const VectorVariablePhiValue & vectorPhiNeighbor() { return _vector_phi_neighbor; }
   const VectorVariablePhiGradient & vectorGradPhiNeighbor() { return _vector_grad_phi_neighbor; }
   const VectorVariablePhiSecond & vectorSecondPhiNeighbor() { return _vector_second_phi_neighbor; }
   const VectorVariablePhiCurl & vectorCurlPhiNeighbor() { return _vector_curl_phi_neighbor; }
+  const VectorVariablePhiDiv & vectorDivPhiNeighbor() { return _vector_div_phi_neighbor; }
 
   const VectorVariablePhiValue & vectorPhiFaceNeighbor() { return _vector_phi_face_neighbor; }
   const VectorVariablePhiGradient & vectorGradPhiFaceNeighbor()
@@ -652,6 +655,10 @@ public:
   const VectorVariablePhiCurl & vectorCurlPhiFaceNeighbor()
   {
     return _vector_curl_phi_face_neighbor;
+  }
+  const VectorVariablePhiDiv & vectorDivPhiFaceNeighbor()
+  {
+    return _vector_div_phi_face_neighbor;
   }
 
   template <typename OutputType>
@@ -770,8 +777,37 @@ public:
     return _vector_fe_shape_data_face_neighbor[type]->_curl_phi;
   }
 
+  const VectorVariablePhiDiv & feDivPhi(FEType type)
+  {
+    _need_div[type] = true;
+    buildVectorFE(type);
+    return _vector_fe_shape_data[type]->_div_phi;
+  }
+
+  const VectorVariablePhiDiv & feDivPhiFace(FEType type)
+  {
+    _need_div[type] = true;
+    buildVectorFaceFE(type);
+    return _vector_fe_shape_data_face[type]->_div_phi;
+  }
+
+  const VectorVariablePhiDiv & feDivPhiNeighbor(FEType type)
+  {
+    _need_div[type] = true;
+    buildVectorNeighborFE(type);
+    return _vector_fe_shape_data_neighbor[type]->_div_phi;
+  }
+
+  const VectorVariablePhiDiv & feDivPhiFaceNeighbor(FEType type)
+  {
+    _need_div[type] = true;
+    buildVectorFaceNeighborFE(type);
+    return _vector_fe_shape_data_face_neighbor[type]->_div_phi;
+  }
+
   std::map<FEType, bool> _need_second_derivative;
   std::map<FEType, bool> _need_curl;
+  std::map<FEType, bool> _need_div;
 
   /**
    * Caches the Jacobian entry 'value', to eventually be
@@ -1074,21 +1110,25 @@ protected:
   VectorVariablePhiGradient _vector_grad_phi;
   VectorVariablePhiSecond _vector_second_phi;
   VectorVariablePhiCurl _vector_curl_phi;
+  VectorVariablePhiDiv _vector_div_phi;
 
   VectorVariablePhiValue _vector_phi_face;
   VectorVariablePhiGradient _vector_grad_phi_face;
   VectorVariablePhiSecond _vector_second_phi_face;
   VectorVariablePhiCurl _vector_curl_phi_face;
+  VectorVariablePhiDiv _vector_div_phi_face;
 
   VectorVariablePhiValue _vector_phi_neighbor;
   VectorVariablePhiGradient _vector_grad_phi_neighbor;
   VectorVariablePhiSecond _vector_second_phi_neighbor;
   VectorVariablePhiCurl _vector_curl_phi_neighbor;
+  VectorVariablePhiDiv _vector_div_phi_neighbor;
 
   VectorVariablePhiValue _vector_phi_face_neighbor;
   VectorVariablePhiGradient _vector_grad_phi_face_neighbor;
   VectorVariablePhiSecond _vector_second_phi_face_neighbor;
   VectorVariablePhiCurl _vector_curl_phi_face_neighbor;
+  VectorVariablePhiDiv _vector_div_phi_face_neighbor;
 
   class FEShapeData
   {
@@ -1105,6 +1145,7 @@ protected:
     VectorVariablePhiGradient _grad_phi;
     VectorVariablePhiSecond _second_phi;
     VectorVariablePhiCurl _curl_phi;
+    VectorVariablePhiDiv _div_phi;
   };
 
   /// Shape function values, gradients. second derivatives for each FE type

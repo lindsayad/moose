@@ -116,13 +116,13 @@ struct OutputTools
   typedef MooseArray<std::vector<OutputGradient>> VariablePhiGradient;
   typedef MooseArray<std::vector<OutputSecond>> VariablePhiSecond;
   typedef MooseArray<std::vector<OutputShape>> VariablePhiCurl;
-  typedef MooseArray<std::vector<OutputDivergence>> VariablePhiDivergence;
+  typedef MooseArray<std::vector<OutputDivergence>> VariablePhiDiv;
 
   typedef MooseArray<std::vector<OutputShape>> VariableTestValue;
   typedef MooseArray<std::vector<OutputGradient>> VariableTestGradient;
   typedef MooseArray<std::vector<OutputSecond>> VariableTestSecond;
   typedef MooseArray<std::vector<OutputShape>> VariableTestCurl;
-  typedef MooseArray<std::vector<OutputDivergence>> VariableTestDivergence;
+  typedef MooseArray<std::vector<OutputDivergence>> VariableTestDiv;
 };
 
 typedef MooseArray<Real> VariableValue;
@@ -146,11 +146,13 @@ typedef MooseArray<std::vector<VectorValue<Real>>> VectorVariablePhiValue;
 typedef MooseArray<std::vector<TensorValue<Real>>> VectorVariablePhiGradient;
 typedef MooseArray<std::vector<TypeNTensor<3, Real>>> VectorVariablePhiSecond;
 typedef MooseArray<std::vector<VectorValue<Real>>> VectorVariablePhiCurl;
+typedef MooseArray<Real> VectorVariablePhiDiv;
 
 typedef MooseArray<std::vector<VectorValue<Real>>> VectorVariableTestValue;
 typedef MooseArray<std::vector<TensorValue<Real>>> VectorVariableTestGradient;
 typedef MooseArray<std::vector<TypeNTensor<3, Real>>> VectorVariableTestSecond;
 typedef MooseArray<std::vector<VectorValue<Real>>> VectorVariableTestCurl;
+typedef MooseArray<Real> VectorVariableTestDiv;
 
 /// Execution flags - when is the object executed/evaluated
 // Note: If this enum is changed, make sure to modify:
