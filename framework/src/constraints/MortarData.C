@@ -3,15 +3,17 @@
 MortarData::MortarData(SubProblem & subproblem) : _subproblem(subproblem) {}
 
 AutomaticMortarGeneration &
-MortarData::getMortarInterface(const std::pair<unsigned, unsigned> & key)
+MortarData::getMortarInterface(const std::pair<BoundaryID, BoundaryID> & boundary_key,
+                               const std::pair<SubdomainID, SubdomainID> & subdomain_key)
 {
-  typename std::map<std::pair<unsigned, unsigned>,
+  typename std::map<std::pair<BoundaryID, BoundaryID>,
                     std::unique_ptr<AutomaticMortarGeneration>>::iterator it =
-      _mortar_interfaces.find(key);
+      _mortar_interfaces.find(boundary_key);
   if (it == _mortar_interfaces.end())
-    _mortar_interfaces.emplace(
-        key, libmesh_make_unique<AutomaticMortarGeneration>(_subproblem.mesh().getMesh()));
-  return *_mortar_interfaces.at(key);
+    _mortar_interfaces.emplace(boundary_key,
+                               libmesh_make_unique<AutomaticMortarGeneration>(
+                                   _subproblem.mesh().getMesh(), boundary_key, subdomain_key));
+  return *_mortar_interfaces.at(boundary_key);
 }
 
 void
