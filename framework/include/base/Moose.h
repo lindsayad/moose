@@ -17,6 +17,14 @@
 #include <set>
 #include <string>
 
+namespace libMesh
+{
+template <typename>
+class NumericVector;
+template <typename>
+class SparseMatrix;
+}
+
 using namespace libMesh;
 
 class ActionFactory;
@@ -24,6 +32,9 @@ class Factory;
 class MooseEnumItem;
 class ExecFlagEnum;
 class MooseVariableFEBase;
+
+void MooseVecView(NumericVector<Number> & vector);
+void MooseMatView(SparseMatrix<Number> & mat);
 
 /**
  * MOOSE now contains C++11 code, so give a reasonable error message
