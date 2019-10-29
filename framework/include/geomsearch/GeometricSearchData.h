@@ -110,8 +110,10 @@ private:
    *
    * @param slave_id The actual slave_id (the one in the mesh)
    * @param qslave_id The "fictitious" slave_id that is going to be used for this quadrature nodeset
+   * @param reiniting Whether we are reinitializing, e.g. whether we need to re-generate q-nodes
    */
-  void generateQuadratureNodes(unsigned int slave_id, unsigned int qslave_id);
+  void
+  generateQuadratureNodes(unsigned int slave_id, unsigned int qslave_id, bool reiniting = false);
 
   /**
    * Update the positions of the quadrature nodes.
@@ -128,4 +130,3 @@ private:
    */
   bool _first;
 };
-
