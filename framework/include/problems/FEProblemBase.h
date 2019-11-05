@@ -1737,9 +1737,9 @@ public:
   virtual bool hasMortarCoupling() const { return _has_mortar; }
 
   /**
-   * The number of grid sequences
+   * Set the number of steps in a grid sequences
    */
-  unsigned numGridSequences() const { return _num_grid_sequences; }
+  void numGridSteps(unsigned int num_grid_steps) { _num_grid_steps = num_grid_steps; }
 
   /**
    * uniformly refine the problem mesh(es). This will also prolong the the solution, and in order
@@ -2106,8 +2106,8 @@ private:
   /// Whether the simulation requires mortar coupling
   bool _has_mortar;
 
-  /// Number of grid sequences
-  const unsigned _num_grid_sequences;
+  /// Number of steps in a grid sequence
+  unsigned int _num_grid_steps;
 };
 
 template <typename T>
