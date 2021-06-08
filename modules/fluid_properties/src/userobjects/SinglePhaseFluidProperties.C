@@ -488,4 +488,474 @@ SinglePhaseFluidProperties::T_from_p_h(Real p, Real h, Real & T, Real & dT_dp, R
   dT_dh = dT_dv * dv_dh + dT_de * de_dh;
 }
 
+Real
+SinglePhaseFluidProperties::p_from_v_e_X(Real v, Real e, const std::vector<Real> & x) const
+{
+  return p_from_v_e(v, e);
+}
+
+ADReal
+SinglePhaseFluidProperties::p_from_v_e_X(ADReal v, ADReal e, const std::vector<ADReal> & x) const
+{
+  return p_from_v_e(v, e);
+}
+
+void
+SinglePhaseFluidProperties::p_from_v_e_X(Real v,
+                                         Real e,
+                                         const std::vector<Real> & x,
+                                         Real & p,
+                                         Real & dp_dv,
+                                         Real & dp_de,
+                                         Real & dp_dx) const
+{
+  p = p_from_v_e(v, e);
+  dp_de = 0.0;
+  dp_dv = 0.0;
+  dp_dx = 0.0;
+}
+
+void
+SinglePhaseFluidProperties::p_from_v_e_X(ADReal v,
+                                         ADReal e,
+                                         const std::vector<ADReal> & x,
+                                         ADReal & p,
+                                         ADReal & dp_dv,
+                                         ADReal & dp_de,
+                                         ADReal & dp_dx) const
+{
+  p = p_from_v_e(v, e);
+  dp_de = 0.0;
+  dp_dv = 0.0;
+  dp_dx = 0.0;
+}
+
+Real
+SinglePhaseFluidProperties::T_from_v_e_X(Real v, Real e, const std::vector<Real> & x) const
+{
+  return e / cv_from_v_e_X(v, e, x);
+}
+
+ADReal
+SinglePhaseFluidProperties::T_from_v_e_X(ADReal v, ADReal e, const std::vector<ADReal> & x) const
+{
+  return e / cv_from_v_e_X(v, e, x);
+}
+
+void
+SinglePhaseFluidProperties::T_from_v_e_X(Real v,
+                                         Real e,
+                                         const std::vector<Real> & x,
+                                         Real & T,
+                                         Real & dT_dv,
+                                         Real & dT_de,
+                                         Real & dT_dx) const
+{
+  T = T_from_v_e(v, e);
+  dT_dv = 0.0;
+  dT_de = 0.0;
+  dT_dx = 0.0;
+}
+
+void
+SinglePhaseFluidProperties::T_from_v_e_X(ADReal v,
+                                         ADReal e,
+                                         const std::vector<ADReal> & x,
+                                         ADReal & T,
+                                         ADReal & dT_dv,
+                                         ADReal & dT_de,
+                                         ADReal & dT_dx) const
+{
+  T_from_v_e(v, e);
+  dT_dv = 0.0;
+  dT_de = 0.0;
+  dT_dx = 0.0;
+}
+
+Real
+SinglePhaseFluidProperties::c_from_v_e_X(Real v, Real e, const std::vector<Real> & x) const
+{
+  return c_from_v_e(v, e);
+}
+
+ADReal
+SinglePhaseFluidProperties::c_from_v_e_X(ADReal v, ADReal e, const std::vector<ADReal> & x) const
+{
+  return c_from_v_e(v, e);
+}
+
+void
+SinglePhaseFluidProperties::c_from_v_e_X(
+    Real v, Real e, const std::vector<Real> & x, Real c, Real dc_dv, Real dc_de, Real dc_dx) const
+{
+  c = c_from_v_e(v, e);
+  dc_dv = 0.0;
+  dc_de = 0.0;
+  dc_dx = 0.0;
+}
+
+void
+SinglePhaseFluidProperties::c_from_v_e_X(ADReal v,
+                                         ADReal e,
+                                         const std::vector<ADReal> & x,
+                                         ADReal c,
+                                         ADReal dc_dv,
+                                         ADReal dc_de,
+                                         ADReal dc_dx) const
+{
+  c = c_from_v_e(v, e);
+  dc_dv = 0.0;
+  dc_de = 0.0;
+  dc_dx = 0.0;
+}
+
+Real
+SinglePhaseFluidProperties::c_from_p_T_x(Real p, Real T, const std::vector<Real> & x) const
+{
+  return c_from_p_T(p, T);
+}
+
+ADReal
+SinglePhaseFluidProperties::c_from_p_T_x(ADReal p, ADReal T, const std::vector<ADReal> & x) const
+{
+  return c_from_p_T(p, T);
+}
+
+Real
+SinglePhaseFluidProperties::cp_from_v_e_X(Real v, Real e, const std::vector<Real> & x) const
+{
+  return cp_from_v_e(v, e);
+}
+
+ADReal
+SinglePhaseFluidProperties::cp_from_v_e_X(ADReal v, ADReal e, const std::vector<ADReal> & x) const
+{
+  return cp_from_v_e(v, e);
+}
+
+Real
+SinglePhaseFluidProperties::cv_from_v_e_X(Real v, Real e, const std::vector<Real> & x) const
+{
+  return cv_from_v_e(v, e);
+}
+
+ADReal
+SinglePhaseFluidProperties::cv_from_v_e_X(ADReal v, ADReal e, const std::vector<ADReal> & x) const
+{
+  return cv_from_v_e(v, e);
+}
+
+Real
+SinglePhaseFluidProperties::mu_from_v_e_X(Real v, Real e, const std::vector<Real> & x) const
+{
+  return mu_from_v_e(v, e);
+}
+
+ADReal
+SinglePhaseFluidProperties::mu_from_v_e_X(ADReal v, ADReal e, const std::vector<ADReal> & x) const
+{
+  return mu_from_v_e(v, e);
+}
+
+Real
+SinglePhaseFluidProperties::k_from_v_e_X(Real v, Real e, const std::vector<Real> & x) const
+{
+  return k_from_v_e(v, e);
+}
+
+ADReal
+SinglePhaseFluidProperties::k_from_v_e_X(ADReal v, ADReal e, const std::vector<ADReal> & x) const
+{
+  return k_from_v_e(v, e);
+}
+
+Real
+SinglePhaseFluidProperties::beta_from_p_T_X(Real p, Real T, const std::vector<Real> & x) const
+{
+  return 0.0;
+}
+
+Real
+SinglePhaseFluidProperties::rho_from_p_T_X(Real p, Real T, const std::vector<Real> & x) const
+{
+  return 0.0;
+}
+
+ADReal
+SinglePhaseFluidProperties::rho_from_p_T_X(ADReal p, ADReal T, const std::vector<ADReal> & x) const
+{
+  return 0.0;
+}
+
+void
+SinglePhaseFluidProperties::rho_from_p_T_X(
+    Real p, Real T, const std::vector<Real> & x, Real & rho, Real & drho_dp, Real & drho_dT) const
+{
+  rho = rho_from_p_T(p, T);
+  drho_dp = 0.0;
+  drho_dT = 0.0;
+}
+
+void
+SinglePhaseFluidProperties::rho_from_p_T_X(ADReal p,
+                                           ADReal T,
+                                           const std::vector<ADReal> & x,
+                                           ADReal & rho,
+                                           ADReal & drho_dp,
+                                           ADReal & drho_dT) const
+{
+  rho = rho_from_p_T(p, T);
+  drho_dp = 0.0;
+  drho_dT = 0.0;
+}
+
+void
+SinglePhaseFluidProperties::rho_from_p_T_X(Real p,
+                                           Real T,
+                                           const std::vector<Real> & x,
+                                           Real & rho,
+                                           Real & drho_dp,
+                                           Real & drho_dT,
+                                           Real & drho_dx) const
+{
+  rho = rho_from_p_T(p, T);
+  drho_dp = 0.0;
+  drho_dT = 0.0;
+  drho_dx = 0.0;
+}
+
+void
+SinglePhaseFluidProperties::rho_from_p_T_X(ADReal p,
+                                           ADReal T,
+                                           const std::vector<ADReal> & x,
+                                           ADReal & rho,
+                                           ADReal & drho_dp,
+                                           ADReal & drho_dT,
+                                           ADReal & drho_dx) const
+{
+  rho = rho_from_p_T(p, T);
+  drho_dp = 0.0;
+  drho_dT = 0.0;
+  drho_dx = 0.0;
+}
+
+Real
+SinglePhaseFluidProperties::v_from_p_T_X(Real p, Real T, const std::vector<Real> & x) const
+{
+  return 1. / rho_from_p_T_X(p, T, x);
+}
+
+ADReal
+SinglePhaseFluidProperties::v_from_p_T_X(ADReal p, ADReal T, const std::vector<ADReal> & x) const
+{
+  return 1. / rho_from_p_T_X(p, T, x);
+}
+
+void
+SinglePhaseFluidProperties::v_from_p_T_X(
+    Real p, Real T, const std::vector<Real> & x, Real & v, Real & dv_dp, Real & dv_dT) const
+{
+  Real rho, drho_dp, drho_dT;
+  rho_from_p_T_X(p, T, x, rho, drho_dp, drho_dT);
+  v = 1. / rho;
+
+  Real dv_drho = -1 / (v * v);
+  dv_dp = dv_drho * drho_dp;
+  dv_dT = dv_drho * drho_dT;
+}
+
+Real
+SinglePhaseFluidProperties::e_from_p_T_X(Real p, Real T, const std::vector<Real> & x) const
+{
+  return e_from_p_T(p, T);
+}
+
+ADReal
+SinglePhaseFluidProperties::e_from_p_T_X(ADReal p, ADReal T, const std::vector<ADReal> & x) const
+{
+  return e_from_p_T(p, T);
+}
+
+void
+SinglePhaseFluidProperties::e_from_p_T_X(
+    Real p, Real T, const std::vector<Real> & x, Real & e, Real & de_dp, Real & de_dT) const
+{
+  e = e_from_p_T(p, T);
+  de_dp = 0.0;
+  de_dT = 0.0; // constant cv
+}
+
+void
+SinglePhaseFluidProperties::e_from_p_T_X(Real p,
+                                         Real T,
+                                         const std::vector<Real> & x,
+                                         Real & e,
+                                         Real & de_dp,
+                                         Real & de_dT,
+                                         Real & de_dx) const
+{
+  e = e_from_p_T_X(p, T, x);
+  de_dp = 0.0;
+  de_dT = 0.0; // constant cv
+  de_dx = 0.0;
+}
+
+void
+SinglePhaseFluidProperties::e_from_p_T_X(ADReal p,
+                                         ADReal T,
+                                         const std::vector<ADReal> & x,
+                                         ADReal & e,
+                                         ADReal & de_dp,
+                                         ADReal & de_dT,
+                                         ADReal & de_dx) const
+{
+  e = e_from_p_T_X(p, T, x);
+  de_dp = 0.0;
+  de_dT = 0.0; // constant cv
+  de_dx = 0.0;
+}
+
+Real
+SinglePhaseFluidProperties::e_from_p_rho_X(Real p, Real rho, const std::vector<Real> & x) const
+{
+  return e_from_p_rho(p, rho);
+}
+
+ADReal
+SinglePhaseFluidProperties::e_from_p_rho_X(ADReal p,
+                                           ADReal rho,
+                                           const std::vector<ADReal> & x) const
+{
+  return e_from_p_rho(p, rho);
+}
+
+Real
+SinglePhaseFluidProperties::h_from_p_T_X(Real p, Real T, const std::vector<Real> & x) const
+{
+  return h_from_p_T(p, T);
+}
+
+ADReal
+SinglePhaseFluidProperties::h_from_p_T_X(ADReal p, ADReal T, const std::vector<ADReal> & x) const
+{
+  return h_from_p_T(p, T);
+}
+
+void
+SinglePhaseFluidProperties::h_from_p_T_X(
+    Real p, Real T, const std::vector<Real> & x, Real & h, Real & dh_dp, Real & dh_dT) const
+{
+  h = h_from_p_T(p, T);
+  dh_dp = 0.;
+  dh_dT = 0.0; // holds because cp is constant
+}
+
+Real
+SinglePhaseFluidProperties::cp_from_p_T_X(Real p, Real T, const std::vector<Real> & x) const
+{
+  return h_from_p_T(p, T) / T;
+}
+
+ADReal
+SinglePhaseFluidProperties::cp_from_p_T_X(ADReal p, ADReal T, const std::vector<ADReal> & x) const
+{
+  return h_from_p_T(p, T) / T;
+}
+
+void
+SinglePhaseFluidProperties::cp_from_p_T_X(
+    Real p, Real T, const std::vector<Real> & x, Real & cp, Real & dcp_dp, Real & dcp_dT) const
+{
+  cp = cp_from_p_T(p, T);
+  dcp_dp = 0.0;
+  dcp_dT = 0.0;
+}
+
+Real
+SinglePhaseFluidProperties::cv_from_p_T_X(Real p, Real T, const std::vector<Real> & x) const
+{
+  return e_from_p_T(p, T) / T;
+}
+
+ADReal
+SinglePhaseFluidProperties::cv_from_p_T_X(ADReal p, ADReal T, const std::vector<ADReal> & x) const
+{
+  return e_from_p_T(p, T) / T;
+}
+
+void
+SinglePhaseFluidProperties::cv_from_p_T_X(
+    Real p, Real T, const std::vector<Real> & x, Real & cv, Real & dcv_dp, Real & dcv_dT) const
+{
+  cv = cv_from_p_T(p, T);
+  dcv_dp = 0.0;
+  dcv_dT = 0.0;
+}
+
+Real
+SinglePhaseFluidProperties::mu_from_p_T_X(Real p, Real T, const std::vector<Real> & x) const
+{
+  return mu_from_p_T(p, T);
+}
+
+ADReal
+SinglePhaseFluidProperties::mu_from_p_T_X(ADReal p, ADReal T, const std::vector<ADReal> & x) const
+{
+  return mu_from_p_T(p, T);
+}
+
+void
+SinglePhaseFluidProperties::mu_from_p_T_X(
+    Real p, Real T, const std::vector<Real> & x, Real & mu, Real & dmu_dp, Real & dmu_dT) const
+{
+  mu = mu_from_p_T(p, T);
+  dmu_dp = 0.0;
+  dmu_dT = 0.0;
+}
+
+Real
+SinglePhaseFluidProperties::k_from_p_T_X(Real p, Real T, const std::vector<Real> & x) const
+{
+  return k_from_p_T(p, T);
+}
+
+ADReal
+SinglePhaseFluidProperties::k_from_p_T_X(ADReal p, ADReal T, const std::vector<ADReal> & x) const
+{
+  return k_from_p_T(p, T);
+}
+
+void
+SinglePhaseFluidProperties::k_from_p_T_X(
+    Real p, Real T, const std::vector<Real> & x, Real & k, Real & dk_dp, Real & dk_dT) const
+{
+  k = k_from_p_T(p, T);
+  dk_dp = 0.0;
+  dk_dT = 0.0;
+}
+
+Real
+SinglePhaseFluidProperties::xp_from_X(const std::vector<Real> & x) const
+{
+  return 0.0;
+}
+
+ADReal
+SinglePhaseFluidProperties::xp_from_X(const std::vector<ADReal> & x) const
+{
+  return 0.0;
+}
+
+Real
+SinglePhaseFluidProperties::molarMass_from_X(const std::vector<Real> & x) const
+{
+  return 0.0;
+}
+
+ADReal
+SinglePhaseFluidProperties::molarMass_from_X(const std::vector<ADReal> & x) const
+{
+  return 0.0;
+}
+
 #pragma GCC diagnostic pop
