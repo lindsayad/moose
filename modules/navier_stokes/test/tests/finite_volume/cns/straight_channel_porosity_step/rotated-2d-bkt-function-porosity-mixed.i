@@ -123,13 +123,13 @@ friction_coeff=10
     momentum_component = 'x'
     epsilon_function = 'eps'
   []
-  [drag]
-    type = PNSFVMomentumFriction
-    variable = sup_mom_x
-    momentum_component = 'x'
-    Darcy_name = 'cl'
-    momentum_name = superficial_rhou
-  []
+  # [drag]
+  #   type = PNSFVMomentumFriction
+  #   variable = sup_mom_x
+  #   momentum_component = 'x'
+  #   Darcy_name = 'cl'
+  #   momentum_name = superficial_rhou
+  # []
 
   [momentum_time_y]
     type = FVMatPropTimeKernel
@@ -148,13 +148,13 @@ friction_coeff=10
     momentum_component = 'y'
     epsilon_function = 'eps'
   []
-  [drag_y]
-    type = PNSFVMomentumFriction
-    variable = sup_mom_y
-    momentum_component = 'y'
-    Darcy_name = 'cl'
-    momentum_name = superficial_rhov
-  []
+  # [drag_y]
+  #   type = PNSFVMomentumFriction
+  #   variable = sup_mom_y
+  #   momentum_component = 'y'
+  #   Darcy_name = 'cl'
+  #   momentum_name = superficial_rhov
+  # []
 
   [energy_time]
     type = FVMatPropTimeKernel
@@ -359,8 +359,28 @@ friction_coeff=10
     execute_on = 'final'
   []
   checkpoint = true
+  csv = true
 []
 
 [Debug]
   show_var_residual_norms = true
+[]
+
+[VectorPostprocessors]
+  [pressure]
+    type = LineValueSampler
+    variable = pressure
+    start_point = '0.5 0.1 0'
+    end_point = '0.5 17.9 0'
+    num_points = 90
+    sort_by = 'y'
+  []
+  [vel_y]
+    type = LineValueSampler
+    variable = vel_y
+    start_point = '0.5 0.1 0'
+    end_point = '0.5 17.9 0'
+    num_points = 90
+    sort_by = 'y'
+  []
 []

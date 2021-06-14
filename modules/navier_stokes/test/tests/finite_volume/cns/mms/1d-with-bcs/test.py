@@ -40,7 +40,7 @@ class Test1DVaryingEpsPorousHLLC(unittest.TestCase):
 # class Test1DVaryingEpsPorousHLLC():
     def test(self):
         labels = ['L2pressure', 'L2sup_mom_x', 'L2T_fluid']
-        df1 = run_spatial('varying-eps-hllc.i', 9, "--error", y_pp=labels)
+        df1 = run_spatial('varying-eps-hllc.i', list(range(1,7)), "--error", y_pp=labels)
 
         fig = mms.ConvergencePlot(xlabel='Element Size ($h$)', ylabel='$L_2$ Error')
         fig.plot(df1, label=labels, marker='o', markersize=8, num_fitted_points=3, slope_precision=1)
@@ -203,7 +203,7 @@ class TestBasic1DVaryingPorousKTPrimitiveUpwind(unittest.TestCase):
 # class TestBasic1DVaryingPorousKTPrimitiveUpwind():
     def test(self):
         labels = ['L2pressure', 'L2sup_vel_x', 'L2T_fluid']
-        df1 = run_spatial('varying-eps-basic-kt-primitive.i', 9, "GlobalParams/limiter='upwind'", "GlobalParams/knp_for_omega=false", "--error", y_pp=labels)
+        df1 = run_spatial('varying-eps-basic-kt-primitive.i', list(range(4,9)), "GlobalParams/limiter='upwind'", "GlobalParams/knp_for_omega=false", "--error", y_pp=labels)
 
         fig = mms.ConvergencePlot(xlabel='Element Size ($h$)', ylabel='$L_2$ Error')
         fig.plot(df1, label=labels, marker='o', markersize=8, num_fitted_points=3, slope_precision=1)
@@ -218,10 +218,10 @@ class TestBasic1DVaryingPorousKTPrimitiveVanLeer(unittest.TestCase):
 # class TestBasic1DVaryingPorousKTPrimitiveVanLeer():
     def test(self):
         labels = ['L2pressure', 'L2sup_vel_x', 'L2T_fluid']
-        df1 = run_spatial('varying-eps-basic-kt-primitive.i', 8, "GlobalParams/limiter='vanLeer'", "GlobalParams/knp_for_omega=false", "--error", y_pp=labels)
+        df1 = run_spatial('varying-eps-basic-kt-primitive.i', 6, "GlobalParams/limiter='vanLeer'", "GlobalParams/knp_for_omega=false", "--error", y_pp=labels)
 
         fig = mms.ConvergencePlot(xlabel='Element Size ($h$)', ylabel='$L_2$ Error')
-        fig.plot(df1, label=labels, marker='o', markersize=8, slope_precision=1)
+        fig.plot(df1, label=labels, marker='o', markersize=8, slope_precision=1, num_fitted_points=3)
         fig.save('varying-eps-basic-kt-primitive-vanLeer.png')
         for key,value in fig.label_to_slope.items():
             print("%s slope, %f" % (key, value))

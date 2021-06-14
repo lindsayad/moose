@@ -9,7 +9,7 @@
     type = GeneratedMeshGenerator
     dim = 1
     xmin = .1
-    xmax = .6
+    xmax = .2
     nx = 2
   []
 []
