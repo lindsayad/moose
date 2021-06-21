@@ -23,9 +23,6 @@ CNSFVHLLCBC::CNSFVHLLCBC(const InputParameters & parameters) : CNSFVHLLCBCBase(p
 ADReal
 CNSFVHLLCBC::computeQpResidual()
 {
-  // mooseAssert(_var.hasBlocks(_face_info->elem().subdomain_id()), "checking subdomain
-  // restriction");
-
   _normal_speed_elem = _normal * _vel_elem[_qp];
   preComputeWaveSpeed();
 

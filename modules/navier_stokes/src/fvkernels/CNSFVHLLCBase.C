@@ -22,7 +22,7 @@ InputParameters
 CNSFVHLLCBase::validParams()
 {
   InputParameters params = FVFluxKernel::validParams();
-  params.addRequiredParam<UserObjectName>(nms::fluid, "Fluid userobject");
+  params.addRequiredParam<UserObjectName>(nms::fluid, "Fluid properties userobject");
   return params;
 }
 
