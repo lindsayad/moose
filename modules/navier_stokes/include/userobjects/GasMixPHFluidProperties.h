@@ -178,10 +178,10 @@ public:
     virtual void e_from_p_T_X(Real p, Real T, const std::vector<Real> & x, Real & e, Real & de_dp, Real & de_dT) const override;
     virtual void e_from_p_T_X(Real p, Real T, const std::vector<Real> & x, Real & e, Real & de_dp, Real & de_dT, Real & de_dx) const override;
     virtual void e_from_p_T_X(ADReal p, ADReal T, const std::vector<ADReal> & x, ADReal & e, ADReal & de_dp, ADReal & de_dT, ADReal & de_dx) const override;
-   
+
     virtual Real e_from_p_rho_X(Real p, Real rho, const std::vector<Real> & x) const override;
     virtual ADReal e_from_p_rho_X(ADReal p, ADReal rho, const std::vector<ADReal> & x) const override;
-   
+
   /**
    * Specific enthalpy from pressure and temperature
    *
@@ -303,10 +303,10 @@ public:
    */
     virtual Real xp_from_X(const std::vector<Real> & x) const override;
     virtual ADReal xp_from_X(const std::vector<ADReal> & x) const override;
-   /** 
+   /**
    * molar mass from the molar mass of the constituing gas species
    *
-   * @param[in] x  mass fractions 
+   * @param[in] x  mass fractions
    * @return    molar mass (kg/mol)
    */
    virtual Real molarMass_from_X(const std::vector<Real> & x) const override;
@@ -323,7 +323,7 @@ public:
   /// Number of secondary vapors
   const unsigned int _n_secondary_gas;
   /// molar (or universal) gas constant
-  constexpr static const Real R_molar = 8.3144598;
+  static const Real R_molar;
 
   Real dmuii_calc(Real mui, Real dmui, Real gi, Real dgi) const;
 };

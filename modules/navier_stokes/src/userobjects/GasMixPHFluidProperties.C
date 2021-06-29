@@ -17,6 +17,7 @@
 
 registerMooseObject("NavierStokesApp", GasMixPHFluidProperties);
 
+const Real GasMixPHFluidProperties::R_molar = 8.3144598;
 
 InputParameters
 GasMixPHFluidProperties::validParams()
@@ -88,7 +89,7 @@ GasMixPHFluidProperties::p_from_v_e_X(Real v, Real e, const std::vector<Real> & 
   p = p_from_v_e_X(v, e, x);
   Real xp = xp_from_X(x), T = T_from_v_e_X(v, e, x);
   Real vi = v / xp, ei = _fp_primary->e_from_T_v(T, vi);
-  Real dp_dv_pr, dp_dv_sec, dp_de_pr, dp_de_sec, dummy; 
+  Real dp_dv_pr, dp_dv_sec, dp_de_pr, dp_de_sec, dummy;
   _fp_primary->p_from_v_e(vi, ei, dummy, dp_dv_pr, dp_de_pr);
   dp_dv = dp_dv_pr / xp;
   dp_de = dp_de_pr;
@@ -100,7 +101,7 @@ GasMixPHFluidProperties::p_from_v_e_X(Real v, Real e, const std::vector<Real> & 
       dp_dv += dp_dv_sec / x[i];
       dp_de += dp_de_sec;
   }
-  dp_dx = dp_dv_pr * v / xp / xp - dp_dv_sec * v / x[0] / x[0]; 
+  dp_dx = dp_dv_pr * v / xp / xp - dp_dv_sec * v / x[0] / x[0];
 }
 
 void
@@ -109,7 +110,7 @@ GasMixPHFluidProperties::p_from_v_e_X(ADReal v, ADReal e, const std::vector<ADRe
   p = p_from_v_e_X(v, e, x);
   ADReal xp = xp_from_X(x), T = T_from_v_e_X(v, e, x);
   ADReal vi = v / xp, ei = _fp_primary->e_from_T_v(T, vi);
-  ADReal dp_dv_pr, dp_dv_sec, dp_de_pr, dp_de_sec, dummy; 
+  ADReal dp_dv_pr, dp_dv_sec, dp_de_pr, dp_de_sec, dummy;
   _fp_primary->p_from_v_e(vi, ei, dummy, dp_dv_pr, dp_de_pr);
   dp_dv = dp_dv_pr / xp;
   dp_de = dp_de_pr;
@@ -121,7 +122,7 @@ GasMixPHFluidProperties::p_from_v_e_X(ADReal v, ADReal e, const std::vector<ADRe
       dp_dv += dp_dv_sec / x[i];
       dp_de += dp_de_sec;
   }
-  dp_dx = dp_dv_pr * v / xp / xp - dp_dv_sec * v / x[0] / x[0]; 
+  dp_dx = dp_dv_pr * v / xp / xp - dp_dv_sec * v / x[0] / x[0];
 }
 
 Real
@@ -603,7 +604,7 @@ GasMixPHFluidProperties:: rho_from_p_T_X(Real p, Real T, const std::vector<Real>
     drho_dp = 1 / R_specific / T;
     drho_dT = -p / R_specific / T / T;
     drho_dx = rho * molarMass_from_X(x) * ( 1/ _fp_primary->molarMass() - 1 / _fp_secondary[0]->molarMass() );
-    
+
     /*rho =  rho_from_p_T_X(p, T, x);
     // Derivatives calculation
     Real xp = xp_from_X(x);
