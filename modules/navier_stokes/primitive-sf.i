@@ -40,8 +40,8 @@ rho_initial = 46.6832
 
 rho_u_in=${fparse -inlet_superficial_vel * rho_initial}
 
-user_limiter='min_mod'
-# user_limiter = 'upwind'
+# user_limiter='min_mod'
+user_limiter = 'upwind'
 
 [GlobalParams]
   # pebble_diameter = ${pebbles_diameter}
@@ -91,13 +91,7 @@ user_limiter='min_mod'
   [rho_v]
     type = MooseVariableFVReal
     initial_condition = ${rho_u_in}
-    # initial_condition = 1e-15
   []
-  [Mass_Fraction]
-    type = MooseVariableFVReal
-    initial_condition = 1e-15
-  []
-
 []
 
 [FVKernels]
@@ -108,7 +102,7 @@ user_limiter='min_mod'
     mat_prop_time_derivative = 'dsuperficial_rho_dt'
   []
   [mass_advection]
-    type = GasMixPCNSFVKT
+    type = PCNSFVKT
     variable = pressure
     eqn = "mass"
   []
@@ -119,7 +113,7 @@ user_limiter='min_mod'
     mat_prop_time_derivative = 'dsuperficial_rhou_dt'
   []
   [momentum_advection_and_pressure_x]
-    type = GasMixPCNSFVKT
+    type = PCNSFVKT
     variable = rho_u
     eqn = "momentum"
     momentum_component = 'x'
@@ -143,7 +137,7 @@ user_limiter='min_mod'
     mat_prop_time_derivative = 'dsuperficial_rhov_dt'
   []
   [momentum_advection_and_pressure_y]
-    type = GasMixPCNSFVKT
+    type = PCNSFVKT
     variable = rho_v
     eqn = "momentum"
     momentum_component = 'y'
@@ -154,18 +148,6 @@ user_limiter='min_mod'
   #   momentum_component = 'y'
   #   gravity = ' 0.00 -9.81 0.00 '
   # []
-
-  # Mass fraction advection
-  [mass_frac_time]
-    type = FVMatPropTimeKernel
-    variable = Mass_Fraction
-    mat_prop_time_derivative = 'drho_f_dt'
-  []
-  [MF_Advection]
-    type = GasMixPCNSFVKT
-    variable = Mass_Fraction
-    eqn = "scalar"
-  []
 []
 
 [AuxVariables]
@@ -199,7 +181,7 @@ user_limiter='min_mod'
 [FVBCs]
   #Reactor Inlet
   [pressure_inlet]
-    type = GasMixPCNSFVStrongBC
+    type = PCNSFVStrongBC
     velocity_function_includes_rho = true
     superficial_velocity = 'rho_u_in_1'
     boundary = 'top'
@@ -208,7 +190,7 @@ user_limiter='min_mod'
     T_fluid = ${inlet_T_fluid}
   []
   [superficial_vel_x_inlet]
-    type = GasMixPCNSFVStrongBC
+    type = PCNSFVStrongBC
     velocity_function_includes_rho = true
     boundary = 'top'
     variable = rho_u
@@ -218,7 +200,7 @@ user_limiter='min_mod'
     T_fluid = ${inlet_T_fluid}
   []
   [superficial_vel_y_inlet]
-    type = GasMixPCNSFVStrongBC
+    type = PCNSFVStrongBC
     velocity_function_includes_rho = true
     boundary = 'top'
     variable = rho_v
@@ -228,28 +210,16 @@ user_limiter='min_mod'
     T_fluid = ${inlet_T_fluid}
   []
 
-  [Mass_Fraction_Inlet]
-    type = GasMixPCNSFVStrongBC
-    velocity_function_includes_rho = true
-    boundary = 'top'
-    variable = Mass_Fraction
-    superficial_velocity = 'rho_u_in_1'
-    eqn = 'scalar'
-    scalar = 1
-    T_fluid = ${inlet_T_fluid}
-  []
-
   # Reactor Outlet Flow.
   [pressure_outlet]
-    type = GasMixPCNSFVStrongBC
+    type = PCNSFVStrongBC
     boundary = 'bottom'
     variable = pressure
     p = ${outlet_pressure}
     eqn = 'mass'
   []
-
   [superficial_vel_x_outlet]
-    type = GasMixPCNSFVStrongBC
+    type = PCNSFVStrongBC
     boundary = 'bottom'
     variable = rho_u
     p = ${outlet_pressure}
@@ -257,19 +227,12 @@ user_limiter='min_mod'
     momentum_component = 'x'
   []
   [superficial_vel_y_outlet]
-    type = GasMixPCNSFVStrongBC
+    type = PCNSFVStrongBC
     boundary = 'bottom'
     variable = rho_v
     p = ${outlet_pressure}
     eqn = 'momentum'
     momentum_component = 'y'
-  []
-  [Mass_Fraction_Outler]
-    type = GasMixPCNSFVStrongBC
-    boundary = 'bottom'
-    variable = Mass_Fraction
-    p = ${outlet_pressure}
-    eqn = 'scalar'
   []
 
   # Fluid solid walls.
@@ -304,38 +267,23 @@ user_limiter='min_mod'
     boundary = 'bottom'
     value = ${outlet_pressure}
   []
-  [MF_inlet]
-    type = FVDirichletBC
-    variable = Mass_Fraction
-    boundary = 'top'
-    value = 1
-  []
 []
 
 [Modules]
   [FluidProperties]
-    [fp_helium]
-      type = HeliumFluidProperties
-    []
-    [fp_air]
-      type = IdealGasFluidProperties
-    []
     [fp]
-      type = GasMixPHFluidProperties
-      fp_primary = fp_helium
-      fp_secondary = 'fp_air'
+      type = IdealGasFluidProperties
     []
   []
 []
 
 [Materials]
   [var_mat]
-    type = GasMixPorousMixedVarMaterial
+    type = PorousMixedVarMaterial
     p = pressure
     T_fluid = T_fluid
     superficial_rhou = rho_u
     superficial_rhov = rho_v
-    secondary_fraction = Mass_Fraction
   []
   [porosity]
     type = GenericConstantMaterial
@@ -359,6 +307,7 @@ user_limiter='min_mod'
   start_time = 0.0
 
   end_time = 1e6
+  dtmin    = 1e-4
   # dtmax    = 1
 
   # Iterations parameters.
@@ -381,14 +330,12 @@ user_limiter='min_mod'
   #   dt = 1e-3
   # []
 
-  num_steps = 100
+  num_steps = 5
   petsc_options = '-ksp_monitor'
-  dt = 1e-5
+  dt = 0.1
   [TimeIntegrator]
-    # type = ExplicitSSPRungeKutta
-    # order = 2
-    type = ActuallyExplicitEuler
-    use_constant_mass = true
+    type = ExplicitSSPRungeKutta
+    order = 2
   []
 []
 
