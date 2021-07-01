@@ -13,6 +13,9 @@
 
 using MetaPhysicL::raw_value;
 
+std::vector<std::unordered_map<const FaceInfo *, std::vector<ADReal>>>
+    PCNSFVHLLC::_fi_to_wave_speeds;
+
 InputParameters
 PCNSFVHLLC::validParams()
 {
@@ -41,10 +44,14 @@ PCNSFVHLLC::PCNSFVHLLC(const InputParameters & params)
     _eps_elem(getMaterialProperty<Real>(NS::porosity)),
     _eps_neighbor(getNeighborMaterialProperty<Real>(NS::porosity))
 {
+  if (_tid == 0)
+    _fi_to_wave_speeds.resize(libMesh::n_threads());
 }
 
 std::vector<ADReal>
-PCNSFVHLLC::waveSpeed(const ADReal & rho_elem,
+PCNSFVHLLC::waveSpeed(const THREAD_ID tid,
+                      const FaceInfo & fi,
+                      const ADReal & rho_elem,
                       const ADRealVectorValue & vel_elem,
                       const ADReal & e_elem,
                       const Real eps_elem,
@@ -55,6 +62,12 @@ PCNSFVHLLC::waveSpeed(const ADReal & rho_elem,
                       const SinglePhaseFluidProperties & fluid,
                       const ADRealVectorValue & normal)
 {
+  mooseAssert(tid < libMesh::n_threads(), tid << " must be less than " << libMesh::n_threads());
+
+  auto it = _fi_to_wave_speeds[tid].find(&fi);
+  if (it != _fi_to_wave_speeds[tid].end())
+    return it->second;
+
   const auto & rho1 = rho_elem;
   const auto u1 = vel_elem.norm();
   const auto q1 = normal * vel_elem;
@@ -95,8 +108,12 @@ PCNSFVHLLC::waveSpeed(const ADReal & rho_elem,
       (eps2 * rho2 * q2 * (SR - q2) - eps1 * rho1 * q1 * (SL - q1) + eps1 * p1 - eps2 * p2) /
       (eps2 * rho2 * (SR - q2) - eps1 * rho1 * (SL - q1));
 
+  std::vector<ADReal> wave_speeds = {{std::move(SL), std::move(SM), std::move(SR)}};
+
   // store these results in _wave_speed
-  return {SL, SM, SR};
+  auto pr = _fi_to_wave_speeds[tid].emplace(&fi, std::move(wave_speeds));
+
+  return pr.first->second;
 }
 
 ADReal
@@ -104,7 +121,9 @@ PCNSFVHLLC::computeQpResidual()
 {
   _normal_speed_elem = _normal * _vel_elem[_qp];
   _normal_speed_neighbor = _normal * _vel_neighbor[_qp];
-  auto wave_speeds = waveSpeed(_rho_elem[_qp],
+  auto wave_speeds = waveSpeed(_tid,
+                               *_face_info,
+                               _rho_elem[_qp],
                                _vel_elem[_qp],
                                _specific_internal_energy_elem[_qp],
                                _eps_elem[_qp],

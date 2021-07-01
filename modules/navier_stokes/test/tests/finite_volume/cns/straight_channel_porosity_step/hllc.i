@@ -93,7 +93,7 @@ u_in=1
   []
   [sup_vel_x]
     type = MooseVariableFVReal
-    initial_condition = 1
+    initial_condition = 1e-15
     scaling = 1e-2
   []
   [T_fluid]
@@ -286,6 +286,8 @@ u_in=1
   solve_type = NEWTON
   line_search = 'bt'
   type = Steady
+  nl_abs_tol = 1e-10
+  nl_max_its = 300
 []
 
 [Outputs]

@@ -41,7 +41,9 @@ PCNSFVHLLCBC::computeQpResidual()
   _normal_speed_elem = _normal * _vel_elem[_qp];
   preComputeWaveSpeed();
 
-  auto wave_speeds = PCNSFVHLLC::waveSpeed(_rho_elem[_qp],
+  auto wave_speeds = PCNSFVHLLC::waveSpeed(_tid,
+                                           *_face_info,
+                                           _rho_elem[_qp],
                                            _vel_elem[_qp],
                                            _specific_internal_energy_elem[_qp],
                                            _eps_elem[_qp],

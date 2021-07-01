@@ -27,7 +27,9 @@ public:
   PCNSFVHLLC(const InputParameters & params);
 
   /// helper function for computing wave speed
-  static std::vector<ADReal> waveSpeed(const ADReal & rho_elem,
+  static std::vector<ADReal> waveSpeed(THREAD_ID tid,
+                                       const FaceInfo & fi,
+                                       const ADReal & rho_elem,
                                        const ADRealVectorValue & vel_elem,
                                        const ADReal & e_elem,
                                        Real eps_elem,
@@ -37,6 +39,9 @@ public:
                                        Real eps_neighbor,
                                        const SinglePhaseFluidProperties & fluid,
                                        const ADRealVectorValue & normal);
+
+  void residualSetup() override final { _fi_to_wave_speeds[_tid].clear(); }
+  void jacobianSetup() override final { _fi_to_wave_speeds[_tid].clear(); }
 
 protected:
   virtual ADReal computeQpResidual() override;
@@ -103,4 +108,7 @@ protected:
   const MaterialProperty<Real> & _eps_elem;
   const MaterialProperty<Real> & _eps_neighbor;
   ///@}
+
+private:
+  static std::vector<std::unordered_map<const FaceInfo *, std::vector<ADReal>>> _fi_to_wave_speeds;
 };
