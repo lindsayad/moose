@@ -12,7 +12,7 @@
 # ==============================================================================
 
 # Geometry ---------------------------------------------------------------------
-multiplier = 1e0
+multiplier = 1e2
 pebble_bed_porosity       = 0.5 # (//).
 pebble_bed_r              = ${fparse 0.79788 * multiplier} # 2 m2 free flow area 1m2 of real flow area (m).
 pebble_bed_h              = ${fparse 10.0 * multiplier} # (m).
@@ -58,7 +58,7 @@ user_limiter='min_mod'
   block_id = ' 1 '
   block_name = 'pebble_bed'
 
-  uniform_refine = 0
+  uniform_refine = 1
 
   [cartesian_mesh]
     type = CartesianMeshGenerator
@@ -128,12 +128,12 @@ user_limiter='min_mod'
     type = PCNSFVMomentumPressureRZ
     variable = rho_u
   []
-  # [momentum_gravity_x]
-  #   type = NSFVMomentumGravity
-  #   variable = rho_u
-  #   momentum_component = 'x'
-  #   gravity = ' 0.00 -9.81 0.00 '
-  # []
+  [momentum_gravity_x]
+    type = NSFVMomentumGravity
+    variable = rho_u
+    momentum_component = 'x'
+    gravity = ' 0.00 -9.81 0.00 '
+  []
 
   # Momentum conservation, y component
 
@@ -148,12 +148,12 @@ user_limiter='min_mod'
     eqn = "momentum"
     momentum_component = 'y'
   []
-  # [momentum_gravity_y]
-  #   type = NSFVMomentumGravity
-  #   variable = rho_v
-  #   momentum_component = 'y'
-  #   gravity = ' 0.00 -9.81 0.00 '
-  # []
+  [momentum_gravity_y]
+    type = NSFVMomentumGravity
+    variable = rho_v
+    momentum_component = 'y'
+    gravity = ' 0.00 -9.81 0.00 '
+  []
 
   # Mass fraction advection
   [mass_frac_time]
@@ -358,8 +358,8 @@ user_limiter='min_mod'
   # Problem time parameters.
   start_time = 0.0
 
-  end_time = 1e6
-  # dtmax    = 1
+  end_time = 200
+  dtmax    = 1
 
   # Iterations parameters.
   l_max_its = 50
@@ -372,24 +372,25 @@ user_limiter='min_mod'
   petsc_options_iname = '-pc_type -pc_factor_shift_type'
   petsc_options_value = 'lu       NONZERO'
 
-  # line_search = 'none'
-  # nl_max_its = 20
-  # nl_abs_tol = 1e-7
-  # [TimeStepper]
-  #   type = IterationAdaptiveDT
-  #   optimal_iterations = 10
-  #   dt = 1e-3
-  # []
-
-  num_steps = 100
-  petsc_options = '-ksp_monitor'
-  dt = 1e-5
-  [TimeIntegrator]
-    # type = ExplicitSSPRungeKutta
-    # order = 2
-    type = ActuallyExplicitEuler
-    use_constant_mass = true
+  line_search = 'none'
+  nl_max_its = 20
+  nl_abs_tol = 1e-4
+  solve_type = NEWTON
+  [TimeStepper]
+    type = IterationAdaptiveDT
+    optimal_iterations = 10
+    dt = 1e-3
   []
+
+  # num_steps = 1000
+  # petsc_options = '-ksp_monitor'
+  # dt = 1e-5
+  # [TimeIntegrator]
+  #   type = ExplicitSSPRungeKutta
+  #   order = 2
+    # type = ActuallyExplicitEuler
+    # use_constant_mass = true
+  # []
 []
 
 [Outputs]
