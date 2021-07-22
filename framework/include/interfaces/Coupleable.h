@@ -1099,6 +1099,9 @@ protected:
   template <bool is_ad>
   const GenericVariableSecond<is_ad> & genericZeroSecond();
 
+  template <typename T>
+  const typename T::FunctorType & getFunctor(const std::string & var_name, unsigned int comp) const;
+
 protected:
   // Reference to the interface's input parameters
   const InputParameters & _c_parameters;
@@ -1420,6 +1423,9 @@ private:
   template <typename T>
   const T & getDefaultNodalValue(const std::string & var_name, unsigned int comp = 0) const;
 
+  template <typename T>
+  const FunctorInterface<T> & getDefaultFunctor(const std::string & var_name) const;
+
   /// Maximum qps for any element in this system
   unsigned int _coupleable_max_qps;
 
@@ -1436,8 +1442,10 @@ private:
   /// Whether the MooseObject is a finite volume object
   const bool _is_fv;
 
-private:
   const MooseObject * const _obj;
+
+  mutable std::unordered_map<std::string, std::unique_ptr<FunctorInterface<ADReal>>>
+      _default_ad_functor;
 };
 
 template <typename T>
@@ -1488,3 +1496,29 @@ Coupleable::getVarHelper(const std::string & var_name, unsigned int comp) const
         "Variable '", name_to_use, "' is of a different C++ type than you tried to fetch it as.");
   }
 }
+
+template <typename T>
+const typename T::FunctorType &
+Coupleable::getFunctor(const std::string & var_name, unsigned int comp) const
+{
+  const auto * const var = getVarHelper<T>(var_name, comp);
+
+  if (var)
+    return *var;
+  else
+    return getDefaultFunctor<typename T::FunctorReturnType>(var_name);
+}
+
+template <typename T>
+const FunctorInterface<T> &
+Coupleable::getDefaultFunctor(const std::string & var_name) const
+{
+  mooseError("Calling Coupleable::getDefaultFunctor with a new type ",
+             typeid(T).name(),
+             " that does not yet have member storage. Please implement the storage in Coupleable "
+             "to support your type which was supplied as the default value for ",
+             var_name);
+}
+
+template <>
+const FunctorInterface<ADReal> & Coupleable::getDefaultFunctor(const std::string & var_name) const;
