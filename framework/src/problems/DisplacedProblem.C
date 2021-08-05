@@ -1144,6 +1144,8 @@ DisplacedProblem::initialSetup()
 void
 DisplacedProblem::timestepSetup()
 {
+  SubProblem::timestepSetup();
+
   _displaced_nl.timestepSetup();
   _displaced_aux.timestepSetup();
 }

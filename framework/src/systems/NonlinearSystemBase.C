@@ -1468,6 +1468,8 @@ NonlinearSystemBase::residualSetup()
   _constraints.residualSetup();
   _general_dampers.residualSetup();
   _nodal_bcs.residualSetup();
+
+  _fe_problem.residualSetup();
 }
 
 void
@@ -2396,6 +2398,8 @@ NonlinearSystemBase::jacobianSetup()
   _constraints.jacobianSetup();
   _general_dampers.jacobianSetup();
   _nodal_bcs.jacobianSetup();
+
+  _fe_problem.jacobianSetup();
 }
 
 void

@@ -1113,6 +1113,8 @@ FEProblemBase::initialSetup()
 void
 FEProblemBase::timestepSetup()
 {
+  SubProblem::timestepSetup();
+
   if (_t_step > 1 && _num_grid_steps)
   {
     MeshRefinement mesh_refinement(_mesh);
@@ -7171,4 +7173,20 @@ FEProblemBase::resizeMaterialData(const Moose::MaterialDataType data_type,
       mooseError("Unrecognized material data type.");
       break;
   }
+}
+
+void
+FEProblemBase::residualSetup()
+{
+  SubProblem::residualSetup();
+  if (_displaced_problem)
+    _displaced_problem->residualSetup();
+}
+
+void
+FEProblemBase::jacobianSetup()
+{
+  SubProblem::jacobianSetup();
+  if (_displaced_problem)
+    _displaced_problem->jacobianSetup();
 }
