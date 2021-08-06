@@ -5,6 +5,7 @@ rho=1
   vel = 'velocity'
   velocity_interp_method = 'rc'
   advected_interp_method = 'average'
+  rhie_chow_user_object = 'rc'
 []
 
 [Mesh]
@@ -53,6 +54,14 @@ rho=1
   []
 []
 
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+  []
+[]
+
 [FVKernels]
   [mass]
     type = INSFVMassAdvection
@@ -60,8 +69,8 @@ rho=1
     pressure = pressure
     u = u
     v = v
-    mu = 'mu'
     rho = ${rho}
+    momentum_component = 'x'
   []
   [mean_zero_pressure]
     type = FVScalarLagrangeMultiplier
@@ -76,14 +85,15 @@ rho=1
     pressure = pressure
     u = u
     v = v
-    mu = 'mu'
     rho = ${rho}
+    momentum_component = 'x'
   []
 
   [u_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = u
-    coeff = ${mu}
+    mu = 'mu'
+    momentum_component = 'x'
   []
 
   [u_pressure]
@@ -100,14 +110,15 @@ rho=1
     pressure = pressure
     u = u
     v = v
-    mu = 'mu'
     rho = ${rho}
+    momentum_component = 'y'
   []
 
   [v_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = v
-    coeff = ${mu}
+    mu = 'mu'
+    momentum_component = 'y'
   []
 
   [v_pressure]

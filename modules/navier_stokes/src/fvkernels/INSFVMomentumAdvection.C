@@ -23,6 +23,7 @@
 #include "MooseUtils.h"
 #include "NS.h"
 #include "FVUtils.h"
+#include "INSFVRhieChowInterpolator.h"
 
 #include "libmesh/dof_map.h"
 #include "libmesh/elem.h"
@@ -33,14 +34,11 @@
 
 registerMooseObject("NavierStokesApp", INSFVMomentumAdvection);
 
-std::unordered_map<const MooseApp *,
-                   std::vector<std::unordered_map<const Elem *, VectorValue<ADReal>>>>
-    INSFVMomentumAdvection::_rc_a_coeffs;
-
 InputParameters
 INSFVMomentumAdvection::validParams()
 {
   InputParameters params = FVMatAdvection::validParams();
+  params += INSFVResidualObject::validParams();
   params.addRequiredCoupledVar(NS::pressure, "The pressure variable.");
   params.addRequiredCoupledVar("u", "The velocity in the x direction.");
   params.addCoupledVar("v", "The velocity in the y direction.");
@@ -54,11 +52,7 @@ INSFVMomentumAdvection::validParams()
       "The interpolation to use for the velocity. Options are "
       "'average' and 'rc' which stands for Rhie-Chow. The default is Rhie-Chow.");
 
-  params.addRequiredParam<MooseFunctorName>("mu", "The viscosity functor material property");
   params.addRequiredParam<MaterialPropertyName>("rho", "Density functor material property");
-
-  // We need 2 ghost layers for the Rhie-Chow interpolation
-  params.set<unsigned short>("ghost_layers") = 2;
 
   params.addClassDescription("Object for advecting momentum, e.g. rho*u");
 
@@ -67,7 +61,7 @@ INSFVMomentumAdvection::validParams()
 
 INSFVMomentumAdvection::INSFVMomentumAdvection(const InputParameters & params)
   : FVMatAdvection(params),
-    _mu(getFunctor<ADReal>("mu")),
+    INSFVResidualObject(*this),
     _p_var(dynamic_cast<const INSFVPressureVariable *>(getFieldVar(NS::pressure, 0))),
     _u_var(dynamic_cast<const INSFVVelocityVariable *>(getFieldVar("u", 0))),
     _v_var(params.isParamValid("v")
@@ -110,12 +104,6 @@ INSFVMomentumAdvection::INSFVMomentumAdvection(const InputParameters & params)
     mooseError("Unrecognized interpolation type ",
                static_cast<std::string>(velocity_interp_method));
 
-  if (_tid == 0)
-  {
-    auto & vec_of_coeffs_map = _rc_a_coeffs[&_app];
-    vec_of_coeffs_map.resize(libMesh::n_threads());
-  }
-
   if (getParam<bool>("force_boundary_execution"))
     paramError("force_boundary_execution",
                "Do not use the force_boundary_execution parameter to control execution of INSFV "
@@ -130,83 +118,7 @@ INSFVMomentumAdvection::INSFVMomentumAdvection(const InputParameters & params)
 void
 INSFVMomentumAdvection::initialSetup()
 {
-  std::set<BoundaryID> all_connected_boundaries;
-  const auto & blk_ids = blockRestricted() ? blockIDs() : _mesh.meshSubdomains();
-  for (const auto blk_id : blk_ids)
-  {
-    const auto & connected_boundaries = _mesh.getSubdomainBoundaryIds(blk_id);
-    for (const auto bnd_id : connected_boundaries)
-      all_connected_boundaries.insert(bnd_id);
-  }
-
-  for (const auto bnd_id : all_connected_boundaries)
-  {
-    setupFlowBoundaries(bnd_id);
-    setupBoundaries<INSFVNoSlipWallBC>(
-        bnd_id, INSFVBCs::INSFVNoSlipWallBC, _no_slip_wall_boundaries);
-    setupBoundaries<INSFVSlipWallBC>(bnd_id, INSFVBCs::INSFVSlipWallBC, _slip_wall_boundaries);
-    setupBoundaries<INSFVSymmetryBC>(bnd_id, INSFVBCs::INSFVSymmetryBC, _symmetry_boundaries);
-  }
-}
-
-void
-INSFVMomentumAdvection::setupFlowBoundaries(const BoundaryID bnd_id)
-{
-  std::vector<INSFVFlowBC *> flow_bcs;
-
-  this->_subproblem.getMooseApp()
-      .theWarehouse()
-      .query()
-      .template condition<AttribBoundaries>(bnd_id)
-      .template condition<AttribINSFVBCs>(INSFVBCs::INSFVFlowBC)
-      .queryInto(flow_bcs);
-
-  if (!flow_bcs.empty())
-  {
-    if (dynamic_cast<INSFVFullyDevelopedFlowBC *>(flow_bcs.front()))
-    {
-      _fully_developed_flow_boundaries.insert(bnd_id);
-
-#ifndef NDEBUG
-      for (auto * flow_bc : flow_bcs)
-        mooseAssert(dynamic_cast<INSFVFullyDevelopedFlowBC *>(flow_bc),
-                    "If one BC is a fully developed flow BC, then all other flow BCs on that "
-                    "boundary must also be fully developed flow BCs");
-    }
-    else
-      for (auto * flow_bc : flow_bcs)
-        mooseAssert(!dynamic_cast<INSFVFullyDevelopedFlowBC *>(flow_bc),
-                    "If one BC is not a fully developed flow BC, then all other flow BCs on that "
-                    "boundary must also not be fully developed flow BCs");
-#else
-    }
-#endif
-
-    _flow_boundaries.insert(bnd_id);
-    _all_boundaries.insert(bnd_id);
-  }
-}
-
-template <typename T>
-void
-INSFVMomentumAdvection::setupBoundaries(const BoundaryID bnd_id,
-                                        const INSFVBCs bc_type,
-                                        std::set<BoundaryID> & bnd_ids)
-{
-  std::vector<T *> bcs;
-
-  this->_subproblem.getMooseApp()
-      .theWarehouse()
-      .query()
-      .template condition<AttribBoundaries>(bnd_id)
-      .template condition<AttribINSFVBCs>(bc_type)
-      .queryInto(bcs);
-
-  if (!bcs.empty())
-  {
-    bnd_ids.insert(bnd_id);
-    _all_boundaries.insert(bnd_id);
-  }
+  INSFVFluxKernelInterface::initialSetup(*this);
 }
 
 bool
@@ -231,35 +143,8 @@ INSFVMomentumAdvection::skipForBoundary(const FaceInfo & fi) const
   return true;
 }
 
-const VectorValue<ADReal> &
-INSFVMomentumAdvection::rcCoeff(const Elem & elem) const
-{
-  auto it = _rc_a_coeffs.find(&_app);
-  mooseAssert(it != _rc_a_coeffs.end(),
-              "No RC coeffs structure exists for the given MooseApp pointer");
-  mooseAssert(_tid < it->second.size(),
-              "The RC coeffs structure size "
-                  << it->second.size() << " is greater than or equal to the provided thread ID "
-                  << _tid);
-  auto & my_map = it->second[_tid];
-
-  auto rc_map_it = my_map.find(&elem);
-
-  if (rc_map_it != my_map.end())
-    return rc_map_it->second;
-
-  // Returns a pair with the first being an iterator pointing to the key-value pair and the second a
-  // boolean denoting whether a new insertion took place
-  auto emplace_ret = my_map.emplace(&elem, coeffCalculator(elem));
-
-  mooseAssert(emplace_ret.second, "We should have inserted a new key-value pair");
-
-  return emplace_ret.first->second;
-}
-
-#ifdef MOOSE_GLOBAL_AD_INDEXING
-VectorValue<ADReal>
-INSFVMomentumAdvection::coeffCalculator(const Elem & elem) const
+void
+INSFVMomentumAdvection::gatherRCData(const FaceInfo & fi)
 {
   // these coefficients arise from simple control volume balances of advection and diffusion. These
   // coefficients are the linear coefficients associated with the centroid of the control volume.
@@ -284,7 +169,12 @@ INSFVMomentumAdvection::coeffCalculator(const Elem & elem) const
   // Note that the coefficient for \phi_C may or may not be positive depending on the values of u_e
   // and u_w
 
-  VectorValue<ADReal> coeff = 0;
+  const Elem & elem = fi.elem();
+  const Elem * const neighbor = fi.neighborPtr();
+  const Point & normal = fi.normal();
+  Real coord;
+  coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
+  const auto surface_vector = normal * fi.faceArea() * coord;
 
   ADRealVectorValue elem_velocity(_u_var->getElemValue(&elem));
 
@@ -293,153 +183,81 @@ INSFVMomentumAdvection::coeffCalculator(const Elem & elem) const
   if (_w_var)
     elem_velocity(2) = _w_var->getElemValue(&elem);
 
-  auto action_functor = [&coeff,
-                         &elem_velocity,
-#ifndef NDEBUG
-                         &elem,
-#endif
-                         this](const Elem & libmesh_dbg_var(functor_elem),
-                               const Elem * const neighbor,
-                               const FaceInfo * const fi,
-                               const Point & surface_vector,
-                               Real libmesh_dbg_var(coord),
-                               const bool elem_has_info) {
-    mooseAssert(fi, "We need a non-null FaceInfo");
-    mooseAssert(&elem == &functor_elem, "Elems don't match");
-    mooseAssert((&elem == &fi->elem()) || (&elem == fi->neighborPtr()),
-                "Surely the element has to match one of the face information's elements right?");
+  const auto face_rho = _rho(std::make_tuple(
+      &fi, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains(&fi)));
 
-    const Point normal = elem_has_info ? fi->normal() : Point(-fi->normal());
-    const Point & rc_centroid = elem_has_info ? fi->elemCentroid() : fi->neighborCentroid();
-#ifndef NDEBUG
-    for (const auto i : make_range(unsigned(LIBMESH_DIM)))
-      mooseAssert(
-          coord == 0
-              ? true
-              : MooseUtils::absoluteFuzzyEqual(
-                    normal(i), (surface_vector / (fi->faceArea() * coord))(i), libMesh::TOLERANCE),
-          "Let's make sure our normal is what we think it is");
-#endif
+  // Unless specified otherwise, "elem" here refers to the element we're computing the
+  // Rhie-Chow coefficient for. "neighbor" is the element across the current FaceInfo (fi)
+  // face from the Rhie-Chow element
 
-    const auto face_mu = _mu(std::make_tuple(
-        fi, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains(fi)));
-    const auto face_rho = _rho(std::make_tuple(
-        fi, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains(fi)));
-
-    // Unless specified otherwise, "elem" here refers to the element we're computing the
-    // Rhie-Chow coefficient for. "neighbor" is the element across the current FaceInfo (fi)
-    // face from the Rhie-Chow element
-
-    if (onBoundary(*fi))
+  if (onBoundary(fi))
+  {
+    // Find the boundary id that has an associated INSFV boundary condition
+    // if a face has more than one bc_id
+    for (const auto bc_id : fi.boundaryIDs())
     {
-      // Find the boundary id that has an associated INSFV boundary condition
-      // if a face has more than one bc_id
-      for (const auto bc_id : fi->boundaryIDs())
+      if ((_no_slip_wall_boundaries.find(bc_id) != _no_slip_wall_boundaries.end()) ||
+          (_slip_wall_boundaries.find(bc_id) != _slip_wall_boundaries.end()))
+        // No flow normal to wall, so no contribution to coefficient from the advection term
+        return;
+
+      if (_flow_boundaries.find(bc_id) != _flow_boundaries.end())
       {
-        if (_no_slip_wall_boundaries.find(bc_id) != _no_slip_wall_boundaries.end())
-        {
-          // Need to account for viscous shear stress from wall
-          for (const auto i : make_range(_dim))
-            coeff(i) += face_mu * surface_vector.norm() /
-                        std::abs((fi->faceCentroid() - rc_centroid) * normal) *
-                        (1 - normal(i) * normal(i));
+        auto ft = fi.faceType(_var.name());
+        mooseAssert((ft == FaceInfo::VarFaceNeighbors::ELEM) ||
+                        (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR),
+                    "Do we want to allow internal flow boundaries?");
+        const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
+        Real residual_sign = var_on_elem_side ? 1. : -1.;
+        const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
 
-          // No flow normal to wall, so no contribution to coefficient from the advection term
-          return;
-        }
+        ADRealVectorValue face_velocity(_u_var->getBoundaryFaceValue(fi));
+        if (_v_var)
+          face_velocity(1) = _v_var->getBoundaryFaceValue(fi);
+        if (_w_var)
+          face_velocity(2) = _w_var->getBoundaryFaceValue(fi);
 
-        if (_slip_wall_boundaries.find(bc_id) != _slip_wall_boundaries.end())
-          // In the case of a slip wall we neither have viscous shear stress from the wall nor
-          // normal outflow, so our contribution to the coefficient is zero
-          return;
+        const auto advection_coeffs =
+            Moose::FV::interpCoeffs(_advected_interp_method, fi, true, face_velocity);
+        const auto advection_coeff =
+            var_on_elem_side ? advection_coeffs.first : advection_coeffs.second;
+        const ADReal coeff =
+            face_rho * face_velocity * surface_vector * advection_coeff * residual_sign;
 
-        if (_flow_boundaries.find(bc_id) != _flow_boundaries.end())
-        {
-          ADRealVectorValue face_velocity(_u_var->getBoundaryFaceValue(*fi));
-          if (_v_var)
-            face_velocity(1) = _v_var->getBoundaryFaceValue(*fi);
-          if (_w_var)
-            face_velocity(2) = _w_var->getBoundaryFaceValue(*fi);
-
-          const auto advection_coeffs =
-              Moose::FV::interpCoeffs(_advected_interp_method, *fi, elem_has_info, face_velocity);
-          ADReal temp_coeff = face_rho * face_velocity * surface_vector * advection_coeffs.first;
-
-          if (_fully_developed_flow_boundaries.find(bc_id) ==
-              _fully_developed_flow_boundaries.end())
-            // We are not on a fully developed flow boundary, so we have a viscous term
-            // contribution. This term is slightly modified relative to the internal face term.
-            // Instead of the distance between elem and neighbor centroid, we just have the distance
-            // between the elem and face centroid. Specifically, the term below is the result of
-            // Moukalled 8.80, 8.82, and the orthogonal correction approach equation for E_f,
-            // equation 8.89. So relative to the internal face viscous term, we have substituted
-            // eqn. 8.82 for 8.78
-            temp_coeff +=
-                face_mu * surface_vector.norm() / (fi->faceCentroid() - rc_centroid).norm();
-
-          // For flow boundaries, the coefficient addition is the same for every velocity component
-          for (const auto i : make_range(_dim))
-            coeff(i) += temp_coeff;
-
-          return;
-        }
-
-        if (_symmetry_boundaries.find(bc_id) != _symmetry_boundaries.end())
-        {
-          // Moukalled eqns. 15.154 - 15.156
-          for (const auto i : make_range(_dim))
-            coeff(i) += 2. * face_mu * surface_vector.norm() /
-                        std::abs((fi->faceCentroid() - rc_centroid) * normal) * normal(i) *
-                        normal(i);
-
-          return;
-        }
+        _rc_uo.addToA(boundary_elem, _index, coeff);
+        return;
       }
 
-      mooseError("The INSFVMomentumAdvection object ",
-                 this->name(),
-                 " is not completely bounded by INSFVBCs. Please examine sideset ",
-                 *fi->boundaryIDs().begin(),
-                 " and your FVBCs blocks.");
+      if (_symmetry_boundaries.find(bc_id) != _symmetry_boundaries.end())
+        // no flow normal to symmetry boundary
+        return;
     }
 
-    // Else we are on an internal face
+    mooseError("The INSFVMomentumAdvection object ",
+               this->name(),
+               " is not completely bounded by INSFVBCs. Please examine sideset ",
+               *fi.boundaryIDs().begin(),
+               " and your FVBCs blocks.");
+  }
 
-    mooseAssert((neighbor == &fi->elem()) || (neighbor == fi->neighborPtr()),
-                "Surely the neighbor has to match one of the face information's elements, right?");
+  // Else we are on an internal face
 
-    ADRealVectorValue neighbor_velocity(_u_var->getNeighborValue(neighbor, *fi, elem_velocity(0)));
-    if (_v_var)
-      neighbor_velocity(1) = _v_var->getNeighborValue(neighbor, *fi, elem_velocity(1));
-    if (_w_var)
-      neighbor_velocity(2) = _w_var->getNeighborValue(neighbor, *fi, elem_velocity(2));
+  ADRealVectorValue neighbor_velocity(_u_var->getNeighborValue(neighbor, fi, elem_velocity(0)));
+  if (_v_var)
+    neighbor_velocity(1) = _v_var->getNeighborValue(neighbor, fi, elem_velocity(1));
+  if (_w_var)
+    neighbor_velocity(2) = _w_var->getNeighborValue(neighbor, fi, elem_velocity(2));
 
-    ADRealVectorValue interp_v;
-    Moose::FV::interpolate(Moose::FV::InterpMethod::Average,
-                           interp_v,
-                           elem_velocity,
-                           neighbor_velocity,
-                           *fi,
-                           elem_has_info);
+  ADRealVectorValue interp_v;
+  Moose::FV::interpolate(
+      Moose::FV::InterpMethod::Average, interp_v, elem_velocity, neighbor_velocity, fi, true);
 
-    const auto advection_coeffs =
-        Moose::FV::interpCoeffs(_advected_interp_method, *fi, elem_has_info, interp_v);
-    ADReal temp_coeff = face_rho * interp_v * surface_vector * advection_coeffs.first;
-
-    // Now add the viscous flux. Note that this includes only the orthogonal component! See
-    // Moukalled equations 8.80, 8.78, and the orthogonal correction approach equation for
-    // E_f, equation 8.69
-    temp_coeff +=
-        face_mu * surface_vector.norm() / (fi->neighborCentroid() - fi->elemCentroid()).norm();
-
-    // For internal faces the coefficient is the same for every velocity component.
-    for (const auto i : make_range(_dim))
-      coeff(i) += temp_coeff;
-  };
-
-  Moose::FV::loopOverElemFaceInfo(elem, _subproblem.mesh(), _subproblem, action_functor);
-
-  return coeff;
+  const auto advection_coeffs =
+      Moose::FV::interpCoeffs(_advected_interp_method, fi, true, interp_v);
+  const ADReal elem_coeff = face_rho * interp_v * surface_vector * advection_coeffs.first;
+  const ADReal neighbor_coeff = -face_rho * interp_v * surface_vector * advection_coeffs.second;
+  _rc_uo.addToA(&elem, _index, elem_coeff);
+  _rc_uo.addToA(neighbor, _index, neighbor_coeff);
 }
 
 void
@@ -498,7 +316,7 @@ INSFVMomentumAdvection::interpolate(Moose::FV::InterpMethod m, ADRealVectorValue
   Real neighbor_volume = _face_info->neighborVolume();
 
   // Now we need to perform the computations of D
-  const VectorValue<ADReal> & elem_a = rcCoeff(*elem);
+  const VectorValue<ADReal> & elem_a = _rc_uo.rcCoeff(elem);
 
   mooseAssert(_subproblem.getCoordSystem(elem->subdomain_id()) ==
                   _subproblem.getCoordSystem(neighbor->subdomain_id()),
@@ -518,7 +336,7 @@ INSFVMomentumAdvection::interpolate(Moose::FV::InterpMethod m, ADRealVectorValue
 
   VectorValue<ADReal> face_D;
 
-  const VectorValue<ADReal> & neighbor_a = rcCoeff(*neighbor);
+  const VectorValue<ADReal> & neighbor_a = _rc_uo.rcCoeff(neighbor);
 
   coordTransformFactor(_subproblem, neighbor->subdomain_id(), neighbor_centroid, coord);
   neighbor_volume *= coord;
@@ -536,20 +354,6 @@ INSFVMomentumAdvection::interpolate(Moose::FV::InterpMethod m, ADRealVectorValue
   for (const auto i : make_range(_dim))
     v(i) -= face_D(i) * (grad_p(i) - unc_grad_p(i));
 }
-#else
-
-VectorValue<ADReal>
-INSFVMomentumAdvection::coeffCalculator(const Elem &) const
-{
-  mooseError("INSFVMomentumAdvection only works with global AD indexing");
-}
-
-void
-INSFVMomentumAdvection::interpolate(Moose::FV::InterpMethod, ADRealVectorValue &)
-{
-  mooseError("INSFVMomentumAdvection only works with global AD indexing");
-}
-#endif
 
 ADReal
 INSFVMomentumAdvection::computeQpResidual()
@@ -569,17 +373,4 @@ INSFVMomentumAdvection::computeQpResidual()
                          *_face_info,
                          true);
   return _normal * v * adv_quant_interface;
-}
-
-void
-INSFVMomentumAdvection::clearRCCoeffs()
-{
-  auto it = _rc_a_coeffs.find(&_app);
-  mooseAssert(it != _rc_a_coeffs.end(),
-              "No RC coeffs structure exists for the given MooseApp pointer");
-  mooseAssert(_tid < it->second.size(),
-              "The RC coeffs structure size "
-                  << it->second.size() << " is greater than or equal to the provided thread ID "
-                  << _tid);
-  it->second[_tid].clear();
 }
