@@ -9,30 +9,24 @@
 
 #pragma once
 
-#include "FVFluxKernel.h"
-#include "CentralDifferenceLimiter.h"
+#include "INSFVMomentumDiffusion.h"
 
 /**
  * A flux kernel for diffusion of momentum in porous media across cell faces
  */
-class PINSFVMomentumDiffusion : public FVFluxKernel
+class PINSFVMomentumDiffusion : public INSFVMomentumDiffusion
 {
 public:
   static InputParameters validParams();
   PINSFVMomentumDiffusion(const InputParameters & params);
+  using INSFVMomentumDiffusion::gatherRCData;
+  void gatherRCData(const FaceInfo & fi) override;
 
 protected:
   ADReal computeQpResidual() override;
 
-  /// the current element viscosity
-  const Moose::Functor<ADReal> & _mu;
-
   /// the porosity
   const Moose::Functor<ADReal> & _eps;
-
-  // Parameters for the gradient diffusion term
-  /// Which momentum component this kernel applies to
-  const int _index;
 
   /// Velocity as functors
   const Moose::Functor<ADRealVectorValue> * const _vel;
@@ -42,7 +36,4 @@ protected:
 
   /// Whether to add the porosity gradient term, only for continuous porosity
   const bool _smooth_porosity;
-
-  /// The object used to perform average/central-difference interpolations
-  Moose::FV::CentralDifferenceLimiter<ADReal> _cd_limiter;
 };

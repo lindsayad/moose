@@ -10,41 +10,31 @@
 #include "PINSFVMomentumDiffusion.h"
 #include "PINSFVSuperficialVelocityVariable.h"
 #include "NS.h"
+#include "INSFVRhieChowInterpolator.h"
 
 registerMooseObject("NavierStokesApp", PINSFVMomentumDiffusion);
 
 InputParameters
 PINSFVMomentumDiffusion::validParams()
 {
-  auto params = FVFluxKernel::validParams();
+  auto params = INSFVMomentumDiffusion::validParams();
   params.addClassDescription("Viscous diffusion term, div(mu grad(u_d / eps)), in the porous media "
                              "incompressible Navier-Stokes momentum equation.");
   params.addRequiredCoupledVar(NS::porosity, "Porosity auxiliary variable");
-  params.addRequiredParam<MooseFunctorName>(NS::mu, "viscosity");
-  MooseEnum momentum_component("x=0 y=1 z=2", "x");
-  params.addParam<MooseEnum>("momentum_component",
-                             momentum_component,
-                             "The component of the momentum equation that this kernel applies to.");
   params.addParam<bool>(
       "smooth_porosity", false, "Whether to include the diffusion porosity gradient term");
-  params.addParam<MaterialPropertyName>(NS::superficial_velocity,
-                                        "The superficial velocity as a material property");
-
-  params.set<unsigned short>("ghost_layers") = 2;
+  params.addParam<MooseFunctorName>(NS::superficial_velocity, "The superficial velocity");
   return params;
 }
 
 PINSFVMomentumDiffusion::PINSFVMomentumDiffusion(const InputParameters & params)
-  : FVFluxKernel(params),
-    _mu(getFunctor<ADReal>(NS::mu)),
+  : INSFVMomentumDiffusion(params),
     _eps(getFunctor<ADReal>(NS::porosity)),
-    _index(getParam<MooseEnum>("momentum_component")),
     _vel(isParamValid(NS::superficial_velocity)
              ? &getFunctor<ADRealVectorValue>(NS::superficial_velocity)
              : nullptr),
     _eps_var(dynamic_cast<const MooseVariableFVReal *>(getFieldVar(NS::porosity, 0))),
-    _smooth_porosity(getParam<bool>("smooth_porosity")),
-    _cd_limiter()
+    _smooth_porosity(getParam<bool>("smooth_porosity"))
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError("PINSFV is not supported by local AD indexing. In order to use PINSFV, please run "
@@ -61,6 +51,102 @@ PINSFVMomentumDiffusion::PINSFVMomentumDiffusion(const InputParameters & params)
     paramError("smooth_porosity",
                "The porosity gradient diffusion term requires specifying "
                "both the momentum component and a superficial velocity material property.");
+}
+
+void
+PINSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
+{
+  const Elem & elem = fi.elem();
+  const Elem * const neighbor = fi.neighborPtr();
+  const Point & normal = fi.normal();
+  Real coord;
+  coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
+  const auto surface_vector = normal * fi.faceArea() * coord;
+
+  const auto face_mu = _mu(std::make_tuple(
+      &fi, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains(&fi)));
+
+  if (onBoundary(fi))
+  {
+    auto ft = fi.faceType(_var.name());
+    const Elem * const boundary_elem = (ft == FaceInfo::VarFaceNeighbors::ELEM) ? &elem : neighbor;
+    const Point & boundary_elem_centroid =
+        (ft == FaceInfo::VarFaceNeighbors::ELEM) ? fi.elemCentroid() : fi.neighborCentroid();
+
+    // Compute the face porosity
+    Real eps_face = MetaPhysicL::raw_value(_eps_var->getBoundaryFaceValue(fi));
+
+    // Find the boundary id that has an associated INSFV boundary condition
+    // if a face has more than one bc_id
+    for (const auto bc_id : fi.boundaryIDs())
+    {
+      if (_no_slip_wall_boundaries.find(bc_id) != _no_slip_wall_boundaries.end())
+      {
+        // Need to account for viscous shear stress from wall
+        const ADReal coeff = face_mu / eps_face * surface_vector.norm() /
+                             std::abs((fi.faceCentroid() - boundary_elem_centroid) * normal) *
+                             (1 - normal(_index) * normal(_index));
+        _rc_uo.addToA(boundary_elem, _index, coeff);
+        return;
+      }
+
+      if (_slip_wall_boundaries.find(bc_id) != _slip_wall_boundaries.end())
+        // In the case of a slip wall we neither have viscous shear stress from the wall, so our
+        // contribution to the coefficient is zero
+        return;
+
+      if (_flow_boundaries.find(bc_id) != _flow_boundaries.end())
+      {
+        if (_fully_developed_flow_boundaries.find(bc_id) == _fully_developed_flow_boundaries.end())
+        {
+          // We are not on a fully developed flow boundary, so we have a viscous term
+          // contribution. This term is slightly modified relative to the internal face term.
+          // Instead of the distance between elem and neighbor centroid, we just have the distance
+          // between the elem and face centroid. Specifically, the term below is the result of
+          // Moukalled 8.80, 8.82, and the orthogonal correction approach equation for E_f,
+          // equation 8.89. So relative to the internal face viscous term, we have substituted
+          // eqn. 8.82 for 8.78
+          // Note: If mu is an effective diffusivity, this should not be divided by eps_face
+          const ADReal coeff = face_mu / eps_face * surface_vector.norm() /
+                               (fi.faceCentroid() - boundary_elem_centroid).norm();
+          _rc_uo.addToA(boundary_elem, _index, coeff);
+        }
+        return;
+      }
+
+      if (_symmetry_boundaries.find(bc_id) != _symmetry_boundaries.end())
+      {
+        // Moukalled eqns. 15.154 - 15.156, adapted for porosity
+        const ADReal coeff = 2. * face_mu / eps_face * surface_vector.norm() /
+                             std::abs((fi.faceCentroid() - boundary_elem_centroid) * normal) *
+                             normal(_index) * normal(_index);
+        _rc_uo.addToA(boundary_elem, _index, coeff);
+        return;
+      }
+    }
+
+    const auto bc_id = *fi.boundaryIDs().begin();
+    mooseError("The INSFVMomentumAdvection object ",
+               this->name(),
+               " is not completely bounded by INSFVBCs. Please examine surface ",
+               bc_id,
+               " and your FVBCs blocks.");
+  }
+
+  // Else we are on an internal face
+
+  // Compute the face porosity
+  // Note: Try to be consistent with how the superficial velocity is computed in computeQpResidual
+  const Real eps_face = MetaPhysicL::raw_value(
+      _eps_var->getInternalFaceValue(neighbor, fi, _eps_var->getElemValue(&fi.elem())));
+
+  // Now add the viscous flux. Note that this includes only the orthogonal component! See
+  // Moukalled equations 8.80, 8.78, and the orthogonal correction approach equation for
+  // E_f, equation 8.69
+  const ADReal coeff = face_mu / eps_face * surface_vector.norm() /
+                       (fi.neighborCentroid() - fi.elemCentroid()).norm();
+  _rc_uo.addToA(&elem, _index, coeff);
+  _rc_uo.addToA(neighbor, _index, coeff);
 }
 
 ADReal

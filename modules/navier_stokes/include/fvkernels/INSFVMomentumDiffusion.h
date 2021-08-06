@@ -9,25 +9,24 @@
 
 #pragma once
 
-#include "FVElementalKernel.h"
+#include "FVFluxKernel.h"
+#include "INSFVFluxKernelInterface.h"
 #include "INSFVResidualObject.h"
 
-class INSFVMomentumPressure : public FVElementalKernel, public INSFVResidualObject
+class INSFVMomentumDiffusion : public FVFluxKernel,
+                               public INSFVFluxKernelInterface,
+                               public INSFVResidualObject
 {
 public:
   static InputParameters validParams();
-  INSFVMomentumPressure(const InputParameters & params);
-
-  // This object neither contributes to the A coefficients nor to the B (source) coefficients
+  INSFVMomentumDiffusion(const InputParameters & params);
   void gatherRCData(const Elem &) override {}
-  void gatherRCData(const FaceInfo &) override {}
+  void gatherRCData(const FaceInfo & fi) override;
+  void initialSetup() override { INSFVFluxKernelInterface::initialSetup(*this); }
 
 protected:
   ADReal computeQpResidual() override;
 
-  /// The pressure variable
-  const MooseVariableFVReal * const _p_var;
-
-  /// index x|y|z
-  const unsigned int _index;
+  /// The dynamic viscosity
+  const Moose::Functor<ADReal> & _mu;
 };

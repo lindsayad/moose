@@ -20,6 +20,8 @@ class PINSFVMomentumAdvection : public INSFVMomentumAdvection
 public:
   static InputParameters validParams();
   PINSFVMomentumAdvection(const InputParameters & params);
+  using INSFVMomentumAdvection::gatherRCData;
+  void gatherRCData(const FaceInfo & fi) override;
 
 protected:
   /**
@@ -28,7 +30,6 @@ protected:
   void interpolate(Moose::FV::InterpMethod m, ADRealVectorValue & interp_v) override;
 
   virtual ADReal computeQpResidual() override;
-  VectorValue<ADReal> coeffCalculator(const Elem & elem) const override;
 
   /// porosity variable to compute gradients
   const MooseVariableFV<Real> * const _eps_var;
