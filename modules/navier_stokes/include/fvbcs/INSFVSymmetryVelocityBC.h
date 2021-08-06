@@ -10,40 +10,39 @@
 #pragma once
 
 #include "INSFVSymmetryBC.h"
+#include "INSFVMomentumResidualObject.h"
 
 /**
  * A class for setting a symmetry boundary condition on the velocity. It should be
  * used in conjunction with an INSFVSymmetryPressureBC.
  */
-class INSFVSymmetryVelocityBC : public INSFVSymmetryBC
+class INSFVSymmetryVelocityBC : public INSFVSymmetryBC, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();
   INSFVSymmetryVelocityBC(const InputParameters & params);
 
+  void gatherRCData(const Elem &) override {}
+  void gatherRCData(const FaceInfo & fi) override;
+
 protected:
   ADReal computeQpResidual() override;
 
-  /// x-velocity on the FaceInfo elem
-  const ADVariableValue & _u_elem;
-  /// y-velocity on the FaceInfo elem
-  const ADVariableValue & _v_elem;
-  /// z-velocity on the FaceInfo elem
-  const ADVariableValue & _w_elem;
-
-  /// x-velocity on the FaceInfo neighbor
-  const ADVariableValue & _u_neighbor;
-  /// y-velocity on the FaceInfo neighbor
-  const ADVariableValue & _v_neighbor;
-  /// z-velocity on the FaceInfo neighbor
-  const ADVariableValue & _w_neighbor;
-
-  /// What component of the velocity this object is acting on
-  const unsigned int _comp;
+  /// x-velocity
+  const Moose::Functor<ADReal> & _u_functor;
+  /// y-velocity
+  const Moose::Functor<ADReal> & _v_functor;
+  /// z-velocity
+  const Moose::Functor<ADReal> & _w_functor;
 
   /// The dynamic viscosity
   const Moose::Functor<ADReal> & _mu;
 
   /// The mesh dimension
   const unsigned int _dim;
+
+  /// Whether we are computing RC data
+  bool _computing_rc_data;
+
+  ADReal _a = 0;
 };

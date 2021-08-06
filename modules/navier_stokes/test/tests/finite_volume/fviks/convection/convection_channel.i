@@ -3,8 +3,6 @@ rho = 1
 k = .01
 cp = 1
 vel = 'velocity'
-velocity_interp_method = 'rc'
-advected_interp_method = 'average'
 
 [Mesh]
   [cmg]
@@ -33,6 +31,18 @@ advected_interp_method = 'average'
 [GlobalParams]
   # retain behavior at time of test creation
   two_term_boundary_expansion = false
+  rhie_chow_user_object = 'rc'
+  advected_interp_method = 'average'
+  velocity_interp_method = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+    block = 0
+  []
 []
 
 [Variables]
@@ -70,12 +80,9 @@ advected_interp_method = 'average'
     type = INSFVMassAdvection
     variable = pressure
     vel = ${vel}
-    advected_interp_method = ${advected_interp_method}
-    velocity_interp_method = ${velocity_interp_method}
     u = u
     v = v
     pressure = pressure
-    mu = ${mu}
     rho = ${rho}
   []
   [mean_zero_pressure]
@@ -89,18 +96,17 @@ advected_interp_method = 'average'
     variable = u
     advected_quantity = 'rhou'
     vel = ${vel}
-    velocity_interp_method = ${velocity_interp_method}
-    advected_interp_method = ${advected_interp_method}
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'x'
   []
   [u_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = u
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'x'
   []
   [u_pressure]
     type = INSFVMomentumPressure
@@ -114,18 +120,17 @@ advected_interp_method = 'average'
     variable = v
     advected_quantity = 'rhov'
     vel = ${vel}
-    velocity_interp_method = ${velocity_interp_method}
-    advected_interp_method = ${advected_interp_method}
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'y'
   []
   [v_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = v
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'y'
   []
   [v_pressure]
     type = INSFVMomentumPressure
@@ -143,12 +148,9 @@ advected_interp_method = 'average'
     type = INSFVEnergyAdvection
     variable = T
     vel = ${vel}
-    velocity_interp_method = ${velocity_interp_method}
-    advected_interp_method = ${advected_interp_method}
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
   []
 
@@ -223,6 +225,8 @@ advected_interp_method = 'average'
     u = u
     v = v
     vel = 'velocity'
+    momentum_component = 'x'
+    rho = ${rho}
   []
   [outlet_v]
     type = INSFVMomentumAdvectionOutflowBC
@@ -231,6 +235,8 @@ advected_interp_method = 'average'
     u = u
     v = v
     vel = 'velocity'
+    momentum_component = 'y'
+    rho = ${rho}
   []
 
   [heater]
@@ -284,7 +290,6 @@ advected_interp_method = 'average'
     boundary = 'top_to_0'
     vel_x = u
     vel_y = v
-    advected_interp_method = ${advected_interp_method}
   []
 []
 

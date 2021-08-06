@@ -81,6 +81,9 @@ protected:
   std::tuple<const FaceInfo *, Moose::FV::LimiterType, bool, SubdomainID> singleSidedFaceArg(
       Moose::FV::LimiterType limiter_type = Moose::FV::LimiterType::CentralDifference) const;
 
+  /// The variable face type
+  FaceInfo::VarFaceNeighbors _face_type;
+
 private:
   /**
    * This creates a tuple of an element, \p FaceInfo, and subdomain ID. The element returned will

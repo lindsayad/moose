@@ -14,6 +14,8 @@
 #include "Limiter.h"
 #include "MathUtils.h"
 #include "libmesh/compare_types.h"
+#include "libmesh/elem.h"
+#include <tuple>
 
 template <typename>
 class MooseVariableFV;
@@ -22,6 +24,27 @@ namespace Moose
 {
 namespace FV
 {
+inline std::
+    tuple<const FaceInfo *, Moose::FV::LimiterType, bool, bool, std::pair<SubdomainID, SubdomainID>>
+    makeCDFace(const FaceInfo & fi,
+               const std::pair<SubdomainID, SubdomainID> & subs,
+               const bool skewness_correction = false)
+{
+  return std::make_tuple(
+      &fi, Moose::FV::LimiterType::CentralDifference, true, skewness_correction, subs);
+}
+
+inline std::
+    tuple<const FaceInfo *, Moose::FV::LimiterType, bool, bool, std::pair<SubdomainID, SubdomainID>>
+    makeCDFace(const FaceInfo & fi, const bool skewness_correction = false)
+{
+  return makeCDFace(
+      fi,
+      std::make_pair(fi.elem().subdomain_id(),
+                     fi.neighborPtr() ? fi.neighbor().subdomain_id() : Moose::INVALID_BLOCK_ID),
+      skewness_correction);
+}
+
 /// This codifies a set of available ways to interpolate with elem+neighbor
 /// solution information to calculate values (e.g. solution, material
 /// properties, etc.) at the face (centroid).  These methods are used in the

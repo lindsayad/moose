@@ -10,16 +10,23 @@
 #pragma once
 
 #include "INSFVSlipWallBC.h"
+#include "INSFVMomentumResidualObject.h"
 
 /**
  * A class for free slip boundary conditions for the velocity.
  */
-class INSFVNaturalFreeSlipBC : public INSFVSlipWallBC
+class INSFVNaturalFreeSlipBC : public INSFVSlipWallBC, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();
   INSFVNaturalFreeSlipBC(const InputParameters & params);
 
+  void gatherRCData(const Elem &) override {}
+
+  // A free slip wall boundary condition does not allow any outflow nor does it impose any viscous
+  // stress so there is no data to contribute from this object
+  void gatherRCData(const FaceInfo &) override {}
+
 protected:
-  ADReal computeQpResidual() override;
+  ADReal computeQpResidual() override { return 0; }
 };

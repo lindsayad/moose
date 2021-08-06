@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "ParsedFunctionTest.h"
+#include "MathFVUtils.h"
 
 #include "libmesh/fe_map.h"
 #include "libmesh/quadrature_gauss.h"
@@ -81,10 +82,8 @@ TEST_F(ParsedFunctionTest, basicConstructor)
   test_eq();
 
   // Test face overloads
-  auto face = std::make_tuple(fi,
-                              Moose::FV::LimiterType::CentralDifference,
-                              true,
-                              std::make_pair(elem->subdomain_id(), neighbor->subdomain_id()));
+  auto face =
+      Moose::FV::makeCDFace(*fi, std::make_pair(elem->subdomain_id(), neighbor->subdomain_id()));
   f_traditional = f.value(0, fi->faceCentroid());
   f_functor = f(face, 0);
   gradient_traditional = f.gradient(0, fi->faceCentroid());

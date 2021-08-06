@@ -21,6 +21,18 @@ inlet_v = 0.001
   []
 []
 
+[GlobalParams]
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+  []
+[]
+
 [Variables]
   [u]
     type = INSFVVelocityVariable
@@ -65,7 +77,6 @@ inlet_v = 0.001
     u = u
     v = v
     pressure = pressure
-    mu = 'mu'
     rho = 'rho'
   []
 
@@ -74,6 +85,7 @@ inlet_v = 0.001
     variable = u
     drho_dt = drho_dt
     rho = rho
+    momentum_component = 'x'
   []
   [u_advection]
     type = INSFVMomentumAdvection
@@ -85,13 +97,14 @@ inlet_v = 0.001
     pressure = pressure
     u = u
     v = v
-    mu = 'mu'
     rho = 'rho'
+    momentum_component = 'x'
   []
   [u_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = u
-    coeff = 'mu'
+    mu = 'mu'
+    momentum_component = 'x'
   []
   [u_pressure]
     type = INSFVMomentumPressure
@@ -105,6 +118,7 @@ inlet_v = 0.001
     variable = v
     drho_dt = drho_dt
     rho = rho
+    momentum_component = 'y'
   []
   [v_advection]
     type = INSFVMomentumAdvection
@@ -116,13 +130,14 @@ inlet_v = 0.001
     pressure = pressure
     u = u
     v = v
-    mu = 'mu'
     rho = 'rho'
+    momentum_component = 'y'
   []
   [v_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = v
-    coeff = 'mu'
+    mu = 'mu'
+    momentum_component = 'y'
   []
   [v_pressure]
     type = INSFVMomentumPressure
@@ -153,7 +168,6 @@ inlet_v = 0.001
     pressure = pressure
     u = u
     v = v
-    mu = 'mu'
     rho = 'rho'
   []
   [heat_source]
@@ -275,6 +289,7 @@ inlet_v = 0.001
 
   automatic_scaling = true
   off_diagonals_in_auto_scaling = true
+  compute_scaling_once = false
 []
 
 [Outputs]

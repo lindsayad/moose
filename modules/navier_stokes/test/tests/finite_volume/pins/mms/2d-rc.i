@@ -45,6 +45,15 @@ velocity_interp_method='rc'
 
 [GlobalParams]
   porosity = porosity
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+  []
 []
 
 [FVKernels]
@@ -57,7 +66,6 @@ velocity_interp_method='rc'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
   []
   [mass_forcing]
@@ -76,14 +84,15 @@ velocity_interp_method='rc'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'x'
   []
   [u_viscosity]
     type = PINSFVMomentumDiffusion
     variable = u
     mu = ${mu}
     porosity = porosity
+    momentum_component = 'x'
   []
   [u_pressure]
     type = PINSFVMomentumPressure
@@ -92,9 +101,10 @@ velocity_interp_method='rc'
     pressure = pressure
   []
   [u_forcing]
-    type = FVBodyForce
+    type = INSFVBodyForce
     variable = u
     function = forcing_u
+    momentum_component = 'x'
   []
 
   [v_advection]
@@ -107,14 +117,15 @@ velocity_interp_method='rc'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'y'
   []
   [v_viscosity]
     type = PINSFVMomentumDiffusion
     variable = v
     mu = ${mu}
     porosity = porosity
+    momentum_component = 'y'
   []
   [v_pressure]
     type = PINSFVMomentumPressure
@@ -123,9 +134,10 @@ velocity_interp_method='rc'
     pressure = pressure
   []
   [v_forcing]
-    type = FVBodyForce
+    type = INSFVBodyForce
     variable = v
     function = forcing_v
+    momentum_component = 'y'
   []
 []
 

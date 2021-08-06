@@ -338,7 +338,7 @@ public:
   virtual void prepareShapes(unsigned int var, THREAD_ID tid) = 0;
   virtual void prepareFaceShapes(unsigned int var, THREAD_ID tid) = 0;
   virtual void prepareNeighborShapes(unsigned int var, THREAD_ID tid) = 0;
-  virtual Moose::CoordinateSystemType getCoordSystem(SubdomainID sid) const = 0;
+  Moose::CoordinateSystemType getCoordSystem(SubdomainID sid) const;
 
   /**
    * Returns the desired radial direction for RZ coordinate transformation
@@ -849,7 +849,8 @@ public:
   /**
    * add a functor to the problem functor container
    */
-  void addFunctor(const std::string & name, const Moose::FunctorBase * functor, THREAD_ID tid);
+  template <typename T>
+  void addFunctor(const std::string & name, const Moose::FunctorImpl<T> & functor, THREAD_ID tid);
 
   virtual void initialSetup();
   virtual void timestepSetup();
@@ -883,9 +884,6 @@ protected:
   Factory & _factory;
 
   CouplingMatrix _nonlocal_cm; /// nonlocal coupling matrix;
-
-  /// Type of coordinate system per subdomain
-  std::map<SubdomainID, Moose::CoordinateSystemType> _coord_sys;
 
   DiracKernelInfo _dirac_kernel_info;
 
@@ -939,9 +937,6 @@ protected:
   /// Elements that should have Dofs ghosted to the local processor
   std::set<dof_id_type> _ghosted_elems;
 
-  /// Storage for RZ axis selection
-  unsigned int _rz_coord_axis;
-
   /// Flag to determine whether the problem is currently computing Jacobian
   bool _currently_computing_jacobian;
 
@@ -967,11 +962,11 @@ private:
   /// we've created a name key then by the time we're setting up the problem this boolean must
   /// evaluate to true or else it means someone has requested property that won't be provided) and
   /// the second member of the pair is a unique pointer to the functor material property object
-  std::vector<std::map<std::string, std::pair<bool, std::unique_ptr<Moose::FunctorBase>>>>
+  std::vector<std::map<std::string, std::pair<bool, Moose::FunctorBase *>>>
       _functor_material_properties;
 
   /// A container holding pointers to all the functors in our problem
-  std::vector<std::multimap<std::string, const Moose::FunctorBase *>> _functors;
+  std::vector<std::multimap<std::string, std::unique_ptr<Moose::FunctorBase>>> _functors;
 
 private:
   /// The requestors of functors where the key is the prop name and the value is a set of names of
@@ -1025,57 +1020,52 @@ SubProblem::declareFunctorProperty(const std::string & name,
   if (it == functor_material_properties.end())
   {
     // No material property created yet so create it
-    it = functor_material_properties
-             .emplace(
-                 name,
-                 std::make_pair(actually_declaring_property,
-                                std::make_unique<FunctorMaterialProperty<T>>(std::make_unique<P<T>>(
-                                    name, std::forward<ConstructionArgs>(construction_args)...))))
-             .first;
-    // And add it to our all-functors container
+    auto new_functor = std::make_unique<FunctorMaterialProperty<T>>(
+        std::make_unique<P<T>>(name, std::forward<ConstructionArgs>(construction_args)...));
+    // Add it to our all-functors container that will own the object
     auto & functors = _functors[tid];
-    functors.emplace(std::make_pair(name, it->second.second.get()));
+    auto functors_it = functors.emplace(std::make_pair(name, std::move(new_functor)));
+    functor_material_properties.emplace(
+        name, std::make_pair(actually_declaring_property, functors_it->second.get()));
+    return static_cast<FunctorMaterialProperty<T> &>(*functors_it->second);
   }
-  else
-  // The property already exists
+
+  // Else the property already exists
+  auto & prop_pair = it->second;
+  bool & already_declared = prop_pair.first;
+  auto * const wrapper_property = dynamic_cast<FunctorMaterialProperty<T> *>(prop_pair.second);
+  if (!wrapper_property)
+    mooseError("Inconsistent return types for functor material property '",
+               name,
+               "'. Did you declare and retrieve the property with different return types?");
+
+  if (actually_declaring_property)
   {
-    auto & prop_pair = it->second;
-    bool & already_declared = prop_pair.first;
-    auto * const wrapper_property =
-        dynamic_cast<FunctorMaterialProperty<T> *>(prop_pair.second.get());
-    if (!wrapper_property)
-      mooseError("Inconsistent return types for functor material property '",
-                 name,
-                 "'. Did you declare and retrieve the property with different return types?");
-
-    if (actually_declaring_property)
+    if (already_declared)
     {
-      if (already_declared)
-      {
-        // Let's make sure all of our declarations of a given property have the same template P,
-        // e.g. underlying/wrapped type
-        if (!wrapper_property->template wrapsType<P<T>>())
-          mooseError("Inconsistent types for functor material property '",
-                     name,
-                     "'. Did you declare this property name with different types in different "
-                     "FunctorMaterials?");
-      }
-      else
-      {
-        // Let's make sure we're the correct template P. If we're not, this is the first
-        // declaration so we're free to re-create with the correct P (if we're not the correct P,
-        // it means P is a derived class of FunctorMaterialPropertyImpl)
-        if (!wrapper_property->template wrapsType<P<T>>())
-          (*wrapper_property) =
-              std::make_unique<P<T>>(name, std::forward<ConstructionArgs>(construction_args)...);
+      // Let's make sure all of our declarations of a given property have the same template P,
+      // e.g. underlying/wrapped type
+      if (!wrapper_property->template wrapsType<P<T>>())
+        mooseError("Inconsistent types for functor material property '",
+                   name,
+                   "'. Did you declare this property name with different types in different "
+                   "FunctorMaterials?");
+    }
+    else
+    {
+      // Let's make sure we're the correct template P. If we're not, this is the first
+      // declaration so we're free to re-create with the correct P (if we're not the correct P,
+      // it means P is a derived class of FunctorMaterialPropertyImpl)
+      if (!wrapper_property->template wrapsType<P<T>>())
+        (*wrapper_property) =
+            std::make_unique<P<T>>(name, std::forward<ConstructionArgs>(construction_args)...);
 
-        // Now we can update the declaration status
-        already_declared = true;
-      }
+      // Now we can update the declaration status
+      already_declared = true;
     }
   }
 
-  auto * const property = dynamic_cast<FunctorMaterialProperty<T> *>(it->second.second.get());
+  auto * const property = dynamic_cast<FunctorMaterialProperty<T> *>(it->second.second);
   mooseAssert(property, "We should have handled all cases");
   return *property;
 }
@@ -1102,7 +1092,7 @@ SubProblem::getFunctor(const std::string & name,
                  "' but multiple functors match. Make sure that you do not have functor material "
                  "properties, functions, and variables with the same names");
 
-    const auto * const functor = dynamic_cast<const Moose::Functor<T> *>(it->second);
+    auto * const functor = dynamic_cast<Moose::Functor<T> *>(it->second.get());
     if (!functor)
       mooseError("A call to SubProblem::getFunctor requested a functor named '",
                  name,
@@ -1116,6 +1106,17 @@ SubProblem::getFunctor(const std::string & name,
   // in the future as a functor material property. We will almost certainly want to change this
   // assumption eventually if functors take over the world
   return declareFunctorProperty<T>(name, tid, true);
+}
+
+template <typename T>
+void
+SubProblem::addFunctor(const std::string & name,
+                       const Moose::FunctorImpl<T> & functor,
+                       const THREAD_ID tid)
+{
+  mooseAssert(tid < _functors.size(), "Too large a thread ID");
+  auto wrapper_functor = std::make_unique<Moose::Functor<T>>(functor);
+  _functors[tid].emplace(std::make_pair(name, std::move(wrapper_functor)));
 }
 
 namespace Moose

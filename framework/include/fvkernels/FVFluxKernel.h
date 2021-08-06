@@ -62,7 +62,7 @@ protected:
   /// should be skipped.
   virtual bool skipForBoundary(const FaceInfo & fi) const;
 
-  const ADRealVectorValue & normal() const { return _normal; }
+  const RealVectorValue & normal() const { return _normal; }
 
   MooseVariableFV<Real> & _var;
 
@@ -76,11 +76,14 @@ protected:
   /// This is the outward unit normal vector for the face the kernel is currently
   /// operating on.  By convention, this is set to be pointing outward from the
   /// face's elem element and residual calculations should keep this in mind.
-  ADRealVectorValue _normal;
+  RealVectorValue _normal;
 
   /// This is holds meta-data for geometric information relevant to the current
   /// face including elem+neighbor cell centroids, cell volumes, face area, etc.
   const FaceInfo * _face_info = nullptr;
+
+  /// The face type
+  FaceInfo::VarFaceNeighbors _face_type;
 
   /**
    * Return whether the supplied face is on a boundary of this object's execution
@@ -119,6 +122,11 @@ protected:
    */
   std::pair<SubdomainID, SubdomainID> faceArgSubdomains(const FaceInfo * face_info = nullptr) const;
 
+  const bool _force_boundary_execution;
+
+  std::unordered_set<BoundaryID> _boundaries_to_force;
+  std::unordered_set<BoundaryID> _boundaries_to_not_force;
+
 private:
   /// Computes the Jacobian contribution for every coupled variable.
   ///
@@ -129,9 +137,4 @@ private:
   /// @param residual The already computed residual (probably done with \p computeQpResidual) that
   /// also holds derivative information for filling in the Jacobians.
   void computeJacobian(Moose::DGJacobianType type, const ADReal & residual);
-
-  const bool _force_boundary_execution;
-
-  std::unordered_set<BoundaryID> _boundaries_to_force;
-  std::unordered_set<BoundaryID> _boundaries_to_not_force;
 };

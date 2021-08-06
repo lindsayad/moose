@@ -5,6 +5,19 @@ velocity_interp_method='rc'
 
 restricted_blocks = '1'
 
+[GlobalParams]
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+    block = ${restricted_blocks}
+  []
+[]
+
 [Mesh]
   parallel_type = 'replicated'
   [mesh]
@@ -77,7 +90,6 @@ restricted_blocks = '1'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
   []
 
@@ -91,13 +103,14 @@ restricted_blocks = '1'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'x'
   []
   [u_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = u
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'x'
   []
   [u_pressure]
     type = INSFVMomentumPressure
@@ -116,13 +129,14 @@ restricted_blocks = '1'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'y'
   []
   [v_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = v
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'y'
   []
   [v_pressure]
     type = INSFVMomentumPressure
@@ -140,7 +154,6 @@ restricted_blocks = '1'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
   []
   [energy_diffusion]
@@ -163,7 +176,6 @@ restricted_blocks = '1'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
   []
   [scalar_diffusion]

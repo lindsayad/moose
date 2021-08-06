@@ -17,19 +17,19 @@ using namespace libMesh;
 using namespace Moose;
 
 template <typename T>
-class TestFunctor : public Functor<T>
+class TestFunctor : public FunctorImpl<T>
 {
 public:
-  using typename Functor<T>::FaceArg;
-  using typename Functor<T>::SingleSidedFaceArg;
-  using typename Functor<T>::ElemFromFaceArg;
-  using typename Functor<T>::ElemQpArg;
-  using typename Functor<T>::ElemSideQpArg;
-  using typename Functor<T>::FunctorType;
-  using typename Functor<T>::FunctorReturnType;
-  using typename Functor<T>::ValueType;
-  using typename Functor<T>::GradientType;
-  using typename Functor<T>::DotType;
+  using typename FunctorImpl<T>::FaceArg;
+  using typename FunctorImpl<T>::SingleSidedFaceArg;
+  using typename FunctorImpl<T>::ElemFromFaceArg;
+  using typename FunctorImpl<T>::ElemQpArg;
+  using typename FunctorImpl<T>::ElemSideQpArg;
+  using typename FunctorImpl<T>::FunctorType;
+  using typename FunctorImpl<T>::FunctorReturnType;
+  using typename FunctorImpl<T>::ValueType;
+  using typename FunctorImpl<T>::GradientType;
+  using typename FunctorImpl<T>::DotType;
 
   TestFunctor() = default;
 
@@ -64,6 +64,7 @@ TEST(MooseFunctorTest, testArgs)
   auto face = std::make_tuple(&fi,
                               FV::LimiterType::CentralDifference,
                               true,
+                              false,
                               std::make_pair(INVALID_BLOCK_ID, INVALID_BLOCK_ID));
   auto single_face =
       std::make_tuple(&fi, FV::LimiterType::CentralDifference, true, INVALID_BLOCK_ID);

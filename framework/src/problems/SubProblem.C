@@ -48,7 +48,6 @@ SubProblem::SubProblem(const InputParameters & parameters)
     _nonlocal_cm(),
     _requires_nonlocal_coupling(false),
     _default_ghosting(getParam<bool>("default_ghosting")),
-    _rz_coord_axis(1), // default to RZ rotation around y-axis
     _currently_computing_jacobian(false),
     _computing_nonlinear_residual(false),
     _currently_computing_residual(false),
@@ -762,10 +761,7 @@ SubProblem::setCurrentBoundaryID(BoundaryID bid, THREAD_ID tid)
 unsigned int
 SubProblem::getAxisymmetricRadialCoord() const
 {
-  if (_rz_coord_axis == 0)
-    return 1; // if the rotation axis is x (0), then the radial direction is y (1)
-  else
-    return 0; // otherwise the radial direction is assumed to be x, i.e., the rotation axis is y
+  return mesh().getAxisymmetricRadialCoord();
 }
 
 MooseVariableFEBase &
@@ -1073,19 +1069,16 @@ SubProblem::initialSetup()
       }
 }
 
-void
-SubProblem::addFunctor(const std::string & name,
-                       const Moose::FunctorBase * functor,
-                       const THREAD_ID tid)
-{
-  mooseAssert(tid < _functors.size(), "Too large a thread ID");
-  _functors[tid].emplace(std::make_pair(name, functor));
-}
-
 bool
 SubProblem::hasFunctor(const std::string & name, const THREAD_ID tid) const
 {
   mooseAssert(tid < _functors.size(), "Too large a thread ID");
   auto & functors = _functors[tid];
   return (functors.find(name) != functors.end());
+}
+
+Moose::CoordinateSystemType
+SubProblem::getCoordSystem(SubdomainID sid) const
+{
+  return mesh().getCoordSystem(sid);
 }

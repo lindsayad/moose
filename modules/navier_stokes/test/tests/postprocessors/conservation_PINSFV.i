@@ -41,6 +41,18 @@ velocity_interp_method='average'
   fv_bcs_integrity_check = true
 []
 
+[GlobalParams]
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+  []
+[]
+
 [Variables]
   [u]
     type = PINSFVSuperficialVelocityVariable
@@ -83,7 +95,6 @@ velocity_interp_method='average'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
     porosity = porosity
   []
@@ -98,9 +109,9 @@ velocity_interp_method='average'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
     porosity = porosity
+    momentum_component = 'x'
   []
   [u_viscosity]
     type = PINSFVMomentumDiffusion
@@ -108,6 +119,7 @@ velocity_interp_method='average'
     force_boundary_execution = true
     porosity = porosity
     mu = ${mu}
+    momentum_component = 'x'
   []
   [u_pressure]
     type = PINSFVMomentumPressure
@@ -127,9 +139,9 @@ velocity_interp_method='average'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
     porosity = porosity
+    momentum_component = 'y'
   []
   [v_viscosity]
     type = PINSFVMomentumDiffusion
@@ -137,6 +149,7 @@ velocity_interp_method='average'
     force_boundary_execution = true
     porosity = porosity
     mu = ${mu}
+    momentum_component = 'y'
   []
   [v_pressure]
     type = PINSFVMomentumPressure
@@ -155,7 +168,6 @@ velocity_interp_method='average'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
     porosity = porosity
   []
@@ -197,11 +209,13 @@ velocity_interp_method='average'
     type = INSFVNaturalFreeSlipBC
     boundary = 'right'
     variable = u
+    momentum_component = 'x'
   []
   [free-slip-v]
     type = INSFVNaturalFreeSlipBC
     boundary = 'right'
     variable = v
+    momentum_component = 'y'
   []
   [axis-u]
     type = PINSFVSymmetryVelocityBC

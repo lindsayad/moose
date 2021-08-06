@@ -127,6 +127,7 @@ FVFluxKernel::computeResidual(const FaceInfo & fi)
 
   _face_info = &fi;
   _normal = fi.normal();
+  _face_type = fi.faceType(_var.name());
   auto r = MetaPhysicL::raw_value(fi.faceArea() * fi.faceCoord() * computeQpResidual());
 
   // residual contributions for a flux kernel go to both neighboring faces.
@@ -145,15 +146,16 @@ FVFluxKernel::computeResidual(const FaceInfo & fi)
   // defined on one side and there is NOT a dirichlet BC, then there is either
   // a flux BC or a natural BC - in either of those cases we don't want to add
   // any residual contributions from regular flux kernels.
-  auto ft = fi.faceType(_var.name());
-  if (ft == FaceInfo::VarFaceNeighbors::ELEM || ft == FaceInfo::VarFaceNeighbors::BOTH)
+  if (_face_type == FaceInfo::VarFaceNeighbors::ELEM ||
+      _face_type == FaceInfo::VarFaceNeighbors::BOTH)
   {
     // residual contribution of this kernel to the elem element
     prepareVectorTag(_assembly, _var.number());
     _local_re(0) = r;
     accumulateTaggedLocalResidual();
   }
-  if (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR || ft == FaceInfo::VarFaceNeighbors::BOTH)
+  if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR ||
+      _face_type == FaceInfo::VarFaceNeighbors::BOTH)
   {
     // residual contribution of this kernel to the neighbor element
     prepareVectorTagNeighbor(_assembly, _var.number());
@@ -226,6 +228,7 @@ FVFluxKernel::computeJacobian(const FaceInfo & fi)
 
   _face_info = &fi;
   _normal = fi.normal();
+  _face_type = fi.faceType(_var.name());
   const ADReal r = fi.faceArea() * fi.faceCoord() * computeQpResidual();
 
   // The fancy face type if condition checks here are because we might
@@ -237,8 +240,8 @@ FVFluxKernel::computeJacobian(const FaceInfo & fi)
   // defined on one side and there is NOT a dirichlet BC, then there is either
   // a flux BC or a natural BC - in either of those cases we don't want to add
   // any jacobian contributions from regular flux kernels.
-  auto ft = fi.faceType(_var.name());
-  if (ft == FaceInfo::VarFaceNeighbors::ELEM || ft == FaceInfo::VarFaceNeighbors::BOTH)
+  if (_face_type == FaceInfo::VarFaceNeighbors::ELEM ||
+      _face_type == FaceInfo::VarFaceNeighbors::BOTH)
   {
     mooseAssert(_var.dofIndices().size() == 1, "We're currently built to use CONSTANT MONOMIALS");
 
@@ -248,14 +251,15 @@ FVFluxKernel::computeJacobian(const FaceInfo & fi)
       computeJacobian(Moose::ElementElement, residual);
 
       mooseAssert(
-          (ft == FaceInfo::VarFaceNeighbors::ELEM) == (_var.dofIndicesNeighbor().size() == 0),
+          (_face_type == FaceInfo::VarFaceNeighbors::ELEM) ==
+              (_var.dofIndicesNeighbor().size() == 0),
           "If the variable is only defined on the elem hand side of the face, then that "
           "means it should have no dof indices on the neighbor/neighbor element. Conversely if "
           "the variable is defined on both sides of the face, then it should have a non-zero "
           "number of degrees of freedom on the neighbor/neighbor element");
 
       // only add residual to neighbor if the variable is defined there.
-      if (ft == FaceInfo::VarFaceNeighbors::BOTH)
+      if (_face_type == FaceInfo::VarFaceNeighbors::BOTH)
         // jacobian contribution of the residual for the elem element to the neighbor element's DOF:
         // d/d_neighbor (residual_elem)
         computeJacobian(Moose::ElementNeighbor, residual);
@@ -264,9 +268,11 @@ FVFluxKernel::computeJacobian(const FaceInfo & fi)
     _assembly.processDerivatives(r, _var.dofIndices()[0], _matrix_tags, element_functor);
   }
 
-  if (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR || ft == FaceInfo::VarFaceNeighbors::BOTH)
+  if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR ||
+      _face_type == FaceInfo::VarFaceNeighbors::BOTH)
   {
-    mooseAssert((ft == FaceInfo::VarFaceNeighbors::NEIGHBOR) == (_var.dofIndices().size() == 0),
+    mooseAssert((_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR) ==
+                    (_var.dofIndices().size() == 0),
                 "If the variable is only defined on the neighbor hand side of the face, then that "
                 "means it should have no dof indices on the elem element. Conversely if "
                 "the variable is defined on both sides of the face, then it should have a non-zero "
@@ -280,7 +286,7 @@ FVFluxKernel::computeJacobian(const FaceInfo & fi)
 
     auto neighbor_functor = [&](const ADReal & residual, dof_id_type, const std::set<TagID> &) {
       // only add residual to elem if the variable is defined there.
-      if (ft == FaceInfo::VarFaceNeighbors::BOTH)
+      if (_face_type == FaceInfo::VarFaceNeighbors::BOTH)
         // jacobian contribution of the residual for the neighbor element to the elem element's DOF:
         // d/d_elem (residual_neighbor)
         computeJacobian(Moose::NeighborElement, residual);
@@ -303,7 +309,7 @@ FVFluxKernel::gradUDotNormal() const
       (_var.faceInterpolationMethod() == Moose::FV::InterpMethod::SkewCorrectedAverage);
 
   return Moose::FV::gradUDotNormal(
-      _u_elem[_qp], _u_neighbor[_qp], *_face_info, _var, correct_skewness);
+      _var(elemFromFace()), _var(neighborFromFace()), *_face_info, _var, correct_skewness);
 }
 
 std::tuple<const libMesh::Elem *, const FaceInfo *, SubdomainID>

@@ -16,24 +16,19 @@ registerMooseObject("NavierStokesApp", PINSFVMomentumAdvectionPorosityGradient);
 InputParameters
 PINSFVMomentumAdvectionPorosityGradient::validParams()
 {
-  auto params = FVElementalKernel::validParams();
+  auto params = INSFVElementalKernel::validParams();
   params.addClassDescription(
       "Porosity gradient spun from the advection term for the porous media Navier Stokes "
       "momentum equation.");
   params.addRequiredCoupledVar(NS::porosity, "Porosity auxiliary variable");
 
-  params.addRequiredCoupledVar("u", "The superficial velocity in the x direction.");
-  params.addCoupledVar("v", "The superficial velocity in the y direction.");
-  params.addCoupledVar("w", "The superficial velocity in the z direction.");
+  params.addRequiredParam<MooseFunctorName>("u", "The superficial velocity in the x direction.");
+  params.addParam<MooseFunctorName>("v", 0, "The superficial velocity in the y direction.");
+  params.addParam<MooseFunctorName>("w", 0, "The superficial velocity in the z direction.");
 
   params.addRequiredParam<Real>(NS::density, "The value for the density");
   params.declareControllable(NS::density);
 
-  MooseEnum momentum_component("x=0 y=1 z=2");
-  params.addRequiredParam<MooseEnum>(
-      "momentum_component",
-      momentum_component,
-      "The component of the momentum equation that this kernel applies to.");
   params.addRequiredParam<bool>("smooth_porosity", "Whether the porosity has no discontinuities");
   params.set<unsigned short>("ghost_layers") = 2;
   return params;
@@ -41,13 +36,12 @@ PINSFVMomentumAdvectionPorosityGradient::validParams()
 
 PINSFVMomentumAdvectionPorosityGradient::PINSFVMomentumAdvectionPorosityGradient(
     const InputParameters & params)
-  : FVElementalKernel(params),
+  : INSFVElementalKernel(params),
     _eps_var(dynamic_cast<const MooseVariableFVReal *>(getFieldVar(NS::porosity, 0))),
-    _u(adCoupledValue("u")),
-    _v(params.isParamValid("v") ? adCoupledValue("v") : _ad_zero),
-    _w(params.isParamValid("w") ? adCoupledValue("w") : _ad_zero),
+    _u(getFunctor<ADReal>("u")),
+    _v(getFunctor<ADReal>("v")),
+    _w(getFunctor<ADReal>("w")),
     _rho(getParam<Real>(NS::density)),
-    _index(getParam<MooseEnum>("momentum_component")),
     _smooth_porosity(getParam<bool>("smooth_porosity"))
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
@@ -65,12 +59,14 @@ PINSFVMomentumAdvectionPorosityGradient::PINSFVMomentumAdvectionPorosityGradient
         "The MomentumAdvectionContinuousPorosity may only be used with a continuous porosity.");
 }
 
-ADReal
-PINSFVMomentumAdvectionPorosityGradient::computeQpResidual()
+void
+PINSFVMomentumAdvectionPorosityGradient::gatherRCData(const Elem & elem)
 {
-  const Real one_over_eps = 1 / MetaPhysicL::raw_value(_eps_var->getElemValue(_current_elem));
-  ADRealVectorValue V = {_u[_qp], _v[_qp], _w[_qp]};
+  const Real one_over_eps = 1 / MetaPhysicL::raw_value(_eps_var->getElemValue(&elem));
+  ADRealVectorValue V = {_u(&elem), _v(&elem), _w(&elem)};
 
-  return _rho * V(_index) * (-one_over_eps * one_over_eps) *
-         (V * MetaPhysicL::raw_value(_eps_var->adGradSln(_current_elem)));
+  _rc_uo.addToB(&elem,
+                _index,
+                _rho * V(_index) * (-one_over_eps * one_over_eps) *
+                    (V * MetaPhysicL::raw_value(_eps_var->adGradSln(&elem))));
 }

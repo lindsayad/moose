@@ -488,14 +488,21 @@ public:
                                       const bool correct_skewness = false) const;
 
   using FunctorArg = typename Moose::ADType<OutputType>::type;
-  using typename Moose::Functor<FunctorArg>::FaceArg;
-  using typename Moose::Functor<FunctorArg>::SingleSidedFaceArg;
-  using typename Moose::Functor<FunctorArg>::ElemFromFaceArg;
-  using typename Moose::Functor<FunctorArg>::ValueType;
-  using typename Moose::Functor<FunctorArg>::DotType;
-  using typename Moose::Functor<FunctorArg>::GradientType;
+  using typename Moose::FunctorImpl<FunctorArg>::FaceArg;
+  using typename Moose::FunctorImpl<FunctorArg>::SingleSidedFaceArg;
+  using typename Moose::FunctorImpl<FunctorArg>::ElemFromFaceArg;
+  using typename Moose::FunctorImpl<FunctorArg>::ValueType;
+  using typename Moose::FunctorImpl<FunctorArg>::DotType;
+  using typename Moose::FunctorImpl<FunctorArg>::GradientType;
+
+  /**
+   * @param face First member of the tuple is the face info, second is the limiter type, third is
+   * whether the face information element is upwind of the face, fourth is whether to perform skew
+   * correction
+   * @return an internal face evaluation
+   */
   ADReal getInternalFaceValue(
-      const std::tuple<const FaceInfo *, Moose::FV::LimiterType, bool> & face) const;
+      const std::tuple<const FaceInfo *, Moose::FV::LimiterType, bool, bool> & face) const;
 
 protected:
   /**
@@ -518,7 +525,7 @@ protected:
    * boundary face for which is not a corresponding Dirichlet condition, e.g. we need to compute
    * some approximation for the boundary face value using the adjacent cell centroid information
    */
-  bool isExtrapolatedBoundaryFace(const FaceInfo & fi) const;
+  bool isExtrapolatedBoundaryFace(const FaceInfo & fi) const override;
 
 private:
   using MooseVariableField<OutputType>::evaluate;
@@ -729,7 +736,8 @@ MooseVariableFV<OutputType>::evaluateFaceHelper(const FaceCallingArg & face) con
   if (isExtrapolatedBoundaryFace(*fi))
     return getExtrapolatedBoundaryFaceValue(*fi);
   else if (isInternalFace(*fi))
-    return getInternalFaceValue(std::make_tuple(fi, std::get<1>(face), std::get<2>(face)));
+    return getInternalFaceValue(
+        std::make_tuple(fi, std::get<1>(face), std::get<2>(face), std::get<3>(face)));
   else
   {
     mooseAssert(isDirichletBoundaryFace(*fi), "We've run out of face types");

@@ -14,6 +14,14 @@ velocity_interp_method='rc'
 
 [GlobalParams]
   two_term_boundary_expansion = true
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+  []
 []
 
 [Problem]
@@ -75,7 +83,6 @@ velocity_interp_method='rc'
     vel = 'velocity'
     pressure = pressure
     u = u
-    mu = ${mu}
     rho = ${rho}
     porosity = porosity
   []
@@ -94,9 +101,9 @@ velocity_interp_method='rc'
     velocity_interp_method = ${velocity_interp_method}
     pressure = pressure
     u = u
-    mu = ${mu}
     rho = ${rho}
     porosity = porosity
+    momentum_component = 'x'
   []
   [u_pressure]
     type = PINSFVMomentumPressureFlux
@@ -107,9 +114,10 @@ velocity_interp_method='rc'
     force_boundary_execution = false
   []
   [u_forcing]
-    type = FVBodyForce
+    type = INSFVBodyForce
     variable = u
     function = forcing_u
+    momentum_component = 'x'
   []
 []
 

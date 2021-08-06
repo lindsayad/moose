@@ -9,32 +9,31 @@
 
 #pragma once
 
-#include "FVElementalKernel.h"
+#include "INSFVElementalKernel.h"
 
 /**
  * An elemental kernel to add the inverse porosity gradient term to the momentum equation
  */
-class PINSFVMomentumAdvectionPorosityGradient : public FVElementalKernel
+class PINSFVMomentumAdvectionPorosityGradient : public INSFVElementalKernel
 {
 public:
   static InputParameters validParams();
   PINSFVMomentumAdvectionPorosityGradient(const InputParameters & params);
 
-protected:
-  ADReal computeQpResidual() override;
+  using INSFVElementalKernel::gatherRCData;
+  void gatherRCData(const Elem &) override;
 
+protected:
   /// porosity variable to compute gradients
   const MooseVariableFV<Real> * const _eps_var;
   /// superficial velocity x-component
-  const ADVariableValue & _u;
+  const Moose::Functor<ADReal> & _u;
   /// superficial velocity y-component
-  const ADVariableValue & _v;
+  const Moose::Functor<ADReal> & _v;
   /// superficial velocity z-component
-  const ADVariableValue & _w;
+  const Moose::Functor<ADReal> & _w;
   /// density
   const Real & _rho;
-  /// which momentum component this kernel applies to
-  const int _index;
   /// whether the porosity has discontinuities, in which case this kernel should not be used
   const bool _smooth_porosity;
 };

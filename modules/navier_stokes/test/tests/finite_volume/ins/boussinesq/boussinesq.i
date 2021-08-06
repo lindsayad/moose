@@ -10,6 +10,18 @@ rayleigh=1e3
 hot_temp=${rayleigh}
 temp_ref=${fparse hot_temp / 2.}
 
+[GlobalParams]
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+  []
+[]
+
 [Mesh]
   [gen]
     type = GeneratedMeshGenerator
@@ -104,7 +116,6 @@ temp_ref=${fparse hot_temp / 2.}
     u = u
     v = v
     pressure = pressure
-    mu = ${mu}
     rho = ${rho}
   []
   [mean_zero_pressure]
@@ -123,13 +134,14 @@ temp_ref=${fparse hot_temp / 2.}
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'x'
   []
   [u_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = u
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'x'
   []
   [u_pressure]
     type = INSFVMomentumPressure
@@ -164,13 +176,14 @@ temp_ref=${fparse hot_temp / 2.}
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'y'
   []
   [v_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = v
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'y'
   []
   [v_pressure]
     type = INSFVMomentumPressure
@@ -209,7 +222,6 @@ temp_ref=${fparse hot_temp / 2.}
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
   []
 []

@@ -56,5 +56,28 @@ private:
   uint64_t _val = 0;
 };
 
+class AttribINSFVMomentumResidualObject : public Attribute
+{
+public:
+  typedef bool Key;
+  void setFrom(const Key k) { _val = k; }
+  AttribINSFVMomentumResidualObject(TheWarehouse & w)
+    : Attribute(w, "insfv_residual_object"), _val(false)
+  {
+  }
+  AttribINSFVMomentumResidualObject(TheWarehouse & w, Key k)
+    : Attribute(w, "insfv_residual_object"), _val(k)
+  {
+  }
+  void initFrom(const MooseObject * obj) override;
+  bool isMatch(const Attribute & other) const override;
+  bool isEqual(const Attribute & other) const override;
+  hashfunc(_val);
+  clonefunc(AttribINSFVMomentumResidualObject);
+
+private:
+  Key _val;
+};
+
 #undef clonefunc
 #undef hashfunc

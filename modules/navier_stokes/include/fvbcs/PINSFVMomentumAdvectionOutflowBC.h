@@ -9,34 +9,24 @@
 
 #pragma once
 
-#include "FVMatAdvectionOutflowBC.h"
-#include "INSFVFullyDevelopedFlowBC.h"
-
-class INSFVVelocityVariable;
+#include "INSFVMomentumAdvectionOutflowBC.h"
 
 /**
  * A class for finite volume fully developed outflow boundary conditions for the momentum equation
  * It advects superficial momentum at the outflow, and may replace outlet pressure boundary
  * conditions when selecting a mean-pressure approach.
  */
-class PINSFVMomentumAdvectionOutflowBC : public FVMatAdvectionOutflowBC,
-                                         public INSFVFullyDevelopedFlowBC
+class PINSFVMomentumAdvectionOutflowBC : public INSFVMomentumAdvectionOutflowBC
 {
 public:
   static InputParameters validParams();
   PINSFVMomentumAdvectionOutflowBC(const InputParameters & params);
+  using INSFVMomentumAdvectionOutflowBC::gatherRCData;
+  void gatherRCData(const FaceInfo &) override;
 
 protected:
   virtual ADReal computeQpResidual() override;
 
-  /// x-velocity
-  const INSFVVelocityVariable * const _u_var;
-  /// y-velocity
-  const INSFVVelocityVariable * const _v_var;
-  /// z-velocity
-  const INSFVVelocityVariable * const _w_var;
   /// porosity
   const Moose::Functor<ADReal> & _eps;
-  /// the dimension of the simulation
-  const unsigned int _dim;
 };

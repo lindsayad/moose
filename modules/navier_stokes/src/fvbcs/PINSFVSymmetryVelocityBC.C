@@ -22,8 +22,7 @@ PINSFVSymmetryVelocityBC::validParams()
 }
 
 PINSFVSymmetryVelocityBC::PINSFVSymmetryVelocityBC(const InputParameters & params)
-  : INSFVSymmetryVelocityBC(params),
-    _eps_var(dynamic_cast<const MooseVariableFV<Real> *>(getFieldVar("porosity", 0)))
+  : INSFVSymmetryVelocityBC(params), _eps(getFunctor<ADReal>("porosity"))
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError("PINSFV is not supported by local AD indexing. In order to use PINSFV, please run "
@@ -35,6 +34,21 @@ PINSFVSymmetryVelocityBC::PINSFVSymmetryVelocityBC(const InputParameters & param
 ADReal
 PINSFVSymmetryVelocityBC::computeQpResidual()
 {
-  const auto & eps_face = _eps_var->getBoundaryFaceValue(*_face_info);
-  return INSFVSymmetryVelocityBC::computeQpResidual() / eps_face;
+  const Elem & elem = _face_info->elem();
+  const Elem * const neighbor = _face_info->neighborPtr();
+
+  auto ft = _face_info->faceType(_var.name());
+  const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
+  const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
+  mooseAssert(boundary_elem, "the boundary elem should be non-null");
+
+  const auto face_eps = _eps(std::make_tuple(
+      _face_info, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
+
+  const auto insfv_residual = INSFVSymmetryVelocityBC::computeQpResidual();
+
+  if (_computing_rc_data)
+    _a /= face_eps;
+
+  return insfv_residual / face_eps;
 }

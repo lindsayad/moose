@@ -10,41 +10,31 @@
 #include "PINSFVMomentumDiffusion.h"
 #include "PINSFVSuperficialVelocityVariable.h"
 #include "NS.h"
+#include "INSFVRhieChowInterpolator.h"
 
 registerMooseObject("NavierStokesApp", PINSFVMomentumDiffusion);
 
 InputParameters
 PINSFVMomentumDiffusion::validParams()
 {
-  auto params = FVFluxKernel::validParams();
+  auto params = INSFVMomentumDiffusion::validParams();
   params.addClassDescription("Viscous diffusion term, div(mu grad(u_d / eps)), in the porous media "
                              "incompressible Navier-Stokes momentum equation.");
   params.addRequiredCoupledVar(NS::porosity, "Porosity auxiliary variable");
-  params.addRequiredParam<MooseFunctorName>(NS::mu, "viscosity");
-  MooseEnum momentum_component("x=0 y=1 z=2", "x");
-  params.addParam<MooseEnum>("momentum_component",
-                             momentum_component,
-                             "The component of the momentum equation that this kernel applies to.");
   params.addParam<bool>(
       "smooth_porosity", false, "Whether to include the diffusion porosity gradient term");
-  params.addParam<MaterialPropertyName>(NS::superficial_velocity,
-                                        "The superficial velocity as a material property");
-
-  params.set<unsigned short>("ghost_layers") = 2;
+  params.addParam<MooseFunctorName>(NS::superficial_velocity, "The superficial velocity");
   return params;
 }
 
 PINSFVMomentumDiffusion::PINSFVMomentumDiffusion(const InputParameters & params)
-  : FVFluxKernel(params),
-    _mu(getFunctor<ADReal>(NS::mu)),
+  : INSFVMomentumDiffusion(params),
     _eps(getFunctor<ADReal>(NS::porosity)),
-    _index(getParam<MooseEnum>("momentum_component")),
     _vel(isParamValid(NS::superficial_velocity)
              ? &getFunctor<ADRealVectorValue>(NS::superficial_velocity)
              : nullptr),
     _eps_var(dynamic_cast<const MooseVariableFVReal *>(getFieldVar(NS::porosity, 0))),
-    _smooth_porosity(getParam<bool>("smooth_porosity")),
-    _cd_limiter()
+    _smooth_porosity(getParam<bool>("smooth_porosity"))
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError("PINSFV is not supported by local AD indexing. In order to use PINSFV, please run "
@@ -87,7 +77,28 @@ PINSFVMomentumDiffusion::computeQpResidual()
               true);
 
   // Compute face superficial velocity gradient
-  auto dudn = gradUDotNormal();
+  auto dudn =
+      _var.gradient(Moose::FV::makeCDFace(*_face_info, faceArgSubdomains())) * _face_info->normal();
+
+  if (_computing_rc_data)
+  {
+    if (_face_type == FaceInfo::VarFaceNeighbors::ELEM ||
+        _face_type == FaceInfo::VarFaceNeighbors::BOTH)
+    {
+      const auto dof_number = _face_info->elem().dof_number(_sys.number(), _var.number(), 0);
+      // A gradient is a linear combination of degrees of freedom so it's safe to straight-up index
+      // into the derivatives vector at the dof we care about
+      _ae = dudn.derivatives()[dof_number];
+      _ae *= -mu_eps_face;
+    }
+    if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR ||
+        _face_type == FaceInfo::VarFaceNeighbors::BOTH)
+    {
+      const auto dof_number = _face_info->neighbor().dof_number(_sys.number(), _var.number(), 0);
+      _an = dudn.derivatives()[dof_number];
+      _an *= mu_eps_face;
+    }
+  }
 
   // First term of residual
   ADReal residual = mu_eps_face * dudn;

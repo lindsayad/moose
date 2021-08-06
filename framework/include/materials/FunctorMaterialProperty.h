@@ -28,7 +28,7 @@
  * A material property that is evaluated on-the-fly via calls to various overloads of \p operator()
  */
 template <typename T>
-class FunctorMaterialPropertyImpl : public Moose::Functor<T>
+class FunctorMaterialPropertyImpl : public Moose::FunctorImpl<T>
 {
 public:
   FunctorMaterialPropertyImpl(const std::string & name) : _name(name) {}
@@ -46,16 +46,16 @@ public:
                   const std::set<SubdomainID> & block_ids,
                   PolymorphicLambda my_lammy);
 
-  using typename Moose::Functor<T>::FaceArg;
-  using typename Moose::Functor<T>::SingleSidedFaceArg;
-  using typename Moose::Functor<T>::ElemFromFaceArg;
-  using typename Moose::Functor<T>::ElemQpArg;
-  using typename Moose::Functor<T>::ElemSideQpArg;
-  using typename Moose::Functor<T>::FunctorType;
-  using typename Moose::Functor<T>::ValueType;
-  using typename Moose::Functor<T>::DotType;
-  using typename Moose::Functor<T>::GradientType;
-  using typename Moose::Functor<T>::FunctorReturnType;
+  using typename Moose::FunctorImpl<T>::FaceArg;
+  using typename Moose::FunctorImpl<T>::SingleSidedFaceArg;
+  using typename Moose::FunctorImpl<T>::ElemFromFaceArg;
+  using typename Moose::FunctorImpl<T>::ElemQpArg;
+  using typename Moose::FunctorImpl<T>::ElemSideQpArg;
+  using typename Moose::FunctorImpl<T>::FunctorType;
+  using typename Moose::FunctorImpl<T>::ValueType;
+  using typename Moose::FunctorImpl<T>::DotType;
+  using typename Moose::FunctorImpl<T>::GradientType;
+  using typename Moose::FunctorImpl<T>::FunctorReturnType;
 
 protected:
   using ElemFn = std::function<T(const Elem * const &, const unsigned int &)>;
@@ -190,8 +190,8 @@ FunctorMaterialPropertyImpl<T>::evaluate(const FaceArg & face, unsigned int stat
 {
   using namespace Moose::FV;
 
-  const auto elem_sub_id = std::get<3>(face).first;
-  const auto neighbor_sub_id = std::get<3>(face).second;
+  const auto elem_sub_id = std::get<4>(face).first;
+  const auto neighbor_sub_id = std::get<4>(face).second;
   const auto limiter = std::get<1>(face);
   const auto * const face_info = std::get<0>(face);
   mooseAssert(face_info,
@@ -254,35 +254,17 @@ template <typename T>
 class FunctorMaterialProperty : public Moose::Functor<T>
 {
 public:
-  using typename Moose::Functor<T>::FaceArg;
-  using typename Moose::Functor<T>::SingleSidedFaceArg;
-  using typename Moose::Functor<T>::ElemFromFaceArg;
-  using typename Moose::Functor<T>::ElemQpArg;
-  using typename Moose::Functor<T>::ElemSideQpArg;
-  using typename Moose::Functor<T>::FunctorType;
-  using typename Moose::Functor<T>::FunctorReturnType;
-  using typename Moose::Functor<T>::ValueType;
-  using typename Moose::Functor<T>::GradientType;
-  using typename Moose::Functor<T>::DotType;
-
   /**
    * Construct wrapper from wrapped object
    */
   FunctorMaterialProperty(std::unique_ptr<FunctorMaterialPropertyImpl<T>> && wrapped)
-    : Moose::Functor<T>(), _wrapped(std::move(wrapped))
+    : Moose::Functor<T>(std::move(wrapped))
   {
-  }
-
-  /**
-   * Assign our wrapped object to be something new and release our previously wrapped object
-   */
-  FunctorMaterialProperty<T> & operator=(std::unique_ptr<FunctorMaterialPropertyImpl<T>> && wrapped)
-  {
-    _wrapped = std::move(wrapped);
-    return *this;
   }
 
   virtual ~FunctorMaterialProperty() = default;
+
+  using Moose::Functor<T>::operator=;
 
   /**
    * Set the functor that will be used in calls to the wrapped object's \p evaluate overloads
@@ -295,50 +277,9 @@ public:
                   const std::set<SubdomainID> & block_ids,
                   PolymorphicLambda my_lammy)
   {
-    _wrapped->setFunctor(mesh, block_ids, my_lammy);
+    auto * const converted = dynamic_cast<FunctorMaterialPropertyImpl<T> *>(this->_owned.get());
+    if (!converted)
+      mooseError("FunctorMaterialProperty class not wrapping a functor material property");
+    converted->setFunctor(mesh, block_ids, my_lammy);
   }
-
-  /**
-   * Tests whether the wrapped object is of the requested type
-   */
-  template <typename T2>
-  bool wrapsType() const
-  {
-    return dynamic_cast<T2 *>(_wrapped.get());
-  }
-
-protected:
-  ///@{
-  /**
-   * Forward evaluate calls to wrapped object
-   */
-  ValueType evaluate(const libMesh::Elem * const & elem, unsigned int state = 0) const override
-  {
-    return _wrapped->evaluate(elem, state);
-  }
-  ValueType evaluate(const ElemFromFaceArg & elem_from_face, unsigned int state = 0) const override
-  {
-    return _wrapped->evaluate(elem_from_face, state);
-  }
-  ValueType evaluate(const FaceArg & face, unsigned int state = 0) const override
-  {
-    return _wrapped->evaluate(face, state);
-  }
-  ValueType evaluate(const SingleSidedFaceArg & face, unsigned int state = 0) const override
-  {
-    return _wrapped->evaluate(face, state);
-  }
-  ValueType evaluate(const ElemQpArg & qp, unsigned int state = 0) const override
-  {
-    return _wrapped->evaluate(qp, state);
-  }
-  ValueType evaluate(const ElemSideQpArg & qp, unsigned int state = 0) const override
-  {
-    return _wrapped->evaluate(qp, state);
-  }
-  ///@}
-
-private:
-  /// Our wrapped object
-  std::unique_ptr<FunctorMaterialPropertyImpl<T>> _wrapped;
 };
