@@ -42,3 +42,4 @@ protected:
   std::shared_ptr<NonlinearSystem> _nl_sys;
 };
 
+using FVProblem = FEProblem;
