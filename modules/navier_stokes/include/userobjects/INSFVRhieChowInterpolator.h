@@ -14,9 +14,9 @@
 #include "MooseTypes.h"
 #include "libmesh/vector_value.h"
 #include "libmesh/id_types.h"
-#include <vector>
 #include <unordered_map>
 #include <set>
+#include <unordered_set>
 
 class MooseMesh;
 namespace libMesh
@@ -41,7 +41,7 @@ public:
 
 private:
   std::set<unsigned int> _var_numbers;
-  std::vector<dof_id_type> _elements_to_pull;
+  std::unordered_set<const Elem *> _elements_to_push_pull;
   std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _a;
   std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _b;
   MooseMesh & _moose_mesh;
