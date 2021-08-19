@@ -20,128 +20,13 @@
 #include "libmesh/parallel_algebra.h"
 #include "metaphysicl/dualsemidynamicsparsenumberarray.h"
 #include "metaphysicl/parallel_dualnumber.h"
+#include "metaphysicl/parallel_dynamic_std_array_wrapper.h"
+#include "metaphysicl/parallel_semidynamicsparsenumberarray.h"
 #include "timpi/parallel_sync.h"
 
 using namespace libMesh;
 
 registerMooseObject("NavierStokesApp", INSFVRhieChowInterpolator);
-
-namespace TIMPI
-{
-using MetaPhysicL::DynamicStdArrayWrapper;
-using MetaPhysicL::SemiDynamicSparseNumberArray;
-
-template <typename T, typename NType>
-class StandardType<DynamicStdArrayWrapper<T, NType>> : public DataType
-{
-public:
-  explicit StandardType(const DynamicStdArrayWrapper<T, NType> * example = nullptr)
-  {
-    // We need an example for MPI_Address to use
-    static const DynamicStdArrayWrapper<T, NType> p{};
-    if (!example)
-      example = &p;
-
-#ifdef TIMPI_HAVE_MPI
-
-    // Get the sub-data-types, and make sure they live long enough
-    // to construct the derived type
-    StandardType<std::array<T, NType::size>> d1(&example->_data);
-    StandardType<std::size_t> d2(&example->_dynamic_n);
-
-    MPI_Datatype types[] = {(data_type)d1, (data_type)d2};
-    int blocklengths[] = {1, 1};
-    MPI_Aint displs[2], start;
-
-    timpi_call_mpi(
-        MPI_Get_address(const_cast<DynamicStdArrayWrapper<T, NType> *>(example), &start));
-    timpi_call_mpi(
-        MPI_Get_address(const_cast<std::array<T, NType::size> *>(&example->_data), &displs[0]));
-    timpi_call_mpi(MPI_Get_address(const_cast<std::size_t *>(&example->_dynamic_n), &displs[1]));
-    displs[0] -= start;
-    displs[1] -= start;
-
-    // create a prototype structure
-    MPI_Datatype tmptype;
-    timpi_call_mpi(MPI_Type_create_struct(2, blocklengths, displs, types, &tmptype));
-    timpi_call_mpi(MPI_Type_commit(&tmptype));
-
-    // resize the structure type to account for padding, if any
-    timpi_call_mpi(
-        MPI_Type_create_resized(tmptype, 0, sizeof(DynamicStdArrayWrapper<T, NType>), &_datatype));
-    timpi_call_mpi(MPI_Type_free(&tmptype));
-
-    this->commit();
-
-#endif // TIMPI_HAVE_MPI
-  }
-
-  StandardType(const StandardType<DynamicStdArrayWrapper<T, NType>> & timpi_mpi_var(t))
-  {
-    timpi_call_mpi(MPI_Type_dup(t._datatype, &_datatype));
-  }
-
-  ~StandardType() { this->free(); }
-
-  static const bool is_fixed_type = true;
-};
-
-template <typename T, typename I, typename N>
-class StandardType<SemiDynamicSparseNumberArray<T, I, N>> : public DataType
-{
-public:
-  explicit StandardType(const SemiDynamicSparseNumberArray<T, I, N> * example = nullptr)
-  {
-    // We need an example for MPI_Address to use
-    static const SemiDynamicSparseNumberArray<T, I, N> p;
-    if (!example)
-      example = &p;
-
-#ifdef TIMPI_HAVE_MPI
-
-    // Get the sub-data-types, and make sure they live long enough
-    // to construct the derived type
-    StandardType<DynamicStdArrayWrapper<T, N>> d1(&example->nude_data());
-    StandardType<DynamicStdArrayWrapper<I, N>> d2(&example->nude_indices());
-
-    MPI_Datatype types[] = {(data_type)d1, (data_type)d2};
-    int blocklengths[] = {1, 1};
-    MPI_Aint displs[2], start;
-
-    timpi_call_mpi(
-        MPI_Get_address(const_cast<SemiDynamicSparseNumberArray<T, I, N> *>(example), &start));
-    timpi_call_mpi(MPI_Get_address(
-        const_cast<DynamicStdArrayWrapper<T, N> *>(&example->nude_data()), &displs[0]));
-    timpi_call_mpi(MPI_Get_address(
-        const_cast<DynamicStdArrayWrapper<I, N> *>(&example->nude_indices()), &displs[1]));
-    displs[0] -= start;
-    displs[1] -= start;
-
-    // create a prototype structure
-    MPI_Datatype tmptype;
-    timpi_call_mpi(MPI_Type_create_struct(2, blocklengths, displs, types, &tmptype));
-    timpi_call_mpi(MPI_Type_commit(&tmptype));
-
-    // resize the structure type to account for padding, if any
-    timpi_call_mpi(MPI_Type_create_resized(
-        tmptype, 0, sizeof(SemiDynamicSparseNumberArray<T, I, N>), &_datatype));
-    timpi_call_mpi(MPI_Type_free(&tmptype));
-
-    this->commit();
-
-#endif // TIMPI_HAVE_MPI
-  }
-
-  StandardType(const StandardType<SemiDynamicSparseNumberArray<T, I, N>> & timpi_mpi_var(t))
-  {
-    timpi_call_mpi(MPI_Type_dup(t._datatype, &_datatype));
-  }
-
-  ~StandardType() { this->free(); }
-
-  static const bool is_fixed_type = true;
-};
-}
 
 InputParameters
 INSFVRhieChowInterpolator::validParams()
