@@ -34,7 +34,7 @@
 
 [Kernels]
   [diff]
-    type = ADMatDiffusion
+    type = ADFunctorMatDiffusion
     variable = fe
     diffusivity = fe_prop
   []
