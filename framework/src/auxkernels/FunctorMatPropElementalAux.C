@@ -29,5 +29,5 @@ FunctorMatPropElementalAux::FunctorMatPropElementalAux(const InputParameters & p
 Real
 FunctorMatPropElementalAux::computeValue()
 {
-  return MetaPhysicL::raw_value(_mat_prop(_current_elem));
+  return MetaPhysicL::raw_value(_mat_prop(FunctorBase::elem(_current_elem)));
 }

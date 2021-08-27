@@ -117,21 +117,22 @@ public:
   void jacobianSetup() override;
 
 private:
+  using typename FunctorInterface<Real>::ElemArg;
   using typename FunctorInterface<Real>::FaceArg;
   using typename FunctorInterface<Real>::ElemAndFaceArg;
   using typename FunctorInterface<Real>::QpArg;
+  using typename FunctorInterface<Real>::TQpArg;
 
   /**
    * @return the time associated with the requested \p state
    */
   Real getTime(unsigned int state) const;
 
-  Real evaluate(const Elem * const & elem, unsigned int state) const override final;
+  Real evaluate(const ElemArg & elem, unsigned int state) const override final;
   Real evaluate(const ElemAndFaceArg & elem_and_face, unsigned int state) const override final;
   Real evaluate(const FaceArg & face, unsigned int state) const override final;
   Real evaluate(const QpArg & qp, unsigned int state) const override final;
-  Real evaluate(const std::tuple<Moose::ElementType, unsigned int, SubdomainID> & tqp,
-                unsigned int state) const override final;
+  Real evaluate(const TQpArg & tqp, unsigned int state) const override final;
 
   /// Keep track of the current functor element in order to enable local element caching (e.g. if we
   /// call evaluate on the same element, but just with a different quadrature point, we can return

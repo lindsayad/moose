@@ -560,14 +560,13 @@ MooseVariableFV<OutputType>::isInternalFace(const FaceInfo & fi) const
 
 template <typename OutputType>
 ADReal
-MooseVariableFV<OutputType>::getInternalFaceValue(
-    const MooseVariableFV<OutputType>::FaceArg & face) const
+MooseVariableFV<OutputType>::getInternalFaceValue(const FaceArg & face) const
 {
-  const FaceInfo * const fi = std::get<0>(face);
+  const FaceInfo * const fi = std::get<1>(face);
   mooseAssert(fi, "The face information must be non-null");
-  const Moose::FV::Limiter * const limiter = std::get<1>(face);
+  const Moose::FV::Limiter * const limiter = std::get<2>(face);
   mooseAssert(limiter, "the limiter must be non-null");
-  const bool elem_is_upwind = std::get<2>(face);
+  const bool elem_is_upwind = std::get<3>(face);
 
   const auto elem_value = getElemValue(&fi->elem());
   mooseAssert(fi->neighborPtr(), "We're supposed to be on an internal face.");
@@ -1068,10 +1067,16 @@ MooseVariableFV<OutputType>::clearAllDofIndices()
 
 template <typename OutputType>
 ADReal
-MooseVariableFV<OutputType>::evaluate(const MooseVariableFV<OutputType>::FaceArg & face,
-                                      unsigned int) const
+MooseVariableFV<OutputType>::evaluate(const ElemArg & elem, unsigned int) const
 {
-  const FaceInfo * const fi = std::get<0>(face);
+  return getElemValue(std::get<1>(elem));
+}
+
+template <typename OutputType>
+ADReal
+MooseVariableFV<OutputType>::evaluate(const FaceArg & face, unsigned int) const
+{
+  const FaceInfo * const fi = std::get<1>(face);
   mooseAssert(fi, "The face information must be non-null");
   if (isExtrapolatedBoundaryFace(*fi))
     return getExtrapolatedBoundaryFaceValue(*fi);
@@ -1088,7 +1093,7 @@ template <typename OutputType>
 ADReal
 MooseVariableFV<OutputType>::evaluate(const ElemAndFaceArg & elem_and_face, unsigned int) const
 {
-  const Elem * const requested_elem = std::get<0>(elem_and_face);
+  const Elem * const requested_elem = std::get<1>(elem_and_face);
   mooseAssert(requested_elem != remote_elem,
               "If the requested element is remote then I think we've messed up our ghosting");
 
@@ -1096,7 +1101,7 @@ MooseVariableFV<OutputType>::evaluate(const ElemAndFaceArg & elem_and_face, unsi
     return getElemValue(requested_elem);
   else
   {
-    const FaceInfo * const fi = std::get<1>(elem_and_face);
+    const FaceInfo * const fi = std::get<2>(elem_and_face);
     mooseAssert(fi, "We need a FaceInfo");
     mooseAssert((requested_elem == &fi->elem()) || (requested_elem == fi->neighborPtr()),
                 "The requested element should match something from the FaceInfo");
@@ -1110,19 +1115,19 @@ template <typename OutputType>
 ADReal
 MooseVariableFV<OutputType>::evaluate(const QpArg & qp, unsigned int state) const
 {
-  mooseAssert(this->hasBlocks(std::get<0>(qp)->subdomain_id()),
+  mooseAssert(this->hasBlocks(std::get<1>(qp)->subdomain_id()),
               "This variable doesn't exist in the requested block!");
 
   switch (state)
   {
     case 0:
-      return adSln()[std::get<1>(qp)];
+      return adSln()[std::get<2>(qp)];
 
     case 1:
-      return slnOld()[std::get<1>(qp)];
+      return slnOld()[std::get<2>(qp)];
 
     case 2:
-      return slnOlder()[std::get<1>(qp)];
+      return slnOlder()[std::get<2>(qp)];
 
     default:
       mooseError("Unsupported state ", state, " in MooseVariableFV::evaluate");
@@ -1131,13 +1136,12 @@ MooseVariableFV<OutputType>::evaluate(const QpArg & qp, unsigned int state) cons
 
 template <typename OutputType>
 ADReal
-MooseVariableFV<OutputType>::evaluate(
-    const std::tuple<Moose::ElementType, unsigned int, SubdomainID> & tqp, unsigned int state) const
+MooseVariableFV<OutputType>::evaluate(const TQpArg & tqp, unsigned int state) const
 {
-  mooseAssert(this->hasBlocks(std::get<2>(tqp)),
+  mooseAssert(this->hasBlocks(std::get<0>(tqp)),
               "This variable doesn't exist in the requested block!");
-  const auto elem_type = std::get<0>(tqp);
-  const auto qp = std::get<1>(tqp);
+  const auto elem_type = std::get<1>(tqp);
+  const auto qp = std::get<2>(tqp);
   switch (elem_type)
   {
     case Moose::ElementType::Element:

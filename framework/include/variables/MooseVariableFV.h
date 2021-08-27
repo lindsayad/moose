@@ -500,12 +500,11 @@ protected:
   bool isExtrapolatedBoundaryFace(const FaceInfo & fi) const;
 
 private:
+  using FunctorInterface<ADReal>::ElemArg;
   using FunctorInterface<ADReal>::FaceArg;
   using FunctorInterface<ADReal>::QpArg;
-  ADReal evaluate(const Elem * const & elem, unsigned int) const override final
-  {
-    return getElemValue(elem);
-  }
+  using FunctorInterface<ADReal>::TQpArg;
+  ADReal evaluate(const ElemArg & elem, unsigned int) const override final;
   ADReal evaluate(const ElemAndFaceArg & elem_and_face, unsigned int) const override final;
   ADReal evaluate(const FaceArg & face, unsigned int) const override final;
   ADReal evaluate(const QpArg & qp, unsigned int state) const override final;

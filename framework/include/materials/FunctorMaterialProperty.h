@@ -44,25 +44,25 @@ public:
                   PolymorphicLambda my_lammy);
 
 private:
+  using typename FunctorInterface<T>::ElemArg;
   using typename FunctorInterface<T>::FaceArg;
   using typename FunctorInterface<T>::ElemAndFaceArg;
   using typename FunctorInterface<T>::QpArg;
+  using typename FunctorInterface<T>::TQpArg;
   using typename FunctorInterface<T>::FunctorType;
   using typename FunctorInterface<T>::FunctorReturnType;
 
-  using ElemFn = std::function<T(const Elem * const &, const unsigned int &)>;
+  using ElemFn = std::function<T(const ElemArg &, const unsigned int &)>;
   using ElemAndFaceFn = std::function<T(const ElemAndFaceArg &, const unsigned int &)>;
   using FaceFn = std::function<T(const FaceArg &, const unsigned int &)>;
   using QpFn = std::function<T(const QpArg &, const unsigned int &)>;
-  using TQpFn = std::function<T(const std::tuple<Moose::ElementType, unsigned int, SubdomainID> &,
-                                const unsigned int &)>;
+  using TQpFn = std::function<T(const TQpArg &, const unsigned int &)>;
 
-  T evaluate(const Elem * const & elem, unsigned int state) const override final;
+  T evaluate(const ElemArg & elem, unsigned int state) const override final;
   T evaluate(const ElemAndFaceArg & elem_and_face, unsigned int state) const override final;
   T evaluate(const FaceArg & face, unsigned int state) const override final;
   T evaluate(const QpArg & qp, unsigned int state) const override final;
-  T evaluate(const std::tuple<Moose::ElementType, unsigned int, SubdomainID> & tqp,
-             unsigned int state) const override final;
+  T evaluate(const TQpArg & tqp, unsigned int state) const override final;
 
   /**
    * Provide a useful error message about lack of functor material property on the provided
@@ -138,12 +138,15 @@ FunctorMaterialProperty<T>::subdomainErrorMessage(const SubdomainID sub_id) cons
 
 template <typename T>
 T
-FunctorMaterialProperty<T>::evaluate(const Elem * const & elem, unsigned int state) const
+FunctorMaterialProperty<T>::evaluate(const ElemArg & elem_arg, unsigned int state) const
 {
-  mooseAssert(elem && elem != libMesh::remote_elem,
+  const SubdomainID sub_id = std::get<0>(elem_arg);
+  mooseAssert(std::get<1>(elem_arg) && std::get<1>(elem_arg) != libMesh::remote_elem,
               "The element must be non-null and non-remote in functor material properties");
-  auto it = _elem_functor.find(elem->subdomain_id());
-  mooseAssert(it != _elem_functor.end(), subdomainErrorMessage(elem->subdomain_id()));
+  mooseAssert(sub_id == std::get<1>(elem_arg)->subdomain_id(),
+              "The subdomain ID argument and element subdomain ID must match");
+  auto it = _elem_functor.find(sub_id);
+  mooseAssert(it != _elem_functor.end(), subdomainErrorMessage(sub_id));
   return it->second(elem, state);
 }
 
@@ -151,13 +154,13 @@ template <typename T>
 T
 FunctorMaterialProperty<T>::evaluate(const ElemAndFaceArg & elem_and_face, unsigned int state) const
 {
-  mooseAssert((std::get<0>(elem_and_face) && std::get<0>(elem_and_face) != libMesh::remote_elem) ||
-                  std::get<1>(elem_and_face),
+  const SubdomainID sub_id = std::get<0>(elem_and_face);
+  mooseAssert((std::get<1>(elem_and_face) && std::get<1>(elem_and_face) != libMesh::remote_elem) ||
+                  std::get<2>(elem_and_face),
               "The element must be non-null and non-remote or the face must be non-null in functor "
               "material properties");
-  auto it = _elem_and_face_functor.find(std::get<2>(elem_and_face));
-  mooseAssert(it != _elem_and_face_functor.end(),
-              subdomainErrorMessage(std::get<2>(elem_and_face)));
+  auto it = _elem_and_face_functor.find(sub_id);
+  mooseAssert(it != _elem_and_face_functor.end(), subdomainErrorMessage(sub_id));
   return it->second(elem_and_face, state);
 }
 
@@ -165,9 +168,10 @@ template <typename T>
 T
 FunctorMaterialProperty<T>::evaluate(const FaceArg & face, unsigned int state) const
 {
-  mooseAssert(std::get<0>(face), "FaceInfo must be non-null");
-  auto it = _face_functor.find(std::get<3>(face));
-  mooseAssert(it != _face_functor.end(), subdomainErrorMessage(std::get<3>(face)));
+  const SubdomainID sub_id = std::get<0>(face);
+  mooseAssert(std::get<1>(face), "FaceInfo must be non-null");
+  auto it = _face_functor.find(sub_id);
+  mooseAssert(it != _face_functor.end(), subdomainErrorMessage(sub_id));
   return it->second(face, state);
 }
 
@@ -175,18 +179,20 @@ template <typename T>
 T
 FunctorMaterialProperty<T>::evaluate(const QpArg & elem_and_qp, unsigned int state) const
 {
-  auto it = _qp_functor.find(std::get<0>(elem_and_qp)->subdomain_id());
-  mooseAssert(it != _qp_functor.end(),
-              subdomainErrorMessage(std::get<0>(elem_and_qp)->subdomain_id()));
+  const SubdomainID sub_id = std::get<0>(elem_and_qp);
+  mooseAssert(sub_id == std::get<1>(elem_and_qp)->subdomain_id(),
+              "The subdomain ID argument and element subdomain ID must match");
+  auto it = _qp_functor.find(sub_id);
+  mooseAssert(it != _qp_functor.end(), subdomainErrorMessage(sub_id));
   return it->second(elem_and_qp, state);
 }
 
 template <typename T>
 T
-FunctorMaterialProperty<T>::evaluate(
-    const std::tuple<Moose::ElementType, unsigned int, SubdomainID> & tqp, unsigned int state) const
+FunctorMaterialProperty<T>::evaluate(const TQpArg & tqp, unsigned int state) const
 {
-  auto it = _tqp_functor.find(std::get<2>(tqp));
-  mooseAssert(it != _tqp_functor.end(), subdomainErrorMessage(std::get<2>(tqp)));
+  const SubdomainID sub_id = std::get<0>(tqp);
+  auto it = _tqp_functor.find(sub_id);
+  mooseAssert(it != _tqp_functor.end(), subdomainErrorMessage(sub_id));
   return it->second(tqp, state);
 }

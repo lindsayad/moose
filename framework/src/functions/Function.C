@@ -97,33 +97,33 @@ Function::getTime(const unsigned int state) const
 }
 
 Real
-Function::evaluate(const Elem * const & elem, const unsigned int state) const
+Function::evaluate(const ElemArg & elem, const unsigned int state) const
 {
-  return value(getTime(state), elem->centroid());
+  return value(getTime(state), std::get<1>(elem)->centroid());
 }
 
 Real
 Function::evaluate(const ElemAndFaceArg & elem_and_face, const unsigned int state) const
 {
-  mooseAssert(std::get<1>(elem_and_face), "We must have a non-null face information pointer");
-  return value(getTime(state), std::get<1>(elem_and_face)->faceCentroid());
+  mooseAssert(std::get<2>(elem_and_face), "We must have a non-null face information pointer");
+  return value(getTime(state), std::get<2>(elem_and_face)->faceCentroid());
 }
 
 Real
 Function::evaluate(const FaceArg & face, const unsigned int state) const
 {
-  return value(getTime(state), std::get<0>(face)->faceCentroid());
+  return value(getTime(state), std::get<1>(face)->faceCentroid());
 }
 
 Real
 Function::evaluate(const QpArg & qp_arg, const unsigned int state) const
 {
-  const Elem * const elem = std::get<0>(qp_arg);
-  const auto qp = std::get<1>(qp_arg);
+  const Elem * const elem = std::get<1>(qp_arg);
+  const auto qp = std::get<2>(qp_arg);
   if (elem != _current_functor_elem)
   {
     _current_functor_elem = elem;
-    const QBase * const qrule_template = std::get<2>(qp_arg);
+    const QBase * const qrule_template = std::get<3>(qp_arg);
 
     const FEFamily mapping_family = FEMap::map_fe_type(*elem);
     const FEType fe_type(elem->default_order(), mapping_family);
@@ -143,8 +143,7 @@ Function::evaluate(const QpArg & qp_arg, const unsigned int state) const
 }
 
 Real
-Function::evaluate(const std::tuple<Moose::ElementType, unsigned int, SubdomainID> & /*tqp*/,
-                   unsigned int /*state*/) const
+Function::evaluate(const TQpArg & /*tqp*/, unsigned int /*state*/) const
 {
   mooseError(
       "The ElementType evaluate overload is not supported by Function because there is no simple "
