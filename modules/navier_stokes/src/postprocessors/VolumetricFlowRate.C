@@ -115,7 +115,7 @@ VolumetricFlowRate::computeQpIntegral()
     else if (_advected_mat_prop_supplied)
     {
       advected_quantity = MetaPhysicL::raw_value(_advected_material_property(
-          std::make_tuple(Moose::ElementType::Element, _qp, _current_elem->subdomain_id())));
+          std::make_tuple(fi, nullptr, true, _current_elem->subdomain_id())));
     }
     else
       advected_quantity = 1;
