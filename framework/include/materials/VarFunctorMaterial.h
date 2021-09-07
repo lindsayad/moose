@@ -19,14 +19,14 @@ class FunctorMaterialProperty;
 /**
  * A material that couples a variable
  */
-class FVVarFunctorMaterial : public FunctorMaterial
+class VarFunctorMaterial : public FunctorMaterial
 {
 public:
   static InputParameters validParams();
 
-  FVVarFunctorMaterial(const InputParameters & parameters);
+  VarFunctorMaterial(const InputParameters & parameters);
 
 protected:
-  const MooseVariableFV<Real> & _var;
+  const FunctorInterface<ADReal> & _var;
   FunctorMaterialProperty<ADReal> & _functor_prop;
 };

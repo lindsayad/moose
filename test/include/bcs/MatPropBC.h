@@ -7,22 +7,19 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "ADKernel.h"
+#pragma once
 
-template <bool is_ad>
-class FunctorMatDiffusionTempl : public ADKernel
+#include "ADIntegratedBC.h"
+
+class MatPropBC : public ADIntegratedBC
 {
 public:
   static InputParameters validParams();
 
-  FunctorMatDiffusionTempl(const InputParameters & parameters);
+  MatPropBC(const InputParameters & parameters);
 
 protected:
   ADReal computeQpResidual() override;
 
-  const FunctorInterface<GenericReal<is_ad>> & _diff;
-  const bool _use_preinitd_data;
+  const FunctorInterface<ADReal> & _coef;
 };
-
-typedef FunctorMatDiffusionTempl<false> FunctorMatDiffusion;
-typedef FunctorMatDiffusionTempl<true> ADFunctorMatDiffusion;
