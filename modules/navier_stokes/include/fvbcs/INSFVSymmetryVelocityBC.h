@@ -10,16 +10,20 @@
 #pragma once
 
 #include "INSFVSymmetryBC.h"
+#include "INSFVResidualObject.h"
 
 /**
  * A class for setting a symmetry boundary condition on the velocity. It should be
  * used in conjunction with an INSFVSymmetryPressureBC.
  */
-class INSFVSymmetryVelocityBC : public INSFVSymmetryBC
+class INSFVSymmetryVelocityBC : public INSFVSymmetryBC, public INSFVResidualObject
 {
 public:
   static InputParameters validParams();
   INSFVSymmetryVelocityBC(const InputParameters & params);
+
+  void gatherRCData(const Elem &) override {}
+  void gatherRCData(const FaceInfo & fi) override;
 
 protected:
   ADReal computeQpResidual() override;

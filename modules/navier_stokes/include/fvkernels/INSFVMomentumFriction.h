@@ -12,7 +12,7 @@
 #include "FVElementalKernel.h"
 
 /**
- * Implements a linear or quadratic friction term for the momentum equation.
+ * Implements a linear or quadratic friction term for the momentum equation
  */
 class INSFVMomentumFriction : public FVElementalKernel
 {

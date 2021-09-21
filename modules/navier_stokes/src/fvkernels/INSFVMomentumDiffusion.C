@@ -30,6 +30,9 @@ INSFVMomentumDiffusion::INSFVMomentumDiffusion(const InputParameters & params)
 void
 INSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
 {
+  if (skipForBoundary(fi))
+    return;
+
   const Elem & elem = fi.elem();
   const Elem * const neighbor = fi.neighborPtr();
   const Point & normal = fi.normal();
@@ -37,15 +40,22 @@ INSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
   coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
   const auto surface_vector = normal * fi.faceArea() * coord;
 
-  const auto face_mu = _mu(std::make_tuple(
-      &fi, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains(&fi)));
-
   if (onBoundary(fi))
   {
     auto ft = fi.faceType(_var.name());
-    const Elem * const boundary_elem = (ft == FaceInfo::VarFaceNeighbors::ELEM) ? &elem : neighbor;
+    mooseAssert((ft == FaceInfo::VarFaceNeighbors::ELEM) ||
+                    (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR),
+                "Do we want to allow internal boundaries?");
+    const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
+    const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
     const Point & boundary_elem_centroid =
-        (ft == FaceInfo::VarFaceNeighbors::ELEM) ? fi.elemCentroid() : fi.neighborCentroid();
+        var_on_elem_side ? fi.elemCentroid() : fi.neighborCentroid();
+
+    mooseAssert(boundary_elem, "the boundary elem should be non-null");
+    mooseAssert(this->hasBlocks(boundary_elem->subdomain_id()),
+                "This object should exist on our boundary element subdomain ID");
+    const auto face_mu = _mu(std::make_tuple(
+        &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
 
     // Find the boundary id that has an associated INSFV boundary condition
     // if a face has more than one bc_id
@@ -60,11 +70,6 @@ INSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
         _rc_uo.addToA(boundary_elem, _index, coeff);
         return;
       }
-
-      if (_slip_wall_boundaries.find(bc_id) != _slip_wall_boundaries.end())
-        // In the case of a slip wall we do not have viscous shear stress from the wall, so our
-        // contribution to the coefficient is zero
-        return;
 
       if (_flow_boundaries.find(bc_id) != _flow_boundaries.end())
       {
@@ -84,15 +89,11 @@ INSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
         return;
       }
 
+      if (_slip_wall_boundaries.find(bc_id) != _slip_wall_boundaries.end())
+        mooseError("Slip wall boundaries should have a flux bc such that we should never get here");
+
       if (_symmetry_boundaries.find(bc_id) != _symmetry_boundaries.end())
-      {
-        // Moukalled eqns. 15.154 - 15.156
-        const ADReal coeff = 2. * face_mu * surface_vector.norm() /
-                             std::abs((fi.faceCentroid() - boundary_elem_centroid) * normal) *
-                             normal(_index) * normal(_index);
-        _rc_uo.addToA(boundary_elem, _index, coeff);
-        return;
-      }
+        mooseError("Symmetry boundaries should have a flux bc such that we should never get here");
     }
 
     mooseError("The INSFVMomentumAdvection object ",
@@ -107,6 +108,8 @@ INSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
   // Now add the viscous flux. Note that this includes only the orthogonal component! See
   // Moukalled equations 8.80, 8.78, and the orthogonal correction approach equation for
   // E_f, equation 8.69
+  const auto face_mu = _mu(std::make_tuple(
+      &fi, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains(&fi)));
   const ADReal coeff =
       face_mu * surface_vector.norm() / (fi.neighborCentroid() - fi.elemCentroid()).norm();
   _rc_uo.addToA(&elem, _index, coeff);

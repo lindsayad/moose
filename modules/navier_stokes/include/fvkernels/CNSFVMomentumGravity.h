@@ -27,6 +27,8 @@ protected:
 
   /// The density
   const Moose::Functor<ADReal> & _rho;
+
+private:
   /// index x|y|z
   const unsigned int _index;
 };

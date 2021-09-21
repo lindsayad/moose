@@ -45,7 +45,6 @@ INSFVMomentumAdvection::validParams()
   params.addCoupledVar("w", "The velocity in the z direction.");
 
   MooseEnum velocity_interp_method("average rc", "rc");
-
   params.addParam<MooseEnum>(
       "velocity_interp_method",
       velocity_interp_method,
@@ -53,6 +52,9 @@ INSFVMomentumAdvection::validParams()
       "'average' and 'rc' which stands for Rhie-Chow. The default is Rhie-Chow.");
 
   params.addRequiredParam<MaterialPropertyName>("rho", "Density functor material property");
+
+  // We need 2 ghost layers for the Rhie-Chow interpolation
+  params.set<unsigned short>("ghost_layers") = 2;
 
   params.addClassDescription("Object for advecting momentum, e.g. rho*u");
 
@@ -146,6 +148,9 @@ INSFVMomentumAdvection::skipForBoundary(const FaceInfo & fi) const
 void
 INSFVMomentumAdvection::gatherRCData(const FaceInfo & fi)
 {
+  if (skipForBoundary(fi))
+    return;
+
   // these coefficients arise from simple control volume balances of advection and diffusion. These
   // coefficients are the linear coefficients associated with the centroid of the control volume.
   // Note that diffusion coefficients should always be positive, e.g. elliptic operators always
@@ -176,16 +181,6 @@ INSFVMomentumAdvection::gatherRCData(const FaceInfo & fi)
   coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
   const auto surface_vector = normal * fi.faceArea() * coord;
 
-  ADRealVectorValue elem_velocity(_u_var->getElemValue(&elem));
-
-  if (_v_var)
-    elem_velocity(1) = _v_var->getElemValue(&elem);
-  if (_w_var)
-    elem_velocity(2) = _w_var->getElemValue(&elem);
-
-  const auto face_rho = _rho(std::make_tuple(
-      &fi, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains(&fi)));
-
   // Unless specified otherwise, "elem" here refers to the element we're computing the
   // Rhie-Chow coefficient for. "neighbor" is the element across the current FaceInfo (fi)
   // face from the Rhie-Chow element
@@ -196,13 +191,13 @@ INSFVMomentumAdvection::gatherRCData(const FaceInfo & fi)
     // if a face has more than one bc_id
     for (const auto bc_id : fi.boundaryIDs())
     {
-      if ((_no_slip_wall_boundaries.find(bc_id) != _no_slip_wall_boundaries.end()) ||
-          (_slip_wall_boundaries.find(bc_id) != _slip_wall_boundaries.end()))
+      if ((_no_slip_wall_boundaries.find(bc_id) != _no_slip_wall_boundaries.end()))
         // No flow normal to wall, so no contribution to coefficient from the advection term
         return;
 
       if (_flow_boundaries.find(bc_id) != _flow_boundaries.end())
       {
+
         auto ft = fi.faceType(_var.name());
         mooseAssert((ft == FaceInfo::VarFaceNeighbors::ELEM) ||
                         (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR),
@@ -210,6 +205,12 @@ INSFVMomentumAdvection::gatherRCData(const FaceInfo & fi)
         const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
         Real residual_sign = var_on_elem_side ? 1. : -1.;
         const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
+
+        mooseAssert(boundary_elem, "the boundary elem should be non-null");
+        mooseAssert(this->hasBlocks(boundary_elem->subdomain_id()),
+                    "This object should exist on our boundary element subdomain ID");
+        const auto face_rho = _rho(std::make_tuple(
+            &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
 
         ADRealVectorValue face_velocity(_u_var->getBoundaryFaceValue(fi));
         if (_v_var)
@@ -228,9 +229,11 @@ INSFVMomentumAdvection::gatherRCData(const FaceInfo & fi)
         return;
       }
 
+      if (_slip_wall_boundaries.find(bc_id) != _slip_wall_boundaries.end())
+        mooseError("Slip wall boundaries should have a flux bc such that we should never get here");
+
       if (_symmetry_boundaries.find(bc_id) != _symmetry_boundaries.end())
-        // no flow normal to symmetry boundary
-        return;
+        mooseError("Symmetry boundaries should have a flux bc such that we should never get here");
     }
 
     mooseError("The INSFVMomentumAdvection object ",
@@ -241,6 +244,15 @@ INSFVMomentumAdvection::gatherRCData(const FaceInfo & fi)
   }
 
   // Else we are on an internal face
+
+  const auto face_rho = _rho(std::make_tuple(
+      &fi, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains(&fi)));
+
+  ADRealVectorValue elem_velocity(_u_var->getElemValue(&elem));
+  if (_v_var)
+    elem_velocity(1) = _v_var->getElemValue(&elem);
+  if (_w_var)
+    elem_velocity(2) = _w_var->getElemValue(&elem);
 
   ADRealVectorValue neighbor_velocity(_u_var->getNeighborValue(neighbor, fi, elem_velocity(0)));
   if (_v_var)

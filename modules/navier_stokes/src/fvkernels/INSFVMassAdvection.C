@@ -17,6 +17,7 @@ INSFVMassAdvection::validParams()
   auto params = INSFVMomentumAdvection::validParams();
   params.addClassDescription("Object for advecting mass, e.g. rho");
   params.suppressParameter<MooseFunctorName>("advected_quantity");
+  params.suppressParameter<MooseEnum>("momentum_component");
   return params;
 }
 

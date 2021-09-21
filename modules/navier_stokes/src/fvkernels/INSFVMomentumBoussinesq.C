@@ -15,6 +15,7 @@ InputParameters
 INSFVMomentumBoussinesq::validParams()
 {
   InputParameters params = FVElementalKernel::validParams();
+  params += INSFVResidualObject::validParams();
   params.addClassDescription("Computes a body force for natural convection buoyancy.");
   params.addRequiredCoupledVar("temperature", "temperature variable");
   params.addRequiredParam<RealVectorValue>("gravity", "Direction of the gravity vector");
@@ -35,6 +36,7 @@ INSFVMomentumBoussinesq::validParams()
 
 INSFVMomentumBoussinesq::INSFVMomentumBoussinesq(const InputParameters & params)
   : FVElementalKernel(params),
+    INSFVResidualObject(*this),
     _temperature(adCoupledValue("temperature")),
     _gravity(getParam<RealVectorValue>("gravity")),
     _alpha(getADMaterialProperty<Real>("alpha_name")),

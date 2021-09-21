@@ -17,6 +17,7 @@ InputParameters
 PINSFVEnergyAdvection::validParams()
 {
   auto params = PINSFVMomentumAdvection::validParams();
+  params.suppressParameter<MooseEnum>("momentum_component");
   params.addClassDescription("Advects energy, e.g. rho*cp*T. A user may still override what "
                              "quantity is advected, but the default is rho*cp*T");
   params.set<MooseFunctorName>("advected_quantity") = "rho_cp_temp";

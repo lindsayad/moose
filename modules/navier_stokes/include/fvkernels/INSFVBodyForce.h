@@ -7,29 +7,20 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#pragma once
-
-#include "FVTimeKernel.h"
+#include "FVBodyForce.h"
 #include "INSFVResidualObject.h"
 
 /**
- * Computes the momentum time derivative for the weakly compressible formulation of the momentum
- * equation, using functor material properties. Only one spatial component is included.
+ * Body force that contributes to the Rhie-Chow interpolation
  */
-class WCNSFVMomentumTimeDerivative : public FVTimeKernel, public INSFVResidualObject
+class INSFVBodyForce : public FVBodyForce, public INSFVResidualObject
 {
 public:
+  INSFVBodyForce(const InputParameters & params);
   static InputParameters validParams();
-  WCNSFVMomentumTimeDerivative(const InputParameters & params);
 
   // requires RC implementation
   void gatherRCData(const Elem &) override {}
 
   void gatherRCData(const FaceInfo &) override {}
-
-protected:
-  ADReal computeQpResidual() override;
-
-  const Moose::Functor<ADReal> & _rho;
-  const Moose::Functor<ADReal> & _rho_dot;
 };

@@ -16,7 +16,7 @@ registerMooseObject("NavierStokesApp", INSFVWallFunctionBC);
 InputParameters
 INSFVWallFunctionBC::validParams()
 {
-  InputParameters params = FVFluxBC::validParams();
+  InputParameters params = INSFVNaturalFreeSlipBC::validParams();
   params.addClassDescription("Implements a wall shear BC for the momentum equation based on "
                              "algebraic standard velocity wall functions.");
   params.addRequiredCoupledVar("u", "The velocity in the x direction.");
