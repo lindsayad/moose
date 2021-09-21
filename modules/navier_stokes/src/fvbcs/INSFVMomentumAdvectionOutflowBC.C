@@ -11,29 +11,34 @@
 #include "INSFVVelocityVariable.h"
 #include "SubProblem.h"
 #include "MooseMesh.h"
+#include "NS.h"
 
-registerADMooseObject("NavierStokesApp", INSFVMomentumAdvectionOutflowBC);
+registerMooseObject("NavierStokesApp", INSFVMomentumAdvectionOutflowBC);
 
 InputParameters
 INSFVMomentumAdvectionOutflowBC::validParams()
 {
   InputParameters params = FVMatAdvectionOutflowBC::validParams();
   params += INSFVFullyDevelopedFlowBC::validParams();
+  params += INSFVResidualObject::validParams();
   params.addRequiredCoupledVar("u", "The velocity in the x direction.");
   params.addCoupledVar("v", "The velocity in the y direction.");
   params.addCoupledVar("w", "The velocity in the z direction.");
   params.addClassDescription("Outflow boundary condition for advecting momentum. This will impose "
                              "a zero normal gradient on the boundary velocity.");
+  params.addRequiredParam<MooseFunctorName>(NS::density, "The density");
   return params;
 }
 
 INSFVMomentumAdvectionOutflowBC::INSFVMomentumAdvectionOutflowBC(const InputParameters & params)
   : FVMatAdvectionOutflowBC(params),
     INSFVFullyDevelopedFlowBC(params),
+    INSFVResidualObject(*this),
     _u_var(dynamic_cast<const INSFVVelocityVariable *>(getFieldVar("u", 0))),
     _v_var(dynamic_cast<const INSFVVelocityVariable *>(getFieldVar("v", 0))),
     _w_var(dynamic_cast<const INSFVVelocityVariable *>(getFieldVar("w", 0))),
-    _dim(_subproblem.mesh().dimension())
+    _dim(_subproblem.mesh().dimension()),
+    _rho(getFunctor<ADReal>(NS::density))
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError("INSFV is not supported by local AD indexing. In order to use INSFV, please run the "
@@ -82,4 +87,40 @@ INSFVMomentumAdvectionOutflowBC::computeQpResidual()
              "configure script in the root MOOSE directory with the configure option "
              "'--with-ad-indexing-type=global'");
 #endif
+}
+
+void
+INSFVMomentumAdvectionOutflowBC::gatherRCData(const FaceInfo & fi)
+{
+  const Elem & elem = fi.elem();
+  const Elem * const neighbor = fi.neighborPtr();
+  const Point & normal = fi.normal();
+  Real coord;
+  coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
+  const auto surface_vector = normal * fi.faceArea() * coord;
+
+  auto ft = fi.faceType(_var.name());
+  mooseAssert((ft == FaceInfo::VarFaceNeighbors::ELEM) ||
+                  (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR),
+              "Do we want to allow internal flow boundaries?");
+  const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
+  Real residual_sign = var_on_elem_side ? 1. : -1.;
+  const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
+
+  mooseAssert(boundary_elem, "the boundary elem should be non-null");
+  const auto face_rho = _rho(std::make_tuple(
+      &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
+
+  ADRealVectorValue face_velocity(_u_var->getBoundaryFaceValue(fi));
+  if (_v_var)
+    face_velocity(1) = _v_var->getBoundaryFaceValue(fi);
+  if (_w_var)
+    face_velocity(2) = _w_var->getBoundaryFaceValue(fi);
+
+  const auto advection_coeffs =
+      Moose::FV::interpCoeffs(_advected_interp_method, fi, true, face_velocity);
+  const auto advection_coeff = var_on_elem_side ? advection_coeffs.first : advection_coeffs.second;
+  const ADReal coeff = face_rho * face_velocity * surface_vector * advection_coeff * residual_sign;
+
+  _rc_uo.addToA(boundary_elem, _index, coeff);
 }

@@ -20,10 +20,12 @@ class PINSFVSymmetryVelocityBC : public INSFVSymmetryVelocityBC
 public:
   static InputParameters validParams();
   PINSFVSymmetryVelocityBC(const InputParameters & params);
+  using INSFVSymmetryVelocityBC::gatherRCData;
+  void gatherRCData(const FaceInfo & fi) override;
 
 protected:
   ADReal computeQpResidual() override;
 
   /// porosity of the medium
-  const MooseVariableFV<Real> * const _eps_var;
+  const Moose::Functor<ADReal> & _eps;
 };

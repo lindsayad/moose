@@ -11,16 +11,21 @@
 
 #include "FVFluxBC.h"
 #include "INSFVFlowBC.h"
+#include "INSFVResidualObject.h"
 
 /**
  * Evaluates boundary mass or momentum fluxes through functor evaluation of the superficial
  * velocities, pressure, density, and porosity
  */
-class PINSFVFunctorBC : public FVFluxBC, public INSFVFlowBC
+class PINSFVFunctorBC : public FVFluxBC, public INSFVFlowBC, public INSFVResidualObject
 {
 public:
   static InputParameters validParams();
   PINSFVFunctorBC(const InputParameters & params);
+
+  void gatherRCData(const Elem &) override {}
+
+  void gatherRCData(const FaceInfo &) override;
 
 protected:
   virtual ADReal computeQpResidual() override;
@@ -42,4 +47,7 @@ protected:
   /// If computing the boundary fluxes for the momentum equation, this denotes the component of the
   /// momentum equation we are computing for
   const unsigned int _index;
+
+  /// The interpolation method to use for the advected quantity
+  Moose::FV::InterpMethod _advected_interp_method;
 };

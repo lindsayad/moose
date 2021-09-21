@@ -17,6 +17,17 @@ velocity_interp_method='rc'
   fv_bcs_integrity_check = true
 []
 
+[GlobalParams]
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+  []
+[]
+
 [Variables]
   [u]
     type = INSFVVelocityVariable
@@ -36,7 +47,6 @@ velocity_interp_method='rc'
     vel = 'velocity'
     pressure = pressure
     u = u
-    mu = ${mu}
     rho = ${rho}
   []
 
@@ -49,13 +59,14 @@ velocity_interp_method='rc'
     velocity_interp_method = ${velocity_interp_method}
     pressure = pressure
     u = u
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'x'
   []
   [u_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = u
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'x'
   []
   [u_pressure]
     type = INSFVMomentumPressure

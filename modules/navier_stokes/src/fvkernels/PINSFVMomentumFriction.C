@@ -16,6 +16,7 @@ InputParameters
 PINSFVMomentumFriction::validParams()
 {
   InputParameters params = FVElementalKernel::validParams();
+  params += INSFVResidualObject::validParams();
   params.addClassDescription(
       "Computes a friction force term on fluid in porous media in the "
       "Navier Stokes i-th momentum equation in Rhie-Chow (incompressible) contexts.");
@@ -34,7 +35,7 @@ PINSFVMomentumFriction::validParams()
 
 PINSFVMomentumFriction::PINSFVMomentumFriction(const InputParameters & params)
   : FVElementalKernel(params),
-    _index(getParam<MooseEnum>("momentum_component")),
+    INSFVResidualObject(*this),
     _cL(isParamValid("Darcy_name") ? &getFunctor<ADRealVectorValue>("Darcy_name") : nullptr),
     _cQ(isParamValid("Forchheimer_name") ? &getFunctor<ADRealVectorValue>("Forchheimer_name")
                                          : nullptr),

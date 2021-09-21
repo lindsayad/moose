@@ -22,6 +22,9 @@ public:
   static InputParameters validParams();
   INSFVWallFunctionBC(const InputParameters & params);
 
+  // requires RC implementation
+  // void gatherRCData(const FaceInfo &) override {}
+
 protected:
   virtual ADReal computeQpResidual() override;
 

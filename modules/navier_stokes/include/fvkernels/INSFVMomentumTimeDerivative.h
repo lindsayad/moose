@@ -10,12 +10,17 @@
 #pragma once
 
 #include "FVTimeKernel.h"
+#include "INSFVResidualObject.h"
 
-class INSFVMomentumTimeDerivative : public FVTimeKernel
+class INSFVMomentumTimeDerivative : public FVTimeKernel, public INSFVResidualObject
 {
 public:
   static InputParameters validParams();
   INSFVMomentumTimeDerivative(const InputParameters & params);
+
+  // This will have to be implemented
+  void gatherRCData(const Elem &) override {}
+  void gatherRCData(const FaceInfo &) override {}
 
 protected:
   ADReal computeQpResidual() override;

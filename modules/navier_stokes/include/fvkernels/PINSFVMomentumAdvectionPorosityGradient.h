@@ -10,15 +10,21 @@
 #pragma once
 
 #include "FVElementalKernel.h"
+#include "INSFVResidualObject.h"
 
 /**
  * An elemental kernel to add the inverse porosity gradient term to the momentum equation
  */
-class PINSFVMomentumAdvectionPorosityGradient : public FVElementalKernel
+class PINSFVMomentumAdvectionPorosityGradient : public FVElementalKernel, public INSFVResidualObject
 {
 public:
   static InputParameters validParams();
   PINSFVMomentumAdvectionPorosityGradient(const InputParameters & params);
+
+  // requires RC implementation
+  void gatherRCData(const Elem &) override {}
+
+  void gatherRCData(const FaceInfo &) override {}
 
 protected:
   ADReal computeQpResidual() override;

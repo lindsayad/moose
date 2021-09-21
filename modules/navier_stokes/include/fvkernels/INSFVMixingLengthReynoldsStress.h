@@ -10,16 +10,22 @@
 #pragma once
 
 #include "FVFluxKernel.h"
+#include "INSFVResidualObject.h"
 
 // Forward declare variable class
 class INSFVVelocityVariable;
 
-class INSFVMixingLengthReynoldsStress : public FVFluxKernel
+class INSFVMixingLengthReynoldsStress : public FVFluxKernel, public INSFVResidualObject
 {
 public:
   static InputParameters validParams();
 
   INSFVMixingLengthReynoldsStress(const InputParameters & params);
+
+  void gatherRCData(const Elem &) override {}
+
+  // requires RC implementation
+  void gatherRCData(const FaceInfo &) override {}
 
 protected:
   ADReal computeQpResidual() override;

@@ -70,7 +70,6 @@ rho=1
     u = u
     v = v
     rho = ${rho}
-    momentum_component = 'x'
   []
   [mean_zero_pressure]
     type = FVScalarLagrangeMultiplier

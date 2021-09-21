@@ -10,21 +10,25 @@
 #pragma once
 
 #include "FVElementalKernel.h"
+#include "INSFVResidualObject.h"
 
 /**
- * Imposes a friction force on the momentum equation in porous media.
+ * Imposes a friction force on the momentum equation in porous media in Rhie-Chow contexts
  */
-class PINSFVMomentumFriction : public FVElementalKernel
+class PINSFVMomentumFriction : public FVElementalKernel, public INSFVResidualObject
 {
 public:
   static InputParameters validParams();
   PINSFVMomentumFriction(const InputParameters & params);
 
+  // requires RC implementation
+  void gatherRCData(const Elem &) override {}
+
+  void gatherRCData(const FaceInfo &) override {}
+
 protected:
   ADReal computeQpResidual() override;
 
-  /// Momentum equation component (x = 0, y = 1, z = 2)
-  const unsigned int _index;
   /// Darcy coefficient
   const Moose::Functor<ADRealVectorValue> * const _cL;
   /// Forchheimer coefficient

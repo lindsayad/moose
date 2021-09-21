@@ -16,6 +16,7 @@ InputParameters
 PINSFVMassAdvection::validParams()
 {
   auto params = PINSFVMomentumAdvection::validParams();
+  params.suppressParameter<MooseEnum>("momentum_component");
   params.addClassDescription("Object for advecting mass in porous media mass equation");
   return params;
 }
