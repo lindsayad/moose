@@ -33,6 +33,18 @@ velocity_interp_method='rc'
   coord_type = 'RZ'
 []
 
+[GlobalParams]
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+  []
+[]
+
 [Variables]
   [u]
     type = INSFVVelocityVariable

@@ -12,6 +12,17 @@ velocity_interp_method='rc'
   []
 []
 
+[GlobalParams]
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+  []
+[]
+
 [Problem]
   error_on_jacobian_nonzero_reallocation = true
 []
@@ -81,7 +92,6 @@ velocity_interp_method='rc'
     vel = 'velocity'
     pressure = pressure
     u = u
-    mu = ${mu}
     rho = ${rho}
     porosity = porosity
     smooth_porosity = true
@@ -101,10 +111,10 @@ velocity_interp_method='rc'
     velocity_interp_method = ${velocity_interp_method}
     pressure = pressure
     u = u
-    mu = ${mu}
     rho = ${rho}
     porosity = porosity
     smooth_porosity = true
+    momentum_component = 'x'
   []
   [u_viscosity]
     type = PINSFVMomentumDiffusion
@@ -143,9 +153,10 @@ velocity_interp_method='rc'
   []
 
   [u_forcing]
-    type = FVBodyForce
+    type = INSFVBodyForce
     variable = u
     function = forcing_u
+    momentum_component = 'x'
   []
 []
 
