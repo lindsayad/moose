@@ -27,10 +27,32 @@ INSFVMomentumDiffusion::INSFVMomentumDiffusion(const InputParameters & params)
 {
 }
 
+bool
+INSFVMomentumDiffusion::rcSkipForBoundary(const FaceInfo & fi) const
+{
+  if (!onBoundary(fi))
+    return false;
+
+  // If we have flux bcs then we do skip
+  const auto & flux_pr = _var.getFluxBCs(fi);
+  if (flux_pr.first)
+    return true;
+
+  // If we have a flow boundary without a replacement flux BC, then we must not skip. Mass and
+  // momentum are transported via advection across boundaries
+  for (const auto bc_id : fi.boundaryIDs())
+    if (_flow_boundaries.find(bc_id) != _flow_boundaries.end())
+      return false;
+
+  // If not a flow boundary, then there should be no advection/flow in the normal direction, e.g. we
+  // should not contribute any advective flux
+  return true;
+}
+
 void
 INSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
 {
-  if (skipForBoundary(fi))
+  if (rcSkipForBoundary(fi))
     return;
 
   const Elem & elem = fi.elem();
