@@ -92,35 +92,36 @@ INSFVMomentumAdvectionOutflowBC::computeQpResidual()
 void
 INSFVMomentumAdvectionOutflowBC::gatherRCData(const FaceInfo & fi)
 {
-  const Elem & elem = fi.elem();
-  const Elem * const neighbor = fi.neighborPtr();
-  const Point & normal = fi.normal();
-  Real coord;
-  coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
-  const auto surface_vector = normal * fi.faceArea() * coord;
+  // const Elem & elem = fi.elem();
+  // const Elem * const neighbor = fi.neighborPtr();
+  // const Point & normal = fi.normal();
+  // Real coord;
+  // coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
+  // const auto surface_vector = normal * fi.faceArea() * coord;
 
-  auto ft = fi.faceType(_var.name());
-  mooseAssert((ft == FaceInfo::VarFaceNeighbors::ELEM) ||
-                  (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR),
-              "Do we want to allow internal flow boundaries?");
-  const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
-  Real residual_sign = var_on_elem_side ? 1. : -1.;
-  const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
+  // auto ft = fi.faceType(_var.name());
+  // mooseAssert((ft == FaceInfo::VarFaceNeighbors::ELEM) ||
+  //                 (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR),
+  //             "Do we want to allow internal flow boundaries?");
+  // const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
+  // Real residual_sign = var_on_elem_side ? 1. : -1.;
+  // const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
 
-  mooseAssert(boundary_elem, "the boundary elem should be non-null");
-  const auto face_rho = _rho(std::make_tuple(
-      &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
+  // mooseAssert(boundary_elem, "the boundary elem should be non-null");
+  // const auto face_rho = _rho(std::make_tuple(
+  //     &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
 
-  ADRealVectorValue face_velocity(_u_var->getBoundaryFaceValue(fi));
-  if (_v_var)
-    face_velocity(1) = _v_var->getBoundaryFaceValue(fi);
-  if (_w_var)
-    face_velocity(2) = _w_var->getBoundaryFaceValue(fi);
+  // ADRealVectorValue face_velocity(_u_var->getBoundaryFaceValue(fi));
+  // if (_v_var)
+  //   face_velocity(1) = _v_var->getBoundaryFaceValue(fi);
+  // if (_w_var)
+  //   face_velocity(2) = _w_var->getBoundaryFaceValue(fi);
 
-  const auto advection_coeffs =
-      Moose::FV::interpCoeffs(_advected_interp_method, fi, true, face_velocity);
-  const auto advection_coeff = var_on_elem_side ? advection_coeffs.first : advection_coeffs.second;
-  const ADReal coeff = face_rho * face_velocity * surface_vector * advection_coeff * residual_sign;
+  // const auto advection_coeffs =
+  //     Moose::FV::interpCoeffs(_advected_interp_method, fi, true, face_velocity);
+  // const auto advection_coeff = var_on_elem_side ? advection_coeffs.first :
+  // advection_coeffs.second; const ADReal coeff = face_rho * face_velocity * surface_vector *
+  // advection_coeff * residual_sign;
 
-  _rc_uo.addToA(boundary_elem, _index, coeff);
+  // _rc_uo.addToA(boundary_elem, _index, coeff);
 }

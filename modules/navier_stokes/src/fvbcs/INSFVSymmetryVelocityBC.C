@@ -87,26 +87,26 @@ INSFVSymmetryVelocityBC::computeQpResidual()
 void
 INSFVSymmetryVelocityBC::gatherRCData(const FaceInfo & fi)
 {
-  const Elem & elem = fi.elem();
-  const Elem * const neighbor = fi.neighborPtr();
-  const Point & normal = fi.normal();
-  Real coord;
-  coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
-  const auto surface_vector = normal * fi.faceArea() * coord;
+  // const Elem & elem = fi.elem();
+  // const Elem * const neighbor = fi.neighborPtr();
+  // const Point & normal = fi.normal();
+  // Real coord;
+  // coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
+  // const auto surface_vector = normal * fi.faceArea() * coord;
 
-  auto ft = fi.faceType(_var.name());
-  const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
-  const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
-  const Point & boundary_elem_centroid =
-      var_on_elem_side ? fi.elemCentroid() : fi.neighborCentroid();
+  // auto ft = fi.faceType(_var.name());
+  // const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
+  // const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
+  // const Point & boundary_elem_centroid =
+  //     var_on_elem_side ? fi.elemCentroid() : fi.neighborCentroid();
 
-  mooseAssert(boundary_elem, "the boundary elem should be non-null");
-  const auto face_mu = _mu(std::make_tuple(
-      &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
+  // mooseAssert(boundary_elem, "the boundary elem should be non-null");
+  // const auto face_mu = _mu(std::make_tuple(
+  //     &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
 
-  // Moukalled eqns. 15.154 - 15.156
-  const ADReal coeff = 2. * face_mu * surface_vector.norm() /
-                       std::abs((fi.faceCentroid() - boundary_elem_centroid) * normal) *
-                       normal(_index) * normal(_index);
-  _rc_uo.addToA(boundary_elem, _index, coeff);
+  // // Moukalled eqns. 15.154 - 15.156
+  // const ADReal coeff = 2. * face_mu * surface_vector.norm() /
+  //                      std::abs((fi.faceCentroid() - boundary_elem_centroid) * normal) *
+  //                      normal(_index) * normal(_index);
+  // _rc_uo.addToA(boundary_elem, _index, coeff);
 }

@@ -148,8 +148,8 @@ INSFVMomentumAdvection::skipForBoundary(const FaceInfo & fi) const
 void
 INSFVMomentumAdvection::gatherRCData(const FaceInfo & fi)
 {
-  if (skipForBoundary(fi))
-    return;
+  // if (skipForBoundary(fi))
+  //   return;
 
   // these coefficients arise from simple control volume balances of advection and diffusion. These
   // coefficients are the linear coefficients associated with the centroid of the control volume.
@@ -230,10 +230,13 @@ INSFVMomentumAdvection::gatherRCData(const FaceInfo & fi)
       }
 
       if (_slip_wall_boundaries.find(bc_id) != _slip_wall_boundaries.end())
-        mooseError("Slip wall boundaries should have a flux bc such that we should never get here");
+        return;
+      // mooseError("Slip wall boundaries should have a flux bc such that we should never get
+      // here");
 
       if (_symmetry_boundaries.find(bc_id) != _symmetry_boundaries.end())
-        mooseError("Symmetry boundaries should have a flux bc such that we should never get here");
+        return;
+      // mooseError("Symmetry boundaries should have a flux bc such that we should never get here");
     }
 
     mooseError("The INSFVMomentumAdvection object ",

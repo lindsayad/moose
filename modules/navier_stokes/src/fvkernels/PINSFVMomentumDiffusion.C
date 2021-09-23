@@ -56,8 +56,8 @@ PINSFVMomentumDiffusion::PINSFVMomentumDiffusion(const InputParameters & params)
 void
 PINSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
 {
-  if (skipForBoundary(fi))
-    return;
+  // if (skipForBoundary(fi))
+  //   return;
 
   const Elem & elem = fi.elem();
   const Elem * const neighbor = fi.neighborPtr();
@@ -119,10 +119,21 @@ PINSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
       }
 
       if (_slip_wall_boundaries.find(bc_id) != _slip_wall_boundaries.end())
-        mooseError("Slip wall boundaries should have a flux bc such that we should never get here");
+        return;
+      // mooseError("Slip wall boundaries should have a flux bc such that we should never get
+      // here");
 
       if (_symmetry_boundaries.find(bc_id) != _symmetry_boundaries.end())
-        mooseError("Symmetry boundaries should have a flux bc such that we should never get here");
+      {
+        // Moukalled eqns. 15.154 - 15.156, adapted for porosity
+        const ADReal coeff = 2. * face_mu / face_eps * surface_vector.norm() /
+                             std::abs((fi.faceCentroid() - boundary_elem_centroid) * normal) *
+                             normal(_index) * normal(_index);
+        _rc_uo.addToA(boundary_elem, _index, coeff);
+        return;
+        // mooseError("Symmetry boundaries should have a flux bc such that we should never get
+        // here");
+      }
     }
 
     const auto bc_id = *fi.boundaryIDs().begin();
