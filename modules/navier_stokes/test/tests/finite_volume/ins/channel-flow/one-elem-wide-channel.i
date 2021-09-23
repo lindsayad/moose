@@ -3,6 +3,18 @@ rho=1.1
 advected_interp_method='average'
 velocity_interp_method='rc'
 
+[GlobalParams]
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+  []
+[]
+
 [Mesh]
   [gen]
     type = GeneratedMeshGenerator
@@ -40,7 +52,6 @@ velocity_interp_method='rc'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
   []
 
@@ -54,13 +65,19 @@ velocity_interp_method='rc'
     pressure = pressure
     u = u
     v = v
+<<<<<<< HEAD:modules/navier_stokes/test/tests/finite_volume/ins/channel-flow/one-elem-wide-channel.i
     mu = ${mu}
     rho = ${rho}
+=======
+    rho = ${rho}
+    momentum_component = 'x'
+>>>>>>> More input file adaptation to RC user object:modules/navier_stokes/test/tests/finite_volume/ins/channel-flow/square-ambient-convection.i
   []
   [u_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = u
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'x'
   []
   [u_pressure]
     type = INSFVMomentumPressure
@@ -79,13 +96,14 @@ velocity_interp_method='rc'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'y'
   []
   [v_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = v
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'y'
   []
   [v_pressure]
     type = INSFVMomentumPressure
@@ -93,6 +111,32 @@ velocity_interp_method='rc'
     momentum_component = 'y'
     pressure = pressure
   []
+<<<<<<< HEAD:modules/navier_stokes/test/tests/finite_volume/ins/channel-flow/one-elem-wide-channel.i
+=======
+
+  [energy_advection]
+    type = INSFVEnergyAdvection
+    variable = temperature
+    vel = 'velocity'
+    velocity_interp_method = ${velocity_interp_method}
+    advected_interp_method = ${advected_interp_method}
+    pressure = pressure
+    u = u
+    v = v
+    rho = ${rho}
+  []
+  [energy_diffusion]
+    type = FVDiffusion
+    coeff = ${k}
+    variable = temperature
+  []
+  [ambient_convection]
+    type = NSFVEnergyAmbientConvection
+    variable = temperature
+    T_ambient = 100
+    alpha = 'alpha'
+  []
+>>>>>>> More input file adaptation to RC user object:modules/navier_stokes/test/tests/finite_volume/ins/channel-flow/square-ambient-convection.i
 []
 
 [FVBCs]

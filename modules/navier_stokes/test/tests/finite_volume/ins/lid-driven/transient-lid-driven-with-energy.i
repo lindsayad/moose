@@ -6,6 +6,18 @@ vel = 'velocity'
 velocity_interp_method = 'rc'
 advected_interp_method = 'average'
 
+[GlobalParams]
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+  []
+[]
+
 [Mesh]
   [gen]
     type = GeneratedMeshGenerator
@@ -79,7 +91,6 @@ advected_interp_method = 'average'
     u = u
     v = v
     pressure = pressure
-    mu = ${mu}
     rho = ${rho}
   []
   [mean_zero_pressure]
@@ -92,6 +103,7 @@ advected_interp_method = 'average'
     type = INSFVMomentumTimeDerivative
     variable = 'u'
     rho = ${rho}
+    momentum_component = 'x'
   []
   [u_advection]
     type = INSFVMomentumAdvection
@@ -103,13 +115,14 @@ advected_interp_method = 'average'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'x'
   []
   [u_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = u
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'x'
   []
   [u_pressure]
     type = INSFVMomentumPressure
@@ -122,6 +135,7 @@ advected_interp_method = 'average'
     type = INSFVMomentumTimeDerivative
     variable = v
     rho = ${rho}
+    momentum_component = 'y'
   []
   [v_advection]
     type = INSFVMomentumAdvection
@@ -133,13 +147,14 @@ advected_interp_method = 'average'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'y'
   []
   [v_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = v
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'y'
   []
   [v_pressure]
     type = INSFVMomentumPressure
@@ -168,7 +183,6 @@ advected_interp_method = 'average'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
   []
 []

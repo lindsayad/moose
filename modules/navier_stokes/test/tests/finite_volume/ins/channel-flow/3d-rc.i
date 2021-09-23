@@ -23,6 +23,19 @@ velocity_interp_method='rc'
   fv_bcs_integrity_check = true
 []
 
+[GlobalParams]
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+    w = w
+  []
+[]
+
 [Variables]
   [u]
     type = INSFVVelocityVariable
@@ -52,7 +65,6 @@ velocity_interp_method='rc'
     u = u
     v = v
     w = w
-    mu = ${mu}
     rho = ${rho}
   []
 
@@ -67,13 +79,14 @@ velocity_interp_method='rc'
     u = u
     v = v
     w = w
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'x'
   []
   [u_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = u
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'x'
   []
   [u_pressure]
     type = INSFVMomentumPressure
@@ -93,13 +106,14 @@ velocity_interp_method='rc'
     u = u
     v = v
     w = w
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'y'
   []
   [v_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = v
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'y'
   []
   [v_pressure]
     type = INSFVMomentumPressure
@@ -119,13 +133,14 @@ velocity_interp_method='rc'
     u = u
     v = v
     w = w
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'z'
   []
   [w_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = w
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'z'
   []
   [w_pressure]
     type = INSFVMomentumPressure
@@ -159,16 +174,19 @@ velocity_interp_method='rc'
     type = INSFVNaturalFreeSlipBC
     boundary = 'top bottom front back'
     variable = u
+    momentum_component = 'x'
   []
   [walls-v]
     type = INSFVNaturalFreeSlipBC
     boundary = 'top bottom front back'
     variable = v
+    momentum_component = 'y'
   []
   [walls-w]
     type = INSFVNaturalFreeSlipBC
     boundary = 'top bottom front back'
     variable = w
+    momentum_component = 'z'
   []
 
   [outlet_p]

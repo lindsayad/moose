@@ -5,6 +5,15 @@ velocity_interp_method='rc'
 
 [GlobalParams]
   two_term_boundary_expansion = true
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+  []
 []
 
 [Mesh]
@@ -46,7 +55,6 @@ velocity_interp_method='rc'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
   []
 
@@ -60,13 +68,14 @@ velocity_interp_method='rc'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'x'
   []
   [u_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = u
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'x'
   []
   [u_pressure]
     type = INSFVMomentumPressure
@@ -85,14 +94,15 @@ velocity_interp_method='rc'
     pressure = pressure
     u = u
     v = v
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'y'
     # we can think of the axis as a slip wall boundary, no normal velocity and no viscous shear
   []
   [v_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = v
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'y'
   []
   [v_pressure]
     type = INSFVMomentumPressure
@@ -121,11 +131,13 @@ velocity_interp_method='rc'
     type = INSFVNaturalFreeSlipBC
     boundary = 'right'
     variable = u
+    momentum_component = 'x'
   []
   [free-slip-wall-v]
     type = INSFVNaturalFreeSlipBC
     boundary = 'right'
     variable = v
+    momentum_component = 'y'
   []
   [no-slip-wall-u]
     type = INSFVNoSlipWallBC

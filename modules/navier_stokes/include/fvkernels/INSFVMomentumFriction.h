@@ -10,16 +10,22 @@
 #pragma once
 
 #include "FVElementalKernel.h"
+#include "INSFVResidualObject.h"
 
 /**
- * Implements a linear or quadratic friction term for the momentum equation
+ * Implements a linear or quadratic friction term for the momentum equation in Rhie-Chow contexts
  */
-class INSFVMomentumFriction : public FVElementalKernel
+class INSFVMomentumFriction : public FVElementalKernel, public INSFVResidualObject
 {
 public:
   static InputParameters validParams();
 
   INSFVMomentumFriction(const InputParameters & parameters);
+
+  // requires RC implementation
+  void gatherRCData(const Elem &) override {}
+
+  void gatherRCData(const FaceInfo &) override {}
 
 protected:
   ADReal computeQpResidual() override;
