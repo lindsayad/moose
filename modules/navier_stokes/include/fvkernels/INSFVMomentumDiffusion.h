@@ -25,8 +25,6 @@ public:
   void initialSetup() override { INSFVFluxKernelInterface::initialSetup(*this); }
 
 protected:
-  bool rcSkipForBoundary(const FaceInfo & fi) const;
-
   ADReal computeQpResidual() override;
 
   /// The dynamic viscosity
