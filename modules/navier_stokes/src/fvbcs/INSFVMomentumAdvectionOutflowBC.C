@@ -54,7 +54,7 @@ INSFVMomentumAdvectionOutflowBC::INSFVMomentumAdvectionOutflowBC(const InputPara
                "In two or more dimensions, the v velocity must be supplied and it must be an "
                "INSFVVelocityVariable.");
 
-  if (_dim >= 3 && !params.isParamValid("w"))
+  if (_dim >= 3 && !_w_var)
     paramError("w",
                "In three-dimensions, the w velocity must be supplied and it must be an "
                "INSFVVelocityVariable.");
