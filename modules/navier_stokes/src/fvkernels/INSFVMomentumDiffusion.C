@@ -30,8 +30,8 @@ INSFVMomentumDiffusion::INSFVMomentumDiffusion(const InputParameters & params)
 void
 INSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
 {
-  if (skipForBoundary(fi))
-    return;
+  // if (skipForBoundary(fi))
+  //   return;
 
   const Elem & elem = fi.elem();
   const Elem * const neighbor = fi.neighborPtr();
@@ -90,13 +90,24 @@ INSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
       }
 
       if (_slip_wall_boundaries.find(bc_id) != _slip_wall_boundaries.end())
-        mooseError("Slip wall boundaries should have a flux bc such that we should never get here");
+        return;
+      // mooseError("Slip wall boundaries should have a flux bc such that we should never get
+      // here");
 
       if (_symmetry_boundaries.find(bc_id) != _symmetry_boundaries.end())
-        mooseError("Symmetry boundaries should have a flux bc such that we should never get here");
+      {
+        // Moukalled eqns. 15.154 - 15.156
+        const ADReal coeff = 2. * face_mu * surface_vector.norm() /
+                             std::abs((fi.faceCentroid() - boundary_elem_centroid) * normal) *
+                             normal(_index) * normal(_index);
+        _rc_uo.addToA(boundary_elem, _index, coeff);
+        return;
+        // mooseError("Symmetry boundaries should have a flux bc such that we should never get
+        // here");
+      }
     }
 
-    mooseError("The INSFVMomentumAdvection object ",
+    mooseError("The INSFVMomentumDiffusion object ",
                this->name(),
                " is not completely bounded by INSFVBCs. Please examine sideset ",
                *fi.boundaryIDs().begin(),
