@@ -48,7 +48,7 @@ PINSFVSymmetryVelocityBC::computeQpResidual()
 }
 
 void
-PINSFVSymmetryVelocityBC::gatherRCData(const FaceInfo & fi)
+PINSFVSymmetryVelocityBC::gatherRCData(const FaceInfo & /*fi*/)
 {
   // const Elem & elem = fi.elem();
   // const Elem * const neighbor = fi.neighborPtr();

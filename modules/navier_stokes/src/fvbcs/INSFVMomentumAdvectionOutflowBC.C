@@ -90,7 +90,7 @@ INSFVMomentumAdvectionOutflowBC::computeQpResidual()
 }
 
 void
-INSFVMomentumAdvectionOutflowBC::gatherRCData(const FaceInfo & fi)
+INSFVMomentumAdvectionOutflowBC::gatherRCData(const FaceInfo & /*fi*/)
 {
   // const Elem & elem = fi.elem();
   // const Elem * const neighbor = fi.neighborPtr();
