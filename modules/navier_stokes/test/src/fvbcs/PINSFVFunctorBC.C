@@ -106,7 +106,7 @@ PINSFVFunctorBC::computeQpResidual()
 }
 
 void
-PINSFVFunctorBC::gatherRCData(const FaceInfo & fi)
+PINSFVFunctorBC::gatherRCData(const FaceInfo & /*fi*/)
 {
   // This is copied from PINSFVMomentumAdvection for flow boundaries. In the future we should
   // probably make this look more like the above computeQpResidual
