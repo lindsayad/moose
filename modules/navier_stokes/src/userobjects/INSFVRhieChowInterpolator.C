@@ -131,7 +131,8 @@ INSFVRhieChowInterpolator::finalize()
   }
 
   {
-    // First push data
+    // First push _a data. We do not have to push _b data because all that data should initially be
+    // local, e.g. we only loop over active local elements for FVElementalKernels
     auto action_functor = [this](const processor_id_type libmesh_dbg_var(pid),
                                  const std::vector<Datum> & sent_data) {
       mooseAssert(pid != this->processor_id(), "We do not send messages to ourself here");
@@ -142,7 +143,7 @@ INSFVRhieChowInterpolator::finalize()
   }
 
   {
-    // Then pull data
+    // Then pull _a data
     auto gather_functor = [this](const processor_id_type libmesh_dbg_var(pid),
                                  const std::vector<dof_id_type> & elem_ids,
                                  std::vector<VectorValue<ADReal>> & data_to_fill) {
@@ -168,6 +169,37 @@ INSFVRhieChowInterpolator::finalize()
         auto it = _a.find(id);
         mooseAssert(it != _a.end(), "We requested this so we must have it in the map");
         it->second = filled_data[i];
+      }
+    };
+    TIMPI::pull_parallel_vector_data(
+        _communicator, pull_requests, gather_functor, action_functor, &example);
+  }
+
+  {
+    // And _b data
+    auto gather_functor = [this](const processor_id_type libmesh_dbg_var(pid),
+                                 const std::vector<dof_id_type> & elem_ids,
+                                 std::vector<VectorValue<ADReal>> & data_to_fill) {
+      mooseAssert(pid != this->processor_id(), "We shouldn't be gathering from ourselves.");
+      data_to_fill.resize(elem_ids.size());
+      for (const auto i : index_range(elem_ids))
+      {
+        const auto id = elem_ids[i];
+        // It's possible that there are no sources in which case we actually want "accidental"
+        // insertion of a 0 vector
+        data_to_fill[i] = _b[id];
+      }
+    };
+
+    auto action_functor = [this](const processor_id_type libmesh_dbg_var(pid),
+                                 const std::vector<dof_id_type> & elem_ids,
+                                 const std::vector<VectorValue<ADReal>> & filled_data) {
+      mooseAssert(pid != this->processor_id(), "The requst filler shouldn't have been ourselves");
+      mooseAssert(elem_ids.size() == filled_data.size(), "I think these should be the same size");
+      for (const auto i : index_range(elem_ids))
+      {
+        const auto id = elem_ids[i];
+        _b[id] = filled_data[i];
       }
     };
     TIMPI::pull_parallel_vector_data(
