@@ -11,11 +11,11 @@
 
 #include "FVFluxKernel.h"
 #include "INSFVFluxKernelInterface.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 class INSFVMomentumDiffusion : public FVFluxKernel,
                                public INSFVFluxKernelInterface,
-                               public INSFVResidualObject
+                               public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

@@ -13,12 +13,12 @@
 
 #include "libmesh/elem_range.h"
 
-class INSFVResidualObject;
+class INSFVMomentumResidualObject;
 
 class GatherRCDataElementThread : public ThreadedElementLoop<ConstElemRange>
 {
 public:
-  GatherRCDataElementThread(FEProblemBase & fe_problem, const std::set<unsigned int> & vars);
+  GatherRCDataElementThread(FEProblemBase & fe_problem, const std::vector<unsigned int> & vars);
 
   // Splitting Constructor
   GatherRCDataElementThread(GatherRCDataElementThread & x, Threads::split split);
@@ -30,6 +30,6 @@ protected:
   void onElement(const Elem * elem) override final;
 
 private:
-  const std::set<unsigned int> & _vars;
-  std::vector<INSFVResidualObject *> _insfv_elemental_kernels;
+  const std::vector<unsigned int> & _vars;
+  std::vector<INSFVMomentumResidualObject *> _insfv_elemental_kernels;
 };

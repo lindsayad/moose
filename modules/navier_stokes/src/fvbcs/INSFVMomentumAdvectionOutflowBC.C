@@ -20,7 +20,7 @@ INSFVMomentumAdvectionOutflowBC::validParams()
 {
   InputParameters params = FVMatAdvectionOutflowBC::validParams();
   params += INSFVFullyDevelopedFlowBC::validParams();
-  params += INSFVResidualObject::validParams();
+  params += INSFVMomentumResidualObject::validParams();
   params.addRequiredCoupledVar("u", "The velocity in the x direction.");
   params.addCoupledVar("v", "The velocity in the y direction.");
   params.addCoupledVar("w", "The velocity in the z direction.");
@@ -33,7 +33,7 @@ INSFVMomentumAdvectionOutflowBC::validParams()
 INSFVMomentumAdvectionOutflowBC::INSFVMomentumAdvectionOutflowBC(const InputParameters & params)
   : FVMatAdvectionOutflowBC(params),
     INSFVFullyDevelopedFlowBC(params),
-    INSFVResidualObject(*this),
+    INSFVMomentumResidualObject(*this),
     _u_var(dynamic_cast<const INSFVVelocityVariable *>(getFieldVar("u", 0))),
     _v_var(dynamic_cast<const INSFVVelocityVariable *>(getFieldVar("v", 0))),
     _w_var(dynamic_cast<const INSFVVelocityVariable *>(getFieldVar("w", 0))),

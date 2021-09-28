@@ -56,15 +56,15 @@ private:
   uint64_t _val = 0;
 };
 
-class AttribINSFVResidualObject : public Attribute
+class AttribINSFVMomentumResidualObject : public Attribute
 {
 public:
   typedef bool Key;
   void setFrom(const Key k) { _val = k; }
-  AttribINSFVResidualObject(TheWarehouse & w) : Attribute(w, "insfv_residual_object"), _val(false)
+  AttribINSFVMomentumResidualObject(TheWarehouse & w) : Attribute(w, "insfv_residual_object"), _val(false)
   {
   }
-  AttribINSFVResidualObject(TheWarehouse & w, Key k)
+  AttribINSFVMomentumResidualObject(TheWarehouse & w, Key k)
     : Attribute(w, "insfv_residual_object"), _val(k)
   {
   }
@@ -72,7 +72,7 @@ public:
   bool isMatch(const Attribute & other) const override;
   bool isEqual(const Attribute & other) const override;
   hashfunc(_val);
-  clonefunc(AttribINSFVResidualObject);
+  clonefunc(AttribINSFVMomentumResidualObject);
 
 private:
   Key _val;

@@ -11,7 +11,7 @@
 
 #include "FVMatAdvectionOutflowBC.h"
 #include "INSFVFullyDevelopedFlowBC.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 class INSFVVelocityVariable;
 
@@ -22,7 +22,7 @@ class INSFVVelocityVariable;
  */
 class INSFVMomentumAdvectionOutflowBC : public FVMatAdvectionOutflowBC,
                                         public INSFVFullyDevelopedFlowBC,
-                                        public INSFVResidualObject
+                                        public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

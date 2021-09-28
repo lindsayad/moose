@@ -10,13 +10,13 @@
 #pragma once
 
 #include "FVFluxKernel.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 /**
  * A flux kernel using the divergence theorem for the pressure gradient term in the momentum
  * equation
  */
-class PINSFVMomentumPressureFlux : public FVFluxKernel, public INSFVResidualObject
+class PINSFVMomentumPressureFlux : public FVFluxKernel, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

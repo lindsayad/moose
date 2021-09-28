@@ -17,7 +17,7 @@ InputParameters
 WCNSFVMomentumTimeDerivative::validParams()
 {
   InputParameters params = FVTimeKernel::validParams();
-  params += INSFVResidualObject::validParams();
+  params += INSFVMomentumResidualObject::validParams();
   params.addClassDescription(
       "Adds the time derivative term to the incompressible Navier-Stokes momentum equation.");
   params.addRequiredParam<MaterialPropertyName>(NS::density, "The density material property");
@@ -28,7 +28,7 @@ WCNSFVMomentumTimeDerivative::validParams()
 
 WCNSFVMomentumTimeDerivative::WCNSFVMomentumTimeDerivative(const InputParameters & params)
   : FVTimeKernel(params),
-    INSFVResidualObject(*this),
+    INSFVMomentumResidualObject(*this),
     _rho(getFunctor<ADReal>(NS::density)),
     _rho_dot(getFunctor<ADReal>(NS::time_deriv(NS::density)))
 {

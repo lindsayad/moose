@@ -7,20 +7,27 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "FVBodyForce.h"
-#include "INSFVResidualObject.h"
+#include "INSFVElementalKernel.h"
 
 /**
  * Body force that contributes to the Rhie-Chow interpolation
  */
-class INSFVBodyForce : public FVBodyForce, public INSFVResidualObject
+class INSFVBodyForce : public INSFVElementalKernel
 {
 public:
   INSFVBodyForce(const InputParameters & params);
   static InputParameters validParams();
 
-  // requires RC implementation
-  void gatherRCData(const Elem &) override {}
+  using INSFVElementalKernel::gatherRCData;
+  void gatherRCData(const Elem &) override;
 
-  void gatherRCData(const FaceInfo &) override {}
+protected:
+  /// Scale factor
+  const Real & _scale;
+
+  /// Optional function value
+  const Function & _function;
+
+  /// Optional Postprocessor value
+  const PostprocessorValue & _postprocessor;
 };

@@ -15,7 +15,7 @@ InputParameters
 INSFVSymmetryVelocityBC::validParams()
 {
   InputParameters params = INSFVSymmetryBC::validParams();
-  params += INSFVResidualObject::validParams();
+  params += INSFVMomentumResidualObject::validParams();
   params.addClassDescription(
       "Implements a free slip boundary condition using a penalty formulation.");
   params.addRequiredCoupledVar("u", "The velocity in the x direction.");
@@ -32,7 +32,7 @@ INSFVSymmetryVelocityBC::validParams()
 
 INSFVSymmetryVelocityBC::INSFVSymmetryVelocityBC(const InputParameters & params)
   : INSFVSymmetryBC(params),
-    INSFVResidualObject(*this),
+    INSFVMomentumResidualObject(*this),
     _u_elem(adCoupledValue("u")),
     _v_elem(adCoupledValue("v")),
     _w_elem(adCoupledValue("w")),

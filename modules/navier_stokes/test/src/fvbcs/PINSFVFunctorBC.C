@@ -19,7 +19,7 @@ PINSFVFunctorBC::validParams()
 {
   InputParameters params = FVFluxBC::validParams();
   params += INSFVFlowBC::validParams();
-  params += INSFVResidualObject::validParams();
+  params += INSFVMomentumResidualObject::validParams();
   params.makeParamNotRequired<MooseEnum>("momentum_component");
   params.addClassDescription("Computes the residual of the advective and pressure term (the latter "
                              "when this object is added for the momentum equation) on a boundary.");
@@ -43,7 +43,7 @@ PINSFVFunctorBC::validParams()
 PINSFVFunctorBC::PINSFVFunctorBC(const InputParameters & params)
   : FVFluxBC(params),
     INSFVFlowBC(params),
-    INSFVResidualObject(*this),
+    INSFVMomentumResidualObject(*this),
     _sup_vel_x(getFunctor<ADReal>(NS::superficial_velocity_x)),
     _sup_vel_y(isParamValid(NS::superficial_velocity_y)
                    ? &getFunctor<ADReal>(NS::superficial_velocity_y)

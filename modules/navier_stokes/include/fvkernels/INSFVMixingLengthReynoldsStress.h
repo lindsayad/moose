@@ -10,12 +10,12 @@
 #pragma once
 
 #include "FVFluxKernel.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 // Forward declare variable class
 class INSFVVelocityVariable;
 
-class INSFVMixingLengthReynoldsStress : public FVFluxKernel, public INSFVResidualObject
+class INSFVMixingLengthReynoldsStress : public FVFluxKernel, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

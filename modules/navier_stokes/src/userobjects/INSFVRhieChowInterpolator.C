@@ -32,7 +32,11 @@ InputParameters
 INSFVRhieChowInterpolator::validParams()
 {
   auto params = GeneralUserObject::validParams();
-  params.set<ExecFlagEnum>("execute_on") = {EXEC_NONLINEAR, EXEC_LINEAR};
+  params += TaggingInterface::validParams();
+  ExecFlagEnum & exec_enum = params.set<ExecFlagEnum>("execute_on", true);
+  exec_enum.addAvailableFlags(EXEC_PRE_KERNELS);
+  exec_enum = {EXEC_PRE_KERNELS};
+  params.suppressParameter<ExecFlagEnum>("execute_on");
   params.addRequiredParam<VariableName>("u", "The x-component of velocity");
   params.addParam<VariableName>("v", "The y-component of velocity");
   params.addParam<VariableName>("w", "The z-component of velocity");
@@ -41,50 +45,22 @@ INSFVRhieChowInterpolator::validParams()
 
 INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & params)
   : GeneralUserObject(params),
-    _moose_mesh(_subproblem.mesh()),
+    TaggingInterface(this),
+    _moose_mesh(UserObject::_subproblem.mesh()),
     _mesh(_moose_mesh.getMesh()),
-    _u(_subproblem.getVariable(0, getParam<VariableName>("u"))),
-    _v(isParamValid("v") ? &_subproblem.getVariable(0, getParam<VariableName>("v")) : nullptr),
-    _w(isParamValid("w") ? &_subproblem.getVariable(0, getParam<VariableName>("w")) : nullptr),
-    _zero(0)
+    _sys(*getCheckedPointerParam<SystemBase *>("_sys")),
+    _u(UserObject::_subproblem.getVariable(0, getParam<VariableName>("u"))),
+    _v(isParamValid("v") ? &UserObject::_subproblem.getVariable(0, getParam<VariableName>("v"))
+                         : nullptr),
+    _w(isParamValid("w") ? &UserObject::_subproblem.getVariable(0, getParam<VariableName>("w"))
+                         : nullptr),
+    _example(0)
 {
-  _var_numbers.insert(_u.number());
+  _var_numbers.push_back(_u.number());
   if (_v)
-    _var_numbers.insert(_v->number());
+    _var_numbers.push_back(_v->number());
   if (_w)
-    _var_numbers.insert(_w->number());
-}
-
-void
-INSFVRhieChowInterpolator::addToA(const Elem * const elem,
-                                  const unsigned int component,
-                                  const ADReal & value)
-{
-  if (elem->processor_id() != this->processor_id())
-    _elements_to_push_pull.insert(elem);
-
-  _a[elem->id()](component) += value;
-}
-
-void
-INSFVRhieChowInterpolator::addToB(const Elem * const elem,
-                                  const unsigned int component,
-                                  const ADReal & value)
-{
-  mooseAssert(elem->processor_id() == this->processor_id(), "Sources should be local");
-
-  // We have our users write their RC data imagining that they've moved all terms to the LHS, but
-  // the balance in Moukalled assumes that the body forces are on the RHS with positive sign, e.g.
-  // 0 = -\nabla p + \mathbf{B}, so we must apply a minus sign here
-  _b[elem->id()](component) -= value;
-}
-
-const VectorValue<ADReal> &
-INSFVRhieChowInterpolator::rcCoeff(const libMesh::Elem * const elem) const
-{
-  auto it = _a.find(elem->id());
-  mooseAssert(it != _a.end(), "Could not find the requested element with id " << elem->id());
-  return it->second;
+    _var_numbers.push_back(_w->number());
 }
 
 void
@@ -207,19 +183,21 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
             .first;
 
     Real coord;
-    coordTransformFactor(_subproblem, fi.elem().subdomain_id(), fi.faceCentroid(), coord);
+    coordTransformFactor(
+        UserObject::_subproblem, fi.elem().subdomain_id(), fi.faceCentroid(), coord);
     const Point surface_vector = fi.normal() * fi.faceArea() * coord;
 
     // Begin of equation 15.211 in Moukalled. I honestly don't know what to do when we are in an RZ
     // coordinate system since this is supposed to be mimicking the gradient of pressure
     auto product = (it->second * fi.dCF()) * surface_vector;
-    coordTransformFactor(_subproblem, fi.elem().subdomain_id(), fi.elemCentroid(), coord);
+    coordTransformFactor(
+        UserObject::_subproblem, fi.elem().subdomain_id(), fi.elemCentroid(), coord);
     _b2[elem_id] += product * fi.gC() / (coord * fi.elemVolume());
 
     if (fi.neighborPtr())
     {
       coordTransformFactor(
-          _subproblem, fi.neighborPtr()->subdomain_id(), fi.neighborCentroid(), coord);
+          UserObject::_subproblem, fi.neighborPtr()->subdomain_id(), fi.neighborCentroid(), coord);
       _b2[fi.neighborPtr()->id()] +=
           std::move(product) * (1. - fi.gC()) / (coord * fi.neighborVolume());
     }
@@ -243,6 +221,33 @@ INSFVRhieChowInterpolator::computeThirdOverBar()
 
     _b3.emplace(std::make_pair(fi, Moose::FV::linearInterpolation(b_elem, b_neighbor, *fi, true)));
   }
+}
+
+void
+INSFVRhieChowInterpolator::applyBData()
+{
+  const auto s = _sys.number();
+  for (auto * const elem : *_moose_mesh.getActiveLocalElementRange())
+  {
+    const auto elem_volume = _assembly.elementVolume(elem);
+    for (const auto i : index_range(_var_numbers))
+    {
+      const auto vn = _var_numbers[i];
+      // negative here because we swapped the sign in addToB and so now we need to swap it back
+      const auto residual = -elem_volume * libmesh_map_find(_b2, elem->id())(i);
+      const auto dof_index = elem->dof_number(s, vn, 0);
+
+      if (_fe_problem.currentlyComputingJacobian())
+        _assembly.processDerivatives(residual, dof_index, _matrix_tags);
+      else
+        _assembly.cacheResidual(dof_index, residual.value(), _vector_tags);
+    }
+  }
+
+  if (_fe_problem.currentlyComputingJacobian())
+    _assembly.addCachedJacobian();
+  else
+    _assembly.addCachedResiduals();
 }
 
 void
@@ -286,11 +291,14 @@ INSFVRhieChowInterpolator::finalizeBData()
     }
   };
   TIMPI::pull_parallel_vector_data(
-      _communicator, pull_requests, gather_functor, action_functor, &_zero);
+      _communicator, pull_requests, gather_functor, action_functor, &_example);
 
   // We can proceed to all the overbar operations for _b
   computeFirstAndSecondOverBars();
   computeThirdOverBar();
+
+  // Add the b data to the residual/Jacobian
+  applyBData();
 }
 
 void

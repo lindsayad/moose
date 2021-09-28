@@ -272,9 +272,12 @@ PINSFVMomentumAdvection::interpolate(Moose::FV::InterpMethod m, ADRealVectorValu
   const auto face_eps = _eps(std::make_tuple(
       _face_info, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains()));
 
+  const auto & b1 = _rc_uo.getB1(*_face_info);
+  const auto & b3 = _rc_uo.getB3(*_face_info);
+
   // perform the pressure correction
   for (const auto i : make_range(_dim))
-    v(i) -= face_D(i) * face_eps * (grad_p(i) - unc_grad_p(i));
+    v(i) += -face_D(i) * face_eps * (grad_p(i) - unc_grad_p(i)) + face_D(i) * (b1(i) - b3(i));
 }
 
 ADReal

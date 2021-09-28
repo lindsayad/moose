@@ -15,12 +15,12 @@ InputParameters
 INSFVNaturalFreeSlipBC::validParams()
 {
   InputParameters params = INSFVSlipWallBC::validParams();
-  params += INSFVResidualObject::validParams();
+  params += INSFVMomentumResidualObject::validParams();
   params.addClassDescription("Implements a free slip boundary condition naturally.");
   return params;
 }
 
 INSFVNaturalFreeSlipBC::INSFVNaturalFreeSlipBC(const InputParameters & params)
-  : INSFVSlipWallBC(params), INSFVResidualObject(*this)
+  : INSFVSlipWallBC(params), INSFVMomentumResidualObject(*this)
 {
 }

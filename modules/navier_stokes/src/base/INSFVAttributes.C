@@ -13,7 +13,7 @@
 #include "INSFVNoSlipWallBC.h"
 #include "INSFVSlipWallBC.h"
 #include "INSFVSymmetryBC.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 void
 AttribINSFVBCs::initFrom(const MooseObject * obj)
@@ -43,21 +43,21 @@ AttribINSFVBCs::isEqual(const Attribute & other) const
 }
 
 void
-AttribINSFVResidualObject::initFrom(const MooseObject * obj)
+AttribINSFVMomentumResidualObject::initFrom(const MooseObject * obj)
 {
-  _val = dynamic_cast<const INSFVResidualObject *>(obj);
+  _val = dynamic_cast<const INSFVMomentumResidualObject *>(obj);
 }
 
 bool
-AttribINSFVResidualObject::isMatch(const Attribute & other) const
+AttribINSFVMomentumResidualObject::isMatch(const Attribute & other) const
 {
-  auto a = dynamic_cast<const AttribINSFVResidualObject *>(&other);
+  auto a = dynamic_cast<const AttribINSFVMomentumResidualObject *>(&other);
   return a && (a->_val == _val);
 }
 
 bool
-AttribINSFVResidualObject::isEqual(const Attribute & other) const
+AttribINSFVMomentumResidualObject::isEqual(const Attribute & other) const
 {
-  auto a = dynamic_cast<const AttribINSFVResidualObject *>(&other);
+  auto a = dynamic_cast<const AttribINSFVMomentumResidualObject *>(&other);
   return a && (a->_val == _val);
 }

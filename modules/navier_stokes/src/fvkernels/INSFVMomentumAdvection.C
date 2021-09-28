@@ -38,7 +38,7 @@ InputParameters
 INSFVMomentumAdvection::validParams()
 {
   InputParameters params = FVMatAdvection::validParams();
-  params += INSFVResidualObject::validParams();
+  params += INSFVMomentumResidualObject::validParams();
   params.addRequiredCoupledVar(NS::pressure, "The pressure variable.");
   params.addRequiredCoupledVar("u", "The velocity in the x direction.");
   params.addCoupledVar("v", "The velocity in the y direction.");
@@ -63,7 +63,7 @@ INSFVMomentumAdvection::validParams()
 
 INSFVMomentumAdvection::INSFVMomentumAdvection(const InputParameters & params)
   : FVMatAdvection(params),
-    INSFVResidualObject(*this),
+    INSFVMomentumResidualObject(*this),
     _p_var(dynamic_cast<const INSFVPressureVariable *>(getFieldVar(NS::pressure, 0))),
     _u_var(dynamic_cast<const INSFVVelocityVariable *>(getFieldVar("u", 0))),
     _v_var(params.isParamValid("v")
@@ -365,9 +365,12 @@ INSFVMomentumAdvection::interpolate(Moose::FV::InterpMethod m, ADRealVectorValue
   Moose::FV::interpolate(
       Moose::FV::InterpMethod::Average, face_D, elem_D, neighbor_D, *_face_info, true);
 
+  const auto & b1 = _rc_uo.getB1(*_face_info);
+  const auto & b3 = _rc_uo.getB3(*_face_info);
+
   // perform the pressure correction
   for (const auto i : make_range(_dim))
-    v(i) -= face_D(i) * (grad_p(i) - unc_grad_p(i));
+    v(i) += -face_D(i) * (grad_p(i) - unc_grad_p(i)) + face_D(i) * (b1(i) - b3(i));
 }
 
 ADReal

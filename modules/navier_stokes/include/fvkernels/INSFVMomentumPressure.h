@@ -10,9 +10,9 @@
 #pragma once
 
 #include "FVElementalKernel.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
-class INSFVMomentumPressure : public FVElementalKernel, public INSFVResidualObject
+class INSFVMomentumPressure : public FVElementalKernel, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

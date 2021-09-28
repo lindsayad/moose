@@ -9,10 +9,10 @@
 
 #include "GatherRCDataElementThread.h"
 #include "INSFVAttributes.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 GatherRCDataElementThread::GatherRCDataElementThread(FEProblemBase & fe_problem,
-                                                     const std::set<unsigned int> & vars)
+                                                     const std::vector<unsigned int> & vars)
   : ThreadedElementLoop<ConstElemRange>(fe_problem), _vars(vars)
 {
 }
@@ -43,7 +43,7 @@ GatherRCDataElementThread::subdomainChanged()
     // any results out of the query (e.g. an object cannot have a variable that simultaneously has
     // both var number 0 and 1)
     auto copied_queries = queries;
-    std::vector<INSFVResidualObject *> var_eks;
+    std::vector<INSFVMomentumResidualObject *> var_eks;
     copied_queries.template condition<AttribVar>(static_cast<int>(var_num)).queryInto(var_eks);
     for (auto * const var_ek : var_eks)
       _insfv_elemental_kernels.push_back(var_ek);
