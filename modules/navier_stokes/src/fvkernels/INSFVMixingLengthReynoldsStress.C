@@ -16,7 +16,7 @@ InputParameters
 INSFVMixingLengthReynoldsStress::validParams()
 {
   InputParameters params = FVFluxKernel::validParams();
-  params += INSFVResidualObject::validParams();
+  params += INSFVMomentumResidualObject::validParams();
   params.addClassDescription(
       "Computes the force due to the Reynolds stress term in the incompressible"
       " Reynolds-averaged Navier-Stokes equations.");
@@ -36,7 +36,7 @@ INSFVMixingLengthReynoldsStress::validParams()
 
 INSFVMixingLengthReynoldsStress::INSFVMixingLengthReynoldsStress(const InputParameters & params)
   : FVFluxKernel(params),
-    INSFVResidualObject(*this),
+    INSFVMomentumResidualObject(*this),
     _dim(_subproblem.mesh().dimension()),
     _axis_index(getParam<MooseEnum>("momentum_component")),
     _u_var(dynamic_cast<const INSFVVelocityVariable *>(getFieldVar("u", 0))),

@@ -16,7 +16,7 @@ InputParameters
 PINSFVMomentumAdvectionPorosityGradient::validParams()
 {
   auto params = FVElementalKernel::validParams();
-  params += INSFVResidualObject::validParams();
+  params += INSFVMomentumResidualObject::validParams();
   params.addClassDescription(
       "Porosity gradient spun from the advection term for the porous media Navier Stokes "
       "momentum equation.");
@@ -42,7 +42,7 @@ PINSFVMomentumAdvectionPorosityGradient::validParams()
 PINSFVMomentumAdvectionPorosityGradient::PINSFVMomentumAdvectionPorosityGradient(
     const InputParameters & params)
   : FVElementalKernel(params),
-    INSFVResidualObject(*this),
+    INSFVMomentumResidualObject(*this),
     _eps_var(dynamic_cast<const MooseVariableFVReal *>(getFieldVar("porosity", 0))),
     _u(adCoupledValue("u")),
     _v(params.isParamValid("v") ? adCoupledValue("v") : _ad_zero),

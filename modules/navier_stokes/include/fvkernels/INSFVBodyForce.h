@@ -8,12 +8,12 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "FVBodyForce.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 /**
  * Body force that contributes to the Rhie-Chow interpolation
  */
-class INSFVBodyForce : public FVBodyForce, public INSFVResidualObject
+class INSFVBodyForce : public FVBodyForce, public INSFVMomentumResidualObject
 {
 public:
   INSFVBodyForce(const InputParameters & params);

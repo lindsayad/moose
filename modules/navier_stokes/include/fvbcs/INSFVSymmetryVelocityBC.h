@@ -10,13 +10,13 @@
 #pragma once
 
 #include "INSFVSymmetryBC.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 /**
  * A class for setting a symmetry boundary condition on the velocity. It should be
  * used in conjunction with an INSFVSymmetryPressureBC.
  */
-class INSFVSymmetryVelocityBC : public INSFVSymmetryBC, public INSFVResidualObject
+class INSFVSymmetryVelocityBC : public INSFVSymmetryBC, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

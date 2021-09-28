@@ -16,7 +16,7 @@ InputParameters
 INSFVMomentumGravity::validParams()
 {
   InputParameters params = FVElementalKernel::validParams();
-  params += INSFVResidualObject::validParams();
+  params += INSFVMomentumResidualObject::validParams();
   params.addClassDescription(
       "Computes a body force due to gravity in Rhie-Chow based simulations.");
   params.addRequiredParam<RealVectorValue>("gravity", "Direction of the gravity vector");
@@ -26,7 +26,7 @@ INSFVMomentumGravity::validParams()
 
 INSFVMomentumGravity::INSFVMomentumGravity(const InputParameters & params)
   : FVElementalKernel(params),
-    INSFVResidualObject(*this),
+    INSFVMomentumResidualObject(*this),
     _gravity(getParam<RealVectorValue>("gravity")),
     _rho(getFunctor<ADReal>(NS::density))
 {

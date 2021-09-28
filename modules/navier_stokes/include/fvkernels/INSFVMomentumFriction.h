@@ -10,12 +10,12 @@
 #pragma once
 
 #include "FVElementalKernel.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 /**
  * Implements a linear or quadratic friction term for the momentum equation in Rhie-Chow contexts
  */
-class INSFVMomentumFriction : public FVElementalKernel, public INSFVResidualObject
+class INSFVMomentumFriction : public FVElementalKernel, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

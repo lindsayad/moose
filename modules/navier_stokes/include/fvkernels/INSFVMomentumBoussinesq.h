@@ -10,13 +10,13 @@
 #pragma once
 
 #include "FVElementalKernel.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 /**
  * Imposes a Boussinesq force on the momentum equation. Useful for modeling natural convection
  * within an incompressible Navier-Stokes approximation
  */
-class INSFVMomentumBoussinesq : public FVElementalKernel, public INSFVResidualObject
+class INSFVMomentumBoussinesq : public FVElementalKernel, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

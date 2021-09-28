@@ -10,12 +10,12 @@
 #pragma once
 
 #include "FVElementalKernel.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 /**
  * An elemental kernel to add the inverse porosity gradient term to the momentum equation
  */
-class PINSFVMomentumAdvectionPorosityGradient : public FVElementalKernel, public INSFVResidualObject
+class PINSFVMomentumAdvectionPorosityGradient : public FVElementalKernel, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

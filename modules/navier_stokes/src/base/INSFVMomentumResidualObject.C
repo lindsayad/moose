@@ -7,13 +7,11 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 #include "UserObjectInterface.h"
-#include "MooseObject.h"
-#include "INSFVRhieChowInterpolator.h"
 
 InputParameters
-INSFVResidualObject::validParams()
+INSFVMomentumResidualObject::validParams()
 {
   auto params = emptyInputParameters();
   params.addRequiredParam<UserObjectName>("rhie_chow_user_object", "The rhie-chow user-object");

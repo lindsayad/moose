@@ -13,7 +13,7 @@
 
 #include "libmesh/elem_range.h"
 
-class INSFVResidualObject;
+class INSFVMomentumResidualObject;
 
 class GatherRCDataElementThread : public ThreadedElementLoop<ConstElemRange>
 {
@@ -31,5 +31,5 @@ protected:
 
 private:
   const std::set<unsigned int> & _vars;
-  std::vector<INSFVResidualObject *> _insfv_elemental_kernels;
+  std::vector<INSFVMomentumResidualObject *> _insfv_elemental_kernels;
 };

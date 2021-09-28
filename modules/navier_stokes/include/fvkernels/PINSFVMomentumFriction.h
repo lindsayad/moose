@@ -10,12 +10,12 @@
 #pragma once
 
 #include "FVElementalKernel.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 /**
  * Imposes a friction force on the momentum equation in porous media in Rhie-Chow contexts
  */
-class PINSFVMomentumFriction : public FVElementalKernel, public INSFVResidualObject
+class PINSFVMomentumFriction : public FVElementalKernel, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

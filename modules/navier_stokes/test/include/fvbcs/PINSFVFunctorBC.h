@@ -11,13 +11,13 @@
 
 #include "FVFluxBC.h"
 #include "INSFVFlowBC.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 /**
  * Evaluates boundary mass or momentum fluxes through functor evaluation of the superficial
  * velocities, pressure, density, and porosity
  */
-class PINSFVFunctorBC : public FVFluxBC, public INSFVFlowBC, public INSFVResidualObject
+class PINSFVFunctorBC : public FVFluxBC, public INSFVFlowBC, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

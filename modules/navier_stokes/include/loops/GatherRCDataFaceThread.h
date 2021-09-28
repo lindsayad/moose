@@ -10,7 +10,7 @@
 #pragma once
 
 #include "ComputeFVFluxThread.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 #include "INSFVAttributes.h"
 #include "TheWarehouse.h"
 
@@ -34,15 +34,15 @@ public:
 private:
   void finalizeContainers();
   template <typename... Attribs>
-  void getVarROs(std::vector<INSFVResidualObject *> & ros,
+  void getVarROs(std::vector<INSFVMomentumResidualObject *> & ros,
                  TheWarehouse::QueryCache<Attribs...> & queries);
 
   const std::set<unsigned int> & _vars;
 
   /// FVFluxKernels
-  std::set<INSFVResidualObject *> _fv_flux_kernels;
-  std::set<INSFVResidualObject *> _elem_sub_fv_flux_kernels;
-  std::set<INSFVResidualObject *> _neigh_sub_fv_flux_kernels;
+  std::set<INSFVMomentumResidualObject *> _fv_flux_kernels;
+  std::set<INSFVMomentumResidualObject *> _elem_sub_fv_flux_kernels;
+  std::set<INSFVMomentumResidualObject *> _neigh_sub_fv_flux_kernels;
 };
 
 template <typename RangeType>
@@ -62,7 +62,7 @@ GatherRCDataFaceThread<RangeType>::GatherRCDataFaceThread(GatherRCDataFaceThread
 template <typename RangeType>
 template <typename... Attribs>
 void
-GatherRCDataFaceThread<RangeType>::getVarROs(std::vector<INSFVResidualObject *> & ros,
+GatherRCDataFaceThread<RangeType>::getVarROs(std::vector<INSFVMomentumResidualObject *> & ros,
                                              TheWarehouse::QueryCache<Attribs...> & queries)
 {
   for (const auto var_num : _vars)
@@ -71,7 +71,7 @@ GatherRCDataFaceThread<RangeType>::getVarROs(std::vector<INSFVResidualObject *> 
     // any results out of the query (e.g. an object cannot have a variable that simultaneously has
     // both var number 0 and 1)
     auto copied_queries = queries;
-    std::vector<INSFVResidualObject *> var_ros;
+    std::vector<INSFVMomentumResidualObject *> var_ros;
     copied_queries.template condition<AttribVar>(static_cast<int>(var_num)).queryInto(var_ros);
     for (auto * const var_ro : var_ros)
       ros.push_back(var_ro);
@@ -91,7 +91,7 @@ void
 GatherRCDataFaceThread<RangeType>::onBoundary(const FaceInfo & fi, BoundaryID bnd_id)
 {
   {
-    std::vector<INSFVResidualObject *> bcs;
+    std::vector<INSFVMomentumResidualObject *> bcs;
     // cannot bind to lvalue reference otherwise the temporary is destroyed and we are left with a
     // dangling reference
     auto queries = this->_fe_problem.theWarehouse()
@@ -106,7 +106,7 @@ GatherRCDataFaceThread<RangeType>::onBoundary(const FaceInfo & fi, BoundaryID bn
   }
 
   {
-    std::vector<INSFVResidualObject *> iks;
+    std::vector<INSFVMomentumResidualObject *> iks;
     // cannot bind to lvalue reference otherwise the temporary is destroyed and we are left with a
     // dangling reference
     auto queries = this->_fe_problem.theWarehouse()
@@ -131,7 +131,7 @@ GatherRCDataFaceThread<RangeType>::subdomainChanged()
   _fv_flux_kernels.clear();
   _elem_sub_fv_flux_kernels.clear();
 
-  std::vector<INSFVResidualObject *> kernels;
+  std::vector<INSFVMomentumResidualObject *> kernels;
   // cannot bind to lvalue reference otherwise the temporary is destroyed and we are left with a
   // dangling reference
   auto queries = this->_fe_problem.theWarehouse()
@@ -141,7 +141,7 @@ GatherRCDataFaceThread<RangeType>::subdomainChanged()
                      .template condition<AttribThread>(this->_tid);
   getVarROs(kernels, queries);
 
-  _elem_sub_fv_flux_kernels = std::set<INSFVResidualObject *>(kernels.begin(), kernels.end());
+  _elem_sub_fv_flux_kernels = std::set<INSFVMomentumResidualObject *>(kernels.begin(), kernels.end());
 
   finalizeContainers();
 }
@@ -156,7 +156,7 @@ GatherRCDataFaceThread<RangeType>::neighborSubdomainChanged()
   _fv_flux_kernels.clear();
   _neigh_sub_fv_flux_kernels.clear();
 
-  std::vector<INSFVResidualObject *> kernels;
+  std::vector<INSFVMomentumResidualObject *> kernels;
   // cannot bind to lvalue reference otherwise the temporary is destroyed and we are left with a
   // dangling reference
   auto queries = this->_fe_problem.theWarehouse()
@@ -166,7 +166,7 @@ GatherRCDataFaceThread<RangeType>::neighborSubdomainChanged()
                      .template condition<AttribThread>(this->_tid);
   getVarROs(kernels, queries);
 
-  _neigh_sub_fv_flux_kernels = std::set<INSFVResidualObject *>(kernels.begin(), kernels.end());
+  _neigh_sub_fv_flux_kernels = std::set<INSFVMomentumResidualObject *>(kernels.begin(), kernels.end());
 
   finalizeContainers();
 }

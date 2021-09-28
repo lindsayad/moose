@@ -10,12 +10,12 @@
 #pragma once
 
 #include "FVElementalKernel.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 /**
  * Imposes a gravitational force on the momentum equation in Rhie-Chow (incompressible) contexts
  */
-class INSFVMomentumGravity : public FVElementalKernel, public INSFVResidualObject
+class INSFVMomentumGravity : public FVElementalKernel, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

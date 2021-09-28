@@ -10,13 +10,13 @@
 #pragma once
 
 #include "FVTimeKernel.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
 /**
  * Computes the momentum time derivative for the weakly compressible formulation of the momentum
  * equation, using functor material properties. Only one spatial component is included.
  */
-class WCNSFVMomentumTimeDerivative : public FVTimeKernel, public INSFVResidualObject
+class WCNSFVMomentumTimeDerivative : public FVTimeKernel, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

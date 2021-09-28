@@ -10,9 +10,9 @@
 #pragma once
 
 #include "FVTimeKernel.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 
-class INSFVMomentumTimeDerivative : public FVTimeKernel, public INSFVResidualObject
+class INSFVMomentumTimeDerivative : public FVTimeKernel, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

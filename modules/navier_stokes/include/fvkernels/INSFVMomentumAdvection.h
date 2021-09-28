@@ -14,7 +14,7 @@
 #include "SubProblem.h"
 #include "MooseApp.h"
 #include "INSFVAttributes.h"
-#include "INSFVResidualObject.h"
+#include "INSFVMomentumResidualObject.h"
 #include "INSFVFluxKernelInterface.h"
 
 #include <vector>
@@ -29,7 +29,7 @@ class INSFVPressureVariable;
  */
 class INSFVMomentumAdvection : public FVMatAdvection,
                                public INSFVFluxKernelInterface,
-                               public INSFVResidualObject
+                               public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();

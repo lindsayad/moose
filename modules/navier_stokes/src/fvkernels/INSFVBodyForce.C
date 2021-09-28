@@ -15,12 +15,12 @@ InputParameters
 INSFVBodyForce::validParams()
 {
   auto params = FVBodyForce::validParams();
-  params += INSFVResidualObject::validParams();
+  params += INSFVMomentumResidualObject::validParams();
   params.addClassDescription("Body force that contributes to the Rhie-Chow interpolation");
   return params;
 }
 
 INSFVBodyForce::INSFVBodyForce(const InputParameters & params)
-  : FVBodyForce(params), INSFVResidualObject(*this)
+  : FVBodyForce(params), INSFVMomentumResidualObject(*this)
 {
 }

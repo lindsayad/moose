@@ -16,14 +16,14 @@ InputParameters
 INSFVMomentumDiffusion::validParams()
 {
   auto params = FVFluxKernel::validParams();
-  params += INSFVResidualObject::validParams();
+  params += INSFVMomentumResidualObject::validParams();
   params.addRequiredParam<MaterialPropertyName>("mu", "The viscosity");
   params.set<unsigned short>("ghost_layers") = 2;
   return params;
 }
 
 INSFVMomentumDiffusion::INSFVMomentumDiffusion(const InputParameters & params)
-  : FVFluxKernel(params), INSFVResidualObject(*this), _mu(getFunctor<ADReal>("mu"))
+  : FVFluxKernel(params), INSFVMomentumResidualObject(*this), _mu(getFunctor<ADReal>("mu"))
 {
 }
 

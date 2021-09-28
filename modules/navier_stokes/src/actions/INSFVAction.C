@@ -28,7 +28,7 @@ INSFVAction::act()
   if (_current_task == "ns_meta_action")
   {
     _app.theWarehouse().registerAttribute<AttribINSFVBCs>("insfvbcs", 0);
-    _app.theWarehouse().registerAttribute<AttribINSFVResidualObject>("insfv_residual_object",
+    _app.theWarehouse().registerAttribute<AttribINSFVMomentumResidualObject>("insfv_residual_object",
                                                                      false);
   }
 }
