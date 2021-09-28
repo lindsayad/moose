@@ -15,8 +15,7 @@ registerMooseObject("NavierStokesApp", PINSFVMomentumFriction);
 InputParameters
 PINSFVMomentumFriction::validParams()
 {
-  InputParameters params = FVElementalKernel::validParams();
-  params += INSFVMomentumResidualObject::validParams();
+  InputParameters params = INSFVElementalKernel::validParams();
   params.addClassDescription(
       "Computes a friction force term on fluid in porous media in the "
       "Navier Stokes i-th momentum equation in Rhie-Chow (incompressible) contexts.");
@@ -26,17 +25,11 @@ PINSFVMomentumFriction::validParams()
                                         "Name of the Forchheimer coefficients material property.");
   params.addParam<MooseFunctorName>(NS::porosity, NS::porosity, "Porosity variable.");
   params.addRequiredParam<MooseFunctorName>("rho", "The density.");
-  MooseEnum momentum_component("x=0 y=1 z=2");
-  params.addRequiredParam<MooseEnum>(
-      "momentum_component",
-      momentum_component,
-      "The component of the momentum equation that this kernel applies to.");
   return params;
 }
 
 PINSFVMomentumFriction::PINSFVMomentumFriction(const InputParameters & params)
-  : FVElementalKernel(params),
-    INSFVMomentumResidualObject(*this),
+  : INSFVElementalKernel(params),
     _cL(isParamValid("Darcy_name") ? &getFunctor<ADRealVectorValue>("Darcy_name") : nullptr),
     _cQ(isParamValid("Forchheimer_name") ? &getFunctor<ADRealVectorValue>("Forchheimer_name")
                                          : nullptr),
@@ -47,14 +40,6 @@ PINSFVMomentumFriction::PINSFVMomentumFriction(const InputParameters & params)
 {
   if (!_use_Darcy_friction_model && !_use_Forchheimer_friction_model)
     mooseError("At least one friction model needs to be specified.");
-}
-
-ADReal
-PINSFVMomentumFriction::computeQpResidual()
-{
-  // Behind the scenes the coefficient signs get swapped between our answer to gatherRCData and this
-  // residual evaluation, so we have to swap back now
-  return -_rc_uo.getB2(*_current_elem, _index);
 }
 
 void

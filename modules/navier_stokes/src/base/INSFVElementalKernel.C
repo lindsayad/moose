@@ -13,11 +13,11 @@ InputParameters
 INSFVElementalKernel::validParams()
 {
   auto params = FVElementalKernel::validParams();
-  params += INSFVResidualObject::validParams();
+  params += INSFVMomentumResidualObject::validParams();
   return params;
 }
 
 INSFVElementalKernel::INSFVElementalKernel(const InputParameters & params)
-  : FVElementalKernel(params), INSFVResidualObject(*this)
+  : FVElementalKernel(params), INSFVMomentumResidualObject(*this)
 {
 }

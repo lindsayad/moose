@@ -9,17 +9,17 @@
 
 #pragma once
 
-#include "FVElementalKernel"
-#include "INSFVResidualObject.h"
+#include "FVElementalKernel.h"
+#include "INSFVMomentumResidualObject.h"
 
-class INSFVElementalKernel : public FVElementalKernel, public INSFVResidualObject
+class INSFVElementalKernel : public FVElementalKernel, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();
   INSFVElementalKernel(const InputParameters & params);
 
-  using INSFVResidualObject::gatherRCData;
-  void gatherRCData(const FaceInfo & fi) override final {}
+  using INSFVMomentumResidualObject::gatherRCData;
+  void gatherRCData(const FaceInfo &) override final {}
 
   virtual ~INSFVElementalKernel() = default;
 

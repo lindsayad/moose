@@ -15,8 +15,7 @@ registerMooseObject("NavierStokesApp", INSFVMomentumGravity);
 InputParameters
 INSFVMomentumGravity::validParams()
 {
-  InputParameters params = FVElementalKernel::validParams();
-  params += INSFVMomentumResidualObject::validParams();
+  InputParameters params = INSFVElementalKernel::validParams();
   params.addClassDescription(
       "Computes a body force due to gravity in Rhie-Chow based simulations.");
   params.addRequiredParam<RealVectorValue>("gravity", "Direction of the gravity vector");
@@ -25,17 +24,10 @@ INSFVMomentumGravity::validParams()
 }
 
 INSFVMomentumGravity::INSFVMomentumGravity(const InputParameters & params)
-  : FVElementalKernel(params),
-    INSFVMomentumResidualObject(*this),
+  : INSFVElementalKernel(params),
     _gravity(getParam<RealVectorValue>("gravity")),
     _rho(getFunctor<ADReal>(NS::density))
 {
-}
-
-ADReal
-INSFVMomentumGravity::computeQpResidual()
-{
-  return -_rc_uo.getB2(*_current_elem, _index);
 }
 
 void

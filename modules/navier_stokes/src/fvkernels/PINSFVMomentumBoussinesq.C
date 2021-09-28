@@ -18,21 +18,24 @@ PINSFVMomentumBoussinesq::validParams()
   InputParameters params = INSFVMomentumBoussinesq::validParams();
   params.addClassDescription(
       "Computes a body force for natural convection buoyancy in porous media: eps alpha (T-T_0)");
-  params.addRequiredCoupledVar("porosity", "Porosity auxiliary variable");
+  params.addRequiredParam<MooseFunctorName>("porosity", "Porosity auxiliary variable");
 
   return params;
 }
 
 PINSFVMomentumBoussinesq::PINSFVMomentumBoussinesq(const InputParameters & params)
-  : INSFVMomentumBoussinesq(params), _eps(coupledValue("porosity"))
+  : INSFVMomentumBoussinesq(params), _eps(getFunctor<ADReal>("porosity"))
 {
   if (!dynamic_cast<PINSFVSuperficialVelocityVariable *>(&_var))
     mooseError("PINSFVMomentumBoussinesq may only be used with a superficial velocity "
                "variable, of variable type PINSFVSuperficialVelocityVariable.");
 }
 
-ADReal
-PINSFVMomentumBoussinesq::computeQpResidual()
+void
+PINSFVMomentumBoussinesq::gatherRCData(const Elem & elem)
 {
-  return _eps[_qp] * INSFVMomentumBoussinesq::computeQpResidual();
+  _rc_uo.addToB(&elem,
+                _index,
+                _eps(&elem) * _alpha(&elem) * _gravity(_index) * _rho *
+                    (_temperature(&elem) - _ref_temperature));
 }
