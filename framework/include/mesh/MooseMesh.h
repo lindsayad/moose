@@ -1056,7 +1056,7 @@ public:
 
   ///@{ accessors for the FaceInfo objects
   unsigned int nFace() const { return _face_info.size(); }
-  /// Accessor for all local \p FaceInfo objects.
+  /// Accessor for local \p FaceInfo objects.
   const std::vector<const FaceInfo *> & faceInfo() const
   {
     buildFaceInfo();
@@ -1064,6 +1064,12 @@ public:
   }
   /// Accessor for the local FaceInfo object on the side of one element. Returns null if ghosted.
   const FaceInfo * faceInfo(const Elem * elem, unsigned int side) const;
+  /// Accessor for all \p FaceInfo objects.
+  const std::vector<FaceInfo> & allFaceInfo() const
+  {
+    buildFaceInfo();
+    return _all_face_info;
+  }
   ///@}
 
   /**
