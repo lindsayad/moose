@@ -365,9 +365,12 @@ INSFVMomentumAdvection::interpolate(Moose::FV::InterpMethod m, ADRealVectorValue
   Moose::FV::interpolate(
       Moose::FV::InterpMethod::Average, face_D, elem_D, neighbor_D, *_face_info, true);
 
+  const auto & b1 = _rc_uo.getB1(*_face_info);
+  const auto & b3 = _rc_uo.getB3(*_face_info);
+
   // perform the pressure correction
   for (const auto i : make_range(_dim))
-    v(i) -= face_D(i) * (grad_p(i) - unc_grad_p(i));
+    v(i) += -face_D(i) * (grad_p(i) - unc_grad_p(i)) + face_D(i) * (b1(i) - b3(i));
 }
 
 ADReal

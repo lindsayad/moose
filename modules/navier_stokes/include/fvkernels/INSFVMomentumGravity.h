@@ -21,8 +21,7 @@ public:
   static InputParameters validParams();
   INSFVMomentumGravity(const InputParameters & params);
 
-  // requires RC implementation
-  void gatherRCData(const Elem &) override {}
+  void gatherRCData(const Elem &) override;
 
   void gatherRCData(const FaceInfo &) override {}
 

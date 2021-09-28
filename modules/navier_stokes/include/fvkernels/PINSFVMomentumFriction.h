@@ -22,7 +22,7 @@ public:
   PINSFVMomentumFriction(const InputParameters & params);
 
   // requires RC implementation
-  void gatherRCData(const Elem &) override {}
+  void gatherRCData(const Elem &) override;
 
   void gatherRCData(const FaceInfo &) override {}
 

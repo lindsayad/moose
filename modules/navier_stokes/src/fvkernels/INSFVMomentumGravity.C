@@ -35,5 +35,11 @@ INSFVMomentumGravity::INSFVMomentumGravity(const InputParameters & params)
 ADReal
 INSFVMomentumGravity::computeQpResidual()
 {
-  return -_rho(_current_elem) * _gravity(_index);
+  return -_rc_uo.getB2(*_current_elem, _index);
+}
+
+void
+INSFVMomentumGravity::gatherRCData(const Elem & elem)
+{
+  _rc_uo.addToB(&elem, _index, -_rho(&elem) * _gravity(_index));
 }

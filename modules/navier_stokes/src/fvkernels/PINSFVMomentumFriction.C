@@ -52,14 +52,20 @@ PINSFVMomentumFriction::PINSFVMomentumFriction(const InputParameters & params)
 ADReal
 PINSFVMomentumFriction::computeQpResidual()
 {
+  // Behind the scenes the coefficient signs get swapped between our answer to gatherRCData and this
+  // residual evaluation, so we have to swap back now
+  return -_rc_uo.getB2(*_current_elem, _index);
+}
+
+void
+PINSFVMomentumFriction::gatherRCData(const Elem & elem)
+{
   ADReal friction_term = 0;
 
   if (_use_Darcy_friction_model)
-    friction_term += (*_cL)(_current_elem)(_index)*_rho(_current_elem) * _u_functor(_current_elem) /
-                     _eps(_current_elem);
+    friction_term += (*_cL)(&elem)(_index)*_rho(&elem) * _u_functor(&elem) / _eps(&elem);
   if (_use_Forchheimer_friction_model)
-    friction_term += (*_cQ)(_current_elem)(_index)*_rho(_current_elem) * _u_functor(_current_elem) /
-                     _eps(_current_elem);
+    friction_term += (*_cQ)(&elem)(_index)*_rho(&elem) * _u_functor(&elem) / _eps(&elem);
 
-  return friction_term;
+  _rc_uo.addToB(&elem, _index, friction_term);
 }
