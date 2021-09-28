@@ -10,6 +10,7 @@
 #pragma once
 
 #include "GeneralUserObject.h"
+#include "TaggingInterface.h"
 #include "ADReal.h"
 #include "MooseTypes.h"
 #include "libmesh/vector_value.h"
@@ -25,7 +26,7 @@ class Elem;
 class MeshBase;
 }
 
-class INSFVRhieChowInterpolator : public GeneralUserObject
+class INSFVRhieChowInterpolator : public GeneralUserObject, public TaggingInterface
 {
 public:
   static InputParameters validParams();
@@ -46,9 +47,10 @@ private:
   void finalizeAData();
   void computeFirstAndSecondOverBars();
   void computeThirdOverBar();
+  void applyBData();
   void finalizeBData();
 
-  std::set<unsigned int> _var_numbers;
+  std::vector<unsigned int> _var_numbers;
   std::unordered_set<const Elem *> _elements_to_push_pull;
   std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _a;
   std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _b;
@@ -58,10 +60,11 @@ private:
   std::map<const FaceInfo *, libMesh::VectorValue<ADReal>> _b3;
   MooseMesh & _moose_mesh;
   const libMesh::MeshBase & _mesh;
+  SystemBase & _sys;
   MooseVariableFieldBase & _u;
   MooseVariableFieldBase * const _v;
   MooseVariableFieldBase * const _w;
-  const VectorValue<ADReal> _zero;
+  const VectorValue<ADReal> _example;
 };
 
 inline const ADReal &
@@ -80,4 +83,36 @@ inline const VectorValue<ADReal> &
 INSFVRhieChowInterpolator::getB3(const FaceInfo & fi) const
 {
   return libmesh_map_find(_b3, &fi);
+}
+
+inline void
+INSFVRhieChowInterpolator::addToA(const Elem * const elem,
+                                  const unsigned int component,
+                                  const ADReal & value)
+{
+  if (elem->processor_id() != this->processor_id())
+    _elements_to_push_pull.insert(elem);
+
+  _a[elem->id()](component) += value;
+}
+
+inline void
+INSFVRhieChowInterpolator::addToB(const Elem * const elem,
+                                  const unsigned int component,
+                                  const ADReal & value)
+{
+  mooseAssert(elem->processor_id() == this->processor_id(), "Sources should be local");
+
+  // We have our users write their RC data imagining that they've moved all terms to the LHS, but
+  // the balance in Moukalled assumes that the body forces are on the RHS with positive sign, e.g.
+  // 0 = -\nabla p + \mathbf{B}, so we must apply a minus sign here
+  _b[elem->id()](component) -= value;
+}
+
+inline const VectorValue<ADReal> &
+INSFVRhieChowInterpolator::rcCoeff(const libMesh::Elem * const elem) const
+{
+  const auto it = _a.find(elem->id());
+  mooseAssert(it != _a.end(), "Could not find the requested element with id " << elem->id());
+  return it->second;
 }

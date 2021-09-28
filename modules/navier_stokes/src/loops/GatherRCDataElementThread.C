@@ -12,7 +12,7 @@
 #include "INSFVMomentumResidualObject.h"
 
 GatherRCDataElementThread::GatherRCDataElementThread(FEProblemBase & fe_problem,
-                                                     const std::set<unsigned int> & vars)
+                                                     const std::vector<unsigned int> & vars)
   : ThreadedElementLoop<ConstElemRange>(fe_problem), _vars(vars)
 {
 }

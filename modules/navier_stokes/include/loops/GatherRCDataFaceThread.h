@@ -21,7 +21,7 @@ public:
   using Parent = ThreadedFaceLoop<RangeType>;
   using Parent::join;
 
-  GatherRCDataFaceThread(FEProblemBase & fe_problem, const std::set<unsigned int> & vars);
+  GatherRCDataFaceThread(FEProblemBase & fe_problem, const std::vector<unsigned int> & vars);
 
   // Splitting Constructor
   GatherRCDataFaceThread(GatherRCDataFaceThread & x, Threads::split split);
@@ -37,7 +37,7 @@ private:
   void getVarROs(std::vector<INSFVMomentumResidualObject *> & ros,
                  TheWarehouse::QueryCache<Attribs...> & queries);
 
-  const std::set<unsigned int> & _vars;
+  const std::vector<unsigned int> & _vars;
 
   /// FVFluxKernels
   std::set<INSFVMomentumResidualObject *> _fv_flux_kernels;
@@ -47,7 +47,7 @@ private:
 
 template <typename RangeType>
 GatherRCDataFaceThread<RangeType>::GatherRCDataFaceThread(FEProblemBase & fe_problem,
-                                                          const std::set<unsigned int> & vars)
+                                                          const std::vector<unsigned int> & vars)
   : ThreadedFaceLoop<RangeType>(fe_problem, {}), _vars(vars)
 {
 }
@@ -141,7 +141,8 @@ GatherRCDataFaceThread<RangeType>::subdomainChanged()
                      .template condition<AttribThread>(this->_tid);
   getVarROs(kernels, queries);
 
-  _elem_sub_fv_flux_kernels = std::set<INSFVMomentumResidualObject *>(kernels.begin(), kernels.end());
+  _elem_sub_fv_flux_kernels =
+      std::set<INSFVMomentumResidualObject *>(kernels.begin(), kernels.end());
 
   finalizeContainers();
 }
@@ -166,7 +167,8 @@ GatherRCDataFaceThread<RangeType>::neighborSubdomainChanged()
                      .template condition<AttribThread>(this->_tid);
   getVarROs(kernels, queries);
 
-  _neigh_sub_fv_flux_kernels = std::set<INSFVMomentumResidualObject *>(kernels.begin(), kernels.end());
+  _neigh_sub_fv_flux_kernels =
+      std::set<INSFVMomentumResidualObject *>(kernels.begin(), kernels.end());
 
   finalizeContainers();
 }

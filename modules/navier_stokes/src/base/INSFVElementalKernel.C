@@ -20,4 +20,15 @@ INSFVElementalKernel::validParams()
 INSFVElementalKernel::INSFVElementalKernel(const InputParameters & params)
   : FVElementalKernel(params), INSFVMomentumResidualObject(*this)
 {
+  std::vector<std::string> tagging_params = {
+      "vector_tags", "matrix_tags", "extra_vector_tags", "extra_matrix_tags"};
+  for (const auto & tparam : tagging_params)
+    if (params.isParamSetByUser(tparam))
+      paramError(
+          tparam,
+          "Tagging parameters have no effect if set on an 'INSFVElementalKernel'. Please set '",
+          tparam,
+          "' on the associated Rhie-Chow user-object '",
+          _rc_uo.name(),
+          "' instead.");
 }
