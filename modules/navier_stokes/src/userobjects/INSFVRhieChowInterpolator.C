@@ -232,6 +232,10 @@ INSFVRhieChowInterpolator::applyBData()
       const auto residual = -_assembly.elementVolume(elem) * libmesh_map_find(_b2, elem->id())(i);
       const auto dof_index = elem->dof_number(s, vn, 0);
 
+      if (i == 0)
+        std::cout << "Volumetric force at " << elem->vertex_average() << " is " << residual.value()
+                  << std::endl;
+
       if (_fe_problem.currentlyComputingJacobian())
         _assembly.processDerivatives(residual, dof_index, _matrix_tags);
       else
