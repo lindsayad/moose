@@ -186,11 +186,13 @@ velocity_interp_method='rc'
     type = INSFVNaturalFreeSlipBC
     boundary = 'top'
     variable = u
+    momentum_component = 'x'
   []
   [free-slip-v]
     type = INSFVNaturalFreeSlipBC
     boundary = 'top'
     variable = v
+    momentum_component = 'y'
   []
   [symmetry-u]
     type = PINSFVSymmetryVelocityBC
