@@ -37,5 +37,5 @@ void
 INSFVBodyForce::gatherRCData(const Elem & elem)
 {
   _rc_uo.addToB(
-      &elem, _index, _scale * _postprocessor * _function.value(_t, elem.vertex_average()));
+      &elem, _index, -_scale * _postprocessor * _function.value(_t, elem.vertex_average()));
 }
