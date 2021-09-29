@@ -748,6 +748,7 @@ NonlinearSystemBase::computeResidualTags(const std::set<TagID> & tags)
     {
       uo->initialize();
       uo->execute();
+      uo->finalize();
     }
 
     computeResidualInternal(tags);
@@ -2703,6 +2704,7 @@ NonlinearSystemBase::computeJacobianTags(const std::set<TagID> & tags)
     {
       uo->initialize();
       uo->execute();
+      uo->finalize();
     }
 
     computeJacobianInternal(tags);
