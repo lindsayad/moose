@@ -33,7 +33,10 @@ INSFVRhieChowInterpolator::validParams()
 {
   auto params = GeneralUserObject::validParams();
   params += TaggingInterface::validParams();
-  params.set<ExecFlagEnum>("execute_on") = {EXEC_NONLINEAR, EXEC_LINEAR};
+  ExecFlagEnum & exec_enum = params.set<ExecFlagEnum>("execute_on", true);
+  exec_enum.addAvailableFlags(EXEC_PRE_KERNELS);
+  exec_enum = {EXEC_PRE_KERNELS};
+  params.suppressParameter<ExecFlagEnum>("execute_on");
   params.addRequiredParam<VariableName>("u", "The x-component of velocity");
   params.addParam<VariableName>("v", "The y-component of velocity");
   params.addParam<VariableName>("w", "The z-component of velocity");
@@ -225,26 +228,21 @@ INSFVRhieChowInterpolator::applyBData()
 {
   const auto s = _sys.number();
   for (auto * const elem : *_moose_mesh.getActiveLocalElementRange())
+  {
+    const auto elem_volume = _assembly.elementVolume(elem);
     for (const auto i : index_range(_var_numbers))
     {
       const auto vn = _var_numbers[i];
       // negative here because we swapped the sign in addToB and so now we need to swap it back
-      const auto residual = -_assembly.elementVolume(elem) * libmesh_map_find(_b2, elem->id())(i);
+      const auto residual = -elem_volume * libmesh_map_find(_b2, elem->id())(i);
       const auto dof_index = elem->dof_number(s, vn, 0);
-
-      if (i == 0)
-        std::cout << "Volumetric force at " << elem->vertex_average() << " is " << residual.value()
-                  << std::endl;
 
       if (_fe_problem.currentlyComputingJacobian())
         _assembly.processDerivatives(residual, dof_index, _matrix_tags);
       else
-      {
-        prepareVectorTag(_assembly, vn);
-        _local_re(0) += MetaPhysicL::raw_value(residual);
-        accumulateTaggedLocalResidual();
-      }
+        _assembly.cacheResidual(dof_index, residual.value(), _vector_tags);
     }
+  }
 
   if (_fe_problem.currentlyComputingJacobian())
     _assembly.addCachedJacobian();
