@@ -158,6 +158,32 @@ INSFVRhieChowInterpolator::finalizeAData()
   }
 }
 
+VectorValue<ADReal>
+INSFVRhieChowInterpolator::interpolateB(const VectorValue<ADReal> & b_elem,
+                                        const VectorValue<ADReal> & b_neighbor,
+                                        const FaceInfo & fi) const
+{
+  if (!fi.neighborPtr())
+    return b_elem;
+
+  Real coord_elem;
+  coordTransformFactor(
+      UserObject::_subproblem, fi.elem().subdomain_id(), fi.elemCentroid(), coord_elem);
+  Real coord_neighbor;
+  coordTransformFactor(
+      UserObject::_subproblem, fi.neighbor().subdomain_id(), fi.neighborCentroid(), coord_neighbor);
+
+  const auto coord_elem2 = coord_elem * coord_elem;
+  const auto coord_neighbor2 = coord_neighbor * coord_neighbor;
+  const auto elem_coord_weighting_factor = coord_elem2 / (coord_elem2 + coord_neighbor2);
+  const auto elem_distance_weighting_factor = fi.gC();
+  const auto elem_weighting_factor =
+      (elem_coord_weighting_factor + elem_distance_weighting_factor) / 2;
+  const auto neighbor_weighting_factor = 1 - elem_weighting_factor;
+
+  return elem_weighting_factor * b_elem + neighbor_weighting_factor * b_neighbor;
+}
+
 void
 INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
 {
@@ -177,10 +203,7 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     // zero instertion here
     const auto & b_elem = _b[elem_id];
     const auto & b_neighbor = fi.neighborPtr() ? _b[fi.neighborPtr()->id()] : b_elem;
-    const auto it =
-        _b1.emplace(
-               std::make_pair(&fi, Moose::FV::linearInterpolation(b_elem, b_neighbor, fi, true)))
-            .first;
+    const auto it = _b1.emplace(std::make_pair(&fi, interpolateB(b_elem, b_neighbor, fi))).first;
 
     Real coord;
     coordTransformFactor(
@@ -219,7 +242,7 @@ INSFVRhieChowInterpolator::computeThirdOverBar()
     const auto & b_neighbor =
         fi->neighborPtr() ? libmesh_map_find(_b2, fi->neighborPtr()->id()) : b_elem;
 
-    _b3.emplace(std::make_pair(fi, Moose::FV::linearInterpolation(b_elem, b_neighbor, *fi, true)));
+    _b3.emplace(std::make_pair(fi, interpolateB(b_elem, b_neighbor, *fi)));
   }
 }
 
