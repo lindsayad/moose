@@ -64,7 +64,9 @@ private:
   MooseVariableFieldBase & _u;
   MooseVariableFieldBase * const _v;
   MooseVariableFieldBase * const _w;
+  const Moose::Functor<ADReal> & _p;
   const VectorValue<ADReal> _example;
+  bool _has_rz;
 };
 
 inline const ADReal &

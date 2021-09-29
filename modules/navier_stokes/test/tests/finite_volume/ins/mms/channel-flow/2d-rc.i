@@ -29,6 +29,7 @@ velocity_interp_method='rc'
     type = INSFVRhieChowInterpolator
     u = u
     v = v
+    pressure = pressure
   []
 []
 
