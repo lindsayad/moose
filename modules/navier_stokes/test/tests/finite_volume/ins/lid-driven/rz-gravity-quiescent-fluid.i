@@ -13,13 +13,17 @@ rho=1
   [gen]
     type = GeneratedMeshGenerator
     dim = 2
-    xmin = 0
-    xmax = .1
+    xmin = 1
+    xmax = 2
     ymin = 0
-    ymax = .1
-    nx = 2
-    ny = 2
+    ymax = 1
+    nx = 10
+    ny = 10
   []
+[]
+
+[Problem]
+  coord_type = 'RZ'
 []
 
 [Variables]
@@ -148,17 +152,17 @@ rho=1
 
 [FVBCs]
   [no_slip_x]
-    type = INSFVNoSlipWallBC
+    type = INSFVNaturalFreeSlipBC
     variable = u
     boundary = 'left right top bottom'
-    function = 0
+    momentum_component = 'x'
   []
 
   [no_slip_y]
-    type = INSFVNoSlipWallBC
+    type = INSFVNaturalFreeSlipBC
     variable = v
     boundary = 'left right top bottom'
-    function = 0
+    momentum_component = 'y'
   []
 []
 
