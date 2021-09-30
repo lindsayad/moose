@@ -32,6 +32,7 @@ velocity_interp_method='rc'
     u = u
     v = v
     pressure = pressure
+    standard_body_forces = true
   []
 []
 

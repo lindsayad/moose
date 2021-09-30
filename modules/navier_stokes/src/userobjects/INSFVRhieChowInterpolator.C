@@ -42,6 +42,7 @@ INSFVRhieChowInterpolator::validParams()
   params.addParam<VariableName>("v", "The y-component of velocity");
   params.addParam<VariableName>("w", "The z-component of velocity");
   params.addRequiredParam<VariableName>(NS::pressure, "The pressure variable");
+  params.addParam<bool>("standard_body_forces", false, "Whether to just apply normal body forces");
   return params;
 }
 
@@ -59,7 +60,8 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
     _p(getFunctor<ADReal>(NS::pressure)),
     _p_num(UserObject::_subproblem.getVariable(0, getParam<VariableName>(NS::pressure)).number()),
     _example(0),
-    _has_rz(false)
+    _has_rz(false),
+    _standard_body_forces(getParam<bool>("standard_body_forces"))
 {
   _var_numbers.push_back(_u.number());
   if (_v)
@@ -213,6 +215,9 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     const Point surface_vector = fi.normal() * fi.faceArea();
     auto product = (it->second * fi.dCF()) * surface_vector;
 
+    if (_standard_body_forces)
+      continue;
+
     // Now should we compute _b2 for this element?
     if (dof_map.is_evaluable(fi.elem(), _p_num))
     {
@@ -232,6 +237,10 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
       // _b2[fi.neighborPtr()->id()] += -surface_vector * _p(fi.neighborPtr()) / neighbor_volume;
     }
   }
+
+  if (_standard_body_forces)
+    for (const auto & pr : _b)
+      _b2[pr.first] = pr.second;
 
   // We now no longer need to store _b so we can drop its memory
   _b.clear();
