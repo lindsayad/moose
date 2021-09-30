@@ -37,6 +37,7 @@ two_term_boundary_expansion=true
     type = INSFVRhieChowInterpolator
     u = u
     v = v
+    pressure = pressure
   []
 []
 

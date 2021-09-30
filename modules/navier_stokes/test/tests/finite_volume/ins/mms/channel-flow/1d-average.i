@@ -21,6 +21,7 @@ velocity_interp_method='average'
   [rc]
     type = INSFVRhieChowInterpolator
     u = u
+    pressure = pressure
   []
 []
 
