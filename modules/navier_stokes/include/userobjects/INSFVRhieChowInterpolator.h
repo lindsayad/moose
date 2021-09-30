@@ -45,9 +45,6 @@ public:
 
 private:
   void finalizeAData();
-  VectorValue<ADReal> interpolateB(const VectorValue<ADReal> & b_elem,
-                                   const VectorValue<ADReal> & b_neighbor,
-                                   const FaceInfo & fi) const;
   void computeFirstAndSecondOverBars();
   void computeThirdOverBar();
   void applyBData();
