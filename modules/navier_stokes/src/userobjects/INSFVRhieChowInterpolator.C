@@ -200,9 +200,7 @@ INSFVRhieChowInterpolator::interpolateB(const VectorValue<ADReal> & b_elem,
   coordTransformFactor(
       UserObject::_subproblem, fi.neighbor().subdomain_id(), fi.neighborCentroid(), coord_neighbor);
 
-  const auto coord_elem2 = coord_elem * coord_elem;
-  const auto coord_neighbor2 = coord_neighbor * coord_neighbor;
-  const auto elem_coord_weighting_factor = coord_elem2 / (coord_elem2 + coord_neighbor2);
+  const auto elem_coord_weighting_factor = coord_elem / (coord_elem + coord_neighbor);
   const auto elem_distance_weighting_factor = fi.gC();
   const auto elem_weighting_factor =
       (elem_coord_weighting_factor + elem_distance_weighting_factor) / 2;
