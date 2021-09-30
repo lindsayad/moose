@@ -231,60 +231,47 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     const auto & b_neighbor = fi.neighborPtr() ? _b[fi.neighborPtr()->id()] : b_elem;
     const auto it = _b1.emplace(std::make_pair(&fi, interpolateB(b_elem, b_neighbor, fi))).first;
 
-    Real coord;
-    coordTransformFactor(
-        UserObject::_subproblem, fi.elem().subdomain_id(), fi.faceCentroid(), coord);
-    const Point surface_vector = fi.normal() * fi.faceArea() * coord;
+    const Point surface_vector = fi.normal() * fi.faceArea();
     auto product = (it->second * fi.dCF()) * surface_vector;
 
     // Now should we compute _b2 for this element?
     if (dof_map.is_evaluable(fi.elem(), _p_num))
     {
-      coordTransformFactor(
-          UserObject::_subproblem, fi.elem().subdomain_id(), fi.elemCentroid(), coord);
-      // Face info volume just uses libMesh::Elem::volume which has no knowledge of the coordinate
-      // system
-      const auto elem_volume = coord * fi.elemVolume();
       // Second term in RHS of Mercinger equation 42
-      _b2[elem_id] += product * fi.gC() / elem_volume;
-      // First term in RHS of Mercinger equation 42
-      _b2[elem_id] += surface_vector * _p(&fi.elem()) / elem_volume;
+      _b2[elem_id] += product * fi.gC() / fi.elemVolume();
+      // // First term in RHS of Mercinger equation 42
+      // _b2[elem_id] += surface_vector * _p(&fi.elem()) / elem_volume;
     }
 
     // Or for the neighbor?
     if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _p_num))
     {
-      coordTransformFactor(
-          UserObject::_subproblem, fi.neighborPtr()->subdomain_id(), fi.neighborCentroid(), coord);
-      // Face info volume just uses libMesh::Elem::volume which has no knowledge of the coordinate
-      // system
-      const auto neighbor_volume = coord * fi.neighborVolume();
       // Second term in RHS of Mercinger equation 42. Apply both a minus sign to the surface vector
       // and to dCF such that result is a + so we don't have to change the sign
-      _b2[fi.neighborPtr()->id()] += std::move(product) * (1. - fi.gC()) / neighbor_volume;
-      // First term in RHS of Mercinger equation 42. Apply a minus sign to the surface vector
-      _b2[fi.neighborPtr()->id()] += -surface_vector * _p(fi.neighborPtr()) / neighbor_volume;
+      _b2[fi.neighborPtr()->id()] += std::move(product) * (1. - fi.gC()) / fi.neighborVolume();
+      // // First term in RHS of Mercinger equation 42. Apply a minus sign to the surface vector
+      // _b2[fi.neighborPtr()->id()] += -surface_vector * _p(fi.neighborPtr()) / neighbor_volume;
     }
   }
 
   // We now no longer need to store _b so we can drop its memory
   _b.clear();
 
-  if (!_has_rz)
-    return;
+  // if (!_has_rz)
+  //   return;
 
-  const bool displaced = &(UserObject::_subproblem) != &_fe_problem;
-  for (auto * const candidate_elem : _fe_problem.getEvaluableElementRange())
-  {
-    auto * const elem = displaced ? _moose_mesh.elemPtr(candidate_elem->id()) : candidate_elem;
+  // const bool displaced = &(UserObject::_subproblem) != &_fe_problem;
+  // for (auto * const candidate_elem : _fe_problem.getEvaluableElementRange())
+  // {
+  //   auto * const elem = displaced ? _moose_mesh.elemPtr(candidate_elem->id()) : candidate_elem;
 
-    const auto coord_system = UserObject::_subproblem.getCoordSystem(elem->subdomain_id());
-    if (coord_system == Moose::CoordinateSystemType::COORD_RZ)
-    {
-      const auto r_coord = UserObject::_subproblem.getAxisymmetricRadialCoord();
-      _b2[elem->id()](r_coord) -= _p(elem) / elem->vertex_average()(r_coord);
-    }
-  }
+  //   const auto coord_system = UserObject::_subproblem.getCoordSystem(elem->subdomain_id());
+  //   if (coord_system == Moose::CoordinateSystemType::COORD_RZ)
+  //   {
+  //     const auto r_coord = UserObject::_subproblem.getAxisymmetricRadialCoord();
+  //     _b2[elem->id()](r_coord) -= _p(elem) / elem->vertex_average()(r_coord);
+  //   }
+  // }
 }
 
 void
