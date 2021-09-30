@@ -66,10 +66,7 @@ private:
   MooseVariableFieldBase & _u;
   MooseVariableFieldBase * const _v;
   MooseVariableFieldBase * const _w;
-  const Moose::Functor<ADReal> & _p;
-  const unsigned int _p_num;
   const VectorValue<ADReal> _example;
-  bool _has_rz;
   const bool _standard_body_forces;
 };
 

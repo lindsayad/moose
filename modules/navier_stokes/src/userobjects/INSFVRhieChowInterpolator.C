@@ -41,7 +41,6 @@ INSFVRhieChowInterpolator::validParams()
   params.addRequiredParam<VariableName>("u", "The x-component of velocity");
   params.addParam<VariableName>("v", "The y-component of velocity");
   params.addParam<VariableName>("w", "The z-component of velocity");
-  params.addRequiredParam<VariableName>(NS::pressure, "The pressure variable");
   params.addParam<bool>("standard_body_forces", false, "Whether to just apply normal body forces");
   return params;
 }
@@ -57,10 +56,7 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
                          : nullptr),
     _w(isParamValid("w") ? &UserObject::_subproblem.getVariable(0, getParam<VariableName>("w"))
                          : nullptr),
-    _p(getFunctor<ADReal>(NS::pressure)),
-    _p_num(UserObject::_subproblem.getVariable(0, getParam<VariableName>(NS::pressure)).number()),
     _example(0),
-    _has_rz(false),
     _standard_body_forces(getParam<bool>("standard_body_forces"))
 {
   _var_numbers.push_back(_u.number());
@@ -68,25 +64,6 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
     _var_numbers.push_back(_v->number());
   if (_w)
     _var_numbers.push_back(_w->number());
-
-  const auto & sub_ids = _moose_mesh.meshSubdomains();
-  for (const auto sub_id : sub_ids)
-  {
-    const auto coord_type = _fe_problem.getCoordSystem(sub_id);
-    switch (coord_type)
-    {
-      case Moose::COORD_RZ:
-        _has_rz = true;
-        break;
-
-      case Moose::COORD_RSPHERICAL:
-        mooseError("We don't yet support r-spherical for INSFV");
-        break;
-
-      default:
-        break;
-    }
-  }
 
   if (&(UserObject::_subproblem) != &(TaggingInterface::_subproblem))
     mooseError("Different subproblems in INSFVRhieChowInterpolator!");
@@ -232,24 +209,16 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     auto product = (it->second * fi.dCF()) * surface_vector;
 
     // Now should we compute _b2 for this element?
-    if (dof_map.is_evaluable(fi.elem(), _p_num))
-    {
+    if (dof_map.is_evaluable(fi.elem(), _var_numbers[0]))
       // Second term in RHS of Mercinger equation 42
       _b2[fi.elem().id()] += product * fi.gC() / _assembly.elementVolume(&fi.elem());
-      // // First term in RHS of Mercinger equation 42
-      // _b2[elem_id] += surface_vector * _p(&fi.elem()) / elem_volume;
-    }
 
     // Or for the neighbor?
-    if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _p_num))
-    {
+    if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _var_numbers[0]))
       // Second term in RHS of Mercinger equation 42. Apply both a minus sign to the surface vector
       // and to dCF such that result is a + so we don't have to change the sign
       _b2[fi.neighbor().id()] +=
           std::move(product) * (1. - fi.gC()) / _assembly.elementVolume(fi.neighborPtr());
-      // First term in RHS of Mercinger equation 42. Apply a minus sign to the surface vector
-      // _b2[fi.neighborPtr()->id()] += -surface_vector * _p(fi.neighborPtr()) / neighbor_volume;
-    }
   }
 
   if (_standard_body_forces)
@@ -258,22 +227,6 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
 
   // We now no longer need to store _b so we can drop its memory
   _b.clear();
-
-  // if (!_has_rz)
-  //   return;
-
-  // const bool displaced = &(UserObject::_subproblem) != &_fe_problem;
-  // for (auto * const candidate_elem : _fe_problem.getEvaluableElementRange())
-  // {
-  //   auto * const elem = displaced ? _moose_mesh.elemPtr(candidate_elem->id()) : candidate_elem;
-
-  //   const auto coord_system = UserObject::_subproblem.getCoordSystem(elem->subdomain_id());
-  //   if (coord_system == Moose::CoordinateSystemType::COORD_RZ)
-  //   {
-  //     const auto r_coord = UserObject::_subproblem.getAxisymmetricRadialCoord();
-  //     _b2[elem->id()](r_coord) -= _p(elem) / elem->vertex_average()(r_coord);
-  //   }
-  // }
 }
 
 void
