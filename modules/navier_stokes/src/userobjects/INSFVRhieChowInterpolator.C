@@ -57,6 +57,7 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
     _w(isParamValid("w") ? &UserObject::_subproblem.getVariable(0, getParam<VariableName>("w"))
                          : nullptr),
     _p(getFunctor<ADReal>(NS::pressure)),
+    _p_num(UserObject::_subproblem.getVariable(0, getParam<VariableName>(NS::pressure)).number()),
     _example(0),
     _has_rz(false)
 {
@@ -187,6 +188,7 @@ INSFVRhieChowInterpolator::finalizeAData()
 void
 INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
 {
+  const auto & dof_map = _sys.dofMap();
   const auto & all_fi = _moose_mesh.allFaceInfo();
   // reserve to avoid re-allocating all the time
   _b2.reserve(_fe_problem.getEvaluableElementRange().size());
@@ -212,19 +214,24 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     coordTransformFactor(
         UserObject::_subproblem, fi.elem().subdomain_id(), fi.faceCentroid(), coord);
     const Point surface_vector = fi.normal() * fi.faceArea() * coord;
-
     auto product = (it->second * fi.dCF()) * surface_vector;
-    coordTransformFactor(
-        UserObject::_subproblem, fi.elem().subdomain_id(), fi.elemCentroid(), coord);
-    // Face info volume just uses libMesh::Elem::volume which has no knowledge of the coordinate
-    // system
-    const auto elem_volume = coord * fi.elemVolume();
-    // Second term in RHS of Mercinger equation 42
-    _b2[elem_id] += product * fi.gC() / elem_volume;
-    // First term in RHS of Mercinger equation 42
-    _b2[elem_id] += surface_vector * _p(&fi.elem()) / elem_volume;
 
-    if (fi.neighborPtr())
+    // Now should we compute _b2 for this element?
+    if (dof_map.is_evaluable(fi.elem(), _p_num))
+    {
+      coordTransformFactor(
+          UserObject::_subproblem, fi.elem().subdomain_id(), fi.elemCentroid(), coord);
+      // Face info volume just uses libMesh::Elem::volume which has no knowledge of the coordinate
+      // system
+      const auto elem_volume = coord * fi.elemVolume();
+      // Second term in RHS of Mercinger equation 42
+      _b2[elem_id] += product * fi.gC() / elem_volume;
+      // First term in RHS of Mercinger equation 42
+      _b2[elem_id] += surface_vector * _p(&fi.elem()) / elem_volume;
+    }
+
+    // Or for the neighbor?
+    if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _p_num))
     {
       coordTransformFactor(
           UserObject::_subproblem, fi.neighborPtr()->subdomain_id(), fi.neighborCentroid(), coord);
@@ -235,7 +242,7 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
       // and to dCF such that result is a + so we don't have to change the sign
       _b2[fi.neighborPtr()->id()] += std::move(product) * (1. - fi.gC()) / neighbor_volume;
       // First term in RHS of Mercinger equation 42. Apply a minus sign to the surface vector
-      _b2[elem_id] += -surface_vector * _p(fi.neighborPtr()) / neighbor_volume;
+      _b2[fi.neighborPtr()->id()] += -surface_vector * _p(fi.neighborPtr()) / neighbor_volume;
     }
   }
 
