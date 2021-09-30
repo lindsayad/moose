@@ -195,19 +195,9 @@ INSFVRhieChowInterpolator::interpolateB(const VectorValue<ADReal> & b_elem,
   if (!fi.neighborPtr())
     return b_elem;
 
-  Real coord_elem;
-  coordTransformFactor(
-      UserObject::_subproblem, fi.elem().subdomain_id(), fi.elemCentroid(), coord_elem);
-  Real coord_neighbor;
-  coordTransformFactor(
-      UserObject::_subproblem, fi.neighbor().subdomain_id(), fi.neighborCentroid(), coord_neighbor);
-
-  const auto coord_elem2 = coord_elem * coord_elem;
-  const auto coord_neighbor2 = coord_neighbor * coord_neighbor;
-  const auto elem_coord_weighting_factor = coord_elem2 / (coord_elem2 + coord_neighbor2);
-  const auto elem_distance_weighting_factor = fi.gC();
-  const auto elem_weighting_factor =
-      (elem_coord_weighting_factor + elem_distance_weighting_factor) / 2;
+  const auto elem_volume = _assembly.elementVolume(&fi.elem());
+  const auto neighbor_volume = _assembly.elementVolume(fi.neighborPtr());
+  const auto elem_weighting_factor = elem_volume / (elem_volume + neighbor_volume);
   const auto neighbor_weighting_factor = 1 - elem_weighting_factor;
 
   return elem_weighting_factor * b_elem + neighbor_weighting_factor * b_neighbor;
