@@ -188,15 +188,17 @@ INSFVRhieChowInterpolator::finalizeAData()
 }
 
 VectorValue<ADReal>
-INSFVRhieChowInterpolator::interpolateB(const VectorValue<ADReal> & b_elem,
-                                        const VectorValue<ADReal> & b_neighbor,
-                                        const FaceInfo & fi) const
+INSFVRhieChowInterpolator::interpolateB(
+    std::unordered_map<dof_id_type, VectorValue<ADReal>> & b_container, const FaceInfo & fi)
 {
+  const auto & b_elem = b_container[fi.elem().id()];
   if (!fi.neighborPtr())
     return b_elem;
 
   const auto elem_volume = _assembly.elementVolume(&fi.elem());
   const auto neighbor_volume = _assembly.elementVolume(fi.neighborPtr());
+
+  const auto & b_neighbor = b_container[fi.neighbor().id()];
   const auto elem_weighting_factor = elem_volume / (elem_volume + neighbor_volume);
   const auto neighbor_weighting_factor = 1 - elem_weighting_factor;
 
@@ -218,49 +220,35 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
       // that case we don't care about its face computation
       continue;
 
-    const auto elem_id = fi.elem().id();
-    // if there are no forces then keys will not already exist so we take advantage of operator[]
-    // zero instertion here
-    const auto & b_elem = _b[elem_id];
-    const auto & b_neighbor = fi.neighborPtr() ? _b[fi.neighborPtr()->id()] : b_elem;
-    const auto it = _b1.emplace(std::make_pair(&fi, interpolateB(b_elem, b_neighbor, fi))).first;
-
-    Real coord;
-    coordTransformFactor(
-        UserObject::_subproblem, fi.elem().subdomain_id(), fi.faceCentroid(), coord);
-    const Point surface_vector = fi.normal() * fi.faceArea() * coord;
-    auto product = (it->second * fi.dCF()) * surface_vector;
+    const auto it = _b1.emplace(std::make_pair(&fi, interpolateB(_b, fi))).first;
 
     if (_standard_body_forces)
       continue;
 
+    Real face_coord;
+    coordTransformFactor(
+        UserObject::_subproblem, fi.elem().subdomain_id(), fi.faceCentroid(), face_coord);
+    const Point surface_vector = fi.normal() * fi.faceArea() * face_coord;
+    auto product = (it->second * fi.dCF()) * surface_vector;
+
     // Now should we compute _b2 for this element?
     if (dof_map.is_evaluable(fi.elem(), _p_num))
     {
-      coordTransformFactor(
-          UserObject::_subproblem, fi.elem().subdomain_id(), fi.elemCentroid(), coord);
-      // Face info volume just uses libMesh::Elem::volume which has no knowledge of the coordinate
-      // system
-      const auto elem_volume = coord * fi.elemVolume();
       // Second term in RHS of Mercinger equation 42
-      _b2[elem_id] += product * fi.gC() / elem_volume;
-      // First term in RHS of Mercinger equation 42
-      _b2[elem_id] += surface_vector * _p(&fi.elem()) / elem_volume;
+      _b2[fi.elem().id()] += product * fi.gC() / _assembly.elementVolume(&fi.elem());
+      // // First term in RHS of Mercinger equation 42
+      // _b2[elem_id] += surface_vector * _p(&fi.elem()) / elem_volume;
     }
 
     // Or for the neighbor?
     if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _p_num))
     {
-      coordTransformFactor(
-          UserObject::_subproblem, fi.neighborPtr()->subdomain_id(), fi.neighborCentroid(), coord);
-      // Face info volume just uses libMesh::Elem::volume which has no knowledge of the coordinate
-      // system
-      const auto neighbor_volume = coord * fi.neighborVolume();
       // Second term in RHS of Mercinger equation 42. Apply both a minus sign to the surface vector
       // and to dCF such that result is a + so we don't have to change the sign
-      _b2[fi.neighborPtr()->id()] += std::move(product) * (1. - fi.gC()) / neighbor_volume;
+      _b2[fi.neighbor().id()] +=
+          std::move(product) * (1. - fi.gC()) / _assembly.elementVolume(fi.neighborPtr());
       // First term in RHS of Mercinger equation 42. Apply a minus sign to the surface vector
-      _b2[fi.neighborPtr()->id()] += -surface_vector * _p(fi.neighborPtr()) / neighbor_volume;
+      // _b2[fi.neighborPtr()->id()] += -surface_vector * _p(fi.neighborPtr()) / neighbor_volume;
     }
   }
 
@@ -271,21 +259,21 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
   // We now no longer need to store _b so we can drop its memory
   _b.clear();
 
-  if (!_has_rz)
-    return;
+  // if (!_has_rz)
+  //   return;
 
-  const bool displaced = &(UserObject::_subproblem) != &_fe_problem;
-  for (auto * const candidate_elem : _fe_problem.getEvaluableElementRange())
-  {
-    auto * const elem = displaced ? _moose_mesh.elemPtr(candidate_elem->id()) : candidate_elem;
+  // const bool displaced = &(UserObject::_subproblem) != &_fe_problem;
+  // for (auto * const candidate_elem : _fe_problem.getEvaluableElementRange())
+  // {
+  //   auto * const elem = displaced ? _moose_mesh.elemPtr(candidate_elem->id()) : candidate_elem;
 
-    const auto coord_system = UserObject::_subproblem.getCoordSystem(elem->subdomain_id());
-    if (coord_system == Moose::CoordinateSystemType::COORD_RZ)
-    {
-      const auto r_coord = UserObject::_subproblem.getAxisymmetricRadialCoord();
-      _b2[elem->id()](r_coord) -= _p(elem) / elem->vertex_average()(r_coord);
-    }
-  }
+  //   const auto coord_system = UserObject::_subproblem.getCoordSystem(elem->subdomain_id());
+  //   if (coord_system == Moose::CoordinateSystemType::COORD_RZ)
+  //   {
+  //     const auto r_coord = UserObject::_subproblem.getAxisymmetricRadialCoord();
+  //     _b2[elem->id()](r_coord) -= _p(elem) / elem->vertex_average()(r_coord);
+  //   }
+  // }
 }
 
 void
@@ -294,14 +282,7 @@ INSFVRhieChowInterpolator::computeThirdOverBar()
   const auto & local_fi = _moose_mesh.faceInfo();
 
   for (auto * const fi : local_fi)
-  {
-    const auto elem_id = fi->elem().id();
-    const auto & b_elem = libmesh_map_find(_b2, elem_id);
-    const auto & b_neighbor =
-        fi->neighborPtr() ? libmesh_map_find(_b2, fi->neighborPtr()->id()) : b_elem;
-
-    _b3.emplace(std::make_pair(fi, interpolateB(b_elem, b_neighbor, *fi)));
-  }
+    _b3.emplace(std::make_pair(fi, interpolateB(_b2, *fi)));
 }
 
 void

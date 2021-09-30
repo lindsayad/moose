@@ -45,9 +45,8 @@ public:
 
 private:
   void finalizeAData();
-  VectorValue<ADReal> interpolateB(const VectorValue<ADReal> & b_elem,
-                                   const VectorValue<ADReal> & b_neighbor,
-                                   const FaceInfo & fi) const;
+  VectorValue<ADReal> interpolateB(std::unordered_map<dof_id_type, VectorValue<ADReal>> & b_elem,
+                                   const FaceInfo & fi);
   void computeFirstAndSecondOverBars();
   void computeThirdOverBar();
   void applyBData();
