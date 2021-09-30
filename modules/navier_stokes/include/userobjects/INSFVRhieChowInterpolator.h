@@ -68,6 +68,7 @@ private:
   const unsigned int _p_num;
   const VectorValue<ADReal> _example;
   bool _has_rz;
+  const bool _standard_body_forces;
 };
 
 inline const ADReal &

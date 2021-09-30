@@ -35,6 +35,7 @@ velocity='velocity'
     u = u
     v = v
     pressure = pressure
+    standard_body_forces = true
   []
 []
 
