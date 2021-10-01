@@ -8,7 +8,7 @@ from mooseutils import fuzzyEqual, fuzzyAbsoluteEqual
 class Test1DRC():
     def test(self):
         labels = ['L2u', 'L2p']
-        df1 = mms.run_spatial('1d-rc.i', 7, "--error", y_pp=labels, mpi=8)
+        df1 = mms.run_spatial('1d-rc.i', 9, "--error", y_pp=labels, mpi=1)
 
         fig = mms.ConvergencePlot(xlabel='Element Size ($h$)', ylabel='$L_2$ Error')
         fig.plot(df1, label=labels, marker='o', markersize=8, num_fitted_points=3, slope_precision=1)

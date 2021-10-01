@@ -7,7 +7,7 @@ velocity_interp_method='rc'
   [gen]
     type = GeneratedMeshGenerator
     dim = 1
-    xmin = 0
+    xmin = -1
     xmax = 1
     nx = 2
   []
@@ -15,6 +15,7 @@ velocity_interp_method='rc'
 
 [GlobalParams]
   rhie_chow_user_object = 'rc'
+  two_term_boundary_expansion = true
 []
 
 [UserObjects]
@@ -28,10 +29,14 @@ velocity_interp_method='rc'
 [Variables]
   [u]
     type = INSFVVelocityVariable
-    initial_condition = 1
+    initial_condition = 1e-15
   []
   [pressure]
     type = INSFVPressureVariable
+  []
+  [lambda]
+    family = SCALAR
+    order = FIRST
   []
 []
 
@@ -50,6 +55,11 @@ velocity_interp_method='rc'
     type = FVBodyForce
     variable = pressure
     function = forcing_p
+  []
+  [mean_zero_pressure]
+    type = FVScalarLagrangeMultiplier
+    variable = pressure
+    lambda = lambda
   []
 
   [u_advection]
@@ -85,17 +95,18 @@ velocity_interp_method='rc'
 []
 
 [FVBCs]
-  [inlet-u]
-    type = INSFVInletVelocityBC
-    boundary = 'left'
+  [u]
+    type = INSFVMomentumFunctionFluxBC
     variable = u
-    function = 'exact_u'
+    boundary = 'left right'
+    function = 'flux_u'
+    momentum_component = 'x'
   []
-  [outlet-p]
-    type = INSFVOutletPressureBC
-    boundary = 'right'
+  [pressure]
+    type = FVFunctionNeumannBC
     variable = pressure
-    function = 'exact_p'
+    boundary = 'left right'
+    function = 'flux_pressure'
   []
 []
 
@@ -111,21 +122,33 @@ velocity_interp_method='rc'
 [Functions]
 [exact_u]
   type = ParsedFunction
-  value = 'sin(x)'
+  value = 'cos(x)'
 []
 [forcing_u]
   type = ParsedFunction
-  value = 'mu*sin(x) + 2*rho*sin(x)*cos(x) - sin(x)'
+  value = 'mu*cos(x) - 2*rho*sin(x)*cos(x) + cos(x)'
+  vars = 'mu rho'
+  vals = '${mu} ${rho}'
+[]
+[flux_u]
+  type = ParsedVectorFunction
+  value_x = 'mu*sin(x) + rho*cos(x)^2'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [exact_p]
   type = ParsedFunction
-  value = 'cos(x)'
+  value = 'sin(x)'
 []
 [forcing_p]
   type = ParsedFunction
-  value = 'rho*cos(x)'
+  value = '-rho*sin(x)'
+  vars = 'rho'
+  vals = '${rho}'
+[]
+[flux_pressure]
+  type = ParsedVectorFunction
+  value_x = 'rho*cos(x)'
   vars = 'rho'
   vals = '${rho}'
 []
@@ -137,6 +160,7 @@ velocity_interp_method='rc'
   petsc_options_iname = '-pc_type -ksp_gmres_restart -sub_pc_type -sub_pc_factor_shift_type'
   petsc_options_value = 'asm      200                lu           NONZERO'
   line_search = 'none'
+  nl_rel_tol = 1e-12
 []
 
 [Outputs]

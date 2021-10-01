@@ -148,8 +148,8 @@ INSFVMomentumAdvection::skipForBoundary(const FaceInfo & fi) const
 void
 INSFVMomentumAdvection::gatherRCData(const FaceInfo & fi)
 {
-  // if (skipForBoundary(fi))
-  //   return;
+  if (skipForBoundary(fi))
+    return;
 
   // these coefficients arise from simple control volume balances of advection and diffusion. These
   // coefficients are the linear coefficients associated with the centroid of the control volume.
