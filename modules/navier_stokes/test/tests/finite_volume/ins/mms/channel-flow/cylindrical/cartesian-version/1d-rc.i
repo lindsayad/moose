@@ -95,18 +95,38 @@ velocity_interp_method='rc'
 []
 
 [FVBCs]
-  [u]
+  # [symmetry]
+  #   type = INSFVVelocitySymmetryBC
+  #   boundary = 'left right'
+  #   variable = u
+  #   momentum_component = 'x'
+  #   mu = ${mu}
+  # []
+  [u_left]
     type = INSFVMomentumFunctionFluxBC
     variable = u
-    boundary = 'left right'
-    function = 'flux_u'
+    boundary = 'left'
+    function = 'flux_u_left'
     momentum_component = 'x'
   []
-  [pressure]
+  [u_right]
+    type = INSFVMomentumFunctionFluxBC
+    variable = u
+    boundary = 'right'
+    function = 'flux_u_right'
+    momentum_component = 'x'
+  []
+  [pressure_left]
     type = FVFunctionNeumannBC
     variable = pressure
-    boundary = 'left right'
-    function = 'flux_pressure'
+    boundary = 'left'
+    function = 'flux_p_left'
+  []
+  [pressure_right]
+    type = FVFunctionNeumannBC
+    variable = pressure
+    boundary = 'right'
+    function = 'flux_p_right'
   []
 []
 
@@ -130,9 +150,15 @@ velocity_interp_method='rc'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
-[flux_u]
-  type = ParsedVectorFunction
-  value_x = 'mu*sin(x) + rho*cos(x)^2'
+[flux_u_left]
+  type = ParsedFunction
+  value = '-mu*sin(x) - rho*cos(x)^2'
+  vars = 'mu rho'
+  vals = '${mu} ${rho}'
+[]
+[flux_u_right]
+  type = ParsedFunction
+  value = 'mu*sin(x) + rho*cos(x)^2'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
@@ -146,9 +172,15 @@ velocity_interp_method='rc'
   vars = 'rho'
   vals = '${rho}'
 []
-[flux_pressure]
-  type = ParsedVectorFunction
-  value_x = 'rho*cos(x)'
+[flux_p_left]
+  type = ParsedFunction
+  value = '-rho*cos(x)'
+  vars = 'rho'
+  vals = '${rho}'
+[]
+[flux_p_right]
+  type = ParsedFunction
+  value = 'rho*cos(x)'
   vars = 'rho'
   vals = '${rho}'
 []

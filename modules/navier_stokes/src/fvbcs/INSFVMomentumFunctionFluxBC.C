@@ -32,5 +32,5 @@ INSFVMomentumFunctionFluxBC::INSFVMomentumFunctionFluxBC(const InputParameters &
 ADReal
 INSFVMomentumFunctionFluxBC::computeQpResidual()
 {
-  return _normal * _function.vectorValue(_t, _face_info->faceCentroid());
+  return _function.value(_t, _face_info->faceCentroid());
 }
