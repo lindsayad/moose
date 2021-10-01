@@ -55,7 +55,7 @@ class Test2DAverageTemp(unittest.TestCase):
 class Test2DRCTemp(unittest.TestCase):
     def test(self):
         labels = ['L2u', 'L2v', 'L2p', 'L2t']
-        df1 = run_spatial('2d-average-with-temp.i', 7, "velocity_interp_method='rc'", y_pp=labels, mpi=16)
+        df1 = run_spatial('2d-average-with-temp.i', 7, "velocity_interp_method='rc'", "UserObjects/rc/standard_body_forces=false", y_pp=labels, mpi=16)
 
         fig = mms.ConvergencePlot(xlabel='Element Size ($h$)', ylabel='$L_2$ Error')
         fig.plot(df1, label=labels, marker='o', markersize=8, num_fitted_points=3, slope_precision=1)
