@@ -30,8 +30,8 @@ INSFVMomentumDiffusion::INSFVMomentumDiffusion(const InputParameters & params)
 void
 INSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
 {
-  // if (skipForBoundary(fi))
-  //   return;
+  if (skipForBoundary(fi))
+    return;
 
   const Elem & elem = fi.elem();
   const Elem * const neighbor = fi.neighborPtr();
