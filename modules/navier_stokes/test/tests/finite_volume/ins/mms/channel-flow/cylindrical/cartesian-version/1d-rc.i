@@ -13,6 +13,10 @@ velocity_interp_method='rc'
   []
 []
 
+[Problem]
+  fv_bcs_integrity_check = false
+[]
+
 [GlobalParams]
   rhie_chow_user_object = 'rc'
   two_term_boundary_expansion = true
@@ -95,12 +99,27 @@ velocity_interp_method='rc'
 []
 
 [FVBCs]
-  # [symmetry]
-  #   type = INSFVVelocitySymmetryBC
-  #   boundary = 'left right'
+  [symmetry]
+    type = INSFVSymmetryVelocityBC
+    boundary = 'left right'
+    variable = u
+    u = u
+    momentum_component = 'x'
+    mu = ${mu}
+  []
+  # [u_diffusion_left]
+  #   type = INSFVMomentumFunctionFluxBC
   #   variable = u
+  #   boundary = 'left'
+  #   function = 'flux_u_diffusion_left'
   #   momentum_component = 'x'
-  #   mu = ${mu}
+  # []
+  # [u_diffusion_right]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = u
+  #   boundary = 'right'
+  #   function = 'flux_u_diffusion_right'
+  #   momentum_component = 'x'
   # []
   [u_left]
     type = INSFVMomentumFunctionFluxBC
@@ -128,6 +147,18 @@ velocity_interp_method='rc'
     boundary = 'right'
     function = 'flux_p_right'
   []
+  [diri_u]
+    type = FVFunctionDirichletBC
+    variable = u
+    function = 'exact_u'
+    boundary = 'left right'
+  []
+  [diri_p]
+    type = FVFunctionDirichletBC
+    variable = pressure
+    function = 'exact_p'
+    boundary = 'left right'
+  []
 []
 
 [Materials]
@@ -152,13 +183,25 @@ velocity_interp_method='rc'
 []
 [flux_u_left]
   type = ParsedFunction
-  value = '-mu*sin(x) - rho*cos(x)^2'
+  value = '-rho*cos(x)^2'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [flux_u_right]
   type = ParsedFunction
-  value = 'mu*sin(x) + rho*cos(x)^2'
+  value = 'rho*cos(x)^2'
+  vars = 'mu rho'
+  vals = '${mu} ${rho}'
+[]
+[flux_u_diffusion_left]
+  type = ParsedFunction
+  value = '-mu*sin(x)'
+  vars = 'mu rho'
+  vals = '${mu} ${rho}'
+[]
+[flux_u_diffusion_right]
+  type = ParsedFunction
+  value = 'mu*sin(x)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []

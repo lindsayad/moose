@@ -46,34 +46,33 @@ INSFVSymmetryVelocityBC::computeQpResidual()
 {
   const bool use_elem = _face_info->faceType(_var.name()) == FaceInfo::VarFaceNeighbors::ELEM;
   const auto normal = use_elem ? _face_info->normal() : Point(-_face_info->normal());
+  const auto sub_id =
+      use_elem ? _face_info->elem().subdomain_id() : _face_info->neighbor().subdomain_id();
   const Point & cell_centroid =
       use_elem ? _face_info->elemCentroid() : _face_info->neighborCentroid();
   _u_eval = use_elem ? _u_functor(&_face_info->elem()) : _u_functor(_face_info->neighborPtr());
   _v_eval = use_elem ? _v_functor(&_face_info->elem()) : _v_functor(_face_info->neighborPtr());
   _w_eval = use_elem ? _w_functor(&_face_info->elem()) : _w_functor(_face_info->neighborPtr());
 
-  // Evaluate viscosity on the face
-  const auto mu_b = use_elem ? _mu(std::make_tuple(_face_info,
-                                                   Moose::FV::LimiterType::CentralDifference,
-                                                   true,
-                                                   _face_info->elem().subdomain_id()))
-                             : _mu(std::make_tuple(_face_info,
-                                                   Moose::FV::LimiterType::CentralDifference,
-                                                   true,
-                                                   _face_info->neighborPtr()->subdomain_id()));
-
   const auto d_perpendicular = std::abs((_face_info->faceCentroid() - cell_centroid) * normal);
 
   // See Moukalled 15.150. Recall that we multiply by the area in the base class, so S_b ->
-  // normal.norm() -> 1 here
+  // normal.norm() -> 1 here. In the text a zero value for the perpendicular face velocity is
+  // implicitly assumed. We do not have to assume that here and we allow that to fall out of the
+  // mass continuity boundary condition
 
-  ADReal v_dot_n = _u_eval * normal(0);
+  const auto face =
+      std::make_tuple(_face_info, Moose::FV::LimiterType::CentralDifference, true, sub_id);
+
+  const auto mu_b = _mu(face);
+
+  ADReal delta_v_dot_n = (_u_eval - _u_functor(face)) * normal(0);
   if (_dim > 1)
-    v_dot_n += _v_eval * normal(1);
+    delta_v_dot_n += (_v_eval - _v_functor(face)) * normal(1);
   if (_dim > 2)
-    v_dot_n += _w_eval + normal(2);
+    delta_v_dot_n += (_w_eval - _w_functor(face)) * normal(2);
 
-  return 2. * mu_b / d_perpendicular * v_dot_n * normal(_index);
+  return mu_b / d_perpendicular * delta_v_dot_n * normal(_index);
 }
 
 void
