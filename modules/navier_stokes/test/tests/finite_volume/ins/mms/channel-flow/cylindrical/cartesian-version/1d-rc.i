@@ -99,42 +99,54 @@ velocity_interp_method='rc'
 []
 
 [FVBCs]
+  # We envision an infinite channel flow problem with symmetry boundary on the
+  # left and something like a free slip BC on the right; critically these are
+  # both flux bcs.  Flux BC in production means to mimic it in MMS we can add
+  # arbitrarily many FVFunctionNeumannBCs and/or INSFVMomentumFunctionFluxBCs to
+  # get the boundary flux correct
+
+  # This corresponds exactly to a diffusive flux for the velocity component that
+  # is perpendicular to the boundary
   [symmetry]
     type = INSFVSymmetryVelocityBC
-    boundary = 'left right'
+    boundary = 'left'
     variable = u
     u = u
     momentum_component = 'x'
     mu = ${mu}
   []
-  # [u_diffusion_left]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = u
-  #   boundary = 'left'
-  #   function = 'flux_u_diffusion_left'
-  #   momentum_component = 'x'
-  # []
-  # [u_diffusion_right]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = u
-  #   boundary = 'right'
-  #   function = 'flux_u_diffusion_right'
-  #   momentum_component = 'x'
-  # []
-  [u_left]
+
+  # And since we are doing MMS we need to toss in the advective flux at the left
+  # boundary
+  [u_advection_left]
     type = INSFVMomentumFunctionFluxBC
     variable = u
     boundary = 'left'
     function = 'flux_u_left'
     momentum_component = 'x'
   []
-  [u_right]
+
+  # Free slip flux bc right which is 0 flux so we add MMS bcs for both advective
+  # and diffusive flux contributions
+  [u_advection_right]
     type = INSFVMomentumFunctionFluxBC
     variable = u
     boundary = 'right'
     function = 'flux_u_right'
     momentum_component = 'x'
   []
+  [u_diffusion_right]
+    type = INSFVMomentumFunctionFluxBC
+    variable = u
+    boundary = 'right'
+    function = 'flux_u_diffusion_right'
+    momentum_component = 'x'
+  []
+
+  # Prescribe fluxes. In our idealized case we would be applying natural
+  # boundary conditions (which are really just 0 flux bcs) to the mass equation
+  # on both left and right so that means we add MMS flux BCs for the mass
+  # advective flux
   [pressure_left]
     type = FVFunctionNeumannBC
     variable = pressure
@@ -147,17 +159,15 @@ velocity_interp_method='rc'
     boundary = 'right'
     function = 'flux_p_right'
   []
+
+  # Finally a symmetry bc means we know that the perpendicular velocity is zero,
+  # e.g. we know a Dirichlet condition for it, so we correspondingly apply an
+  # MMS dirichlet BC here
   [diri_u]
     type = FVFunctionDirichletBC
     variable = u
     function = 'exact_u'
-    boundary = 'left right'
-  []
-  [diri_p]
-    type = FVFunctionDirichletBC
-    variable = pressure
-    function = 'exact_p'
-    boundary = 'left right'
+    boundary = 'left'
   []
 []
 
