@@ -172,11 +172,8 @@ INSFVRhieChowInterpolator::interpolateB(
   if (!fi.neighborPtr())
     return b_elem;
 
-  const auto elem_volume = _assembly.elementVolume(&fi.elem());
-  const auto neighbor_volume = _assembly.elementVolume(fi.neighborPtr());
-
   const auto & b_neighbor = b_container[fi.neighbor().id()];
-  const auto elem_weighting_factor = elem_volume / (elem_volume + neighbor_volume);
+  const auto elem_weighting_factor = fi.gC();
   const auto neighbor_weighting_factor = 1 - elem_weighting_factor;
 
   return elem_weighting_factor * b_elem + neighbor_weighting_factor * b_neighbor;
