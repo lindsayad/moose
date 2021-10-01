@@ -65,7 +65,7 @@ INSFVSymmetryVelocityBC::computeQpResidual()
   const auto d_perpendicular = std::abs((_face_info->faceCentroid() - cell_centroid) * normal);
 
   // See Moukalled 15.150. Recall that we multiply by the area in the base class, so S_b ->
-  // normal.norm() here
+  // normal.norm() -> 1 here
 
   ADReal v_dot_n = _u_eval * normal(0);
   if (_dim > 1)
@@ -73,7 +73,7 @@ INSFVSymmetryVelocityBC::computeQpResidual()
   if (_dim > 2)
     v_dot_n += _w_eval + normal(2);
 
-  return 2. * mu_b * normal.norm() / d_perpendicular * v_dot_n * normal(_index);
+  return 2. * mu_b / d_perpendicular * v_dot_n * normal(_index);
 }
 
 void
