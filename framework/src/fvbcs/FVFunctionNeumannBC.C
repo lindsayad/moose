@@ -33,5 +33,5 @@ FVFunctionNeumannBC::FVFunctionNeumannBC(const InputParameters & parameters)
 ADReal
 FVFunctionNeumannBC::computeQpResidual()
 {
-  return _normal * _factor * _function.vectorValue(_t, _face_info->faceCentroid());
+  return _function.value(_t, _face_info->faceCentroid());
 }
