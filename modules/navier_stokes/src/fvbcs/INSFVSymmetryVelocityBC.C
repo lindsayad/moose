@@ -18,14 +18,9 @@ INSFVSymmetryVelocityBC::validParams()
   params += INSFVMomentumResidualObject::validParams();
   params.addClassDescription(
       "Implements a free slip boundary condition using a penalty formulation.");
-  params.addRequiredCoupledVar("u", "The velocity in the x direction.");
-  params.addCoupledVar("v", 0, "The velocity in the y direction.");
-  params.addCoupledVar("w", 0, "The velocity in the z direction.");
-  MooseEnum momentum_component("x=0 y=1 z=2");
-  params.addRequiredParam<MooseEnum>(
-      "momentum_component",
-      momentum_component,
-      "The component of the momentum equation that this BC applies to.");
+  params.addRequiredParam<MooseFunctorName>("u", "The velocity in the x direction.");
+  params.addParam<MooseFunctorName>("v", 0, "The velocity in the y direction.");
+  params.addParam<MooseFunctorName>("w", 0, "The velocity in the z direction.");
   params.addRequiredParam<MaterialPropertyName>("mu", "The viscosity");
   return params;
 }
@@ -33,13 +28,9 @@ INSFVSymmetryVelocityBC::validParams()
 INSFVSymmetryVelocityBC::INSFVSymmetryVelocityBC(const InputParameters & params)
   : INSFVSymmetryBC(params),
     INSFVMomentumResidualObject(*this),
-    _u_elem(adCoupledValue("u")),
-    _v_elem(adCoupledValue("v")),
-    _w_elem(adCoupledValue("w")),
-    _u_neighbor(adCoupledNeighborValue("u")),
-    _v_neighbor(adCoupledNeighborValue("v")),
-    _w_neighbor(adCoupledNeighborValue("w")),
-    _comp(getParam<MooseEnum>("momentum_component")),
+    _u_functor(getFunctor<ADReal>("u")),
+    _v_functor(getFunctor<ADReal>("v")),
+    _w_functor(getFunctor<ADReal>("w")),
     _mu(getFunctor<ADReal>("mu")),
     _dim(_subproblem.mesh().dimension())
 {
@@ -54,11 +45,12 @@ ADReal
 INSFVSymmetryVelocityBC::computeQpResidual()
 {
   const bool use_elem = _face_info->faceType(_var.name()) == FaceInfo::VarFaceNeighbors::ELEM;
+  const auto normal = use_elem ? _face_info->normal() : Point(-_face_info->normal());
   const Point & cell_centroid =
       use_elem ? _face_info->elemCentroid() : _face_info->neighborCentroid();
-  const auto & u_C = use_elem ? _u_elem : _u_neighbor;
-  const auto & v_C = use_elem ? _v_elem : _v_neighbor;
-  const auto & w_C = use_elem ? _w_elem : _w_neighbor;
+  _u_eval = use_elem ? _u_functor(&_face_info->elem()) : _u_functor(_face_info->neighborPtr());
+  _v_eval = use_elem ? _v_functor(&_face_info->elem()) : _v_functor(_face_info->neighborPtr());
+  _w_eval = use_elem ? _w_functor(&_face_info->elem()) : _w_functor(_face_info->neighborPtr());
 
   // Evaluate viscosity on the face
   const auto mu_b = use_elem ? _mu(std::make_tuple(_face_info,
@@ -70,43 +62,42 @@ INSFVSymmetryVelocityBC::computeQpResidual()
                                                    true,
                                                    _face_info->neighborPtr()->subdomain_id()));
 
-  const auto d_perpendicular = std::abs((_face_info->faceCentroid() - cell_centroid) * _normal);
+  const auto d_perpendicular = std::abs((_face_info->faceCentroid() - cell_centroid) * normal);
 
   // See Moukalled 15.150. Recall that we multiply by the area in the base class, so S_b ->
-  // _normal.norm() here
+  // normal.norm() here
 
-  ADReal v_dot_n = u_C[_qp] * _normal(0);
+  ADReal v_dot_n = _u_eval * normal(0);
   if (_dim > 1)
-    v_dot_n += v_C[_qp] * _normal(1);
+    v_dot_n += _v_eval * normal(1);
   if (_dim > 2)
-    v_dot_n += w_C[_qp] + _normal(2);
+    v_dot_n += _w_eval + normal(2);
 
-  return 2. * mu_b * _normal.norm() / d_perpendicular * v_dot_n * _normal(_comp);
+  return 2. * mu_b * normal.norm() / d_perpendicular * v_dot_n * normal(_index);
 }
 
 void
-INSFVSymmetryVelocityBC::gatherRCData(const FaceInfo & /*fi*/)
+INSFVSymmetryVelocityBC::gatherRCData(const FaceInfo & fi)
 {
-  // const Elem & elem = fi.elem();
-  // const Elem * const neighbor = fi.neighborPtr();
-  // const Point & normal = fi.normal();
-  // Real coord;
-  // coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
-  // const auto surface_vector = normal * fi.faceArea() * coord;
+  _face_info = &fi;
+  const auto residual = fi.faceArea() * fi.faceCoord() * computeQpResidual();
+  const auto & var = [this]() {
+    switch (_index)
+    {
+      case 0:
+        return _u_eval;
+      case 1:
+        return _v_eval;
+      case 2:
+        return _w_eval;
+      default:
+        mooseError("Unrecognized index value");
+    }
+  }();
 
-  // auto ft = fi.faceType(_var.name());
-  // const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
-  // const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
-  // const Point & boundary_elem_centroid =
-  //     var_on_elem_side ? fi.elemCentroid() : fi.neighborCentroid();
+  auto * const boundary_elem = (fi.faceType(_var.name()) == FaceInfo::VarFaceNeighbors::ELEM)
+                                   ? &fi.elem()
+                                   : fi.neighborPtr();
 
-  // mooseAssert(boundary_elem, "the boundary elem should be non-null");
-  // const auto face_mu = _mu(std::make_tuple(
-  //     &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
-
-  // // Moukalled eqns. 15.154 - 15.156
-  // const ADReal coeff = 2. * face_mu * surface_vector.norm() /
-  //                      std::abs((fi.faceCentroid() - boundary_elem_centroid) * normal) *
-  //                      normal(_index) * normal(_index);
-  // _rc_uo.addToA(boundary_elem, _index, coeff);
+  _rc_uo.addToA(boundary_elem, _index, residual / var);
 }
