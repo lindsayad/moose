@@ -34,6 +34,7 @@ velocity='velocity'
     type = INSFVRhieChowInterpolator
     u = u
     v = v
+    standard_body_forces = true
   []
 []
 
