@@ -1,7 +1,5 @@
 mu=1
 rho=1
-advected_interp_method='average'
-velocity_interp_method='rc'
 
 [Mesh]
   [gen]
@@ -20,6 +18,8 @@ velocity_interp_method='rc'
 [GlobalParams]
   rhie_chow_user_object = 'rc'
   two_term_boundary_expansion = true
+  advected_interp_method = 'average'
+  velocity_interp_method = 'rc'
 []
 
 [UserObjects]
@@ -48,8 +48,6 @@ velocity_interp_method='rc'
   [mass]
     type = INSFVMassAdvection
     variable = pressure
-    advected_interp_method = ${advected_interp_method}
-    velocity_interp_method = ${velocity_interp_method}
     vel = 'velocity'
     pressure = pressure
     u = u
@@ -71,8 +69,6 @@ velocity_interp_method='rc'
     variable = u
     advected_quantity = 'rhou'
     vel = 'velocity'
-    advected_interp_method = ${advected_interp_method}
-    velocity_interp_method = ${velocity_interp_method}
     pressure = pressure
     u = u
     rho = ${rho}

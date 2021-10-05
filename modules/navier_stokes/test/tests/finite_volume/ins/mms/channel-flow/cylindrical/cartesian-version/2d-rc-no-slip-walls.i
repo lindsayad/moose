@@ -132,99 +132,18 @@ rho=1
   # Walls
   #
 
-  # This corresponds exactly to a diffusive flux for the velocity component that
-  # is perpendicular to the boundary
-  [symmetry_u]
-    type = INSFVSymmetryVelocityBC
-    boundary = 'left'
+  # Dirichlet conditions for velocity
+  [u_walls]
+    type = INSFVNoSlipWallBC
     variable = u
-    u = u
-    v = v
-    momentum_component = 'x'
-    mu = ${mu}
+    boundary = 'left right'
+    function = 'exact_u'
   []
-  # And since we are doing MMS we need to toss in the advective flux at the left
-  # boundary
-  [u_advective_left]
-    type = INSFVMomentumFunctionFluxBC
-    variable = u
-    boundary = 'left'
-    function = 'advective_flux_u_left'
-    momentum_component = 'x'
-  []
-
-  # This should correspond to a zero flux for the velocity component that
-  # is parallel to the boundary
-  [symmetry_v]
-    type = INSFVSymmetryVelocityBC
-    boundary = 'left'
+  [v_walls]
+    type = INSFVNoSlipWallBC
     variable = v
-    u = u
-    v = v
-    momentum_component = 'y'
-    mu = ${mu}
-  []
-  # But since we are doing MMS we need to toss in both the advective and
-  # diffusive fluxes at the "symmetry" boundary
-  [v_advective_left]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'left'
-    function = 'advective_flux_v_left'
-    momentum_component = 'x'
-  []
-  [v_diffusive_left]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'left'
-    function = 'diffusive_flux_v_left'
-    momentum_component = 'x'
-  []
-
-  # Free slip flux bc right which is 0 flux so we add MMS bcs for both advective
-  # and diffusive flux contributions
-  [u_free_slip]
-    type = INSFVNaturalFreeSlipBC
-    variable = u
-    boundary = 'right'
-    momentum_component = 'x'
-  []
-  [u_advective_right]
-    type = INSFVMomentumFunctionFluxBC
-    variable = u
-    boundary = 'right'
-    function = 'advective_flux_u_right'
-    momentum_component = 'x'
-  []
-  [u_diffusive_right]
-    type = INSFVMomentumFunctionFluxBC
-    variable = u
-    boundary = 'right'
-    function = 'diffusive_flux_u_right'
-    momentum_component = 'x'
-  []
-
-  # Free slip flux bc right which is 0 flux so we add MMS bcs for both advective
-  # and diffusive flux contributions
-  [v_free_slip]
-    type = INSFVNaturalFreeSlipBC
-    variable = v
-    boundary = 'right'
-    momentum_component = 'y'
-  []
-  [v_advective_right]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'right'
-    function = 'advective_flux_v_right'
-    momentum_component = 'y'
-  []
-  [v_diffusive_right]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'right'
-    function = 'diffusive_flux_v_right'
-    momentum_component = 'y'
+    boundary = 'left right'
+    function = 'exact_v'
   []
 
   # Prescribe fluxes. In our idealized case we would be applying natural
@@ -242,16 +161,6 @@ rho=1
     variable = pressure
     boundary = 'right'
     function = 'flux_p_right'
-  []
-
-  # A symmetry bc means we know that the perpendicular velocity is zero,
-  # e.g. we know a Dirichlet condition for it, so we correspondingly apply an
-  # MMS dirichlet BC here
-  [diri_u]
-    type = FVFunctionDirichletBC
-    variable = u
-    function = 'exact_u'
-    boundary = 'left'
   []
 
   #
