@@ -119,6 +119,11 @@ protected:
    */
   std::pair<SubdomainID, SubdomainID> faceArgSubdomains(const FaceInfo * face_info = nullptr) const;
 
+  const bool _force_boundary_execution;
+
+  std::unordered_set<BoundaryID> _boundaries_to_force;
+  std::unordered_set<BoundaryID> _boundaries_to_not_force;
+
 private:
   /// Computes the Jacobian contribution for every coupled variable.
   ///
@@ -129,9 +134,4 @@ private:
   /// @param residual The already computed residual (probably done with \p computeQpResidual) that
   /// also holds derivative information for filling in the Jacobians.
   void computeJacobian(Moose::DGJacobianType type, const ADReal & residual);
-
-  const bool _force_boundary_execution;
-
-  std::unordered_set<BoundaryID> _boundaries_to_force;
-  std::unordered_set<BoundaryID> _boundaries_to_not_force;
 };
