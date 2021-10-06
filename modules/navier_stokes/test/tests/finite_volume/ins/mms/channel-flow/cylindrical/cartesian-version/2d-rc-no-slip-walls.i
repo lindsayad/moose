@@ -141,121 +141,121 @@ rho=1.1
   # Walls
   #
 
-  [top_u_diffusive_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = u
-    boundary = 'top'
-    function = 'diffusive_flux_u_top'
-    momentum_component = 'x'
-  []
-  [bottom_u_diffusive_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = u
-    boundary = 'bottom'
-    function = 'diffusive_flux_u_bottom'
-    momentum_component = 'x'
-  []
-  [left_u_diffusive_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = u
-    boundary = 'left'
-    function = 'diffusive_flux_u_left'
-    momentum_component = 'x'
-  []
-  [right_u_diffusive_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = u
-    boundary = 'right'
-    function = 'diffusive_flux_u_right'
-    momentum_component = 'x'
-  []
+  # [top_u_diffusive_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = u
+  #   boundary = 'top'
+  #   function = 'diffusive_flux_u_top'
+  #   momentum_component = 'x'
+  # []
+  # [bottom_u_diffusive_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = u
+  #   boundary = 'bottom'
+  #   function = 'diffusive_flux_u_bottom'
+  #   momentum_component = 'x'
+  # []
+  # [left_u_diffusive_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = u
+  #   boundary = 'left'
+  #   function = 'diffusive_flux_u_left'
+  #   momentum_component = 'x'
+  # []
+  # [right_u_diffusive_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = u
+  #   boundary = 'right'
+  #   function = 'diffusive_flux_u_right'
+  #   momentum_component = 'x'
+  # []
 
-  [top_v_diffusive_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'top'
-    function = 'diffusive_flux_v_top'
-    momentum_component = 'y'
-  []
-  [bottom_v_diffusive_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'bottom'
-    function = 'diffusive_flux_v_bottom'
-    momentum_component = 'y'
-  []
-  [left_v_diffusive_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'left'
-    function = 'diffusive_flux_v_left'
-    momentum_component = 'y'
-  []
-  [right_v_diffusive_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'right'
-    function = 'diffusive_flux_v_right'
-    momentum_component = 'y'
-  []
+  # [top_v_diffusive_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = v
+  #   boundary = 'top'
+  #   function = 'diffusive_flux_v_top'
+  #   momentum_component = 'y'
+  # []
+  # [bottom_v_diffusive_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = v
+  #   boundary = 'bottom'
+  #   function = 'diffusive_flux_v_bottom'
+  #   momentum_component = 'y'
+  # []
+  # [left_v_diffusive_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = v
+  #   boundary = 'left'
+  #   function = 'diffusive_flux_v_left'
+  #   momentum_component = 'y'
+  # []
+  # [right_v_diffusive_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = v
+  #   boundary = 'right'
+  #   function = 'diffusive_flux_v_right'
+  #   momentum_component = 'y'
+  # []
 
-  [top_u_advective_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = u
-    boundary = 'top'
-    function = 'advective_flux_u_top'
-    momentum_component = 'x'
-  []
-  [bottom_u_advective_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = u
-    boundary = 'bottom'
-    function = 'advective_flux_u_bottom'
-    momentum_component = 'x'
-  []
-  [left_u_advective_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = u
-    boundary = 'left'
-    function = 'advective_flux_u_left'
-    momentum_component = 'x'
-  []
-  [right_u_advective_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = u
-    boundary = 'right'
-    function = 'advective_flux_u_right'
-    momentum_component = 'x'
-  []
+  # [top_u_advective_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = u
+  #   boundary = 'top'
+  #   function = 'advective_flux_u_top'
+  #   momentum_component = 'x'
+  # []
+  # [bottom_u_advective_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = u
+  #   boundary = 'bottom'
+  #   function = 'advective_flux_u_bottom'
+  #   momentum_component = 'x'
+  # []
+  # [left_u_advective_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = u
+  #   boundary = 'left'
+  #   function = 'advective_flux_u_left'
+  #   momentum_component = 'x'
+  # []
+  # [right_u_advective_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = u
+  #   boundary = 'right'
+  #   function = 'advective_flux_u_right'
+  #   momentum_component = 'x'
+  # []
 
-  [top_v_advective_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'top'
-    function = 'advective_flux_v_top'
-    momentum_component = 'y'
-  []
-  [bottom_v_advective_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'bottom'
-    function = 'advective_flux_v_bottom'
-    momentum_component = 'y'
-  []
-  [left_v_advective_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'left'
-    function = 'advective_flux_v_left'
-    momentum_component = 'y'
-  []
-  [right_v_advective_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'right'
-    function = 'advective_flux_v_right'
-    momentum_component = 'y'
-  []
+  # [top_v_advective_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = v
+  #   boundary = 'top'
+  #   function = 'advective_flux_v_top'
+  #   momentum_component = 'y'
+  # []
+  # [bottom_v_advective_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = v
+  #   boundary = 'bottom'
+  #   function = 'advective_flux_v_bottom'
+  #   momentum_component = 'y'
+  # []
+  # [left_v_advective_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = v
+  #   boundary = 'left'
+  #   function = 'advective_flux_v_left'
+  #   momentum_component = 'y'
+  # []
+  # [right_v_advective_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = v
+  #   boundary = 'right'
+  #   function = 'advective_flux_v_right'
+  #   momentum_component = 'y'
+  # []
 
   [top_pressure_flux]
     type = FVFunctionNeumannBC
