@@ -282,25 +282,26 @@ rho=1.1
     function = 'flux_p_right'
   []
 
-# # Dirichlet conditions for velocity
-  # [u_walls]
-  #   type = INSFVNoSlipWallBC
-  #   variable = u
-  #   boundary = 'left right top bottom'
-  #   function = 'exact_u'
-  # []
-  # [v_walls]
-  #   type = INSFVNoSlipWallBC
-  #   variable = v
-  #   boundary = 'left right top bottom'
-  #   function = 'exact_v'
-  # []
+# Dirichlet conditions for velocity
+  [u_walls]
+    type = INSFVNoSlipWallBC
+    variable = u
+    boundary = 'bottom left right top'
+    function = 'exact_u'
+  []
+  [v_walls]
+    type = INSFVNoSlipWallBC
+    variable = v
+    boundary = 'bottom left right top'
+    function = 'exact_v'
+  []
 
+  # # If this is uncommented it causes the pressure to no longer have optimal convergence
   # [p]
   #   type = FVFunctionDirichletBC
   #   variable = pressure
   #   function = 'exact_p'
-  #   boundary = 'left right top bottom'
+  #   boundary = 'top'
   # []
 
 
