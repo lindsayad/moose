@@ -82,6 +82,9 @@ protected:
   /// face including elem+neighbor cell centroids, cell volumes, face area, etc.
   const FaceInfo * _face_info = nullptr;
 
+  /// The face type
+  FaceInfo::VarFaceNeighbors _face_type;
+
   /**
    * Return whether the supplied face is on a boundary of this object's execution
    */
