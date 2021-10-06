@@ -1,5 +1,5 @@
-mu=1
-rho=1
+mu=1.1
+rho=1.1
 
 [Mesh]
   [gen]
