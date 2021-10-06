@@ -462,4 +462,10 @@ rho=1.1
     outputs = 'console csv'
     execute_on = 'timestep_end'
   [../]
+  [p_avg]
+    type = ElementAverageValue
+    variable = pressure
+    outputs = 'console csv'
+    execute_on = 'timestep_end'
+  []
 []
