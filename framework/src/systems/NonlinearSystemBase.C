@@ -735,24 +735,6 @@ NonlinearSystemBase::computeResidualTags(const std::set<TagID> & tags)
   try
   {
     zeroTaggedVectors(tags);
-
-    // Residual contributions from UOs - for now this is used for ray tracing
-    // and ray kernels that contribute to the residual (think line sources)
-    std::vector<UserObject *> uos;
-    _fe_problem.theWarehouse()
-        .query()
-        .condition<AttribSystem>("UserObject")
-        .condition<AttribExecOns>(EXEC_PRE_KERNELS)
-        .queryInto(uos);
-    for (auto & uo : uos)
-      uo->residualSetup();
-    for (auto & uo : uos)
-    {
-      uo->initialize();
-      uo->execute();
-      uo->finalize();
-    }
-
     computeResidualInternal(tags);
     closeTaggedVectors(tags);
 
@@ -1464,6 +1446,23 @@ NonlinearSystemBase::computeResidualInternal(const std::set<TagID> & tags)
   TIME_SECTION("computeResidualInternal", 3);
 
   residualSetup();
+
+  // Residual contributions from UOs - for now this is used for ray tracing
+  // and ray kernels that contribute to the residual (think line sources)
+  std::vector<UserObject *> uos;
+  _fe_problem.theWarehouse()
+      .query()
+      .condition<AttribSystem>("UserObject")
+      .condition<AttribExecOns>(EXEC_PRE_KERNELS)
+      .queryInto(uos);
+  for (auto & uo : uos)
+    uo->residualSetup();
+  for (auto & uo : uos)
+  {
+    uo->initialize();
+    uo->execute();
+    uo->finalize();
+  }
 
   // reinit scalar variables
   for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
@@ -2423,6 +2422,23 @@ NonlinearSystemBase::computeJacobianInternal(const std::set<TagID> & tags)
 
   jacobianSetup();
 
+  // Jacobian contributions from UOs - for now this is used for ray tracing
+  // and ray kernels that contribute to the Jacobian (think line sources)
+  std::vector<UserObject *> uos;
+  _fe_problem.theWarehouse()
+      .query()
+      .condition<AttribSystem>("UserObject")
+      .condition<AttribExecOns>(EXEC_PRE_KERNELS)
+      .queryInto(uos);
+  for (auto & uo : uos)
+    uo->jacobianSetup();
+  for (auto & uo : uos)
+  {
+    uo->initialize();
+    uo->execute();
+    uo->finalize();
+  }
+
   // reinit scalar variables
   for (unsigned int tid = 0; tid < libMesh::n_threads(); tid++)
     _fe_problem.reinitScalars(tid);
@@ -2734,23 +2750,6 @@ NonlinearSystemBase::computeJacobianTags(const std::set<TagID> & tags)
 
   try
   {
-    // Jacobian contributions from UOs - for now this is used for ray tracing
-    // and ray kernels that contribute to the Jacobian (think line sources)
-    std::vector<UserObject *> uos;
-    _fe_problem.theWarehouse()
-        .query()
-        .condition<AttribSystem>("UserObject")
-        .condition<AttribExecOns>(EXEC_PRE_KERNELS)
-        .queryInto(uos);
-    for (auto & uo : uos)
-      uo->jacobianSetup();
-    for (auto & uo : uos)
-    {
-      uo->initialize();
-      uo->execute();
-      uo->finalize();
-    }
-
     computeJacobianInternal(tags);
   }
   catch (MooseException & e)
