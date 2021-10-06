@@ -37,11 +37,11 @@ rho=1.1
 [Variables]
   [u]
     type = INSFVVelocityVariable
-    initial_condition = 1e-15
+    # initial_condition = 1e-15
   []
   [v]
     type = INSFVVelocityVariable
-    initial_condition = 1e-15
+    # initial_condition = 1e-15
   []
   [pressure]
     type = INSFVPressureVariable
@@ -49,6 +49,24 @@ rho=1.1
   [lambda]
     family = SCALAR
     order = FIRST
+  []
+[]
+
+[ICs]
+  [u]
+    type = FunctionIC
+    function = 'exact_u'
+    variable = u
+  []
+  [v]
+    type = FunctionIC
+    function = 'exact_v'
+    variable = v
+  []
+  [pressure]
+    type = FunctionIC
+    function = 'exact_p'
+    variable = pressure
   []
 []
 
@@ -61,7 +79,7 @@ rho=1.1
     u = u
     v = v
     rho = ${rho}
-    boundaries_to_force = 'top'
+    # boundaries_to_force = 'top'
   []
   [mass_forcing]
     type = FVBodyForce
@@ -84,7 +102,7 @@ rho=1.1
     v = v
     rho = ${rho}
     momentum_component = 'x'
-    boundaries_to_force = 'top'
+    # boundaries_to_force = 'top'
   []
   [u_viscosity]
     type = INSFVMomentumDiffusion
@@ -115,7 +133,7 @@ rho=1.1
     v = v
     rho = ${rho}
     momentum_component = 'y'
-    boundaries_to_force = 'top'
+    # boundaries_to_force = 'top'
   []
   [v_viscosity]
     type = INSFVMomentumDiffusion
@@ -138,10 +156,6 @@ rho=1.1
 []
 
 [FVBCs]
-  #
-  # Walls
-  #
-
   [top_u_diffusive_flux]
     type = INSFVMomentumFunctionFluxBC
     variable = u
@@ -149,28 +163,6 @@ rho=1.1
     function = 'diffusive_flux_u_top'
     momentum_component = 'x'
   []
-  # [bottom_u_diffusive_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = u
-  #   boundary = 'bottom'
-  #   function = 'diffusive_flux_u_bottom'
-  #   momentum_component = 'x'
-  # []
-  # [left_u_diffusive_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = u
-  #   boundary = 'left'
-  #   function = 'diffusive_flux_u_left'
-  #   momentum_component = 'x'
-  # []
-  # [right_u_diffusive_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = u
-  #   boundary = 'right'
-  #   function = 'diffusive_flux_u_right'
-  #   momentum_component = 'x'
-  # []
-
   [top_v_diffusive_flux]
     type = INSFVMomentumFunctionFluxBC
     variable = v
@@ -178,98 +170,6 @@ rho=1.1
     function = 'diffusive_flux_v_top'
     momentum_component = 'y'
   []
-  # [bottom_v_diffusive_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = v
-  #   boundary = 'bottom'
-  #   function = 'diffusive_flux_v_bottom'
-  #   momentum_component = 'y'
-  # []
-  # [left_v_diffusive_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = v
-  #   boundary = 'left'
-  #   function = 'diffusive_flux_v_left'
-  #   momentum_component = 'y'
-  # []
-  # [right_v_diffusive_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = v
-  #   boundary = 'right'
-  #   function = 'diffusive_flux_v_right'
-  #   momentum_component = 'y'
-  # []
-
-  # [top_u_advective_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = u
-  #   boundary = 'top'
-  #   function = 'advective_flux_u_top'
-  #   momentum_component = 'x'
-  # []
-  # [bottom_u_advective_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = u
-  #   boundary = 'bottom'
-  #   function = 'advective_flux_u_bottom'
-  #   momentum_component = 'x'
-  # []
-  # [left_u_advective_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = u
-  #   boundary = 'left'
-  #   function = 'advective_flux_u_left'
-  #   momentum_component = 'x'
-  # []
-  # [right_u_advective_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = u
-  #   boundary = 'right'
-  #   function = 'advective_flux_u_right'
-  #   momentum_component = 'x'
-  # []
-
-  # [top_v_advective_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = v
-  #   boundary = 'top'
-  #   function = 'advective_flux_v_top'
-  #   momentum_component = 'y'
-  # []
-  # [bottom_v_advective_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = v
-  #   boundary = 'bottom'
-  #   function = 'advective_flux_v_bottom'
-  #   momentum_component = 'y'
-  # []
-  # [left_v_advective_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = v
-  #   boundary = 'left'
-  #   function = 'advective_flux_v_left'
-  #   momentum_component = 'y'
-  # []
-  # [right_v_advective_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = v
-  #   boundary = 'right'
-  #   function = 'advective_flux_v_right'
-  #   momentum_component = 'y'
-  # []
-
-  # [top_pressure_flux]
-  #   type = FVFunctionNeumannBC
-  #   variable = pressure
-  #   boundary = 'top'
-  #   function = 'flux_p_top'
-  # []
-  # [bottom_pressure_flux]
-  #   type = FVFunctionNeumannBC
-  #   variable = pressure
-  #   boundary = 'bottom'
-  #   function = 'flux_p_bottom'
-  # []
   [left_pressure_flux]
     type = FVFunctionNeumannBC
     variable = pressure
@@ -282,7 +182,6 @@ rho=1.1
     boundary = 'right'
     function = 'flux_p_right'
   []
-
 # Dirichlet conditions for velocity
   [u_walls]
     type = INSFVNoSlipWallBC
@@ -296,38 +195,48 @@ rho=1.1
     boundary = 'left right'
     function = 'exact_v'
   []
-
-  # # If this is uncommented it causes the pressure to no longer have optimal convergence
+  [p]
+    type = FVFunctionNeumannBC
+    variable = pressure
+    boundary = 'top'
+    function = 'flux_p_top'
+  []
   # [p]
-  #   type = FVFunctionDirichletBC
+  #   type = INSFVOutletPressureBC
   #   variable = pressure
   #   function = 'exact_p'
   #   boundary = 'top'
   # []
-
-
-
-  # # Prescribe fluxes. In our idealized case we would be applying natural
-  # # boundary conditions (which are really just 0 flux bcs) to the mass equation
-  # # on both left and right so that means we add MMS flux BCs for the mass
-  # # advective flux
-  # [pressure_left]
-  #   type = FVFunctionNeumannBC
+  # [p]
+  #   type = INSFVMassAdvectionOutflowBC
   #   variable = pressure
-  #   boundary = 'left'
-  #   function = 'flux_p_left'
+  #   boundary = 'top'
+  #   rho = ${rho}
+  #   u = u
+  #   v = v
   # []
-  # [pressure_right]
-  #   type = FVFunctionNeumannBC
-  #   variable = pressure
-  #   boundary = 'right'
-  #   function = 'flux_p_right'
-  # []
-
-  # #
-  # # Flow boundaries
-  # #
-
+  [u_advection_top]
+    type = INSFVMomentumAdvectionOutflowBC
+    variable = u
+    boundary = 'top'
+    u = u
+    v = v
+    rho = ${rho}
+    momentum_component = 'x'
+    advected_quantity = 'rhou'
+    vel = 'velocity'
+  []
+  [v_advection_top]
+    type = INSFVMomentumAdvectionOutflowBC
+    variable = v
+    boundary = 'top'
+    u = u
+    v = v
+    rho = ${rho}
+    momentum_component = 'y'
+    advected_quantity = 'rhov'
+    vel = 'velocity'
+  []
   # # These are dirichlet boundary conditions in the background that trigger
   # # execution of the kernels on the boundary
   [inlet_u]
@@ -342,37 +251,6 @@ rho=1.1
     function = 'exact_v'
     boundary = 'bottom'
   []
-  # # The above conditions should also implicitly trigger the mass advection
-  # # kernel on the boundary
-
-  # # As a dirichlet boundary condition this will trigger execution of the mass
-  # # advection kernel
-  # [outlet_p]
-  #   type = INSFVOutletPressureBC
-  #   variable = pressure
-  #   boundary = 'top'
-  #   function = 'exact_p'
-  # []
-  # # The above BC would also implicitly trigger the advection kernel, but not the
-  # # diffusion kernel, to execute. Given that we will add a flux bc for the
-  # # diffusive component. And *that* would normally cause the advection kernel to
-  # # no longer execute because we skip kernel execution any time there is a flux
-  # # bc applied, so we make sure to force boundary execution of the momentum
-  # # advective kernels above in order to mimic production run behavior
-  # [outlet_u_diffusive_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = u
-  #   boundary = 'top'
-  #   function = 'diffusive_flux_u_top'
-  #   momentum_component = 'x'
-  # []
-  # [outlet_v_diffusive_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = v
-  #   boundary = 'top'
-  #   function = 'diffusive_flux_v_top'
-  #   momentum_component = 'y'
-  # []
 []
 
 [Materials]
@@ -392,7 +270,7 @@ rho=1.1
 []
 [forcing_u]
   type = ParsedFunction
-  value = '2.65*mu*sin(1.1*x)*cos(1.2*y) - 1.2*rho*sin(1.1*x)*sin(1.2*y)*sin(1.4*y)*cos(1.3*x) + 2.2*rho*sin(1.1*x)*cos(1.1*x)*cos(1.2*y)^2 + 1.4*rho*sin(1.1*x)*cos(1.3*x)*cos(1.2*y)*cos(1.4*y) + 1.5*cos(1.5*x)*cos(1.6*y)'
+  value = '2.65*mu*sin(1.1*x)*cos(1.2*y) - 1.2*rho*sin(1.1*x)*sin(1.2*y)*cos(1.3*x)*cos(1.4*y) - 1.4*rho*sin(1.1*x)*sin(1.4*y)*cos(1.3*x)*cos(1.2*y) + 2.2*rho*sin(1.1*x)*cos(1.1*x)*cos(1.2*y)^2 + 1.5*cos(1.5*x)*cos(1.6*y)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
@@ -410,13 +288,13 @@ rho=1.1
 []
 [advective_flux_u_top]
   type = ParsedFunction
-  value = 'rho*sin(1.1*x)*sin(1.4*y)*cos(1.3*x)*cos(1.2*y)'
+  value = 'rho*sin(1.1*x)*cos(1.3*x)*cos(1.2*y)*cos(1.4*y)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [advective_flux_u_bottom]
   type = ParsedFunction
-  value = '-rho*sin(1.1*x)*sin(1.4*y)*cos(1.3*x)*cos(1.2*y)'
+  value = '-rho*sin(1.1*x)*cos(1.3*x)*cos(1.2*y)*cos(1.4*y)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
@@ -446,59 +324,59 @@ rho=1.1
 []
 [exact_v]
   type = ParsedFunction
-  value = 'sin(1.4*y)*cos(1.3*x)'
+  value = 'cos(1.3*x)*cos(1.4*y)'
 []
 [forcing_v]
   type = ParsedFunction
-  value = '3.65*mu*sin(1.4*y)*cos(1.3*x) - 1.3*rho*sin(1.1*x)*sin(1.3*x)*sin(1.4*y)*cos(1.2*y) + 1.1*rho*sin(1.4*y)*cos(1.1*x)*cos(1.3*x)*cos(1.2*y) + 2.8*rho*sin(1.4*y)*cos(1.3*x)^2*cos(1.4*y) - 1.6*sin(1.5*x)*sin(1.6*y)'
+  value = '3.65*mu*cos(1.3*x)*cos(1.4*y) - 1.3*rho*sin(1.1*x)*sin(1.3*x)*cos(1.2*y)*cos(1.4*y) - 2.8*rho*sin(1.4*y)*cos(1.3*x)^2*cos(1.4*y) + 1.1*rho*cos(1.1*x)*cos(1.3*x)*cos(1.2*y)*cos(1.4*y) - 1.6*sin(1.5*x)*sin(1.6*y)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [advective_flux_v_left]
   type = ParsedFunction
-  value = '-rho*sin(1.1*x)*sin(1.4*y)*cos(1.3*x)*cos(1.2*y)'
+  value = '-rho*sin(1.1*x)*cos(1.3*x)*cos(1.2*y)*cos(1.4*y)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [advective_flux_v_right]
   type = ParsedFunction
-  value = 'rho*sin(1.1*x)*sin(1.4*y)*cos(1.3*x)*cos(1.2*y)'
+  value = 'rho*sin(1.1*x)*cos(1.3*x)*cos(1.2*y)*cos(1.4*y)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [advective_flux_v_top]
   type = ParsedFunction
-  value = 'rho*sin(1.4*y)^2*cos(1.3*x)^2'
+  value = 'rho*cos(1.3*x)^2*cos(1.4*y)^2'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [advective_flux_v_bottom]
   type = ParsedFunction
-  value = '-rho*sin(1.4*y)^2*cos(1.3*x)^2'
+  value = '-rho*cos(1.3*x)^2*cos(1.4*y)^2'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [diffusive_flux_v_left]
   type = ParsedFunction
-  value = '-1.3*mu*sin(1.3*x)*sin(1.4*y)'
+  value = '-1.3*mu*sin(1.3*x)*cos(1.4*y)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [diffusive_flux_v_right]
   type = ParsedFunction
-  value = '1.3*mu*sin(1.3*x)*sin(1.4*y)'
+  value = '1.3*mu*sin(1.3*x)*cos(1.4*y)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [diffusive_flux_v_top]
   type = ParsedFunction
-  value = '-1.4*mu*cos(1.3*x)*cos(1.4*y)'
+  value = '1.4*mu*sin(1.4*y)*cos(1.3*x)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [diffusive_flux_v_bottom]
   type = ParsedFunction
-  value = '1.4*mu*cos(1.3*x)*cos(1.4*y)'
+  value = '-1.4*mu*sin(1.4*y)*cos(1.3*x)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
@@ -508,7 +386,7 @@ rho=1.1
 []
 [forcing_p]
   type = ParsedFunction
-  value = '1.1*rho*cos(1.1*x)*cos(1.2*y) + 1.4*rho*cos(1.3*x)*cos(1.4*y)'
+  value = '-1.4*rho*sin(1.4*y)*cos(1.3*x) + 1.1*rho*cos(1.1*x)*cos(1.2*y)'
   vars = 'rho'
   vals = '${rho}'
 []
@@ -526,13 +404,13 @@ rho=1.1
 []
 [flux_p_top]
   type = ParsedFunction
-  value = 'rho*sin(1.4*y)*cos(1.3*x)'
+  value = 'rho*cos(1.3*x)*cos(1.4*y)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [flux_p_bottom]
   type = ParsedFunction
-  value = '-rho*sin(1.4*y)*cos(1.3*x)'
+  value = '-rho*cos(1.3*x)*cos(1.4*y)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
@@ -545,6 +423,7 @@ rho=1.1
   petsc_options_value = 'lu       NONZERO               superlu_dist'
   line_search = 'none'
   nl_rel_tol = 1e-12
+  nl_abs_tol = 1e-12
 []
 
 [Outputs]

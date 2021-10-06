@@ -71,6 +71,9 @@ protected:
    */
   std::pair<SubdomainID, SubdomainID> faceArgSubdomains() const;
 
+  /// The variable face type
+  FaceInfo::VarFaceNeighbors _face_type;
+
 private:
   /**
    * This creates a tuple of an element, \p FaceInfo, and subdomain ID. The element returned will
