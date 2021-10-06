@@ -46,6 +46,10 @@ rho=1
   [pressure]
     type = INSFVPressureVariable
   []
+  [lambda]
+    family = SCALAR
+    order = FIRST
+  []
 []
 
 [FVKernels]
@@ -63,6 +67,11 @@ rho=1
     variable = pressure
     function = forcing_p
   []
+  [mean_zero_pressure]
+    type = FVScalarLagrangeMultiplier
+    variable = pressure
+    lambda = lambda
+  []
 
   [u_advection]
     type = INSFVMomentumAdvection
@@ -74,7 +83,7 @@ rho=1
     v = v
     rho = ${rho}
     momentum_component = 'x'
-    boundaries_to_force = 'top'
+    # boundaries_to_force = 'top'
   []
   [u_viscosity]
     type = INSFVMomentumDiffusion
@@ -105,7 +114,7 @@ rho=1
     v = v
     rho = ${rho}
     momentum_component = 'y'
-    boundaries_to_force = 'top'
+    # boundaries_to_force = 'top'
   []
   [v_viscosity]
     type = INSFVMomentumDiffusion
@@ -132,86 +141,236 @@ rho=1
   # Walls
   #
 
-  # Dirichlet conditions for velocity
-  [u_walls]
-    type = INSFVNoSlipWallBC
-    variable = u
-    boundary = 'left right'
-    function = 'exact_u'
-  []
-  [v_walls]
-    type = INSFVNoSlipWallBC
-    variable = v
-    boundary = 'left right'
-    function = 'exact_v'
-  []
-
-  # Prescribe fluxes. In our idealized case we would be applying natural
-  # boundary conditions (which are really just 0 flux bcs) to the mass equation
-  # on both left and right so that means we add MMS flux BCs for the mass
-  # advective flux
-  [pressure_left]
-    type = FVFunctionNeumannBC
-    variable = pressure
-    boundary = 'left'
-    function = 'flux_p_left'
-  []
-  [pressure_right]
-    type = FVFunctionNeumannBC
-    variable = pressure
-    boundary = 'right'
-    function = 'flux_p_right'
-  []
-
-  #
-  # Flow boundaries
-  #
-
-  # These are dirichlet boundary conditions in the background that trigger
-  # execution of the kernels on the boundary
-  [inlet_u]
-    type = INSFVInletVelocityBC
-    variable = u
-    function = 'exact_u'
-    boundary = 'bottom'
-  []
-  [inlet_v]
-    type = INSFVInletVelocityBC
-    variable = v
-    function = 'exact_v'
-    boundary = 'bottom'
-  []
-  # The above conditions should also implicitly trigger the mass advection
-  # kernel on the boundary
-
-  # As a dirichlet boundary condition this will trigger execution of the mass
-  # advection kernel
-  [outlet_p]
-    type = INSFVOutletPressureBC
-    variable = pressure
-    boundary = 'top'
-    function = 'exact_p'
-  []
-  # The above BC would also implicitly trigger the advection kernel, but not the
-  # diffusion kernel, to execute. Given that we will add a flux bc for the
-  # diffusive component. And *that* would normally cause the advection kernel to
-  # no longer execute because we skip kernel execution any time there is a flux
-  # bc applied, so we make sure to force boundary execution of the momentum
-  # advective kernels above in order to mimic production run behavior
-  [outlet_u_diffusive_flux]
+  [top_u_diffusive_flux]
     type = INSFVMomentumFunctionFluxBC
     variable = u
     boundary = 'top'
     function = 'diffusive_flux_u_top'
     momentum_component = 'x'
   []
-  [outlet_v_diffusive_flux]
+  [bottom_u_diffusive_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = u
+    boundary = 'bottom'
+    function = 'diffusive_flux_u_bottom'
+    momentum_component = 'x'
+  []
+  [left_u_diffusive_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = u
+    boundary = 'left'
+    function = 'diffusive_flux_u_left'
+    momentum_component = 'x'
+  []
+  [right_u_diffusive_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = u
+    boundary = 'right'
+    function = 'diffusive_flux_u_right'
+    momentum_component = 'x'
+  []
+
+  [top_v_diffusive_flux]
     type = INSFVMomentumFunctionFluxBC
     variable = v
     boundary = 'top'
     function = 'diffusive_flux_v_top'
     momentum_component = 'y'
   []
+  [bottom_v_diffusive_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = v
+    boundary = 'bottom'
+    function = 'diffusive_flux_v_bottom'
+    momentum_component = 'y'
+  []
+  [left_v_diffusive_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = v
+    boundary = 'left'
+    function = 'diffusive_flux_v_left'
+    momentum_component = 'y'
+  []
+  [right_v_diffusive_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = v
+    boundary = 'right'
+    function = 'diffusive_flux_v_right'
+    momentum_component = 'y'
+  []
+
+  [top_u_advective_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = u
+    boundary = 'top'
+    function = 'advective_flux_u_top'
+    momentum_component = 'x'
+  []
+  [bottom_u_advective_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = u
+    boundary = 'bottom'
+    function = 'advective_flux_u_bottom'
+    momentum_component = 'x'
+  []
+  [left_u_advective_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = u
+    boundary = 'left'
+    function = 'advective_flux_u_left'
+    momentum_component = 'x'
+  []
+  [right_u_advective_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = u
+    boundary = 'right'
+    function = 'advective_flux_u_right'
+    momentum_component = 'x'
+  []
+
+  [top_v_advective_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = v
+    boundary = 'top'
+    function = 'advective_flux_v_top'
+    momentum_component = 'y'
+  []
+  [bottom_v_advective_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = v
+    boundary = 'bottom'
+    function = 'advective_flux_v_bottom'
+    momentum_component = 'y'
+  []
+  [left_v_advective_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = v
+    boundary = 'left'
+    function = 'advective_flux_v_left'
+    momentum_component = 'y'
+  []
+  [right_v_advective_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = v
+    boundary = 'right'
+    function = 'advective_flux_v_right'
+    momentum_component = 'y'
+  []
+
+  [top_pressure_flux]
+    type = FVFunctionNeumannBC
+    variable = pressure
+    boundary = 'top'
+    function = 'flux_p_top'
+  []
+  [bottom_pressure_flux]
+    type = FVFunctionNeumannBC
+    variable = pressure
+    boundary = 'bottom'
+    function = 'flux_p_bottom'
+  []
+  [left_pressure_flux]
+    type = FVFunctionNeumannBC
+    variable = pressure
+    boundary = 'left'
+    function = 'flux_p_left'
+  []
+  [right_pressure_flux]
+    type = FVFunctionNeumannBC
+    variable = pressure
+    boundary = 'right'
+    function = 'flux_p_right'
+  []
+
+# # Dirichlet conditions for velocity
+  # [u_walls]
+  #   type = INSFVNoSlipWallBC
+  #   variable = u
+  #   boundary = 'left right top bottom'
+  #   function = 'exact_u'
+  # []
+  # [v_walls]
+  #   type = INSFVNoSlipWallBC
+  #   variable = v
+  #   boundary = 'left right top bottom'
+  #   function = 'exact_v'
+  # []
+
+  # [p]
+  #   type = FVFunctionDirichletBC
+  #   variable = pressure
+  #   function = 'exact_p'
+  #   boundary = 'left right top bottom'
+  # []
+
+
+
+  # # Prescribe fluxes. In our idealized case we would be applying natural
+  # # boundary conditions (which are really just 0 flux bcs) to the mass equation
+  # # on both left and right so that means we add MMS flux BCs for the mass
+  # # advective flux
+  # [pressure_left]
+  #   type = FVFunctionNeumannBC
+  #   variable = pressure
+  #   boundary = 'left'
+  #   function = 'flux_p_left'
+  # []
+  # [pressure_right]
+  #   type = FVFunctionNeumannBC
+  #   variable = pressure
+  #   boundary = 'right'
+  #   function = 'flux_p_right'
+  # []
+
+  # #
+  # # Flow boundaries
+  # #
+
+  # # These are dirichlet boundary conditions in the background that trigger
+  # # execution of the kernels on the boundary
+  # [inlet_u]
+  #   type = INSFVInletVelocityBC
+  #   variable = u
+  #   function = 'exact_u'
+  #   boundary = 'bottom'
+  # []
+  # [inlet_v]
+  #   type = INSFVInletVelocityBC
+  #   variable = v
+  #   function = 'exact_v'
+  #   boundary = 'bottom'
+  # []
+  # # The above conditions should also implicitly trigger the mass advection
+  # # kernel on the boundary
+
+  # # As a dirichlet boundary condition this will trigger execution of the mass
+  # # advection kernel
+  # [outlet_p]
+  #   type = INSFVOutletPressureBC
+  #   variable = pressure
+  #   boundary = 'top'
+  #   function = 'exact_p'
+  # []
+  # # The above BC would also implicitly trigger the advection kernel, but not the
+  # # diffusion kernel, to execute. Given that we will add a flux bc for the
+  # # diffusive component. And *that* would normally cause the advection kernel to
+  # # no longer execute because we skip kernel execution any time there is a flux
+  # # bc applied, so we make sure to force boundary execution of the momentum
+  # # advective kernels above in order to mimic production run behavior
+  # [outlet_u_diffusive_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = u
+  #   boundary = 'top'
+  #   function = 'diffusive_flux_u_top'
+  #   momentum_component = 'x'
+  # []
+  # [outlet_v_diffusive_flux]
+  #   type = INSFVMomentumFunctionFluxBC
+  #   variable = v
+  #   boundary = 'top'
+  #   function = 'diffusive_flux_v_top'
+  #   momentum_component = 'y'
+  # []
 []
 
 [Materials]
@@ -380,8 +539,8 @@ rho=1
 [Executioner]
   type = Steady
   solve_type = 'NEWTON'
-  petsc_options_iname = '-pc_type -ksp_gmres_restart -sub_pc_type -sub_pc_factor_shift_type'
-  petsc_options_value = 'asm      200                lu           NONZERO'
+  petsc_options_iname = '-pc_type -pc_factor_shift_type -pc_factor_mat_solver_type'
+  petsc_options_value = 'lu       NONZERO               superlu_dist'
   line_search = 'none'
   nl_rel_tol = 1e-12
 []
