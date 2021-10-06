@@ -83,7 +83,7 @@ rho=1.1
     v = v
     rho = ${rho}
     momentum_component = 'x'
-    # boundaries_to_force = 'top'
+    boundaries_to_force = 'top'
   []
   [u_viscosity]
     type = INSFVMomentumDiffusion
@@ -114,7 +114,7 @@ rho=1.1
     v = v
     rho = ${rho}
     momentum_component = 'y'
-    # boundaries_to_force = 'top'
+    boundaries_to_force = 'top'
   []
   [v_viscosity]
     type = INSFVMomentumDiffusion
@@ -141,13 +141,13 @@ rho=1.1
   # Walls
   #
 
-  # [top_u_diffusive_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = u
-  #   boundary = 'top'
-  #   function = 'diffusive_flux_u_top'
-  #   momentum_component = 'x'
-  # []
+  [top_u_diffusive_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = u
+    boundary = 'top'
+    function = 'diffusive_flux_u_top'
+    momentum_component = 'x'
+  []
   # [bottom_u_diffusive_flux]
   #   type = INSFVMomentumFunctionFluxBC
   #   variable = u
@@ -170,13 +170,13 @@ rho=1.1
   #   momentum_component = 'x'
   # []
 
-  # [top_v_diffusive_flux]
-  #   type = INSFVMomentumFunctionFluxBC
-  #   variable = v
-  #   boundary = 'top'
-  #   function = 'diffusive_flux_v_top'
-  #   momentum_component = 'y'
-  # []
+  [top_v_diffusive_flux]
+    type = INSFVMomentumFunctionFluxBC
+    variable = v
+    boundary = 'top'
+    function = 'diffusive_flux_v_top'
+    momentum_component = 'y'
+  []
   # [bottom_v_diffusive_flux]
   #   type = INSFVMomentumFunctionFluxBC
   #   variable = v
@@ -286,13 +286,13 @@ rho=1.1
   [u_walls]
     type = INSFVNoSlipWallBC
     variable = u
-    boundary = 'bottom left right top'
+    boundary = 'bottom left right'
     function = 'exact_u'
   []
   [v_walls]
     type = INSFVNoSlipWallBC
     variable = v
-    boundary = 'bottom left right top'
+    boundary = 'bottom left right'
     function = 'exact_v'
   []
 
