@@ -65,4 +65,10 @@ protected:
 
   /// The interpolation method to use for the velocity
   Moose::FV::InterpMethod _velocity_interp_method;
+
+  /// The a coefficient for the element
+  ADReal _ae = 0;
+
+  /// The a coefficient for the neighbor
+  ADReal _an = 0;
 };
