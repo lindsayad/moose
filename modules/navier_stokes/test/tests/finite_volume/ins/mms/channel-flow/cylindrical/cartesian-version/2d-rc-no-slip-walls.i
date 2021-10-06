@@ -263,12 +263,12 @@ rho=1.1
     boundary = 'top'
     function = 'flux_p_top'
   []
-  [bottom_pressure_flux]
-    type = FVFunctionNeumannBC
-    variable = pressure
-    boundary = 'bottom'
-    function = 'flux_p_bottom'
-  []
+  # [bottom_pressure_flux]
+  #   type = FVFunctionNeumannBC
+  #   variable = pressure
+  #   boundary = 'bottom'
+  #   function = 'flux_p_bottom'
+  # []
   [left_pressure_flux]
     type = FVFunctionNeumannBC
     variable = pressure
@@ -286,13 +286,13 @@ rho=1.1
   [u_walls]
     type = INSFVNoSlipWallBC
     variable = u
-    boundary = 'bottom left right'
+    boundary = 'left right'
     function = 'exact_u'
   []
   [v_walls]
     type = INSFVNoSlipWallBC
     variable = v
-    boundary = 'bottom left right'
+    boundary = 'left right'
     function = 'exact_v'
   []
 
@@ -329,18 +329,18 @@ rho=1.1
 
   # # These are dirichlet boundary conditions in the background that trigger
   # # execution of the kernels on the boundary
-  # [inlet_u]
-  #   type = INSFVInletVelocityBC
-  #   variable = u
-  #   function = 'exact_u'
-  #   boundary = 'bottom'
-  # []
-  # [inlet_v]
-  #   type = INSFVInletVelocityBC
-  #   variable = v
-  #   function = 'exact_v'
-  #   boundary = 'bottom'
-  # []
+  [inlet_u]
+    type = INSFVInletVelocityBC
+    variable = u
+    function = 'exact_u'
+    boundary = 'bottom'
+  []
+  [inlet_v]
+    type = INSFVInletVelocityBC
+    variable = v
+    function = 'exact_v'
+    boundary = 'bottom'
+  []
   # # The above conditions should also implicitly trigger the mass advection
   # # kernel on the boundary
 
