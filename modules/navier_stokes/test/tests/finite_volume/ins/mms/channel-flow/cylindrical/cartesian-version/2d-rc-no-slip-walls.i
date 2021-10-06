@@ -46,10 +46,10 @@ rho=1.1
   [pressure]
     type = INSFVPressureVariable
   []
-  [lambda]
-    family = SCALAR
-    order = FIRST
-  []
+  # [lambda]
+  #   family = SCALAR
+  #   order = FIRST
+  # []
 []
 
 [ICs]
@@ -86,11 +86,11 @@ rho=1.1
     variable = pressure
     function = forcing_p
   []
-  [mean_zero_pressure]
-    type = FVScalarLagrangeMultiplier
-    variable = pressure
-    lambda = lambda
-  []
+  # [mean_zero_pressure]
+  #   type = FVScalarLagrangeMultiplier
+  #   variable = pressure
+  #   lambda = lambda
+  # []
 
   [u_advection]
     type = INSFVMomentumAdvection
@@ -195,18 +195,18 @@ rho=1.1
     boundary = 'left right'
     function = 'exact_v'
   []
-  [p]
-    type = FVFunctionNeumannBC
-    variable = pressure
-    boundary = 'top'
-    function = 'flux_p_top'
-  []
   # [p]
-  #   type = INSFVOutletPressureBC
+  #   type = FVFunctionNeumannBC
   #   variable = pressure
-  #   function = 'exact_p'
   #   boundary = 'top'
+  #   function = 'flux_p_top'
   # []
+  [p]
+    type = INSFVOutletPressureBC
+    variable = pressure
+    function = 'exact_p'
+    boundary = 'top'
+  []
   # [p]
   #   type = INSFVMassAdvectionOutflowBC
   #   variable = pressure
