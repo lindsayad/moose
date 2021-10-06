@@ -12,6 +12,7 @@
 #include "SubProblem.h"
 #include "MooseMesh.h"
 #include "NS.h"
+#include "SystemBase.h"
 
 registerMooseObject("NavierStokesApp", INSFVMomentumAdvectionOutflowBC);
 
@@ -38,7 +39,8 @@ INSFVMomentumAdvectionOutflowBC::INSFVMomentumAdvectionOutflowBC(const InputPara
     _v_var(dynamic_cast<const INSFVVelocityVariable *>(getFieldVar("v", 0))),
     _w_var(dynamic_cast<const INSFVVelocityVariable *>(getFieldVar("w", 0))),
     _dim(_subproblem.mesh().dimension()),
-    _rho(getFunctor<ADReal>(NS::density))
+    _rho(getFunctor<ADReal>(NS::density)),
+    _computing_rc_data(false)
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError("INSFV is not supported by local AD indexing. In order to use INSFV, please run the "
@@ -72,16 +74,26 @@ INSFVMomentumAdvectionOutflowBC::computeQpResidual()
   if (_w_var)
     v(2) = _w_var->getBoundaryFaceValue(*_face_info);
 
-  const auto adv_quant_boundary =
-      _adv_quant(std::make_tuple(_face_info,
-                                 Moose::FV::LimiterType::CentralDifference,
-                                 v * _face_info->normal() > 0,
-                                 faceArgSubdomains()));
+  const auto & elem = (_face_type == FaceInfo::VarFaceNeighbors::ELEM) ? _face_info->elem()
+                                                                       : _face_info->neighbor();
+  const auto sub_id = elem.subdomain_id();
+  const auto boundary_face =
+      std::make_tuple(_face_info, Moose::FV::LimiterType::CentralDifference, true, sub_id);
 
-  mooseAssert(_normal * v >= 0,
-              "This boundary condition is for outflow but the flow is in the opposite direction of "
-              "the boundary normal");
-  return _normal * v * adv_quant_boundary;
+  const auto rho_boundary = _rho(boundary_face);
+  // This will tend to be an extrapolated boundary for the velocity in which case, when using two
+  // term expansion, this boundary value will actually be a function of more than just the degree of
+  // freedom at the cell centroid adjacent to the face, e.g. it can/will depend on surrounding cell
+  // degrees of freedom as well
+  auto var_boundary = _var(boundary_face);
+  if (_computing_rc_data)
+  {
+    const auto dof_number = elem.dof_number(_sys.number(), _var.number(), 0);
+    _a = var_boundary.derivatives()[dof_number];
+    _a *= _normal * v * rho_boundary;
+  }
+
+  return _normal * v * rho_boundary * var_boundary;
 #else
   mooseError("INSFV is not supported by local AD indexing. In order to use INSFV, please run the "
              "configure script in the root MOOSE directory with the configure option "
@@ -90,38 +102,22 @@ INSFVMomentumAdvectionOutflowBC::computeQpResidual()
 }
 
 void
-INSFVMomentumAdvectionOutflowBC::gatherRCData(const FaceInfo & /*fi*/)
+INSFVMomentumAdvectionOutflowBC::gatherRCData(const FaceInfo & fi)
 {
-  // const Elem & elem = fi.elem();
-  // const Elem * const neighbor = fi.neighborPtr();
-  // const Point & normal = fi.normal();
-  // Real coord;
-  // coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
-  // const auto surface_vector = normal * fi.faceArea() * coord;
+  _face_info = &fi;
+  _normal = fi.normal();
+  _face_type = fi.faceType(_var.name());
 
-  // auto ft = fi.faceType(_var.name());
-  // mooseAssert((ft == FaceInfo::VarFaceNeighbors::ELEM) ||
-  //                 (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR),
-  //             "Do we want to allow internal flow boundaries?");
-  // const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
-  // Real residual_sign = var_on_elem_side ? 1. : -1.;
-  // const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
+  if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR)
+    _normal = -_normal;
 
-  // mooseAssert(boundary_elem, "the boundary elem should be non-null");
-  // const auto face_rho = _rho(std::make_tuple(
-  //     &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
+  _computing_rc_data = true;
+  const auto saved_do_derivatives = ADReal::do_derivatives;
+  ADReal::do_derivatives = true;
+  const auto residual = fi.faceArea() * fi.faceCoord() * computeQpResidual();
+  ADReal::do_derivatives = saved_do_derivatives;
+  _computing_rc_data = false;
 
-  // ADRealVectorValue face_velocity(_u_var->getBoundaryFaceValue(fi));
-  // if (_v_var)
-  //   face_velocity(1) = _v_var->getBoundaryFaceValue(fi);
-  // if (_w_var)
-  //   face_velocity(2) = _w_var->getBoundaryFaceValue(fi);
-
-  // const auto advection_coeffs =
-  //     Moose::FV::interpCoeffs(_advected_interp_method, fi, true, face_velocity);
-  // const auto advection_coeff = var_on_elem_side ? advection_coeffs.first :
-  // advection_coeffs.second; const ADReal coeff = face_rho * face_velocity * surface_vector *
-  // advection_coeff * residual_sign;
-
-  // _rc_uo.addToA(boundary_elem, _index, coeff);
+  _rc_uo.addToA(
+      (_face_type == FaceInfo::VarFaceNeighbors::ELEM) ? &fi.elem() : fi.neighborPtr(), _index, _a);
 }

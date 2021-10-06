@@ -46,4 +46,10 @@ protected:
 
   /// The density
   const Moose::Functor<ADReal> & _rho;
+
+  /// whether we are computing Rhie-Chow data
+  bool _computing_rc_data;
+
+  /// A member to hold computation of the Rhie-Chow coefficient
+  ADReal _a = 0;
 };

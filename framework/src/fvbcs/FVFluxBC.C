@@ -41,7 +41,7 @@ FVFluxBC::computeResidual(const FaceInfo & fi)
 {
   _face_info = &fi;
   _normal = fi.normal();
-  auto ft = fi.faceType(_var.name());
+  _face_type = fi.faceType(_var.name());
 
   // For FV flux kernels, the normal is always oriented outward from the lower-id
   // element's perspective.  But for BCs, there is only a residual
@@ -50,13 +50,13 @@ FVFluxBC::computeResidual(const FaceInfo & fi)
   // side of the face the BC's variable is defined on; we flip it if this
   // variable is defined on the neighbor side of the face (instead of elem) since
   // the FaceInfo normal polarity is always oriented with respect to the lower-id element.
-  if (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR)
+  if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR)
     _normal = -_normal;
 
-  if (ft == FaceInfo::VarFaceNeighbors::BOTH)
+  if (_face_type == FaceInfo::VarFaceNeighbors::BOTH)
     mooseError("A FVFluxBC is being triggered on an internal face with centroid: ",
                fi.faceCentroid());
-  else if (ft == FaceInfo::VarFaceNeighbors::NEITHER)
+  else if (_face_type == FaceInfo::VarFaceNeighbors::NEITHER)
     mooseError("A FVFluxBC is being triggered on a face which does not connect to a block ",
                "with the relevant finite volume variable. Its centroid: ",
                fi.faceCentroid());
@@ -67,9 +67,9 @@ FVFluxBC::computeResidual(const FaceInfo & fi)
   // restriction where the var is only defined on one side of the face.  We
   // need to make sure that we add the residual contribution to the correct
   // side - the one where the variable is defined.
-  if (ft == FaceInfo::VarFaceNeighbors::ELEM)
+  if (_face_type == FaceInfo::VarFaceNeighbors::ELEM)
     prepareVectorTag(_assembly, _var.number());
-  else if (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR)
+  else if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR)
     prepareVectorTagNeighbor(_assembly, _var.number());
 
   _local_re(0) = r;
@@ -136,7 +136,7 @@ FVFluxBC::computeJacobian(const FaceInfo & fi)
 {
   _face_info = &fi;
   _normal = fi.normal();
-  auto ft = fi.faceType(_var.name());
+  _face_type = fi.faceType(_var.name());
 
   // For FV flux kernels, the normal is always oriented outward from the lower-id
   // element's perspective.  But for BCs, there is only a Jacobian
@@ -145,13 +145,14 @@ FVFluxBC::computeJacobian(const FaceInfo & fi)
   // side of the face the BC's variable is defined on; we flip it if this
   // variable is defined on the neighbor side of the face (instead of elem) since
   // the FaceInfo normal polarity is always oriented with respect to the lower-id element.
-  if (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR)
+  if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR)
     _normal = -_normal;
 
   ADReal r = fi.faceArea() * fi.faceCoord() * computeQpResidual();
 
-  const auto & dof_indices =
-      (ft == FaceInfo::VarFaceNeighbors::ELEM) ? _var.dofIndices() : _var.dofIndicesNeighbor();
+  const auto & dof_indices = (_face_type == FaceInfo::VarFaceNeighbors::ELEM)
+                                 ? _var.dofIndices()
+                                 : _var.dofIndicesNeighbor();
 
   mooseAssert(dof_indices.size() == 1, "We're currently built to use CONSTANT MONOMIALS");
 
@@ -165,11 +166,11 @@ FVFluxBC::computeJacobian(const FaceInfo & fi)
     // Also, we don't need to worry about ElementNeighbor or NeighborElement
     // contributions here because, once again, this is a boundary face with the
     // variable only defined on one side.
-    if (ft == FaceInfo::VarFaceNeighbors::ELEM)
+    if (_face_type == FaceInfo::VarFaceNeighbors::ELEM)
       computeJacobian(Moose::ElementElement, residual);
-    else if (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR)
+    else if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR)
       computeJacobian(Moose::NeighborNeighbor, residual);
-    else if (ft == FaceInfo::VarFaceNeighbors::BOTH)
+    else if (_face_type == FaceInfo::VarFaceNeighbors::BOTH)
       mooseError("A FVFluxBC is being triggered on an internal face with centroid: ",
                  fi.faceCentroid());
     else

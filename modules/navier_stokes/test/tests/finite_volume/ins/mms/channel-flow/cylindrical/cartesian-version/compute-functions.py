@@ -4,7 +4,7 @@ import mms
 import sympy
 
 u = 'sin(1.1*x)*cos(1.2*y)'
-v = 'cos(1.3*x)*sin(1.4*y)'
+v = 'cos(1.3*x)*cos(1.4*y)'
 
 vel = u + '* e_i + ' + v + ' * e_j'
 
