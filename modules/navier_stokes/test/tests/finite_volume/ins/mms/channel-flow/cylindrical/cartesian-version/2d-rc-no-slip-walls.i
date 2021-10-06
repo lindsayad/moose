@@ -202,17 +202,11 @@ rho=1.1
   #   function = 'flux_p_top'
   # []
   [p]
-    type = FVFunctionDirichletBC
+    type = INSFVOutletPressureBC
     variable = pressure
     function = 'exact_p'
     boundary = 'top'
   []
-  # [p]
-  #   type = INSFVOutletPressureBC
-  #   variable = pressure
-  #   function = 'exact_p'
-  #   boundary = 'top'
-  # []
   # [p]
   #   type = INSFVMassAdvectionOutflowBC
   #   variable = pressure
