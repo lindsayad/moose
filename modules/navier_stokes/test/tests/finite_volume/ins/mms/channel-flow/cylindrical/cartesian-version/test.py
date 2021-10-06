@@ -45,6 +45,6 @@ class Test2DRCWalls():
 
 if __name__ == '__main__':
     # unittest.main(__name__, verbosity=2)
-    # Test2DRCWalls().test()
+    Test2DRCWalls().test()
     # Test2DRC().test()
-    Test1DRC().test()
+    # Test1DRC().test()
