@@ -105,6 +105,16 @@ INSFVMomentumAdvection::INSFVMomentumAdvection(const InputParameters & params)
   else
     mooseError("Unrecognized interpolation type ",
                static_cast<std::string>(velocity_interp_method));
+
+  if (getParam<bool>("force_boundary_execution"))
+    paramError("force_boundary_execution",
+               "Do not use the force_boundary_execution parameter to control execution of INSFV "
+               "advection objects");
+
+  if (!getParam<std::vector<BoundaryName>>("boundaries_to_force").empty())
+    paramError("boundaries_to_force",
+               "Do not use the boundaries_to_force parameter to control execution of INSFV "
+               "advection objects");
 }
 
 void
@@ -119,24 +129,6 @@ INSFVMomentumAdvection::skipForBoundary(const FaceInfo & fi) const
   if (!onBoundary(fi))
     return false;
 
-  if (_force_boundary_execution)
-  {
-    bool force = true;
-    for (const auto bnd_id : fi.boundaryIDs())
-      if (_boundaries_to_not_force.find(bnd_id) != _boundaries_to_not_force.end())
-      {
-        force = false;
-        break;
-      }
-
-    if (force)
-      return false;
-  }
-
-  for (const auto bnd_to_force : _boundaries_to_force)
-    if (fi.boundaryIDs().find(bnd_to_force) != fi.boundaryIDs().end())
-      return false;
-
   // If we have flux bcs then we do skip
   const auto & flux_pr = _var.getFluxBCs(fi);
   if (flux_pr.first)
@@ -148,9 +140,139 @@ INSFVMomentumAdvection::skipForBoundary(const FaceInfo & fi) const
     if (_flow_boundaries.find(bc_id) != _flow_boundaries.end())
       return false;
 
-  // If we don't have flux bcs *and* we do have dirichlet bcs then we don't skip. If we don't have
-  // either then we assume natural boundary condition and we should skip
-  return !_var.getDirichletBC(fi).first;
+  // If not a flow boundary, then there should be no advection/flow in the normal direction, e.g. we
+  // should not contribute any advective flux
+  return true;
+}
+
+void
+INSFVMomentumAdvection::gatherRCData(const FaceInfo & fi)
+{
+  if (skipForBoundary(fi))
+    return;
+
+  // these coefficients arise from simple control volume balances of advection and diffusion. These
+  // coefficients are the linear coefficients associated with the centroid of the control volume.
+  // Note that diffusion coefficients should always be positive, e.g. elliptic operators always
+  // yield positive definite matrices
+  //
+  // Example 1D discretization of diffusion, e.g. the sum of the fluxes around a control volume:
+  //
+  // \sum_f -D \nabla \phi * \hat{n} =
+  //   -D_e * (phi_E - \phi_C) / d_{CE} * 1 - D_w * (\phi_C - \phi_W) / d_{WC} * -1 =
+  //   D_e / d_{CE} * (\phi_C - \phi_E) + D_w / d_{WC} * (\phi_C - \phi_W)
+  //
+  // Note the positive coefficients for \phi_C !!
+  //
+  // Now an example 1D discretization for advection using central differences, e.g. an average
+  // interpolation
+  //
+  // \sum_f \vec{u} \phi \hat{n} =
+  //   u_w * (\phi_W + \phi_C) / 2 * -1 + u_e * (\phi_C + \phi_E) / 2 * 1 =
+  //   -u_w / 2 * \phi_W + u_e / 2 * \phi_E + (u_e - u_w) / 2 * \phi_C
+  //
+  // Note that the coefficient for \phi_C may or may not be positive depending on the values of u_e
+  // and u_w
+
+  const Elem & elem = fi.elem();
+  const Elem * const neighbor = fi.neighborPtr();
+  const Point & normal = fi.normal();
+  Real coord;
+  coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
+  const auto surface_vector = normal * fi.faceArea() * coord;
+
+  // Unless specified otherwise, "elem" here refers to the element we're computing the
+  // Rhie-Chow coefficient for. "neighbor" is the element across the current FaceInfo (fi)
+  // face from the Rhie-Chow element
+
+  if (onBoundary(fi))
+  {
+    // Find the boundary id that has an associated INSFV boundary condition
+    // if a face has more than one bc_id
+    for (const auto bc_id : fi.boundaryIDs())
+    {
+      if ((_no_slip_wall_boundaries.find(bc_id) != _no_slip_wall_boundaries.end()))
+        // No flow normal to wall, so no contribution to coefficient from the advection term
+        return;
+
+      if (_flow_boundaries.find(bc_id) != _flow_boundaries.end())
+      {
+
+        auto ft = fi.faceType(_var.name());
+        mooseAssert((ft == FaceInfo::VarFaceNeighbors::ELEM) ||
+                        (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR),
+                    "Do we want to allow internal flow boundaries?");
+        const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
+        Real residual_sign = var_on_elem_side ? 1. : -1.;
+        const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
+
+        mooseAssert(boundary_elem, "the boundary elem should be non-null");
+        mooseAssert(this->hasBlocks(boundary_elem->subdomain_id()),
+                    "This object should exist on our boundary element subdomain ID");
+        const auto face_rho = _rho(std::make_tuple(
+            &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
+
+        ADRealVectorValue face_velocity(_u_var->getBoundaryFaceValue(fi));
+        if (_v_var)
+          face_velocity(1) = _v_var->getBoundaryFaceValue(fi);
+        if (_w_var)
+          face_velocity(2) = _w_var->getBoundaryFaceValue(fi);
+
+        const auto advection_coeffs =
+            Moose::FV::interpCoeffs(_advected_interp_method, fi, true, face_velocity);
+        const auto advection_coeff =
+            var_on_elem_side ? advection_coeffs.first : advection_coeffs.second;
+        const ADReal coeff =
+            face_rho * face_velocity * surface_vector * advection_coeff * residual_sign;
+
+        _rc_uo.addToA(boundary_elem, _index, coeff);
+        return;
+      }
+
+      if (_slip_wall_boundaries.find(bc_id) != _slip_wall_boundaries.end())
+        return;
+      // mooseError("Slip wall boundaries should have a flux bc such that we should never get
+      // here");
+
+      if (_symmetry_boundaries.find(bc_id) != _symmetry_boundaries.end())
+        return;
+      // mooseError("Symmetry boundaries should have a flux bc such that we should never get here");
+    }
+
+    mooseError("The INSFVMomentumAdvection object ",
+               this->name(),
+               " is not completely bounded by INSFVBCs. Please examine sideset ",
+               *fi.boundaryIDs().begin(),
+               " and your FVBCs blocks.");
+  }
+
+  // Else we are on an internal face
+
+  const auto face_rho = _rho(std::make_tuple(
+      &fi, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains(&fi)));
+
+  ADRealVectorValue elem_velocity(_u_var->getElemValue(&elem));
+  if (_v_var)
+    elem_velocity(1) = _v_var->getElemValue(&elem);
+  if (_w_var)
+    elem_velocity(2) = _w_var->getElemValue(&elem);
+
+  ADRealVectorValue neighbor_velocity(_u_var->getNeighborValue(neighbor, fi, elem_velocity(0)));
+  if (_v_var)
+    neighbor_velocity(1) = _v_var->getNeighborValue(neighbor, fi, elem_velocity(1));
+  if (_w_var)
+    neighbor_velocity(2) = _w_var->getNeighborValue(neighbor, fi, elem_velocity(2));
+
+  ADRealVectorValue interp_v;
+  Moose::FV::interpolate(
+      Moose::FV::InterpMethod::Average, interp_v, elem_velocity, neighbor_velocity, fi, true);
+
+  const auto advection_coeffs =
+      Moose::FV::interpCoeffs(_advected_interp_method, fi, true, interp_v);
+  const ADReal elem_coeff = face_rho * interp_v * surface_vector * advection_coeffs.first;
+  const ADReal neighbor_coeff = -face_rho * interp_v * surface_vector * advection_coeffs.second;
+  _rc_uo.addToA(&elem, _index, elem_coeff);
+  _rc_uo.addToA(neighbor, _index, neighbor_coeff);
 }
 
 void
@@ -161,6 +283,19 @@ INSFVMomentumAdvection::interpolate(Moose::FV::InterpMethod m, ADRealVectorValue
 
   if (onBoundary(*_face_info))
   {
+#ifndef NDEBUG
+    bool flow_boundary_found = false;
+    for (const auto b_id : _face_info->boundaryIDs())
+      if (_flow_boundaries.find(b_id) != _flow_boundaries.end())
+      {
+        flow_boundary_found = true;
+        break;
+      }
+
+    mooseAssert(flow_boundary_found,
+                "INSFV*Advection flux kernel objects should only execute on flow boundaries.");
+#endif
+
     v(0) = _u_var->getBoundaryFaceValue(*_face_info);
     if (_v_var)
       v(1) = _v_var->getBoundaryFaceValue(*_face_info);
@@ -256,32 +391,4 @@ INSFVMomentumAdvection::computeQpResidual()
                          *_face_info,
                          true);
   return _normal * v * adv_quant_interface;
-}
-
-void
-INSFVMomentumAdvection::gatherRCData(const FaceInfo & fi)
-{
-  if (skipForBoundary(fi))
-    return;
-
-  const auto saved_velocity_interp_method = _velocity_interp_method;
-  // We are currently gathering data in order to be able to compute the RC velocity so we must use
-  // the average velocity here
-  _velocity_interp_method = Moose::FV::InterpMethod::Average;
-
-  _face_info = &fi;
-  _normal = fi.normal();
-
-  const auto residual = fi.faceArea() * fi.faceCoord() * computeQpResidual();
-
-  const auto ft = fi.faceType(_var.name());
-  if (ft == FaceInfo::VarFaceNeighbors::ELEM || ft == FaceInfo::VarFaceNeighbors::BOTH)
-    // residual contribution of this kernel to the elem element
-    _rc_uo.addToA(&fi.elem(), _index, residual / _var(&fi.elem()));
-  if (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR || ft == FaceInfo::VarFaceNeighbors::BOTH)
-    // residual contribution of this kernel to the neighbor element
-    _rc_uo.addToA(fi.neighborPtr(), _index, -residual / _var(fi.neighborPtr()));
-
-  // restore velocity interp method
-  _velocity_interp_method = saved_velocity_interp_method;
 }
