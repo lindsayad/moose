@@ -105,16 +105,6 @@ INSFVMomentumAdvection::INSFVMomentumAdvection(const InputParameters & params)
   else
     mooseError("Unrecognized interpolation type ",
                static_cast<std::string>(velocity_interp_method));
-
-  if (getParam<bool>("force_boundary_execution"))
-    paramError("force_boundary_execution",
-               "Do not use the force_boundary_execution parameter to control execution of INSFV "
-               "advection objects");
-
-  if (!getParam<std::vector<BoundaryName>>("boundaries_to_force").empty())
-    paramError("boundaries_to_force",
-               "Do not use the boundaries_to_force parameter to control execution of INSFV "
-               "advection objects");
 }
 
 void
@@ -129,6 +119,24 @@ INSFVMomentumAdvection::skipForBoundary(const FaceInfo & fi) const
   if (!onBoundary(fi))
     return false;
 
+  if (_force_boundary_execution)
+  {
+    bool force = true;
+    for (const auto bnd_id : fi.boundaryIDs())
+      if (_boundaries_to_not_force.find(bnd_id) != _boundaries_to_not_force.end())
+      {
+        force = false;
+        break;
+      }
+
+    if (force)
+      return false;
+  }
+
+  for (const auto bnd_to_force : _boundaries_to_force)
+    if (fi.boundaryIDs().find(bnd_to_force) != fi.boundaryIDs().end())
+      return false;
+
   // If we have flux bcs then we do skip
   const auto & flux_pr = _var.getFluxBCs(fi);
   if (flux_pr.first)
@@ -140,9 +148,9 @@ INSFVMomentumAdvection::skipForBoundary(const FaceInfo & fi) const
     if (_flow_boundaries.find(bc_id) != _flow_boundaries.end())
       return false;
 
-  // If not a flow boundary, then there should be no advection/flow in the normal direction, e.g. we
-  // should not contribute any advective flux
-  return true;
+  // If we don't have flux bcs *and* we do have dirichlet bcs then we don't skip. If we don't have
+  // either then we assume natural boundary condition and we should skip
+  return !_var.getDirichletBC(fi).first;
 }
 
 void
@@ -283,19 +291,6 @@ INSFVMomentumAdvection::interpolate(Moose::FV::InterpMethod m, ADRealVectorValue
 
   if (onBoundary(*_face_info))
   {
-#ifndef NDEBUG
-    bool flow_boundary_found = false;
-    for (const auto b_id : _face_info->boundaryIDs())
-      if (_flow_boundaries.find(b_id) != _flow_boundaries.end())
-      {
-        flow_boundary_found = true;
-        break;
-      }
-
-    mooseAssert(flow_boundary_found,
-                "INSFV*Advection flux kernel objects should only execute on flow boundaries.");
-#endif
-
     v(0) = _u_var->getBoundaryFaceValue(*_face_info);
     if (_v_var)
       v(1) = _v_var->getBoundaryFaceValue(*_face_info);
