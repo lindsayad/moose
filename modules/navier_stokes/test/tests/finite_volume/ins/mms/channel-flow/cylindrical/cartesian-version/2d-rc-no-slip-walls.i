@@ -61,6 +61,7 @@ rho=1.1
     u = u
     v = v
     rho = ${rho}
+    boundaries_to_force = 'top'
   []
   [mass_forcing]
     type = FVBodyForce
@@ -257,12 +258,12 @@ rho=1.1
   #   momentum_component = 'y'
   # []
 
-  [top_pressure_flux]
-    type = FVFunctionNeumannBC
-    variable = pressure
-    boundary = 'top'
-    function = 'flux_p_top'
-  []
+  # [top_pressure_flux]
+  #   type = FVFunctionNeumannBC
+  #   variable = pressure
+  #   boundary = 'top'
+  #   function = 'flux_p_top'
+  # []
   # [bottom_pressure_flux]
   #   type = FVFunctionNeumannBC
   #   variable = pressure
