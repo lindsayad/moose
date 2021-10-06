@@ -29,4 +29,13 @@ protected:
 
   /// The dynamic viscosity
   const Moose::Functor<ADReal> & _mu;
+
+  /// Whether we are computing RhieChow data at the time of our residual evaluation
+  bool _computing_rc_data;
+
+  /// The a coefficient for the element
+  ADReal _ae = 0;
+
+  /// The a coefficient for the neighbor
+  ADReal _an = 0;
 };

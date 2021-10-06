@@ -24,7 +24,10 @@ INSFVMomentumDiffusion::validParams()
 }
 
 INSFVMomentumDiffusion::INSFVMomentumDiffusion(const InputParameters & params)
-  : FVFluxKernel(params), INSFVMomentumResidualObject(*this), _mu(getFunctor<ADReal>(NS::mu))
+  : FVFluxKernel(params),
+    INSFVMomentumResidualObject(*this),
+    _mu(getFunctor<ADReal>(NS::mu)),
+    _computing_rc_data(false)
 {
 }
 
@@ -36,26 +39,22 @@ INSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
 
   _face_info = &fi;
   _normal = fi.normal();
+  _face_type = fi.faceType(_var.name());
 
+  _computing_rc_data = true;
+  const auto saved_do_derivatives = ADReal::do_derivatives;
+  // We rely on derivative indexing
+  ADReal::do_derivatives = true;
   const auto residual = fi.faceArea() * fi.faceCoord() * computeQpResidual();
+  _computing_rc_data = false;
+  ADReal::do_derivatives = saved_do_derivatives;
 
-  const auto ft = fi.faceType(_var.name());
-  if (ft == FaceInfo::VarFaceNeighbors::ELEM || ft == FaceInfo::VarFaceNeighbors::BOTH)
-  {
-    const auto dof_number = fi.elem().dof_number(_sys.number(), _var.number(), 0);
-    const auto var_value = _var(&fi.elem());
-    const auto a = residual / var_value;
-    // residual contribution of this kernel to the elem element
-    _rc_uo.addToA(&fi.elem(), _index, residual / _var(&fi.elem()));
-  }
-  if (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR || ft == FaceInfo::VarFaceNeighbors::BOTH)
-  {
-    const auto dof_number = fi.neighbor().dof_number(_sys.number(), _var.number(), 0);
-    const auto var_value = _var(&fi.neighbor());
-    const auto a = -residual / var_value;
-    // residual contribution of this kernel to the neighbor element
-    _rc_uo.addToA(fi.neighborPtr(), _index, -residual / _var(fi.neighborPtr()));
-  }
+  if (_face_type == FaceInfo::VarFaceNeighbors::ELEM ||
+      _face_type == FaceInfo::VarFaceNeighbors::BOTH)
+    _rc_uo.addToA(&fi.elem(), _index, _ae);
+  if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR ||
+      _face_type == FaceInfo::VarFaceNeighbors::BOTH)
+    _rc_uo.addToA(fi.neighborPtr(), _index, _an);
 }
 
 ADReal
@@ -65,6 +64,26 @@ INSFVMomentumDiffusion::computeQpResidual()
       _face_info, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains());
   const auto dudn = _var.gradient(face) * _face_info->normal();
   const auto face_mu = _mu(face);
+
+  if (_computing_rc_data)
+  {
+    if (_face_type == FaceInfo::VarFaceNeighbors::ELEM ||
+        _face_type == FaceInfo::VarFaceNeighbors::BOTH)
+    {
+      const auto dof_number = _face_info->elem().dof_number(_sys.number(), _var.number(), 0);
+      // A gradient is a linear combination of degrees of freedom so it's safe to straight-up index
+      // into the derivatives vector at the dof we care about
+      _ae = dudn.derivatives()[dof_number];
+      _ae *= -face_mu;
+    }
+    if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR ||
+        _face_type == FaceInfo::VarFaceNeighbors::BOTH)
+    {
+      const auto dof_number = _face_info->neighbor().dof_number(_sys.number(), _var.number(), 0);
+      _an = dudn.derivatives()[dof_number];
+      _an *= face_mu;
+    }
+  }
 
   return -face_mu * dudn;
 }
