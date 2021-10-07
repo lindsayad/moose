@@ -21,8 +21,8 @@ public:
 
   static InputParameters validParams();
 
-  // #ifdef MOOSE_GLOBAL_AD_INDEXING
-  //   using INSFVVariable::adGradSln;
-  //   const VectorValue<ADReal> & adGradSln(const Elem * const elem) const override;
-  // #endif
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+  using INSFVVariable::adGradSln;
+  const VectorValue<ADReal> & adGradSln(const Elem * const elem) const override;
+#endif
 };

@@ -37,18 +37,12 @@ rho=1.1
 [Variables]
   [u]
     type = INSFVVelocityVariable
-    # initial_condition = 1e-15
   []
   [v]
     type = INSFVVelocityVariable
-    # initial_condition = 1e-15
   []
   [pressure]
     type = INSFVPressureVariable
-  []
-  [lambda]
-    family = SCALAR
-    order = FIRST
   []
 []
 
@@ -79,17 +73,11 @@ rho=1.1
     u = u
     v = v
     rho = ${rho}
-    # boundaries_to_force = 'top'
   []
   [mass_forcing]
     type = FVBodyForce
     variable = pressure
     function = forcing_p
-  []
-  [mean_zero_pressure]
-    type = FVScalarLagrangeMultiplier
-    variable = pressure
-    lambda = lambda
   []
 
   [u_advection]
@@ -102,7 +90,6 @@ rho=1.1
     v = v
     rho = ${rho}
     momentum_component = 'x'
-    # boundaries_to_force = 'top'
   []
   [u_viscosity]
     type = INSFVMomentumDiffusion
@@ -133,7 +120,6 @@ rho=1.1
     v = v
     rho = ${rho}
     momentum_component = 'y'
-    # boundaries_to_force = 'top'
   []
   [v_viscosity]
     type = INSFVMomentumDiffusion
@@ -156,33 +142,6 @@ rho=1.1
 []
 
 [FVBCs]
-  [top_u_diffusive_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = u
-    boundary = 'top'
-    function = 'diffusive_flux_u_top'
-    momentum_component = 'x'
-  []
-  [top_v_diffusive_flux]
-    type = INSFVMomentumFunctionFluxBC
-    variable = v
-    boundary = 'top'
-    function = 'diffusive_flux_v_top'
-    momentum_component = 'y'
-  []
-  [left_pressure_flux]
-    type = FVFunctionNeumannBC
-    variable = pressure
-    boundary = 'left'
-    function = 'flux_p_left'
-  []
-  [right_pressure_flux]
-    type = FVFunctionNeumannBC
-    variable = pressure
-    boundary = 'right'
-    function = 'flux_p_right'
-  []
-# Dirichlet conditions for velocity
   [u_walls]
     type = INSFVNoSlipWallBC
     variable = u
@@ -195,50 +154,12 @@ rho=1.1
     boundary = 'left right'
     function = 'exact_v'
   []
-  [p_flux]
-    type = FVFunctionNeumannBC
+  [p]
+    type = INSFVOutletPressureBC
     variable = pressure
+    function = 'exact_p'
     boundary = 'top'
-    function = 'flux_p_top'
   []
-  # [p]
-  #   type = INSFVOutletPressureBC
-  #   variable = pressure
-  #   function = 'exact_p'
-  #   boundary = 'top'
-  # []
-  # [p]
-  #   type = INSFVMassAdvectionOutflowBC
-  #   variable = pressure
-  #   boundary = 'top'
-  #   rho = ${rho}
-  #   u = u
-  #   v = v
-  # []
-  [u_advection_top]
-    type = INSFVMomentumAdvectionOutflowBC
-    variable = u
-    boundary = 'top'
-    u = u
-    v = v
-    rho = ${rho}
-    momentum_component = 'x'
-    advected_quantity = 'rhou'
-    vel = 'velocity'
-  []
-  [v_advection_top]
-    type = INSFVMomentumAdvectionOutflowBC
-    variable = v
-    boundary = 'top'
-    u = u
-    v = v
-    rho = ${rho}
-    momentum_component = 'y'
-    advected_quantity = 'rhov'
-    vel = 'velocity'
-  []
-  # # These are dirichlet boundary conditions in the background that trigger
-  # # execution of the kernels on the boundary
   [inlet_u]
     type = INSFVInletVelocityBC
     variable = u
@@ -264,156 +185,36 @@ rho=1.1
 []
 
 [Functions]
-[exact_u]
-  type = ParsedFunction
-  value = 'sin(1.1*x)*cos(1.2*y)'
-[]
-[forcing_u]
-  type = ParsedFunction
-  value = '2.65*mu*sin(1.1*x)*cos(1.2*y) - 1.2*rho*sin(1.1*x)*sin(1.2*y)*cos(1.3*x)*cos(1.4*y) - 1.4*rho*sin(1.1*x)*sin(1.4*y)*cos(1.3*x)*cos(1.2*y) + 2.2*rho*sin(1.1*x)*cos(1.1*x)*cos(1.2*y)^2 + 1.5*cos(1.5*x)*cos(1.6*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[advective_flux_u_left]
-  type = ParsedFunction
-  value = '-rho*sin(1.1*x)^2*cos(1.2*y)^2'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[advective_flux_u_right]
-  type = ParsedFunction
-  value = 'rho*sin(1.1*x)^2*cos(1.2*y)^2'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[advective_flux_u_top]
-  type = ParsedFunction
-  value = 'rho*sin(1.1*x)*cos(1.3*x)*cos(1.2*y)*cos(1.4*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[advective_flux_u_bottom]
-  type = ParsedFunction
-  value = '-rho*sin(1.1*x)*cos(1.3*x)*cos(1.2*y)*cos(1.4*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[diffusive_flux_u_left]
-  type = ParsedFunction
-  value = '1.1*mu*cos(1.1*x)*cos(1.2*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[diffusive_flux_u_right]
-  type = ParsedFunction
-  value = '-1.1*mu*cos(1.1*x)*cos(1.2*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[diffusive_flux_u_top]
-  type = ParsedFunction
-  value = '1.2*mu*sin(1.1*x)*sin(1.2*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[diffusive_flux_u_bottom]
-  type = ParsedFunction
-  value = '-1.2*mu*sin(1.1*x)*sin(1.2*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[exact_v]
-  type = ParsedFunction
-  value = 'cos(1.3*x)*cos(1.4*y)'
-[]
-[forcing_v]
-  type = ParsedFunction
-  value = '3.65*mu*cos(1.3*x)*cos(1.4*y) - 1.3*rho*sin(1.1*x)*sin(1.3*x)*cos(1.2*y)*cos(1.4*y) - 2.8*rho*sin(1.4*y)*cos(1.3*x)^2*cos(1.4*y) + 1.1*rho*cos(1.1*x)*cos(1.3*x)*cos(1.2*y)*cos(1.4*y) - 1.6*sin(1.5*x)*sin(1.6*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[advective_flux_v_left]
-  type = ParsedFunction
-  value = '-rho*sin(1.1*x)*cos(1.3*x)*cos(1.2*y)*cos(1.4*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[advective_flux_v_right]
-  type = ParsedFunction
-  value = 'rho*sin(1.1*x)*cos(1.3*x)*cos(1.2*y)*cos(1.4*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[advective_flux_v_top]
-  type = ParsedFunction
-  value = 'rho*cos(1.3*x)^2*cos(1.4*y)^2'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[advective_flux_v_bottom]
-  type = ParsedFunction
-  value = '-rho*cos(1.3*x)^2*cos(1.4*y)^2'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[diffusive_flux_v_left]
-  type = ParsedFunction
-  value = '-1.3*mu*sin(1.3*x)*cos(1.4*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[diffusive_flux_v_right]
-  type = ParsedFunction
-  value = '1.3*mu*sin(1.3*x)*cos(1.4*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[diffusive_flux_v_top]
-  type = ParsedFunction
-  value = '1.4*mu*sin(1.4*y)*cos(1.3*x)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[diffusive_flux_v_bottom]
-  type = ParsedFunction
-  value = '-1.4*mu*sin(1.4*y)*cos(1.3*x)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[exact_p]
-  type = ParsedFunction
-  value = 'sin(1.5*x)*cos(1.6*y)'
-[]
-[forcing_p]
-  type = ParsedFunction
-  value = '-1.4*rho*sin(1.4*y)*cos(1.3*x) + 1.1*rho*cos(1.1*x)*cos(1.2*y)'
-  vars = 'rho'
-  vals = '${rho}'
-[]
-[flux_p_left]
-  type = ParsedFunction
-  value = '-rho*sin(1.1*x)*cos(1.2*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[flux_p_right]
-  type = ParsedFunction
-  value = 'rho*sin(1.1*x)*cos(1.2*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[flux_p_top]
-  type = ParsedFunction
-  value = 'rho*cos(1.3*x)*cos(1.4*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[flux_p_bottom]
-  type = ParsedFunction
-  value = '-rho*cos(1.3*x)*cos(1.4*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
+  [exact_u]
+    type = ParsedFunction
+    value = 'sin(x*pi)*cos(y*pi)'
+  []
+  [forcing_u]
+    type = ParsedFunction
+    value = '2*pi^2*mu*sin(x*pi)*cos(y*pi) - 2*pi*rho*sin(x*pi)*sin(y*pi)*cos(1.3*x)*cos(y*pi) + 2*pi*rho*sin(x*pi)*cos(x*pi)*cos(y*pi)^2 + 1.5*cos(1.5*x)*cos(1.6*y)'
+    vars = 'mu rho'
+    vals = '${mu} ${rho}'
+  []
+  [exact_v]
+    type = ParsedFunction
+    value = 'cos(1.3*x)*cos(y*pi)'
+  []
+  [forcing_v]
+    type = ParsedFunction
+    value = '1.69*mu*cos(1.3*x)*cos(y*pi) + pi^2*mu*cos(1.3*x)*cos(y*pi) - 1.3*rho*sin(1.3*x)*sin(x*pi)*cos(y*pi)^2 - 2*pi*rho*sin(y*pi)*cos(1.3*x)^2*cos(y*pi) + pi*rho*cos(1.3*x)*cos(x*pi)*cos(y*pi)^2 - 1.6*sin(1.5*x)*sin(1.6*y)'
+    vars = 'mu rho'
+    vals = '${mu} ${rho}'
+  []
+  [exact_p]
+    type = ParsedFunction
+    value = 'sin(1.5*x)*cos(1.6*y)'
+  []
+  [forcing_p]
+    type = ParsedFunction
+    value = '-pi*rho*sin(y*pi)*cos(1.3*x) + pi*rho*cos(x*pi)*cos(y*pi)'
+    vars = 'rho'
+    vals = '${rho}'
+  []
 []
 
 [Executioner]
