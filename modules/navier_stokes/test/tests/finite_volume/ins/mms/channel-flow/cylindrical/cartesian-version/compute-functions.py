@@ -3,8 +3,8 @@
 import mms
 import sympy
 
-u = 'sin(1.1*x)*cos(1.2*y)'
-v = 'cos(1.3*x)*cos(1.4*y)'
+u = 'sin(pi*x)*cos(pi*y)'
+v = 'cos(1.3*x)*cos(pi*y)'
 
 vel = u + '* e_i + ' + v + ' * e_j'
 
