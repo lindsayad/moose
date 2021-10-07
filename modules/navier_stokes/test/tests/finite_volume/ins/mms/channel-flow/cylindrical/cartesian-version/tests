@@ -7,6 +7,16 @@
     min_parallel = 8
     ad_indexing_type = 'global'
     required_python_packages = 'pandas matplotlib'
-    requirement = 'The system shall exhibit second order convergence for all variables in a Cartesian, no-slip, channel-floww problem using a Rhie-Chow interpolation and two term boundary expansion for gradient and extrapolated boundary face value computation.'
+    requirement = 'The system shall exhibit second order convergence for all variables in a Cartesian, no-slip, channel-flow problem using a Rhie-Chow interpolation and two term boundary expansion for gradient and extrapolated boundary face value computation.'
+  []
+  [two_term_symmetry]
+    type = PythonUnitTest
+    input = 'test.py'
+    test_case = Test2DRCSymmetry
+    method = '!dbg'
+    min_parallel = 8
+    ad_indexing_type = 'global'
+    required_python_packages = 'pandas matplotlib'
+    requirement = 'The system shall exhibit second order convergence for all variables in a Cartesian, no-slip, channel-flow problem with a symmetry axis using a Rhie-Chow interpolation and two term boundary expansion for gradient and extrapolated boundary face value computation.'
   []
 []
