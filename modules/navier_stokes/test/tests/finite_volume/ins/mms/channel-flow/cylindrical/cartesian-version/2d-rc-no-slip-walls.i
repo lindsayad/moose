@@ -73,7 +73,6 @@ rho=1.1
     u = u
     v = v
     rho = ${rho}
-    # boundaries_to_force = 'top'
   []
   [mass_forcing]
     type = FVBodyForce
