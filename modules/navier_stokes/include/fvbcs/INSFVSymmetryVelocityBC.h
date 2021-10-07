@@ -38,10 +38,11 @@ protected:
   /// The dynamic viscosity
   const Moose::Functor<ADReal> & _mu;
 
-  ADReal _u_eval = 0;
-  ADReal _v_eval = 0;
-  ADReal _w_eval = 0;
-
   /// The mesh dimension
   const unsigned int _dim;
+
+  /// Whether we are computing RC data
+  bool _computing_rc_data;
+
+  ADReal _a = 0;
 };

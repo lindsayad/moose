@@ -32,7 +32,8 @@ INSFVSymmetryVelocityBC::INSFVSymmetryVelocityBC(const InputParameters & params)
     _v_functor(getFunctor<ADReal>("v")),
     _w_functor(getFunctor<ADReal>("w")),
     _mu(getFunctor<ADReal>("mu")),
-    _dim(_subproblem.mesh().dimension())
+    _dim(_subproblem.mesh().dimension()),
+    _computing_rc_data(false)
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError("INSFV is not supported by local AD indexing. In order to use INSFV, please run the "
@@ -50,9 +51,12 @@ INSFVSymmetryVelocityBC::computeQpResidual()
       use_elem ? _face_info->elem().subdomain_id() : _face_info->neighbor().subdomain_id();
   const Point & cell_centroid =
       use_elem ? _face_info->elemCentroid() : _face_info->neighborCentroid();
-  _u_eval = use_elem ? _u_functor(&_face_info->elem()) : _u_functor(_face_info->neighborPtr());
-  _v_eval = use_elem ? _v_functor(&_face_info->elem()) : _v_functor(_face_info->neighborPtr());
-  _w_eval = use_elem ? _w_functor(&_face_info->elem()) : _w_functor(_face_info->neighborPtr());
+  const auto u_eval =
+      use_elem ? _u_functor(&_face_info->elem()) : _u_functor(_face_info->neighborPtr());
+  const auto v_eval =
+      use_elem ? _v_functor(&_face_info->elem()) : _v_functor(_face_info->neighborPtr());
+  const auto w_eval =
+      use_elem ? _w_functor(&_face_info->elem()) : _w_functor(_face_info->neighborPtr());
 
   const auto d_perpendicular = std::abs((_face_info->faceCentroid() - cell_centroid) * normal);
 
@@ -66,11 +70,14 @@ INSFVSymmetryVelocityBC::computeQpResidual()
 
   const auto mu_b = _mu(face);
 
-  ADReal delta_v_dot_n = (_u_eval - _u_functor(face)) * normal(0);
+  ADReal delta_v_dot_n = (u_eval - _u_functor(face)) * normal(0);
   if (_dim > 1)
-    delta_v_dot_n += (_v_eval - _v_functor(face)) * normal(1);
+    delta_v_dot_n += (v_eval - _v_functor(face)) * normal(1);
   if (_dim > 2)
-    delta_v_dot_n += (_w_eval - _w_functor(face)) * normal(2);
+    delta_v_dot_n += (w_eval - _w_functor(face)) * normal(2);
+
+  if (_computing_rc_data)
+    _a = normal(_index) * mu_b / d_perpendicular * normal(_index);
 
   return mu_b / d_perpendicular * delta_v_dot_n * normal(_index);
 }
@@ -79,24 +86,12 @@ void
 INSFVSymmetryVelocityBC::gatherRCData(const FaceInfo & fi)
 {
   _face_info = &fi;
+  _face_type = fi.faceType(_var.name());
+
+  _computing_rc_data = true;
   const auto residual = fi.faceArea() * fi.faceCoord() * computeQpResidual();
-  const auto & var = [this]() {
-    switch (_index)
-    {
-      case 0:
-        return _u_eval;
-      case 1:
-        return _v_eval;
-      case 2:
-        return _w_eval;
-      default:
-        mooseError("Unrecognized index value");
-    }
-  }();
+  _computing_rc_data = false;
 
-  auto * const boundary_elem = (fi.faceType(_var.name()) == FaceInfo::VarFaceNeighbors::ELEM)
-                                   ? &fi.elem()
-                                   : fi.neighborPtr();
-
-  _rc_uo.addToA(boundary_elem, _index, residual / var);
+  _rc_uo.addToA(
+      (_face_type == FaceInfo::VarFaceNeighbors::ELEM) ? &fi.elem() : fi.neighborPtr(), _index, _a);
 }
