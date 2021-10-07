@@ -30,7 +30,7 @@ rho=1.1
     type = INSFVRhieChowInterpolator
     u = u
     v = v
-    standard_body_forces = true
+    standard_body_forces = false
   []
 []
 
