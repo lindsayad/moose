@@ -199,10 +199,7 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     if (_standard_body_forces)
       continue;
 
-    Real face_coord;
-    coordTransformFactor(
-        UserObject::_subproblem, fi.elem().subdomain_id(), fi.faceCentroid(), face_coord);
-    const Point surface_vector = fi.normal() * fi.faceArea() * face_coord;
+    const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
     auto product = (it->second * fi.dCF()) * surface_vector;
 
     // Now should we compute _b2 for this element?
