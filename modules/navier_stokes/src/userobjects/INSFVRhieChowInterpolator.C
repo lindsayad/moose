@@ -199,20 +199,19 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     if (_standard_body_forces)
       continue;
 
-    const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
+    const Point surface_vector = fi.normal() * fi.faceArea();
     auto product = (it->second * fi.dCF()) * surface_vector;
 
     // Now should we compute _b2 for this element?
     if (dof_map.is_evaluable(fi.elem(), _var_numbers[0]))
       // Second term in RHS of Mercinger equation 42
-      _b2[fi.elem().id()] += product * fi.gC() / _assembly.elementVolume(&fi.elem());
+      _b2[fi.elem().id()] += product * fi.gC() / fi.elemVolume();
 
     // Or for the neighbor?
     if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _var_numbers[0]))
       // Second term in RHS of Mercinger equation 42. Apply both a minus sign to the surface vector
       // and to dCF such that result is a + so we don't have to change the sign
-      _b2[fi.neighbor().id()] +=
-          std::move(product) * (1. - fi.gC()) / _assembly.elementVolume(fi.neighborPtr());
+      _b2[fi.neighbor().id()] += std::move(product) * (1. - fi.gC()) / fi.neighborVolume();
   }
 
   if (_standard_body_forces)
