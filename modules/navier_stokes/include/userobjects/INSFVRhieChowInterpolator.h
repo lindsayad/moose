@@ -35,8 +35,7 @@ public:
   void addToA(const libMesh::Elem * elem, unsigned int component, const ADReal & value);
   void addToB(const libMesh::Elem * elem, unsigned int component, const ADReal & value);
   const ADReal & getB2(const libMesh::Elem & elem, unsigned int component) const;
-  const VectorValue<ADReal> & getB1(const FaceInfo & fi) const;
-  const VectorValue<ADReal> & getB3(const FaceInfo & fi) const;
+  const VectorValue<ADReal> & getPressureJump(const FaceInfo & fi) const;
   const VectorValue<ADReal> & rcCoeff(const libMesh::Elem * elem) const;
 
   void initialize() override final;
@@ -48,7 +47,6 @@ private:
   VectorValue<ADReal> interpolateB(std::unordered_map<dof_id_type, VectorValue<ADReal>> & b_elem,
                                    const FaceInfo & fi);
   void computeFirstAndSecondOverBars();
-  void computeThirdOverBar();
   void applyBData();
   void finalizeBData();
 
@@ -57,9 +55,8 @@ private:
   std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _a;
   std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _b;
   // Here the suffix on _b refers to the number of bar operations we've performed
-  std::map<const FaceInfo *, libMesh::VectorValue<ADReal>> _b1;
+  std::map<const FaceInfo *, libMesh::VectorValue<ADReal>> _pressure_jump;
   std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _b2;
-  std::map<const FaceInfo *, libMesh::VectorValue<ADReal>> _b3;
   MooseMesh & _moose_mesh;
   const libMesh::MeshBase & _mesh;
   SystemBase & _sys;
@@ -77,15 +74,9 @@ INSFVRhieChowInterpolator::getB2(const libMesh::Elem & elem, const unsigned int 
 }
 
 inline const VectorValue<ADReal> &
-INSFVRhieChowInterpolator::getB1(const FaceInfo & fi) const
+INSFVRhieChowInterpolator::getPressureJump(const FaceInfo & fi) const
 {
-  return libmesh_map_find(_b1, &fi);
-}
-
-inline const VectorValue<ADReal> &
-INSFVRhieChowInterpolator::getB3(const FaceInfo & fi) const
-{
-  return libmesh_map_find(_b3, &fi);
+  return libmesh_map_find(_pressure_jump, &fi);
 }
 
 inline void
