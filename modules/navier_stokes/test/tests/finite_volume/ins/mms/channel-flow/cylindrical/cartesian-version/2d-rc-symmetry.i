@@ -172,6 +172,11 @@ rho=1.1
     v = v
     momentum_component = 'y'
   []
+  [p_axis]
+    type = INSFVSymmetryPressureBC
+    variable = pressure
+    boundary = 'left'
+  []
   [p]
     type = INSFVOutletPressureBC
     variable = pressure
