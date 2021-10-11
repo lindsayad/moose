@@ -1,6 +1,6 @@
 mu=1.1
 rho=1.1
-offset=1e0
+offset=8e-2
 
 [Mesh]
   [gen]
@@ -212,31 +212,31 @@ offset=1e0
 [Functions]
 [exact_u]
   type = ParsedFunction
-  value = 'sin(pi*(x - 1.0))*cos(y*pi)'
+  value = 'sin(pi*(x - 0.08))*cos(y*pi)'
 []
 [forcing_u]
   type = ParsedFunction
-  value = 'pi^2*mu*sin(pi*(x - 1.0))*cos(y*pi) - 2*pi*rho*sin(y*pi)*sin(pi*(x - 1.0))*cos(y*pi)*cos(pi*(x - 1.0)) - pi*sin(pi*(x - 1.0))*cos(1.6*y) - (-x*pi^2*mu*sin(pi*(x - 1.0))*cos(y*pi) + pi*mu*cos(y*pi)*cos(pi*(x - 1.0)))/x + (2*x*pi*rho*sin(pi*(x - 1.0))*cos(y*pi)^2*cos(pi*(x - 1.0)) + rho*sin(pi*(x - 1.0))^2*cos(y*pi)^2)/x'
+  value = 'pi^2*mu*sin(pi*(x - 0.08))*cos(y*pi) - 2*pi*rho*sin(y*pi)*sin(pi*(x - 0.08))*cos(y*pi)*cos(pi*(x - 0.08)) - pi*sin(pi*(x - 0.08))*cos(1.6*y) - (-x*pi^2*mu*sin(pi*(x - 0.08))*cos(y*pi) + pi*mu*cos(y*pi)*cos(pi*(x - 0.08)))/x + (2*x*pi*rho*sin(pi*(x - 0.08))*cos(y*pi)^2*cos(pi*(x - 0.08)) + rho*sin(pi*(x - 0.08))^2*cos(y*pi)^2)/x'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [exact_v]
   type = ParsedFunction
-  value = 'cos(y*pi)*cos(pi*(x - 1.0))'
+  value = 'cos(y*pi)*cos(pi*(x - 0.08))'
 []
 [forcing_v]
   type = ParsedFunction
-  value = 'pi^2*mu*cos(y*pi)*cos(pi*(x - 1.0)) - 2*pi*rho*sin(y*pi)*cos(y*pi)*cos(pi*(x - 1.0))^2 - 1.6*sin(1.6*y)*cos(pi*(x - 1.0)) - (-x*pi^2*mu*cos(y*pi)*cos(pi*(x - 1.0)) - pi*mu*sin(pi*(x - 1.0))*cos(y*pi))/x + (-x*pi*rho*sin(pi*(x - 1.0))^2*cos(y*pi)^2 + x*pi*rho*cos(y*pi)^2*cos(pi*(x - 1.0))^2 + rho*sin(pi*(x - 1.0))*cos(y*pi)^2*cos(pi*(x - 1.0)))/x'
+  value = 'pi^2*mu*cos(y*pi)*cos(pi*(x - 0.08)) - 2*pi*rho*sin(y*pi)*cos(y*pi)*cos(pi*(x - 0.08))^2 - 1.6*sin(1.6*y)*cos(pi*(x - 0.08)) - (-x*pi^2*mu*cos(y*pi)*cos(pi*(x - 0.08)) - pi*mu*sin(pi*(x - 0.08))*cos(y*pi))/x + (-x*pi*rho*sin(pi*(x - 0.08))^2*cos(y*pi)^2 + x*pi*rho*cos(y*pi)^2*cos(pi*(x - 0.08))^2 + rho*sin(pi*(x - 0.08))*cos(y*pi)^2*cos(pi*(x - 0.08)))/x'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [exact_p]
   type = ParsedFunction
-  value = 'cos(1.6*y)*cos(pi*(x - 1.0))'
+  value = 'cos(1.6*y)*cos(pi*(x - 0.08))'
 []
 [forcing_p]
   type = ParsedFunction
-  value = '-pi*rho*sin(y*pi)*cos(pi*(x - 1.0)) + (x*pi*rho*cos(y*pi)*cos(pi*(x - 1.0)) + rho*sin(pi*(x - 1.0))*cos(y*pi))/x'
+  value = '-pi*rho*sin(y*pi)*cos(pi*(x - 0.08)) + (x*pi*rho*cos(y*pi)*cos(pi*(x - 0.08)) + rho*sin(pi*(x - 0.08))*cos(y*pi))/x'
   vars = 'rho'
   vals = '${rho}'
 []
