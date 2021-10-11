@@ -15,7 +15,6 @@
 #include "MooseMesh.h"
 #include "SystemBase.h"
 #include "NS.h"
-#include "FVUtils.h"
 
 #include "libmesh/mesh_base.h"
 #include "libmesh/elem_range.h"
@@ -77,8 +76,9 @@ INSFVRhieChowInterpolator::initialize()
 
   _a.clear();
   _b.clear();
-  _pressure_jump.clear();
+  _b1.clear();
   _b2.clear();
+  _b3.clear();
 }
 
 void
@@ -186,27 +186,6 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
   const auto & all_fi = _moose_mesh.allFaceInfo();
   // reserve to avoid re-allocating all the time
   _b2.reserve(_fe_problem.getEvaluableElementRange().size());
-  // Will hold all but the surface vector in the numerator in equation 40 in Rothere
-  std::unordered_map<dof_id_type, ADRealVectorValue> b_V_over_sum_area;
-  b_V_over_sum_area.reserve(_fe_problem.getEvaluableElementRange().size());
-
-  for (auto * const elem : _fe_problem.getEvaluableElementRange())
-  {
-    Real denominator = 0;
-    auto denominator_functor = [&denominator](const Elem &,
-                                              const Elem *,
-                                              const FaceInfo *,
-                                              const Point & surface_vector,
-                                              Real,
-                                              bool) {
-      denominator += surface_vector * surface_vector;
-    };
-
-    Moose::FV::loopOverElemFaceInfo(
-        *elem, _moose_mesh, UserObject::_subproblem, denominator_functor);
-
-    b_V_over_sum_area[elem->id()] = _b[elem->id()] * _assembly.elementVolume(elem) / denominator;
-  }
 
   for (const auto & fi : all_fi)
   {
@@ -215,52 +194,25 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
       // that case we don't care about its face computation
       continue;
 
-    const auto surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
-    const auto dim = fi.elem().dim();
-    mooseAssert(!fi.neighborPtr() || (fi.neighbor().dim() == dim),
-                "Elem and neighbor dims should be the same");
-    auto componentwise_mult = [dim](const auto & vec1, const auto & vec2) -> VectorValue<ADReal> {
-      VectorValue<ADReal> ret;
-      for (const auto i : make_range(dim))
-        ret(i) = vec1(i) * vec2(i);
-
-      return ret;
-    };
-
-    const auto it = _pressure_jump
-                        .emplace(std::make_pair(
-                            &fi,
-                            componentwise_mult(libmesh_map_find(b_V_over_sum_area, fi.elem().id()),
-                                               surface_vector)))
-                        .first;
-
-    auto & pressure_jump = it->second;
-    if (fi.neighborPtr())
-      // Equation 41 in Rothere doesn't have the minus sign applied to the normal but should it?
-      pressure_jump += componentwise_mult(libmesh_map_find(b_V_over_sum_area, fi.neighbor().id()),
-                                          surface_vector);
+    const auto it = _b1.emplace(std::make_pair(&fi, interpolateB(_b, fi))).first;
 
     if (_standard_body_forces)
       continue;
 
+    const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
+    auto product = (it->second * fi.dCF()) * surface_vector;
+
     // Now should we compute _b2 for this element?
     if (dof_map.is_evaluable(fi.elem(), _var_numbers[0]))
-    {
-      auto & b2 = _b2[fi.elem().id()];
-      // Equation 42 in Rothere
-      for (const auto d : make_range(fi.elem().dim()))
-        b2(d) += 0.5 * surface_vector(d) * pressure_jump(d) / _assembly.elementVolume(&fi.elem());
-    }
+      // Second term in RHS of Mercinger equation 42
+      _b2[fi.elem().id()] += product * fi.gC() / _assembly.elementVolume(&fi.elem());
 
     // Or for the neighbor?
     if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _var_numbers[0]))
-    {
-      auto & b2 = _b2[fi.neighbor().id()];
-      // Equation 42 in Rothere
-      for (const auto d : make_range(fi.neighbor().dim()))
-        b2(d) +=
-            0.5 * -surface_vector(d) * pressure_jump(d) / _assembly.elementVolume(fi.neighborPtr());
-    }
+      // Second term in RHS of Mercinger equation 42. Apply both a minus sign to the surface vector
+      // and to dCF such that result is a + so we don't have to change the sign
+      _b2[fi.neighbor().id()] +=
+          std::move(product) * (1. - fi.gC()) / _assembly.elementVolume(fi.neighborPtr());
   }
 
   if (_standard_body_forces)
@@ -269,6 +221,15 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
 
   // We now no longer need to store _b so we can drop its memory
   _b.clear();
+}
+
+void
+INSFVRhieChowInterpolator::computeThirdOverBar()
+{
+  const auto & local_fi = _moose_mesh.faceInfo();
+
+  for (auto * const fi : local_fi)
+    _b3.emplace(std::make_pair(fi, interpolateB(_b2, *fi)));
 }
 
 void
@@ -343,6 +304,7 @@ INSFVRhieChowInterpolator::finalizeBData()
 
   // We can proceed to all the overbar operations for _b
   computeFirstAndSecondOverBars();
+  computeThirdOverBar();
 
   // Add the b data to the residual/Jacobian
   applyBData();
