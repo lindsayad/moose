@@ -64,7 +64,6 @@ rho=1
     type = INSFVRhieChowInterpolator
     u = u
     v = v
-    pressure = pressure
   []
 []
 
