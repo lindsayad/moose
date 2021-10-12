@@ -186,6 +186,8 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
   const auto & all_fi = _moose_mesh.allFaceInfo();
   // reserve to avoid re-allocating all the time
   _b2.reserve(_fe_problem.getEvaluableElementRange().size());
+  std::unordered_map<dof_id_type, Real> sf_sfhat_sum;
+  sf_sfhat_sum.reserve(_fe_problem.getEvaluableElementRange().size());
 
   for (const auto & fi : all_fi)
   {
@@ -199,19 +201,23 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     if (_standard_body_forces)
       continue;
 
-    const Point surface_vector = fi.normal() * fi.faceArea();
-    auto product = (it->second * fi.dCF()) * surface_vector;
+    const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
+    const auto sf_sfhat = fi.normal() * surface_vector;
+    const auto weighted_flux = it->second * sf_sfhat;
 
     // Now should we compute _b2 for this element?
     if (dof_map.is_evaluable(fi.elem(), _var_numbers[0]))
-      // Second term in RHS of Mercinger equation 42
-      _b2[fi.elem().id()] += product * fi.gC() / fi.elemVolume();
+    {
+      _b2[fi.elem().id()] += weighted_flux;
+      sf_sfhat_sum[fi.elem().id()] += sf_sfhat;
+    }
 
     // Or for the neighbor?
     if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _var_numbers[0]))
-      // Second term in RHS of Mercinger equation 42. Apply both a minus sign to the surface vector
-      // and to dCF such that result is a + so we don't have to change the sign
-      _b2[fi.neighbor().id()] += std::move(product) * (1. - fi.gC()) / fi.neighborVolume();
+    {
+      _b2[fi.neighbor().id()] += weighted_flux;
+      sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
+    }
   }
 
   if (_standard_body_forces)
@@ -220,6 +226,12 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
 
   // We now no longer need to store _b so we can drop its memory
   _b.clear();
+
+  if (_standard_body_forces)
+    return;
+
+  for (auto & pr : _b2)
+    pr.second /= libmesh_map_find(sf_sfhat_sum, pr.first);
 }
 
 void
