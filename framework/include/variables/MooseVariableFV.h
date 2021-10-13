@@ -512,7 +512,7 @@ protected:
    * boundary face for which is not a corresponding Dirichlet condition, e.g. we need to compute
    * some approximation for the boundary face value using the adjacent cell centroid information
    */
-  bool isExtrapolatedBoundaryFace(const FaceInfo & fi) const;
+  bool isExtrapolatedBoundaryFace(const FaceInfo & fi) const override;
 
 private:
   using MooseVariableField<OutputType>::evaluate;

@@ -179,6 +179,11 @@ public:
    */
   void setCacheClearanceSchedule(const std::set<ExecFlagType> & clearance_schedule);
 
+  /**
+   * Returns whether this is an extrapolated boundary face
+   */
+  virtual bool isExtrapolatedBoundaryFace(const FaceInfo &) const { return false; }
+
 protected:
   /**
    * Evaluate the functor with a given element. Some example implementations of this method
