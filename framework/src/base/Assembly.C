@@ -19,6 +19,7 @@
 #include "MooseVariableScalar.h"
 #include "XFEMInterface.h"
 #include "DisplacedSystem.h"
+#include "MooseMeshUtils.h"
 
 // libMesh
 #include "libmesh/coupling_matrix.h"
@@ -45,24 +46,12 @@ coordTransformFactor(const SubProblem & s,
                   ? s.getCoordSystem(sub_id) == s.getCoordSystem(neighbor_sub_id)
                   : true,
               "Coordinate systems must be the same between element and neighbor");
-
-  switch (s.getCoordSystem(sub_id))
-  {
-    case Moose::COORD_XYZ:
-      factor = 1.0;
-      break;
-    case Moose::COORD_RZ:
-    {
-      unsigned int rz_radial_coord = s.getAxisymmetricRadialCoord();
-      factor = 2 * M_PI * point(rz_radial_coord);
-      break;
-    }
-    case Moose::COORD_RSPHERICAL:
-      factor = 4 * M_PI * point(0) * point(0);
-      break;
-    default:
-      mooseError("Unknown coordinate system");
-  }
+  const auto coord_type = s.getCoordSystem(sub_id);
+  MooseMeshUtils::coordTransformFactor(
+      point,
+      factor,
+      coord_type,
+      coord_type == Moose::COORD_RZ ? s.getAxisymmetricRadialCoord() : libMesh::invalid_uint);
 }
 
 Assembly::Assembly(SystemBase & sys, THREAD_ID tid)
