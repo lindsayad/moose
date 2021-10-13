@@ -115,12 +115,12 @@ loopOverElemFaceInfo(const Elem & elem,
                      const SubProblem & subproblem,
                      ActionFunctor & act)
 {
-  const auto coord_type = s.getCoordSystem(sub_id);
+  const auto coord_type = subproblem.getCoordSystem(elem.subdomain_id());
   loopOverElemFaceInfo(elem,
                        mesh,
                        act,
                        coord_type,
-                       coord_type == Moose::COORD_RZ ? s.getAxisymmetricRadialCoord()
+                       coord_type == Moose::COORD_RZ ? subproblem.getAxisymmetricRadialCoord()
                                                      : libMesh::invalid_uint);
 }
 
