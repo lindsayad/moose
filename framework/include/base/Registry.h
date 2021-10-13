@@ -17,6 +17,11 @@
 #define combineNames1(X, Y) X##Y
 #define combineNames(X, Y) combineNames1(X, Y)
 
+class InputParameters;
+InputParameters emptyInputParameters();
+template <class>
+InputParameters validParams();
+
 /// This is provided as a convenience to globally set certain app names or labels used for
 /// objects/actions as allowable.  While usually not needed, this macro can be useful for cases
 /// when your app/module code may be compiled with other apps without your objects being
