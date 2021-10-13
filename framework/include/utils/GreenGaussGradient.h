@@ -25,10 +25,10 @@ VectorValue<T>
 greenGaussGradient(const Elem * const elem,
                    const Moose::Functor<T> & functor,
                    const bool two_term_boundary_expansion,
+                   const MooseMesh & mesh,
                    const Moose::CoordinateSystemType coord_type,
                    const unsigned int rz_radial_coord = libMesh::invalid_uint,
-                   std::unordered_map<const FaceInfo *, T> * const face_to_value_cache = nullptr,
-                   std::unordered_map<const Elem *, VectorValue<T>> elem_to_grad_cache = nullptr)
+                   std::unordered_map<const FaceInfo *, T> * const face_to_value_cache = nullptr)
 {
   T elem_value = functor(elem);
 
@@ -80,12 +80,17 @@ greenGaussGradient(const Elem * const elem,
                            &ebf_b,
                            &grad_ebf_coeffs,
                            &grad_b,
-                           this](const Elem & functor_elem,
-                                 const Elem * const neighbor,
-                                 const FaceInfo * const fi,
-                                 const Point & surface_vector,
-                                 Real coord,
-                                 const bool elem_has_info) {
+                           &functor,
+                           &mesh,
+                           two_term_boundary_expansion,
+                           coord_type,
+                           rz_radial_coord,
+                           face_to_value_cache](const Elem & functor_elem,
+                                                const Elem *,
+                                                const FaceInfo * const fi,
+                                                const Point & surface_vector,
+                                                Real coord,
+                                                const bool elem_has_info) {
       mooseAssert(fi, "We need a FaceInfo for this action_functor");
       mooseAssert(elem == &functor_elem,
                   "Just a sanity check that the element being passed in is the one we passed out.");
@@ -142,16 +147,15 @@ greenGaussGradient(const Elem * const elem,
       }
     };
 
-    Moose::FV::loopOverElemFaceInfo(
-        *elem, this->_mesh, action_functor, coord_type, rz_radial_coord);
+    Moose::FV::loopOverElemFaceInfo(*elem, mesh, action_functor, coord_type, rz_radial_coord);
 
     mooseAssert(volume_set && volume > 0, "We should have set the volume");
     grad_b /= volume;
 
     if (coord_type == Moose::CoordinateSystemType::COORD_RZ)
     {
-      const auto r_coord = this->_subproblem.getAxisymmetricRadialCoord();
-      grad_b(r_coord) -= elem_value / elem->vertex_average()(r_coord);
+      mooseAssert(rz_radial_coord != libMesh::invalid_uint, "rz_radial_coord must be set");
+      grad_b(rz_radial_coord) -= elem_value / elem->vertex_average()(rz_radial_coord);
     }
 
     mooseAssert(
@@ -215,22 +219,16 @@ greenGaussGradient(const Elem * const elem,
           face_to_value_cache->emplace(ebf_faces[j], x(LIBMESH_DIM + j));
     }
 
-    if (elem_to_grad_cache)
-    {
-      auto pr = elem_to_grad_cache->emplace(elem, std::move(grad));
-      return pr.first->second;
-    }
-    else
-      return grad;
+    return grad;
   }
-  catch
+  catch (libMesh::LogicError &)
   {
     // Retry without two-term
     mooseAssert(two_term_boundary_expansion,
                 "I believe we should only get singular systems when two-term boundary expansion is "
                 "being used");
-    const auto & grad = greenGaussGradient(
-        elem, functor, false, coord_type, rz_radial_coord, face_to_value_cache, elem_to_grad_cache);
+    const auto grad = greenGaussGradient(
+        elem, functor, false, mesh, coord_type, rz_radial_coord, face_to_value_cache);
 
     // We failed to compute the extrapolated boundary faces with two-term expansion and callers of
     // this method may be relying on those values (e.g. if the caller is
