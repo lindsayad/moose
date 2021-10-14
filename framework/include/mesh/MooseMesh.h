@@ -1078,6 +1078,9 @@ public:
    */
   void cacheVarIndicesByFace(const std::vector<const MooseVariableBase *> & moose_vars);
 
+  void applyCoordSysToFaceCoords(Moose::CoordinateSystemType coord_type,
+                                 unsigned int rz_radial_coord = libMesh::invalid_uint);
+
   /**
    * Compute the face coordinate value for all \p FaceInfo objects. 'Coordinate' here means a
    * coordinate value associated with the coordinate system. For Cartesian coordinate systems,

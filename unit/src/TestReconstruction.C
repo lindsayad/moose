@@ -88,6 +88,7 @@ TEST(TestReconstruction, theTest)
                                                                       std::move(analytic_map));
 
     const auto & all_fi = mesh->allFaceInfo();
+    mesh->applyCoordSysToFaceCoords(coord_type, rz_radial_coord);
 
     std::unordered_map<dof_id_type, RealVectorValue> up;
     std::unordered_map<dof_id_type, RealVectorValue> up_weller;
@@ -105,7 +106,7 @@ TEST(TestReconstruction, theTest)
       const RealVectorValue uf(u(face));
       const RealTensorValue grad_uf(u.gradient(face));
 
-      const Point surface_vector = fi.normal() * fi.faceArea();
+      const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
       const auto elem_interpolant = uf + grad_uf * (fi.elemCentroid() - fi.faceCentroid());
       const auto sf_sfhat = fi.normal() * surface_vector;
 

@@ -3272,6 +3272,17 @@ MooseMesh::faceInfo(const Elem * elem, unsigned int side) const
 }
 
 void
+MooseMesh::applyCoordSysToFaceCoords(const Moose::CoordinateSystemType coord_type,
+                                     const unsigned int rz_radial_coord)
+{
+  if (_face_info_dirty)
+    mooseError("Trying to compute face-info coords when the information is dirty");
+
+  for (auto & fi : _all_face_info)
+    MooseMeshUtils::computeFaceInfoFaceCoord(fi, coord_type, rz_radial_coord);
+}
+
+void
 MooseMesh::computeFaceInfoFaceCoords(const SubProblem & subproblem)
 {
   if (_face_info_dirty)
