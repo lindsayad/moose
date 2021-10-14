@@ -11,10 +11,22 @@
 #include "MooseError.h"
 #include "CastUniquePointer.h"
 #include "GeneratedMeshGenerator.h"
+#include "MooseFunctor.h"
+#include "PolynomialFit.h"
+#include "FaceInfo.h"
+#include "GreenGaussGradient.h"
+#include "MooseTypes.h"
+
+#include "libmesh/elem.h"
+#include "libmesh/tensor_value.h"
+#include "libmesh/point.h"
+#include "libmesh/vector_value.h"
 
 #include <memory>
+#include <vector>
+#include <memory>
 
-class XYFunctor : public Functor<Real>
+class XYFunctor : public Moose::Functor<Real>
 {
 public:
   using typename Functor<Real>::FaceArg;
@@ -24,6 +36,8 @@ public:
   using typename Functor<Real>::ElemSideQpArg;
 
   XYFunctor(const MooseMesh & mesh) : _mesh(mesh) {}
+
+  bool isExtrapolatedBoundaryFace(const FaceInfo & fi) const override { return !fi.neighborPtr(); }
 
 private:
   const MooseMesh & _mesh;
@@ -48,7 +62,7 @@ private:
       return fi.gC() * elem_value + (1 - fi.gC()) * (*this)(fi.neighborPtr());
     else
       // Two term expansion
-      return elem_value + this->gradient(&fi.elem()) * (fi->faceCentroid() - fi->elemCentroid())
+      return elem_value + this->gradient(&fi.elem()) * (fi.faceCentroid() - fi.elemCentroid());
   }
 
   Real evaluate(const SingleSidedFaceArg &, unsigned int) const override final
@@ -69,7 +83,7 @@ private:
   VectorValue<Real> evaluateGradient(const libMesh::Elem * const & elem,
                                      unsigned int) const override final
   {
-    return Moose::FV::greenGaussGradient(elem, *this, true, _mesh, Moose::XYZ);
+    return Moose::FV::greenGaussGradient(elem, *this, true, _mesh, Moose::COORD_XYZ);
   }
 
   VectorValue<Real> evaluateGradient(const ElemFromFaceArg &, unsigned int) const override final
@@ -150,7 +164,7 @@ private:
 class UYFunctor : public XYFunctor
 {
 public:
-  UXFunctor(const MooseMesh & mesh) : XYFunctor(mesh) {}
+  UYFunctor(const MooseMesh & mesh) : XYFunctor(mesh) {}
 
 private:
   Real value(const Point & point) const override final
@@ -162,14 +176,20 @@ private:
 TEST(TestReconstruction, theTest)
 {
   const char * argv[2] = {"foo", "\0"};
-  auto app = AppFactory::createAppShared("MooseUnitApp", 1, (char **)argv);
-  auto * factory = &app->getFactory();
-  std::string mesh_type = "MeshGeneratorMesh";
 
-  std::vector<unsigned int> num_elem = {2, 4, 8, 16, 32};
+  std::vector<unsigned int> num_elem = {64, 128, 256};
+  std::vector<Real> errors;
+  std::vector<Real> h(num_elem.size());
+  for (const auto i : index_range(num_elem))
+    h[i] = 1. / num_elem[i];
 
-  for (const auto nx : num_elem)
+  for (const auto i : index_range(num_elem))
   {
+    const auto nx = num_elem[i];
+    auto app = AppFactory::createAppShared("MooseUnitApp", 1, (char **)argv);
+    auto * factory = &app->getFactory();
+    std::string mesh_type = "MeshGeneratorMesh";
+
     std::shared_ptr<MeshGeneratorMesh> mesh;
     {
       InputParameters params = factory->getValidParams(mesh_type);
@@ -195,6 +215,9 @@ TEST(TestReconstruction, theTest)
     UYFunctor uy(*mesh);
     const auto & all_fi = mesh->allFaceInfo();
 
+    std::map<const Elem *, RealVectorValue> up;
+    std::map<const Elem *, Real> sf_sfhat_sum;
+
     for (const auto & fi : all_fi)
     {
       const auto face =
@@ -204,48 +227,56 @@ TEST(TestReconstruction, theTest)
                           std::make_pair(fi.elem().subdomain_id(),
                                          fi.neighborPtr() ? fi.neighbor().subdomain_id()
                                                           : Moose::INVALID_BLOCK_ID));
-      RealVectorValue uf(ux(face), uy(face));
+      const RealVectorValue uf(ux(face), uy(face));
       RealTensorValue grad_uf;
-      RealVectorValue grad_uxf = ux.gradient(face);
-      RealVectorValue grad_uyf = uy.gradient(face);
+      const RealVectorValue grad_uxf = ux.gradient(face);
+      const RealVectorValue grad_uyf = uy.gradient(face);
       for (const auto i : make_range(unsigned(2)))
       {
         grad_uf(0, i) = grad_uxf(i);
         grad_uf(1, i) = grad_uyf(i);
       }
 
-      const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
-      const auto Ff = uf * surface_vector;
-
+      const Point surface_vector = fi.normal() * fi.faceArea();
+      const auto elem_interpolant = uf + grad_uf * (fi.elemCentroid() - fi.faceCentroid());
       const auto sf_sfhat = fi.normal() * surface_vector;
-      const auto weighted_flux = it->second * sf_sfhat;
 
-      // Now should we compute _b2 for this element?
-      if (dof_map.is_evaluable(fi.elem(), _var_numbers[0]))
-      {
-        _b2[fi.elem().id()] += weighted_flux;
-        sf_sfhat_sum[fi.elem().id()] += sf_sfhat;
-      }
+      up[&fi.elem()] += elem_interpolant * sf_sfhat;
+      sf_sfhat_sum[&fi.elem()] += sf_sfhat;
 
-      // Or for the neighbor?
-      if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _var_numbers[0]))
+      if (fi.neighborPtr())
       {
-        _b2[fi.neighbor().id()] += weighted_flux;
-        sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
+        const auto neighbor_interpolant =
+            uf + grad_uf * (fi.neighborCentroid() - fi.faceCentroid());
+        up[&fi.neighbor()] += neighbor_interpolant * sf_sfhat;
+        sf_sfhat_sum[&fi.neighbor()] += sf_sfhat;
       }
     }
 
-    if (_standard_body_forces)
-      for (const auto & pr : _b)
-        _b2[pr.first] = pr.second;
-
-    // We now no longer need to store _b so we can drop its memory
-    _b.clear();
-
-    if (_standard_body_forces)
-      return;
-
-    for (auto & pr : _b2)
-      pr.second /= libmesh_map_find(sf_sfhat_sum, pr.first);
+    Real error = 0;
+    const auto current_h = h[i];
+    for (auto & pr : up)
+    {
+      auto * const elem = pr.first;
+      auto & up_current = pr.second;
+      up_current /= libmesh_map_find(sf_sfhat_sum, elem);
+      const RealVectorValue analytic(ux(elem), uy(elem));
+      const auto diff = analytic - up_current;
+      error += diff * diff * current_h * current_h;
+    }
+    error = std::sqrt(error);
+    errors.push_back(error);
   }
+
+  for (auto error : errors)
+    std::cout << error << std::endl;
+
+  std::for_each(h.begin(), h.end(), [](Real & h_elem) { h_elem = std::log(h_elem); });
+  std::for_each(errors.begin(), errors.end(), [](Real & error) { error = std::log(error); });
+  PolynomialFit fit(h, errors, 1);
+  fit.generate();
+
+  const auto & coeffs = fit.getCoefficients();
+  for (auto coeff : coeffs)
+    std::cout << coeff << std::endl;
 }
