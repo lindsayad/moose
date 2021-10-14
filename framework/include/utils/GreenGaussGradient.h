@@ -12,6 +12,7 @@
 #include "MooseFunctor.h"
 #include "FVUtils.h"
 #include "MooseMeshUtils.h"
+#include "VectorComponentFunctor.h"
 
 template <typename>
 class MooseVariableFV;
@@ -240,6 +241,34 @@ greenGaussGradient(const Elem * const elem,
 
     return grad;
   }
+}
+
+template <typename T>
+TensorValue<T>
+greenGaussGradient(const Elem * const elem,
+                   const Moose::Functor<VectorValue<T>> & functor,
+                   const bool two_term_boundary_expansion,
+                   const MooseMesh & mesh,
+                   const Moose::CoordinateSystemType coord_type,
+                   const unsigned int rz_radial_coord = libMesh::invalid_uint,
+                   std::unordered_map<const FaceInfo *, T> * const face_to_value_cache = nullptr)
+{
+  TensorValue<T> ret;
+  for (const auto i : make_range(unsigned(LIBMESH_DIM)))
+  {
+    VectorComponentFunctor<T> scalar_functor(functor, i);
+    const auto row_gradient = greenGaussGradient(elem,
+                                                 scalar_functor,
+                                                 two_term_boundary_expansion,
+                                                 mesh,
+                                                 coord_type,
+                                                 rz_radial_coord,
+                                                 face_to_value_cache);
+    for (const auto j : make_range(unsigned(LIBMESH_DIM)))
+      ret(i, j) = row_gradient(j);
+  }
+
+  return ret;
 }
 }
 }
