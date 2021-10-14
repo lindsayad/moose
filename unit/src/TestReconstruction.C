@@ -96,7 +96,14 @@ private:
     const auto & fi = *std::get<0>(face);
     const auto elem_gradient = this->gradient(&fi.elem());
     if (fi.neighborPtr())
-      return fi.gC() * elem_gradient + (1 - fi.gC()) * this->gradient(fi.neighborPtr());
+    {
+      const auto linear_interp_gradient =
+          fi.gC() * elem_gradient + (1 - fi.gC()) * this->gradient(fi.neighborPtr());
+      return linear_interp_gradient +
+             (((*this)(fi.neighborPtr()) - (*this)(&fi.elem())) / fi.dCFMag() -
+              linear_interp_gradient * fi.eCF()) *
+                 fi.eCF();
+    }
     else
       // One term expansion
       return elem_gradient;
