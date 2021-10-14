@@ -36,12 +36,15 @@
 #include <vector>
 #include <memory>
 
-TEST(TestReconstruction, theTest)
+void
+testReconstruction(const Moose::CoordinateSystemType coord_type,
+                   const unsigned int rz_radial_coord = libMesh::invalid_uint)
 {
   const char * argv[2] = {"foo", "\0"};
 
   std::vector<unsigned int> num_elem = {64, 128, 256};
   std::vector<Real> errors;
+  std::vector<Real> linear_errors;
   std::vector<Real> weller_errors;
   std::vector<Real> h(num_elem.size());
   for (const auto i : index_range(num_elem))
@@ -84,13 +87,17 @@ TEST(TestReconstruction, theTest)
                                                  std::cos(centroid(0)) * std::sin(centroid(1)));
     }
 
-    CellCenteredMapFunctor<RealVectorValue, decltype(analytic_map)> u(*mesh,
-                                                                      std::move(analytic_map));
+    auto dup = analytic_map;
+    CellCenteredMapFunctor<RealVectorValue, decltype(analytic_map)> u(
+        *mesh, std::move(analytic_map), true);
+    CellCenteredMapFunctor<RealVectorValue, decltype(analytic_map)> u_linear(
+        *mesh, std::move(dup), false);
 
     const auto & all_fi = mesh->allFaceInfo();
     mesh->applyCoordSysToFaceCoords(coord_type, rz_radial_coord);
 
     std::unordered_map<dof_id_type, RealVectorValue> up;
+    std::unordered_map<dof_id_type, RealVectorValue> up_linear;
     std::unordered_map<dof_id_type, RealVectorValue> up_weller;
     std::unordered_map<dof_id_type, Real> sf_sfhat_sum;
 
@@ -103,61 +110,84 @@ TEST(TestReconstruction, theTest)
                           std::make_pair(fi.elem().subdomain_id(),
                                          fi.neighborPtr() ? fi.neighbor().subdomain_id()
                                                           : Moose::INVALID_BLOCK_ID));
-      const RealVectorValue uf(u(face));
-      const RealTensorValue grad_uf(u.gradient(face));
-
       const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
-      const auto elem_interpolant = uf + grad_uf * (fi.elemCentroid() - fi.faceCentroid());
+
       const auto sf_sfhat = fi.normal() * surface_vector;
-
-      up[fi.elem().id()] += elem_interpolant * sf_sfhat;
-      up_weller[fi.elem().id()] += uf * sf_sfhat;
       sf_sfhat_sum[fi.elem().id()] += sf_sfhat;
-
       if (fi.neighborPtr())
-      {
-        const auto neighbor_interpolant =
-            uf + grad_uf * (fi.neighborCentroid() - fi.faceCentroid());
-        up[fi.neighbor().id()] += neighbor_interpolant * sf_sfhat;
-        up_weller[fi.neighbor().id()] += uf * sf_sfhat;
         sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
-      }
+
+      auto interpolate =
+          [&face, &fi, &sf_sfhat](auto & functor, auto & container, const bool aguerre) {
+            const RealVectorValue uf(functor(face));
+            const RealTensorValue grad_uf(functor.gradient(face));
+            auto elem_interpolant = uf;
+            if (aguerre)
+              elem_interpolant += grad_uf * (fi.elemCentroid() - fi.faceCentroid());
+            container[fi.elem().id()] += elem_interpolant * sf_sfhat;
+            if (fi.neighborPtr())
+            {
+              auto neighbor_interpolant = uf;
+              if (aguerre)
+                neighbor_interpolant += grad_uf * (fi.neighborCentroid() - fi.faceCentroid());
+              container[fi.neighbor().id()] += neighbor_interpolant * sf_sfhat;
+            }
+          };
+
+      interpolate(u, up, true);
+      interpolate(u, up_weller, false);
+      interpolate(u_linear, up_linear, true);
     }
 
     Real error = 0;
     Real weller_error = 0;
+    Real linear_error = 0;
     const auto current_h = h[i];
-    for (auto & pr : up)
+    for (auto * const elem : lm_mesh.active_element_ptr_range())
     {
-      const auto elem_id = pr.first;
-      auto & up_current = pr.second;
+      const auto elem_id = elem->id();
       const auto sf_sfhat = libmesh_map_find(sf_sfhat_sum, elem_id);
-      up_current /= sf_sfhat;
-      auto & up_weller_current = libmesh_map_find(up_weller, elem_id);
-      up_weller_current /= sf_sfhat;
-      auto * elem = lm_mesh.elem_ptr(elem_id);
       const RealVectorValue analytic(u(elem));
-      const auto diff = analytic - up_current;
-      error += diff * diff * current_h * current_h;
-      const auto weller_diff = analytic - up_weller_current;
-      weller_error += weller_diff * weller_diff * current_h * current_h;
+
+      auto compute_elem_error = [elem_id, current_h, &sf_sfhat, &analytic](auto & container,
+                                                                           auto & error) {
+        auto & current = libmesh_map_find(container, elem_id);
+        current /= sf_sfhat;
+        const auto diff = analytic - current;
+        error += diff * diff * current_h * current_h;
+      };
+
+      compute_elem_error(up, error);
+      compute_elem_error(up_weller, weller_error);
+      compute_elem_error(up_linear, linear_error);
     }
     error = std::sqrt(error);
     weller_error = std::sqrt(weller_error);
+    linear_error = std::sqrt(linear_error);
     errors.push_back(error);
     weller_errors.push_back(weller_error);
+    linear_errors.push_back(linear_error);
   }
 
   for (auto error : errors)
     EXPECT_LT(error, std::numeric_limits<Real>::epsilon());
 
   std::for_each(h.begin(), h.end(), [](Real & h_elem) { h_elem = std::log(h_elem); });
-  std::for_each(weller_errors.begin(), weller_errors.end(), [](Real & weller_error) {
-    weller_error = std::log(weller_error);
-  });
-  PolynomialFit weller_fit(h, weller_errors, 1);
-  weller_fit.generate();
 
-  const auto & coeffs = weller_fit.getCoefficients();
-  EXPECT_NEAR(coeffs[1], 2., .05);
+  auto expect_errors = [&h, coord_type](auto & errors_arg, Real expected_error) {
+    std::for_each(
+        errors_arg.begin(), errors_arg.end(), [](Real & error) { error = std::log(error); });
+    PolynomialFit fit(h, errors_arg, 1);
+    fit.generate();
+
+    const auto & coeffs = fit.getCoefficients();
+    EXPECT_NEAR(coeffs[1], expected_error, .05);
+  };
+
+  expect_errors(weller_errors, coord_type == Moose::COORD_RZ ? 1.5 : 2);
+  expect_errors(linear_errors, 2.5);
 }
+
+TEST(TestReconstruction, Cartesian) { testReconstruction(Moose::COORD_XYZ); }
+
+TEST(TestReconstruction, Cylindrical) { testReconstruction(Moose::COORD_RZ, 0); }
