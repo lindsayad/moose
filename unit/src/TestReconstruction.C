@@ -87,8 +87,8 @@ TEST(TestReconstruction, theTest)
     CellCenteredMapFunctor<RealVectorValue, decltype(analytic_map)> u(*mesh,
                                                                       std::move(analytic_map));
 
-    mesh->applyCoordSysToFaceCoords(Moose::COORD_XYZ);
     const auto & all_fi = mesh->allFaceInfo();
+    mesh->applyCoordSysToFaceCoords(coord_type, rz_radial_coord);
 
     std::unordered_map<dof_id_type, RealVectorValue> up;
     std::unordered_map<dof_id_type, RealVectorValue> up_weller;
