@@ -37,13 +37,17 @@ public:
   using typename Moose::Functor<T>::GradientType;
   using typename Moose::Functor<T>::DotType;
 
-  CellCenteredMapFunctor(const MooseMesh & mesh, Map && map) : _mesh(mesh), _map(std::move(map)) {}
+  CellCenteredMapFunctor(const MooseMesh & mesh, Map && map, const bool correct_face)
+    : _mesh(mesh), _map(std::move(map)), _correct_face(correct_face)
+  {
+  }
 
   bool isExtrapolatedBoundaryFace(const FaceInfo & fi) const override { return !fi.neighborPtr(); }
 
 private:
   const MooseMesh & _mesh;
-  Map _map;
+  const Map _map;
+  const bool _correct_face;
 
   ValueType evaluate(const libMesh::Elem * const & elem, unsigned int) const override final
   {
@@ -77,10 +81,13 @@ private:
     {
       const auto linear_interp_gradient =
           fi.gC() * elem_gradient + (1 - fi.gC()) * this->gradient(fi.neighborPtr());
-      return linear_interp_gradient +
-             outer_product(((*this)(fi.neighborPtr()) - (*this)(&fi.elem())) / fi.dCFMag() -
-                               linear_interp_gradient * fi.eCF(),
-                           fi.eCF());
+      if (_correct_face)
+        return linear_interp_gradient +
+               outer_product(((*this)(fi.neighborPtr()) - (*this)(&fi.elem())) / fi.dCFMag() -
+                                 linear_interp_gradient * fi.eCF(),
+                             fi.eCF());
+      else
+        return linear_interp_gradient;
     }
     else
       // One term expansion
