@@ -13,6 +13,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <memory>
 
 #define combineNames1(X, Y) X##Y
 #define combineNames(X, Y) combineNames1(X, Y)
