@@ -87,6 +87,7 @@ TEST(TestReconstruction, theTest)
     CellCenteredMapFunctor<RealVectorValue, decltype(analytic_map)> u(*mesh,
                                                                       std::move(analytic_map));
 
+    mesh->applyCoordSysToFaceCoords(Moose::COORD_XYZ);
     const auto & all_fi = mesh->allFaceInfo();
 
     std::unordered_map<dof_id_type, RealVectorValue> up;
@@ -105,7 +106,7 @@ TEST(TestReconstruction, theTest)
       const RealVectorValue uf(u(face));
       const RealTensorValue grad_uf(u.gradient(face));
 
-      const Point surface_vector = fi.normal() * fi.faceArea();
+      const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
       const auto elem_interpolant = uf + grad_uf * (fi.elemCentroid() - fi.faceCentroid());
       const auto sf_sfhat = fi.normal() * surface_vector;
 
