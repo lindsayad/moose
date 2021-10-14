@@ -186,6 +186,7 @@ TEST(TestReconstruction, theTest)
 
   std::vector<unsigned int> num_elem = {64, 128, 256};
   std::vector<Real> errors;
+  std::vector<Real> weller_errors;
   std::vector<Real> h(num_elem.size());
   for (const auto i : index_range(num_elem))
     h[i] = 1. / num_elem[i];
@@ -223,6 +224,7 @@ TEST(TestReconstruction, theTest)
     const auto & all_fi = mesh->allFaceInfo();
 
     std::map<const Elem *, RealVectorValue> up;
+    std::map<const Elem *, RealVectorValue> up_weller;
     std::map<const Elem *, Real> sf_sfhat_sum;
 
     for (const auto & fi : all_fi)
@@ -249,6 +251,7 @@ TEST(TestReconstruction, theTest)
       const auto sf_sfhat = fi.normal() * surface_vector;
 
       up[&fi.elem()] += elem_interpolant * sf_sfhat;
+      up_weller[&fi.elem()] += uf * sf_sfhat;
       sf_sfhat_sum[&fi.elem()] += sf_sfhat;
 
       if (fi.neighborPtr())
@@ -256,34 +259,44 @@ TEST(TestReconstruction, theTest)
         const auto neighbor_interpolant =
             uf + grad_uf * (fi.neighborCentroid() - fi.faceCentroid());
         up[&fi.neighbor()] += neighbor_interpolant * sf_sfhat;
+        up_weller[&fi.neighbor()] += uf * sf_sfhat;
         sf_sfhat_sum[&fi.neighbor()] += sf_sfhat;
       }
     }
 
     Real error = 0;
+    Real weller_error = 0;
     const auto current_h = h[i];
     for (auto & pr : up)
     {
       auto * const elem = pr.first;
       auto & up_current = pr.second;
-      up_current /= libmesh_map_find(sf_sfhat_sum, elem);
+      const auto sf_sfhat = libmesh_map_find(sf_sfhat_sum, elem);
+      up_current /= sf_sfhat;
+      auto & up_weller_current = libmesh_map_find(up_weller, elem);
+      up_weller_current /= sf_sfhat;
       const RealVectorValue analytic(ux(elem), uy(elem));
       const auto diff = analytic - up_current;
       error += diff * diff * current_h * current_h;
+      const auto weller_diff = analytic - up_weller_current;
+      weller_error += weller_diff * weller_diff * current_h * current_h;
     }
     error = std::sqrt(error);
+    weller_error = std::sqrt(weller_error);
     errors.push_back(error);
+    weller_errors.push_back(weller_error);
   }
 
   for (auto error : errors)
-    std::cout << error << std::endl;
+    EXPECT_LT(error, std::numeric_limits<Real>::epsilon());
 
   std::for_each(h.begin(), h.end(), [](Real & h_elem) { h_elem = std::log(h_elem); });
-  std::for_each(errors.begin(), errors.end(), [](Real & error) { error = std::log(error); });
-  PolynomialFit fit(h, errors, 1);
-  fit.generate();
+  std::for_each(weller_errors.begin(), weller_errors.end(), [](Real & weller_error) {
+    weller_error = std::log(weller_error);
+  });
+  PolynomialFit weller_fit(h, weller_errors, 1);
+  weller_fit.generate();
 
-  const auto & coeffs = fit.getCoefficients();
-  for (auto coeff : coeffs)
-    std::cout << coeff << std::endl;
+  const auto & coeffs = weller_fit.getCoefficients();
+  EXPECT_NEAR(coeffs[1], 2., .05);
 }
