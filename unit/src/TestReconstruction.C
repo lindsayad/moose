@@ -1,3 +1,12 @@
+//* This file is part of the MOOSE framework
+//* https://www.mooseframework.org
+//*
+//* All rights reserved, see COPYRIGHT for full restrictions
+//* https://github.com/idaholab/moose/blob/master/COPYRIGHT
+//*
+//* Licensed under LGPL 2.1, please see LICENSE for details
+//* https://www.gnu.org/licenses/lgpl-2.1.html
+
 #include "gtest/gtest.h"
 
 #include "Registry.h"
@@ -14,171 +23,18 @@
 #include "MooseFunctor.h"
 #include "PolynomialFit.h"
 #include "FaceInfo.h"
-#include "GreenGaussGradient.h"
 #include "MooseTypes.h"
+#include "CellCenteredMapFunctor.h"
 
 #include "libmesh/elem.h"
 #include "libmesh/tensor_value.h"
 #include "libmesh/point.h"
 #include "libmesh/vector_value.h"
+#include "libmesh/utility.h"
 
 #include <memory>
 #include <vector>
 #include <memory>
-
-class XYFunctor : public Moose::Functor<Real>
-{
-public:
-  using typename Functor<Real>::FaceArg;
-  using typename Functor<Real>::SingleSidedFaceArg;
-  using typename Functor<Real>::ElemFromFaceArg;
-  using typename Functor<Real>::ElemQpArg;
-  using typename Functor<Real>::ElemSideQpArg;
-
-  XYFunctor(const MooseMesh & mesh) : _mesh(mesh) {}
-
-  bool isExtrapolatedBoundaryFace(const FaceInfo & fi) const override { return !fi.neighborPtr(); }
-
-private:
-  const MooseMesh & _mesh;
-
-  virtual Real value(const Point & point) const = 0;
-
-  Real evaluate(const libMesh::Elem * const & elem, unsigned int) const override final
-  {
-    return value(elem->vertex_average());
-  }
-
-  Real evaluate(const ElemFromFaceArg &, unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-
-  Real evaluate(const FaceArg & face, unsigned int) const override final
-  {
-    const auto & fi = *std::get<0>(face);
-    const auto elem_value = (*this)(&fi.elem());
-    if (fi.neighborPtr())
-      return fi.gC() * elem_value + (1 - fi.gC()) * (*this)(fi.neighborPtr());
-    else
-      // Two term expansion
-      return elem_value + this->gradient(&fi.elem()) * (fi.faceCentroid() - fi.elemCentroid());
-  }
-
-  Real evaluate(const SingleSidedFaceArg &, unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-  Real evaluate(const ElemQpArg &, unsigned int) const override final { mooseError("Not needed"); }
-  Real evaluate(const ElemSideQpArg &, unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-  Real evaluate(const std::tuple<Moose::ElementType, unsigned int, SubdomainID> &,
-                unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-
-  VectorValue<Real> evaluateGradient(const libMesh::Elem * const & elem,
-                                     unsigned int) const override final
-  {
-    return Moose::FV::greenGaussGradient(elem, *this, true, _mesh, Moose::COORD_XYZ);
-  }
-
-  VectorValue<Real> evaluateGradient(const ElemFromFaceArg &, unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-
-  VectorValue<Real> evaluateGradient(const FaceArg & face, unsigned int) const override final
-  {
-    const auto & fi = *std::get<0>(face);
-    const auto elem_gradient = this->gradient(&fi.elem());
-    if (fi.neighborPtr())
-    {
-      const auto linear_interp_gradient =
-          fi.gC() * elem_gradient + (1 - fi.gC()) * this->gradient(fi.neighborPtr());
-      return linear_interp_gradient +
-             (((*this)(fi.neighborPtr()) - (*this)(&fi.elem())) / fi.dCFMag() -
-              linear_interp_gradient * fi.eCF()) *
-                 fi.eCF();
-    }
-    else
-      // One term expansion
-      return elem_gradient;
-  }
-
-  VectorValue<Real> evaluateGradient(const SingleSidedFaceArg &, unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-  VectorValue<Real> evaluateGradient(const ElemQpArg &, unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-  VectorValue<Real> evaluateGradient(const ElemSideQpArg &, unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-  VectorValue<Real>
-  evaluateGradient(const std::tuple<Moose::ElementType, unsigned int, SubdomainID> &,
-                   unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-
-  Real evaluateDot(const libMesh::Elem * const &, unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-  Real evaluateDot(const ElemFromFaceArg &, unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-  Real evaluateDot(const FaceArg &, unsigned int) const override final { mooseError("Not needed"); }
-  Real evaluateDot(const SingleSidedFaceArg &, unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-  Real evaluateDot(const ElemQpArg &, unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-  Real evaluateDot(const ElemSideQpArg &, unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-  Real evaluateDot(const std::tuple<Moose::ElementType, unsigned int, SubdomainID> &,
-                   unsigned int) const override final
-  {
-    mooseError("Not needed");
-  }
-};
-
-class UXFunctor : public XYFunctor
-{
-public:
-  UXFunctor(const MooseMesh & mesh) : XYFunctor(mesh) {}
-
-private:
-  Real value(const Point & point) const override final
-  {
-    return -std::sin(point(0)) * std::cos(point(1));
-  }
-};
-
-class UYFunctor : public XYFunctor
-{
-public:
-  UYFunctor(const MooseMesh & mesh) : XYFunctor(mesh) {}
-
-private:
-  Real value(const Point & point) const override final
-  {
-    return std::cos(point(0)) * std::sin(point(1));
-  }
-};
 
 TEST(TestReconstruction, theTest)
 {
@@ -205,9 +61,9 @@ TEST(TestReconstruction, theTest)
     }
 
     app->actionWarehouse().mesh() = mesh;
-    std::unique_ptr<MeshBase> lm_mesh;
 
     {
+      std::unique_ptr<MeshBase> lm_mesh;
       InputParameters params = factory->getValidParams("GeneratedMeshGenerator");
       params.set<unsigned int>("nx") = nx;
       params.set<unsigned int>("ny") = nx;
@@ -215,17 +71,27 @@ TEST(TestReconstruction, theTest)
       auto mesh_gen =
           factory->create<GeneratedMeshGenerator>("GeneratedMeshGenerator", "mesh_gen", params);
       lm_mesh = mesh_gen->generate();
+      mesh->setMeshBase(std::move(lm_mesh));
     }
 
-    mesh->setMeshBase(std::move(lm_mesh));
+    auto & lm_mesh = mesh->getMesh();
 
-    UXFunctor ux(*mesh);
-    UYFunctor uy(*mesh);
+    std::unordered_map<dof_id_type, RealVectorValue> analytic_map;
+    for (auto * const elem : lm_mesh.active_element_ptr_range())
+    {
+      const auto centroid = elem->vertex_average();
+      analytic_map[elem->id()] = RealVectorValue(-std::sin(centroid(0)) * std::cos(centroid(1)),
+                                                 std::cos(centroid(0)) * std::sin(centroid(1)));
+    }
+
+    CellCenteredMapFunctor<RealVectorValue, decltype(analytic_map)> u(*mesh,
+                                                                      std::move(analytic_map));
+
     const auto & all_fi = mesh->allFaceInfo();
 
-    std::map<const Elem *, RealVectorValue> up;
-    std::map<const Elem *, RealVectorValue> up_weller;
-    std::map<const Elem *, Real> sf_sfhat_sum;
+    std::unordered_map<dof_id_type, RealVectorValue> up;
+    std::unordered_map<dof_id_type, RealVectorValue> up_weller;
+    std::unordered_map<dof_id_type, Real> sf_sfhat_sum;
 
     for (const auto & fi : all_fi)
     {
@@ -236,31 +102,24 @@ TEST(TestReconstruction, theTest)
                           std::make_pair(fi.elem().subdomain_id(),
                                          fi.neighborPtr() ? fi.neighbor().subdomain_id()
                                                           : Moose::INVALID_BLOCK_ID));
-      const RealVectorValue uf(ux(face), uy(face));
-      RealTensorValue grad_uf;
-      const RealVectorValue grad_uxf = ux.gradient(face);
-      const RealVectorValue grad_uyf = uy.gradient(face);
-      for (const auto i : make_range(unsigned(2)))
-      {
-        grad_uf(0, i) = grad_uxf(i);
-        grad_uf(1, i) = grad_uyf(i);
-      }
+      const RealVectorValue uf(u(face));
+      const RealTensorValue grad_uf(u.gradient(face));
 
       const Point surface_vector = fi.normal() * fi.faceArea();
       const auto elem_interpolant = uf + grad_uf * (fi.elemCentroid() - fi.faceCentroid());
       const auto sf_sfhat = fi.normal() * surface_vector;
 
-      up[&fi.elem()] += elem_interpolant * sf_sfhat;
-      up_weller[&fi.elem()] += uf * sf_sfhat;
-      sf_sfhat_sum[&fi.elem()] += sf_sfhat;
+      up[fi.elem().id()] += elem_interpolant * sf_sfhat;
+      up_weller[fi.elem().id()] += uf * sf_sfhat;
+      sf_sfhat_sum[fi.elem().id()] += sf_sfhat;
 
       if (fi.neighborPtr())
       {
         const auto neighbor_interpolant =
             uf + grad_uf * (fi.neighborCentroid() - fi.faceCentroid());
-        up[&fi.neighbor()] += neighbor_interpolant * sf_sfhat;
-        up_weller[&fi.neighbor()] += uf * sf_sfhat;
-        sf_sfhat_sum[&fi.neighbor()] += sf_sfhat;
+        up[fi.neighbor().id()] += neighbor_interpolant * sf_sfhat;
+        up_weller[fi.neighbor().id()] += uf * sf_sfhat;
+        sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
       }
     }
 
@@ -269,13 +128,14 @@ TEST(TestReconstruction, theTest)
     const auto current_h = h[i];
     for (auto & pr : up)
     {
-      auto * const elem = pr.first;
+      const auto elem_id = pr.first;
       auto & up_current = pr.second;
-      const auto sf_sfhat = libmesh_map_find(sf_sfhat_sum, elem);
+      const auto sf_sfhat = libmesh_map_find(sf_sfhat_sum, elem_id);
       up_current /= sf_sfhat;
-      auto & up_weller_current = libmesh_map_find(up_weller, elem);
+      auto & up_weller_current = libmesh_map_find(up_weller, elem_id);
       up_weller_current /= sf_sfhat;
-      const RealVectorValue analytic(ux(elem), uy(elem));
+      auto * elem = lm_mesh.elem_ptr(elem_id);
+      const RealVectorValue analytic(u(elem));
       const auto diff = analytic - up_current;
       error += diff * diff * current_h * current_h;
       const auto weller_diff = analytic - up_weller_current;
