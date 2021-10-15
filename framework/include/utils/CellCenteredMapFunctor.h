@@ -66,7 +66,7 @@ private:
 
   ValueType evaluate(const libMesh::Elem * const & elem, unsigned int) const override final
   {
-    return libmesh_map_find(*this, elem->id());
+    return (*const_cast<CellCenteredMapFunctor *>(this))[elem->id()];
   }
 
   ValueType evaluate(const FaceArg & face, unsigned int) const override final
