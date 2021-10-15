@@ -57,7 +57,9 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
     _w(isParamValid("w") ? &UserObject::_subproblem.getVariable(0, getParam<VariableName>("w"))
                          : nullptr),
     _example(0),
-    _standard_body_forces(getParam<bool>("standard_body_forces"))
+    _standard_body_forces(getParam<bool>("standard_body_forces")),
+    _b(_moose_mesh, false),
+    _b2(_moose_mesh, true)
 {
   _var_numbers.push_back(_u.number());
   if (_v)
@@ -76,9 +78,7 @@ INSFVRhieChowInterpolator::initialize()
 
   _a.clear();
   _b.clear();
-  _b1.clear();
   _b2.clear();
-  _b3.clear();
 }
 
 void
@@ -196,26 +196,27 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
       // that case we don't care about its face computation
       continue;
 
-    const auto it = _b1.emplace(std::make_pair(&fi, interpolateB(_b, fi))).first;
-
     if (_standard_body_forces)
       continue;
 
     const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
     const auto sf_sfhat = fi.normal() * surface_vector;
-    const auto weighted_flux = it->second * sf_sfhat;
+
+    const auto bf = _b(fi);
+    const auto grad_bf = _b.gradient(fi);
 
     // Now should we compute _b2 for this element?
     if (dof_map.is_evaluable(fi.elem(), _var_numbers[0]))
     {
-      _b2[fi.elem().id()] += weighted_flux;
+      _b2[fi.elem().id()] += (bf + grad_bf * (fi.elemCentroid() - fi.faceCentroid())) * sf_sfhat;
       sf_sfhat_sum[fi.elem().id()] += sf_sfhat;
     }
 
     // Or for the neighbor?
     if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _var_numbers[0]))
     {
-      _b2[fi.neighbor().id()] += weighted_flux;
+      _b2[fi.neighbor().id()] +=
+          (bf + grad_bf * (fi.neighborCentroid() - fi.faceCentroid())) * sf_sfhat;
       sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
     }
   }
@@ -224,23 +225,11 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     for (const auto & pr : _b)
       _b2[pr.first] = pr.second;
 
-  // We now no longer need to store _b so we can drop its memory
-  _b.clear();
-
   if (_standard_body_forces)
     return;
 
   for (auto & pr : _b2)
     pr.second /= libmesh_map_find(sf_sfhat_sum, pr.first);
-}
-
-void
-INSFVRhieChowInterpolator::computeThirdOverBar()
-{
-  const auto & local_fi = _moose_mesh.faceInfo();
-
-  for (auto * const fi : local_fi)
-    _b3.emplace(std::make_pair(fi, interpolateB(_b2, *fi)));
 }
 
 void
@@ -313,9 +302,9 @@ INSFVRhieChowInterpolator::finalizeBData()
   TIMPI::pull_parallel_vector_data(
       _communicator, pull_requests, gather_functor, action_functor, &_example);
 
-  // We can proceed to all the overbar operations for _b
+  // We can proceed to the overbar operations for _b. We only do the first and second overbars. The
+  // third overbar is done on the fly when it is requested
   computeFirstAndSecondOverBars();
-  computeThirdOverBar();
 
   // Add the b data to the residual/Jacobian
   applyBData();

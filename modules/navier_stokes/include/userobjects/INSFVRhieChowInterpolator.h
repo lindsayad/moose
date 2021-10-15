@@ -13,6 +13,7 @@
 #include "TaggingInterface.h"
 #include "ADReal.h"
 #include "MooseTypes.h"
+#include "CellCenteredMapFunctor.h"
 #include "libmesh/vector_value.h"
 #include "libmesh/id_types.h"
 #include <unordered_map>
@@ -35,8 +36,8 @@ public:
   void addToA(const libMesh::Elem * elem, unsigned int component, const ADReal & value);
   void addToB(const libMesh::Elem * elem, unsigned int component, const ADReal & value);
   const ADReal & getB2(const libMesh::Elem & elem, unsigned int component) const;
-  const VectorValue<ADReal> & getB1(const FaceInfo & fi) const;
-  const VectorValue<ADReal> & getB3(const FaceInfo & fi) const;
+  VectorValue<ADReal> getB1(const FaceInfo & fi) const;
+  VectorValue<ADReal> getB3(const FaceInfo & fi) const;
   const VectorValue<ADReal> & rcCoeff(const libMesh::Elem * elem) const;
 
   void initialize() override final;
@@ -54,12 +55,7 @@ private:
 
   std::vector<unsigned int> _var_numbers;
   std::unordered_set<const Elem *> _elements_to_push_pull;
-  std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _a;
-  std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _b;
-  // Here the suffix on _b refers to the number of bar operations we've performed
-  std::map<const FaceInfo *, libMesh::VectorValue<ADReal>> _b1;
-  std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _b2;
-  std::map<const FaceInfo *, libMesh::VectorValue<ADReal>> _b3;
+
   MooseMesh & _moose_mesh;
   const libMesh::MeshBase & _mesh;
   SystemBase & _sys;
@@ -68,6 +64,15 @@ private:
   MooseVariableFieldBase * const _w;
   const VectorValue<ADReal> _example;
   const bool _standard_body_forces;
+
+  std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _a;
+  CellCenteredMapFunctor<libMesh::VectorValue<ADReal>,
+                         std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>>>
+      _b;
+  // Here the suffix on _b refers to the number of bar operations we've performed
+  CellCenteredMapFunctor<libMesh::VectorValue<ADReal>,
+                         std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>>>
+      _b2;
 };
 
 inline const ADReal &
@@ -76,16 +81,16 @@ INSFVRhieChowInterpolator::getB2(const libMesh::Elem & elem, const unsigned int 
   return libmesh_map_find(_b2, elem.id())(component);
 }
 
-inline const VectorValue<ADReal> &
+inline VectorValue<ADReal>
 INSFVRhieChowInterpolator::getB1(const FaceInfo & fi) const
 {
-  return libmesh_map_find(_b1, &fi);
+  return _b(fi);
 }
 
-inline const VectorValue<ADReal> &
+inline VectorValue<ADReal>
 INSFVRhieChowInterpolator::getB3(const FaceInfo & fi) const
 {
-  return libmesh_map_find(_b3, &fi);
+  return _b2(fi);
 }
 
 inline void
