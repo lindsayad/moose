@@ -42,6 +42,10 @@ INSFVRhieChowInterpolator::validParams()
   params.addParam<VariableName>("v", "The y-component of velocity");
   params.addParam<VariableName>("w", "The z-component of velocity");
   params.addParam<bool>("standard_body_forces", false, "Whether to just apply normal body forces");
+  params.addParam<bool>("two_term_reconstruction",
+                        true,
+                        "Whether to reconstruct from the face to the centroid using the face value "
+                        "*and* the face gradient, or just the face value.");
   return params;
 }
 
@@ -58,6 +62,7 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
                          : nullptr),
     _example(0),
     _standard_body_forces(getParam<bool>("standard_body_forces")),
+    _two_term_reconstruction(getParam<bool>("two_term_reconstruction")),
     _b(_moose_mesh, false),
     _b2(_moose_mesh, true)
 {
@@ -208,15 +213,20 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     // Now should we compute _b2 for this element?
     if (dof_map.is_evaluable(fi.elem(), _var_numbers[0]))
     {
-      _b2[fi.elem().id()] += (bf + grad_bf * (fi.elemCentroid() - fi.faceCentroid())) * sf_sfhat;
+      auto interpolant = bf;
+      if (_two_term_reconstruction)
+        interpolant += grad_bf * (fi.elemCentroid() - fi.faceCentroid());
+      _b2[fi.elem().id()] += interpolant * sf_sfhat;
       sf_sfhat_sum[fi.elem().id()] += sf_sfhat;
     }
 
     // Or for the neighbor?
     if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _var_numbers[0]))
     {
-      _b2[fi.neighbor().id()] +=
-          (bf + grad_bf * (fi.neighborCentroid() - fi.faceCentroid())) * sf_sfhat;
+      auto interpolant = bf;
+      if (_two_term_reconstruction)
+        interpolant += grad_bf * (fi.neighborCentroid() - fi.faceCentroid());
+      _b2[fi.neighbor().id()] += interpolant * sf_sfhat;
       sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
     }
   }
@@ -243,7 +253,7 @@ INSFVRhieChowInterpolator::applyBData()
     {
       const auto vn = _var_numbers[i];
       // negative here because we swapped the sign in addToB and so now we need to swap it back
-      const auto residual = -elem_volume * libmesh_map_find(_b2, elem->id())(i);
+      const auto residual = -elem_volume * _b2[elem->id()](i);
       const auto dof_index = elem->dof_number(s, vn, 0);
 
       if (_fe_problem.currentlyComputingJacobian())

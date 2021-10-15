@@ -64,6 +64,7 @@ private:
   MooseVariableFieldBase * const _w;
   const VectorValue<ADReal> _example;
   const bool _standard_body_forces;
+  const bool _two_term_reconstruction;
 
   std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _a;
   CellCenteredMapFunctor<libMesh::VectorValue<ADReal>,
