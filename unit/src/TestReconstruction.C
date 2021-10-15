@@ -46,6 +46,7 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
   std::vector<Real> errors;
   std::vector<Real> linear_errors;
   std::vector<Real> weller_errors;
+  std::vector<Real> moukalled_errors;
   std::vector<Real> h(num_elem.size());
   for (const auto i : index_range(num_elem))
     h[i] = 1. / num_elem[i];
@@ -98,6 +99,7 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
     std::unordered_map<dof_id_type, RealVectorValue> up;
     std::unordered_map<dof_id_type, RealVectorValue> up_linear;
     std::unordered_map<dof_id_type, RealVectorValue> up_weller;
+    std::unordered_map<dof_id_type, RealVectorValue> up_moukalled;
     std::unordered_map<dof_id_type, Real> sf_sfhat_sum;
 
     for (const auto & fi : all_fi)
@@ -124,14 +126,27 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
         }
       };
 
+      auto moukalled_interpolate = [&fi](auto & functor, auto & container) {
+        const RealVectorValue uf(functor(fi));
+        const Point surface_vector = fi.normal() * fi.faceArea();
+        auto product = (uf * fi.dCF()) * surface_vector;
+
+        container[fi.elem().id()] += product * fi.gC() / fi.elemVolume();
+        if (fi.neighborPtr())
+          container[fi.neighbor().id()] +=
+              std::move(product) * (1. - fi.gC()) / fi.neighborVolume();
+      };
+
       interpolate(u, up, true);
       interpolate(u, up_weller, false);
       interpolate(u_linear, up_linear, true);
+      moukalled_interpolate(u, up_moukalled);
     }
 
     Real error = 0;
     Real weller_error = 0;
     Real linear_error = 0;
+    Real moukalled_error = 0;
     const auto current_h = h[i];
     for (auto * const elem : lm_mesh.active_element_ptr_range())
     {
@@ -139,24 +154,28 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
       const auto sf_sfhat = libmesh_map_find(sf_sfhat_sum, elem_id);
       const RealVectorValue analytic(u(elem));
 
-      auto compute_elem_error = [elem_id, current_h, &sf_sfhat, &analytic](auto & container,
-                                                                           auto & error) {
+      auto compute_elem_error = [elem_id, current_h, &sf_sfhat, &analytic](
+                                    auto & container, auto & error, const bool apply_sfhat) {
         auto & current = libmesh_map_find(container, elem_id);
-        current /= sf_sfhat;
+        if (apply_sfhat)
+          current /= sf_sfhat;
         const auto diff = analytic - current;
         error += diff * diff * current_h * current_h;
       };
 
-      compute_elem_error(up, error);
-      compute_elem_error(up_weller, weller_error);
-      compute_elem_error(up_linear, linear_error);
+      compute_elem_error(up, error, true);
+      compute_elem_error(up_weller, weller_error, true);
+      compute_elem_error(up_linear, linear_error, true);
+      compute_elem_error(up_moukalled, moukalled_error, false);
     }
     error = std::sqrt(error);
     weller_error = std::sqrt(weller_error);
     linear_error = std::sqrt(linear_error);
+    moukalled_error = std::sqrt(moukalled_error);
     errors.push_back(error);
     weller_errors.push_back(weller_error);
     linear_errors.push_back(linear_error);
+    moukalled_errors.push_back(moukalled_error);
   }
 
   for (auto error : errors)
@@ -176,6 +195,7 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
 
   expect_errors(weller_errors, coord_type == Moose::COORD_RZ ? 1.5 : 2);
   expect_errors(linear_errors, 2.5);
+  expect_errors(moukalled_errors, 2);
 }
 
 TEST(TestReconstruction, Cartesian) { testReconstruction(Moose::COORD_XYZ); }
