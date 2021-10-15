@@ -46,6 +46,8 @@ INSFVRhieChowInterpolator::validParams()
                         true,
                         "Whether to reconstruct from the face to the centroid using the face value "
                         "*and* the face gradient, or just the face value.");
+  MooseEnum b2_strategy("moukalled aguerre", "aguerre");
+  params.addParam<MooseEnum>("b2_strategy", b2_strategy, "How to construct b2");
   return params;
 }
 
@@ -63,6 +65,7 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
     _example(0),
     _standard_body_forces(getParam<bool>("standard_body_forces")),
     _two_term_reconstruction(getParam<bool>("two_term_reconstruction")),
+    _use_moukalled(getParam<MooseEnum>("b2_strategy") == "moukalled"),
     _b(_moose_mesh, false),
     _b2(_moose_mesh, true)
 {
@@ -192,7 +195,8 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
   // reserve to avoid re-allocating all the time
   _b2.reserve(_fe_problem.getEvaluableElementRange().size());
   std::unordered_map<dof_id_type, Real> sf_sfhat_sum;
-  sf_sfhat_sum.reserve(_fe_problem.getEvaluableElementRange().size());
+  if (!_use_moukalled)
+    sf_sfhat_sum.reserve(_fe_problem.getEvaluableElementRange().size());
 
   for (const auto & fi : all_fi)
   {
@@ -204,42 +208,60 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     if (_standard_body_forces)
       continue;
 
-    const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
-    const auto sf_sfhat = fi.normal() * surface_vector;
-
     const auto bf = _b(fi);
-    const auto grad_bf = _b.gradient(fi);
 
-    // Now should we compute _b2 for this element?
-    if (dof_map.is_evaluable(fi.elem(), _var_numbers[0]))
+    if (_use_moukalled)
     {
-      auto interpolant = bf;
-      if (_two_term_reconstruction)
-        interpolant += grad_bf * (fi.elemCentroid() - fi.faceCentroid());
-      _b2[fi.elem().id()] += interpolant * sf_sfhat;
-      sf_sfhat_sum[fi.elem().id()] += sf_sfhat;
+      const Point surface_vector = fi.normal() * fi.faceArea();
+      auto product = (bf * fi.dCF()) * surface_vector;
+
+      // Now should we compute _b2 for this element?
+      if (dof_map.is_evaluable(fi.elem(), _var_numbers[0]))
+        _b2[fi.elem().id()] += product * fi.gC() / fi.elemVolume();
+
+      // Or for the neighbor?
+      if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _var_numbers[0]))
+        _b2[fi.neighbor().id()] += std::move(product) * (1. - fi.gC()) / fi.neighborVolume();
     }
-
-    // Or for the neighbor?
-    if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _var_numbers[0]))
+    else
     {
-      auto interpolant = bf;
-      if (_two_term_reconstruction)
-        interpolant += grad_bf * (fi.neighborCentroid() - fi.faceCentroid());
-      _b2[fi.neighbor().id()] += interpolant * sf_sfhat;
-      sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
+      const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
+      const auto sf_sfhat = fi.normal() * surface_vector;
+      const auto grad_bf = _b.gradient(fi);
+
+      // Now should we compute _b2 for this element?
+      if (dof_map.is_evaluable(fi.elem(), _var_numbers[0]))
+      {
+        auto interpolant = bf;
+        if (_two_term_reconstruction)
+          interpolant += grad_bf * (fi.elemCentroid() - fi.faceCentroid());
+        _b2[fi.elem().id()] += interpolant * sf_sfhat;
+        sf_sfhat_sum[fi.elem().id()] += sf_sfhat;
+      }
+
+      // Or for the neighbor?
+      if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _var_numbers[0]))
+      {
+        auto interpolant = bf;
+        if (_two_term_reconstruction)
+          interpolant += grad_bf * (fi.neighborCentroid() - fi.faceCentroid());
+        _b2[fi.neighbor().id()] += interpolant * sf_sfhat;
+        sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
+      }
     }
   }
 
   if (_standard_body_forces)
+  {
     for (const auto & pr : _b)
       _b2[pr.first] = pr.second;
 
-  if (_standard_body_forces)
     return;
+  }
 
-  for (auto & pr : _b2)
-    pr.second /= libmesh_map_find(sf_sfhat_sum, pr.first);
+  if (!_use_moukalled)
+    for (auto & pr : _b2)
+      pr.second /= libmesh_map_find(sf_sfhat_sum, pr.first);
 }
 
 void
