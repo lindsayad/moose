@@ -25,7 +25,7 @@ outer_product(const T & a, const TypeVector<T2> & b)
 }
 
 template <typename T, typename Map>
-class CellCenteredMapFunctor : public Moose::Functor<T>
+class CellCenteredMapFunctor : public Moose::Functor<T>, public Map
 {
 public:
   using typename Moose::Functor<T>::FaceArg;
@@ -37,8 +37,8 @@ public:
   using typename Moose::Functor<T>::GradientType;
   using typename Moose::Functor<T>::DotType;
 
-  CellCenteredMapFunctor(const MooseMesh & mesh, Map && map, const bool correct_face)
-    : _mesh(mesh), _map(std::move(map)), _correct_face(correct_face)
+  CellCenteredMapFunctor(const MooseMesh & mesh, const bool correct_face)
+    : _mesh(mesh), _correct_face(correct_face)
   {
   }
 
@@ -46,12 +46,11 @@ public:
 
 private:
   const MooseMesh & _mesh;
-  const Map _map;
   const bool _correct_face;
 
   ValueType evaluate(const libMesh::Elem * const & elem, unsigned int) const override final
   {
-    return libmesh_map_find(_map, elem->id());
+    return libmesh_map_find(*this, elem->id());
   }
 
   ValueType evaluate(const FaceArg & face, unsigned int) const override final
