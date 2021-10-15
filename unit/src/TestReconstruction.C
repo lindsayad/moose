@@ -79,19 +79,18 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
 
     auto & lm_mesh = mesh->getMesh();
 
-    std::unordered_map<dof_id_type, RealVectorValue> analytic_map;
+    CellCenteredMapFunctor<RealVectorValue, std::unordered_map<dof_id_type, RealVectorValue>> u(
+        *mesh, true);
+    CellCenteredMapFunctor<RealVectorValue, std::unordered_map<dof_id_type, RealVectorValue>>
+        u_linear(*mesh, false);
     for (auto * const elem : lm_mesh.active_element_ptr_range())
     {
       const auto centroid = elem->vertex_average();
-      analytic_map[elem->id()] = RealVectorValue(-std::sin(centroid(0)) * std::cos(centroid(1)),
-                                                 std::cos(centroid(0)) * std::sin(centroid(1)));
+      const auto value = RealVectorValue(-std::sin(centroid(0)) * std::cos(centroid(1)),
+                                         std::cos(centroid(0)) * std::sin(centroid(1)));
+      u[elem->id()] = value;
+      u_linear[elem->id()] = value;
     }
-
-    auto dup = analytic_map;
-    CellCenteredMapFunctor<RealVectorValue, decltype(analytic_map)> u(
-        *mesh, std::move(analytic_map), true);
-    CellCenteredMapFunctor<RealVectorValue, decltype(analytic_map)> u_linear(
-        *mesh, std::move(dup), false);
 
     const auto & all_fi = mesh->allFaceInfo();
     mesh->applyCoordSysToFaceCoords(coord_type, rz_radial_coord);
