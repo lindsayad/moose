@@ -130,8 +130,7 @@ INSFVVelocityVariable::adGradSln(const Elem * const elem) const
                                  const bool elem_has_info) {
       mooseAssert(fi, "We need a FaceInfo for this action_functor");
       mooseAssert(elem == &functor_elem,
-                  "Just a sanity check that the element being passed in is the one we passed
-                  out.");
+                  "Just a sanity check that the element being passed in is the one we passed out.");
 
       if (isExtrapolatedBoundaryFace(*fi))
       {
@@ -274,8 +273,8 @@ INSFVVelocityVariable::adGradSln(const Elem * const elem) const
       }
 
       mooseAssert(num_fdf_faces == fdf_grad_centroid_coeffs.size(),
-                  "Bad math in INSFVVelocityVariable::adGradlnSln(const Elem *). Please contact a
-                  " "MOOSE developer");
+                  "Bad math in INSFVVelocityVariable::adGradlnSln(const Elem *). Please contact a "
+                  "MOOSE developer");
 
       // eqn. 3
       for (const auto fdf_face_index : make_range(num_fdf_faces))
@@ -330,8 +329,8 @@ INSFVVelocityVariable::adGradSln(const Elem * const elem) const
   {
     // Retry without two-term
     mooseAssert(_two_term_boundary_expansion,
-                "I believe we should only get singular systems when two-term boundary expansion
-                is " "being used");
+                "I believe we should only get singular systems when two-term boundary expansion is "
+                "being used");
     const_cast<INSFVVelocityVariable *>(this)->_two_term_boundary_expansion = false;
     const auto & grad = adGradSln(elem);
 
