@@ -102,36 +102,27 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
 
     for (const auto & fi : all_fi)
     {
-      const auto face =
-          std::make_tuple(&fi,
-                          Moose::FV::LimiterType::CentralDifference,
-                          true,
-                          std::make_pair(fi.elem().subdomain_id(),
-                                         fi.neighborPtr() ? fi.neighbor().subdomain_id()
-                                                          : Moose::INVALID_BLOCK_ID));
       const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
-
       const auto sf_sfhat = fi.normal() * surface_vector;
       sf_sfhat_sum[fi.elem().id()] += sf_sfhat;
       if (fi.neighborPtr())
         sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
 
-      auto interpolate =
-          [&face, &fi, &sf_sfhat](auto & functor, auto & container, const bool aguerre) {
-            const RealVectorValue uf(functor(face));
-            const RealTensorValue grad_uf(functor.gradient(face));
-            auto elem_interpolant = uf;
-            if (aguerre)
-              elem_interpolant += grad_uf * (fi.elemCentroid() - fi.faceCentroid());
-            container[fi.elem().id()] += elem_interpolant * sf_sfhat;
-            if (fi.neighborPtr())
-            {
-              auto neighbor_interpolant = uf;
-              if (aguerre)
-                neighbor_interpolant += grad_uf * (fi.neighborCentroid() - fi.faceCentroid());
-              container[fi.neighbor().id()] += neighbor_interpolant * sf_sfhat;
-            }
-          };
+      auto interpolate = [&fi, &sf_sfhat](auto & functor, auto & container, const bool aguerre) {
+        const RealVectorValue uf(functor(fi));
+        const RealTensorValue grad_uf(functor.gradient(fi));
+        auto elem_interpolant = uf;
+        if (aguerre)
+          elem_interpolant += grad_uf * (fi.elemCentroid() - fi.faceCentroid());
+        container[fi.elem().id()] += elem_interpolant * sf_sfhat;
+        if (fi.neighborPtr())
+        {
+          auto neighbor_interpolant = uf;
+          if (aguerre)
+            neighbor_interpolant += grad_uf * (fi.neighborCentroid() - fi.faceCentroid());
+          container[fi.neighbor().id()] += neighbor_interpolant * sf_sfhat;
+        }
+      };
 
       interpolate(u, up, true);
       interpolate(u, up_weller, false);

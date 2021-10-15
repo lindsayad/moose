@@ -44,7 +44,23 @@ public:
 
   bool isExtrapolatedBoundaryFace(const FaceInfo & fi) const override { return !fi.neighborPtr(); }
 
+  using Moose::Functor<T>::operator();
+  ValueType operator()(const FaceInfo & fi) const { return (*this)(makeFace(fi)); }
+
+  using Moose::Functor<T>::gradient;
+  GradientType gradient(const FaceInfo & fi) const { return gradient(makeFace(fi)); }
+
 private:
+  FaceArg makeFace(const FaceInfo & fi) const
+  {
+    return std::make_tuple(
+        &fi,
+        Moose::FV::LimiterType::CentralDifference,
+        true,
+        std::make_pair(fi.elem().subdomain_id(),
+                       fi.neighborPtr() ? fi.neighbor().subdomain_id() : Moose::INVALID_BLOCK_ID));
+  }
+
   const MooseMesh & _mesh;
   const bool _correct_face;
 
