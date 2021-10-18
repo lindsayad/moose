@@ -110,7 +110,7 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
       if (fi.neighborPtr())
         sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
 
-      auto interpolate = [&fi, &sf_sfhat](auto & functor, auto & container, const bool aguerre) {
+      auto reconstruct = [&fi, &sf_sfhat](auto & functor, auto & container, const bool aguerre) {
         const RealVectorValue uf(functor(fi));
         const RealTensorValue grad_uf(functor.gradient(fi));
         auto elem_interpolant = uf;
@@ -126,7 +126,7 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
         }
       };
 
-      auto moukalled_interpolate = [&fi](auto & functor, auto & container) {
+      auto moukalled_reconstruct = [&fi](auto & functor, auto & container) {
         const RealVectorValue uf(functor(fi));
         const Point surface_vector = fi.normal() * fi.faceArea();
         auto product = (uf * fi.dCF()) * surface_vector;
@@ -137,10 +137,10 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
               std::move(product) * (1. - fi.gC()) / fi.neighborVolume();
       };
 
-      interpolate(u, up, true);
-      interpolate(u, up_weller, false);
-      interpolate(u_linear, up_linear, true);
-      moukalled_interpolate(u, up_moukalled);
+      reconstruct(u, up, true);
+      reconstruct(u, up_weller, false);
+      reconstruct(u_linear, up_linear, true);
+      moukalled_reconstruct(u, up_moukalled);
     }
 
     Real error = 0;
