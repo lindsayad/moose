@@ -20,8 +20,6 @@ class PINSFVMomentumAdvection : public INSFVMomentumAdvection
 public:
   static InputParameters validParams();
   PINSFVMomentumAdvection(const InputParameters & params);
-  using INSFVMomentumAdvection::gatherRCData;
-  void gatherRCData(const FaceInfo & fi) override;
 
 protected:
   /**
