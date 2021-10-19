@@ -70,10 +70,4 @@ private:
   {
     return _vector(elem_side_qp, state)(_component);
   }
-
-  ValueType evaluate(const std::tuple<Moose::ElementType, unsigned int, SubdomainID> &,
-                     unsigned int) const override final
-  {
-    mooseError("not implemented");
-  }
 };
