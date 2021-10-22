@@ -47,6 +47,7 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
   std::vector<Real> linear_errors;
   std::vector<Real> weller_errors;
   std::vector<Real> moukalled_errors;
+  std::vector<Real> tano_errors;
   std::vector<Real> h(num_elem.size());
   for (const auto i : index_range(num_elem))
     h[i] = 1. / num_elem[i];
@@ -100,31 +101,38 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
     std::unordered_map<dof_id_type, RealVectorValue> up_linear;
     std::unordered_map<dof_id_type, RealVectorValue> up_weller;
     std::unordered_map<dof_id_type, RealVectorValue> up_moukalled;
+    std::unordered_map<dof_id_type, RealVectorValue> up_tano;
     std::unordered_map<dof_id_type, Real> sf_sfhat_sum;
+    std::unordered_map<dof_id_type, Real> unity_sum;
 
     for (const auto & fi : all_fi)
     {
       const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
       const auto sf_sfhat = fi.normal() * surface_vector;
       sf_sfhat_sum[fi.elem().id()] += sf_sfhat;
+      unity_sum[fi.elem().id()] += 1.;
       if (fi.neighborPtr())
+      {
         sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
+        unity_sum[fi.neighbor().id()] += 1.;
+      }
 
-      auto reconstruct = [&fi, &sf_sfhat](auto & functor, auto & container, const bool aguerre) {
-        const RealVectorValue uf(functor(fi));
-        const RealTensorValue grad_uf(functor.gradient(fi));
-        auto elem_interpolant = uf;
-        if (aguerre)
-          elem_interpolant += grad_uf * (fi.elemCentroid() - fi.faceCentroid());
-        container[fi.elem().id()] += elem_interpolant * sf_sfhat;
-        if (fi.neighborPtr())
-        {
-          auto neighbor_interpolant = uf;
-          if (aguerre)
-            neighbor_interpolant += grad_uf * (fi.neighborCentroid() - fi.faceCentroid());
-          container[fi.neighbor().id()] += neighbor_interpolant * sf_sfhat;
-        }
-      };
+      auto reconstruct =
+          [&fi](auto & functor, auto & container, const bool aguerre, const Real weight) {
+            const RealVectorValue uf(functor(fi));
+            const RealTensorValue grad_uf(functor.gradient(fi));
+            auto elem_interpolant = uf;
+            if (aguerre)
+              elem_interpolant += grad_uf * (fi.elemCentroid() - fi.faceCentroid());
+            container[fi.elem().id()] += elem_interpolant * weight;
+            if (fi.neighborPtr())
+            {
+              auto neighbor_interpolant = uf;
+              if (aguerre)
+                neighbor_interpolant += grad_uf * (fi.neighborCentroid() - fi.faceCentroid());
+              container[fi.neighbor().id()] += neighbor_interpolant * weight;
+            }
+          };
 
       auto moukalled_reconstruct = [&fi](auto & functor, auto & container) {
         const RealVectorValue uf(functor(fi));
@@ -137,45 +145,50 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
               std::move(product) * (1. - fi.gC()) / fi.neighborVolume();
       };
 
-      reconstruct(u, up, true);
-      reconstruct(u, up_weller, false);
-      reconstruct(u_linear, up_linear, true);
+      reconstruct(u, up, true, sf_sfhat);
+      reconstruct(u, up_weller, false, sf_sfhat);
+      reconstruct(u_linear, up_linear, true, sf_sfhat);
+      reconstruct(u, up_tano, false, 1.);
       moukalled_reconstruct(u, up_moukalled);
     }
 
     Real error = 0;
     Real weller_error = 0;
     Real linear_error = 0;
+    Real tano_error = 0;
     Real moukalled_error = 0;
     const auto current_h = h[i];
     for (auto * const elem : lm_mesh.active_element_ptr_range())
     {
       const auto elem_id = elem->id();
       const auto sf_sfhat = libmesh_map_find(sf_sfhat_sum, elem_id);
+      const auto unity = libmesh_map_find(unity_sum, elem_id);
       const RealVectorValue analytic(u(elem));
 
-      auto compute_elem_error = [elem_id, current_h, &sf_sfhat, &analytic](
-                                    auto & container, auto & error, const bool apply_sfhat) {
-        auto & current = libmesh_map_find(container, elem_id);
-        if (apply_sfhat)
-          current /= sf_sfhat;
-        const auto diff = analytic - current;
-        error += diff * diff * current_h * current_h;
-      };
+      auto compute_elem_error =
+          [elem_id, current_h, &analytic](auto & container, auto & error, const Real divisor) {
+            auto & current = libmesh_map_find(container, elem_id);
+            current /= divisor;
+            const auto diff = analytic - current;
+            error += diff * diff * current_h * current_h;
+          };
 
-      compute_elem_error(up, error, true);
-      compute_elem_error(up_weller, weller_error, true);
-      compute_elem_error(up_linear, linear_error, true);
-      compute_elem_error(up_moukalled, moukalled_error, false);
+      compute_elem_error(up, error, sf_sfhat);
+      compute_elem_error(up_weller, weller_error, sf_sfhat);
+      compute_elem_error(up_linear, linear_error, sf_sfhat);
+      compute_elem_error(up_moukalled, moukalled_error, 1.);
+      compute_elem_error(up_tano, tano_error, unity);
     }
     error = std::sqrt(error);
     weller_error = std::sqrt(weller_error);
     linear_error = std::sqrt(linear_error);
     moukalled_error = std::sqrt(moukalled_error);
+    tano_error = std::sqrt(tano_error);
     errors.push_back(error);
     weller_errors.push_back(weller_error);
     linear_errors.push_back(linear_error);
     moukalled_errors.push_back(moukalled_error);
+    tano_errors.push_back(tano_error);
   }
 
   for (auto error : errors)
@@ -196,6 +209,7 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
   expect_errors(weller_errors, coord_type == Moose::COORD_RZ ? 1.5 : 2);
   expect_errors(linear_errors, 2.5);
   expect_errors(moukalled_errors, 2);
+  expect_errors(tano_errors, 2);
 }
 
 TEST(TestReconstruction, Cartesian) { testReconstruction(Moose::COORD_XYZ); }
