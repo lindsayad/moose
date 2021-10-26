@@ -25,6 +25,7 @@
 #include "FaceInfo.h"
 #include "MooseTypes.h"
 #include "CellCenteredMapFunctor.h"
+#include "Reconstructions.h"
 
 #include "libmesh/elem.h"
 #include "libmesh/tensor_value.h"
@@ -101,21 +102,17 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
     std::unordered_map<dof_id_type, RealVectorValue> up_linear;
     std::unordered_map<dof_id_type, RealVectorValue> up_weller;
     std::unordered_map<dof_id_type, RealVectorValue> up_moukalled;
-    std::unordered_map<dof_id_type, RealVectorValue> up_tano;
+    CellCenteredMapFunctor<RealVectorValue, std::unordered_map<dof_id_type, RealVectorValue>>
+        up_tano(*mesh, true);
     std::unordered_map<dof_id_type, Real> sf_sfhat_sum;
-    std::unordered_map<dof_id_type, Real> unity_sum;
 
     for (const auto & fi : all_fi)
     {
       const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
       const auto sf_sfhat = fi.normal() * surface_vector;
       sf_sfhat_sum[fi.elem().id()] += sf_sfhat;
-      unity_sum[fi.elem().id()] += 1.;
       if (fi.neighborPtr())
-      {
         sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
-        unity_sum[fi.neighbor().id()] += 1.;
-      }
 
       auto reconstruct =
           [&fi](auto & functor, auto & container, const bool aguerre, const Real weight) {
@@ -148,9 +145,10 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
       reconstruct(u, up, true, sf_sfhat);
       reconstruct(u, up_weller, false, sf_sfhat);
       reconstruct(u_linear, up_linear, true, sf_sfhat);
-      reconstruct(u, up_tano, false, 1.);
       moukalled_reconstruct(u, up_moukalled);
     }
+
+    Moose::FV::tanoReconstruction(up_tano, u, 1, *mesh);
 
     Real error = 0;
     Real weller_error = 0;
@@ -162,7 +160,6 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
     {
       const auto elem_id = elem->id();
       const auto sf_sfhat = libmesh_map_find(sf_sfhat_sum, elem_id);
-      const auto unity = libmesh_map_find(unity_sum, elem_id);
       const RealVectorValue analytic(u(elem));
 
       auto compute_elem_error =
@@ -177,7 +174,7 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
       compute_elem_error(up_weller, weller_error, sf_sfhat);
       compute_elem_error(up_linear, linear_error, sf_sfhat);
       compute_elem_error(up_moukalled, moukalled_error, 1.);
-      compute_elem_error(up_tano, tano_error, unity);
+      compute_elem_error(up_tano, tano_error, 1.);
     }
     error = std::sqrt(error);
     weller_error = std::sqrt(weller_error);
