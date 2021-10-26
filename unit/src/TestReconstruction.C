@@ -49,6 +49,7 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
   std::vector<Real> weller_errors;
   std::vector<Real> moukalled_errors;
   std::vector<Real> tano_errors;
+  std::vector<Real> tano_errors_twice;
   std::vector<Real> h(num_elem.size());
   for (const auto i : index_range(num_elem))
     h[i] = 1. / num_elem[i];
@@ -162,6 +163,25 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
     linear_errors.push_back(linear_error);
     moukalled_errors.push_back(moukalled_error);
     tano_errors.push_back(tano_error);
+
+    up_tano.clear();
+    Moose::FV::reconstruct(up_tano, u, 2, false, false, *mesh);
+
+    tano_error = 0;
+    for (auto * const elem : lm_mesh.active_element_ptr_range())
+    {
+      const auto elem_id = elem->id();
+      const RealVectorValue analytic(u(elem));
+
+      auto compute_elem_error = [elem_id, current_h, &analytic](auto & container, auto & error) {
+        auto & current = libmesh_map_find(container, elem_id);
+        const auto diff = analytic - current;
+        error += diff * diff * current_h * current_h;
+      };
+      compute_elem_error(up_tano, tano_error);
+    }
+    tano_error = std::sqrt(tano_error);
+    tano_errors_twice.push_back(tano_error);
   }
 
   for (auto error : errors)
@@ -183,6 +203,7 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
   expect_errors(linear_errors, 2.5);
   expect_errors(moukalled_errors, 2);
   expect_errors(tano_errors, 2);
+  expect_errors(tano_errors_twice, 2);
 }
 
 TEST(TestReconstruction, Cartesian) { testReconstruction(Moose::COORD_XYZ); }
