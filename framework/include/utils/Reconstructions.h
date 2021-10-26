@@ -23,10 +23,12 @@ namespace FV
 {
 template <typename T, typename Map>
 void
-tanoReconstruction(CellCenteredMapFunctor<T, Map> & output_functor,
-                   const CellCenteredMapFunctor<T, Map> & input_functor,
-                   const unsigned int num_reconstructions,
-                   const MooseMesh & mesh)
+reconstruct(CellCenteredMapFunctor<T, Map> & output_functor,
+            const CellCenteredMapFunctor<T, Map> & input_functor,
+            const unsigned int num_reconstructions,
+            const bool two_term_expansion,
+            const bool weight_with_sf,
+            const MooseMesh & mesh)
 {
   if (!num_reconstructions)
     return;
@@ -36,16 +38,26 @@ tanoReconstruction(CellCenteredMapFunctor<T, Map> & output_functor,
   const auto & all_fi = mesh.allFaceInfo();
   for (const auto & fi : all_fi)
   {
-    auto & elem_pr = elem_to_num_denom[fi.elem().id()];
+    const Real weight = weight_with_sf ? fi.faceArea() * fi.faceCoord() : 1;
     auto face_value = input_functor(fi);
+    std::pair<T, Real> * neighbor_pr = nullptr;
     if (fi.neighborPtr() && fi.neighborPtr() != libMesh::remote_elem)
     {
-      auto & neighbor_pr = elem_to_num_denom[fi.neighbor().id()];
-      neighbor_pr.first += face_value;
-      neighbor_pr.second += 1.;
+      neighbor_pr = &elem_to_num_denom[fi.neighbor().id()];
+      neighbor_pr->first += face_value * weight;
+      neighbor_pr->second += weight;
     }
-    elem_pr.first += std::move(face_value);
-    elem_pr.second += 1.;
+    auto & elem_pr = elem_to_num_denom[fi.elem().id()];
+    elem_pr.first += std::move(face_value) * weight;
+    elem_pr.second += weight;
+
+    if (two_term_expansion)
+    {
+      auto face_gradient = input_functor.gradient(fi);
+      if (fi.neighborPtr() && fi.neighborPtr() != libMesh::remote_elem)
+        neighbor_pr->first += face_gradient * (fi.neighborCentroid() - fi.faceCentroid()) * weight;
+      elem_pr.first += std::move(face_gradient) * (fi.elemCentroid() - fi.faceCentroid()) * weight;
+    }
   }
 
   for (const auto & pr : elem_to_num_denom)
@@ -54,7 +66,12 @@ tanoReconstruction(CellCenteredMapFunctor<T, Map> & output_functor,
     output_functor[pr.first] = data_pr.first / data_pr.second;
   }
 
-  tanoReconstruction(output_functor, output_functor, num_reconstructions - 1, mesh);
+  reconstruct(output_functor,
+              output_functor,
+              num_reconstructions - 1,
+              two_term_expansion,
+              weight_with_sf,
+              mesh);
 }
 }
 }
