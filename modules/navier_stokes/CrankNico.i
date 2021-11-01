@@ -4,6 +4,8 @@
 [GlobalParams]
   gravity = '0 0 0'
   integrate_p_by_parts = 'true'
+  pspg = true
+  supg = true
 []
 
 [Mesh]
@@ -13,11 +15,11 @@
 
 [Variables]
   [vel_x]
-    order = SECOND
+    order = FIRST
     family = LAGRANGE
   []
   [vel_y]
-    order = SECOND
+    order = FIRST
     family = LAGRANGE
   []
   [p]
@@ -70,7 +72,7 @@
   [y_no_slip]
     type = DirichletBC
     variable = vel_y
-    boundary = 'left top bottom wall'
+    boundary = 'top bottom wall'
     value = 0.0
   []
   [x_inlet]
@@ -78,7 +80,14 @@
     type = DirichletBC
     variable = vel_x
     boundary = 'left'
-    value = 0.2
+    value = 1.0
+  []
+  [y_inlet]
+    # function = 'inlet_func'
+    type = FunctionDirichletBC
+    variable = vel_y
+    boundary = 'left'
+    function = '1e-3 * exp(-t/60) * sin(t)'
   []
 []
 
@@ -102,15 +111,17 @@
 
 [Executioner]
   type = Transient
-  petsc_options_iname = '-pc_type -pc_asm_overlap -sub_pc_type -sub_pc_factor_levels -ksp_gmres_restart'
-  petsc_options_value = 'asm      2               ilu          4                     300'
+  # petsc_options_iname = '-pc_type -pc_asm_overlap -sub_pc_type -sub_pc_factor_levels -ksp_gmres_restart'
+  # petsc_options_value = 'asm      2               ilu          4                     300'
+  petsc_options_iname = '-pc_type'
+  petsc_options_value = 'lu'
   line_search = none
   [./TimeIntegrator]
-    type = CrankNicolson
+    type = BDF2
   [../]
   dt = 0.02
   dtmin = 1E-6
-  num_steps = 1500
+  num_steps = 4500
   nl_rel_tol = 1e-8
   nl_max_its = 6
   l_tol = 1e-5
@@ -143,6 +154,10 @@
     family = MONOMIAL
     order = CONSTANT
   []
+  [Fo]
+    family = MONOMIAL
+    order = CONSTANT
+  []
 []
 
 [AuxKernels]
@@ -159,5 +174,10 @@
     variable = Re
     u = vel_x
     v = vel_y
+  []
+  [Fo]
+    type = Fourier
+    execute_on = 'initial timestep_end'
+    variable = Fo
   []
 []
