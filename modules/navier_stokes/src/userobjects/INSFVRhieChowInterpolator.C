@@ -112,6 +112,7 @@ INSFVRhieChowInterpolator::execute()
 void
 INSFVRhieChowInterpolator::finalizeAData()
 {
+#ifdef MOOSE_GLOBAL_AD_INDEXING
   using Datum = std::pair<dof_id_type, VectorValue<ADReal>>;
   std::unordered_map<processor_id_type, std::vector<Datum>> push_data;
   std::unordered_map<processor_id_type, std::vector<dof_id_type>> pull_requests;
@@ -170,6 +171,9 @@ INSFVRhieChowInterpolator::finalizeAData()
     TIMPI::pull_parallel_vector_data(
         _communicator, pull_requests, gather_functor, action_functor, &example);
   }
+#else
+  mooseError("INSFVRhieChowInterpolator only supported for global AD indexing.");
+#endif
 }
 
 VectorValue<ADReal>
@@ -294,6 +298,7 @@ INSFVRhieChowInterpolator::applyBData()
 void
 INSFVRhieChowInterpolator::finalizeBData()
 {
+#ifdef MOOSE_GLOBAL_AD_INDEXING
   // We do not have to push _b data because all that data should initially be
   // local, e.g. we only loop over active local elements for FVElementalKernels
 
@@ -340,6 +345,9 @@ INSFVRhieChowInterpolator::finalizeBData()
 
   // Add the b data to the residual/Jacobian
   applyBData();
+#else
+  mooseError("INSFVRhieChowInterpolator only supported for global AD indexing.");
+#endif
 }
 
 void
