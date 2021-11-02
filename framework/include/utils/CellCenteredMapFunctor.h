@@ -27,17 +27,17 @@ outer_product(const T & a, const TypeVector<T2> & b)
 }
 
 template <typename T, typename Map>
-class CellCenteredMapFunctor : public Moose::Functor<T>, public Map
+class CellCenteredMapFunctor : public Moose::FunctorImpl<T>, public Map
 {
 public:
-  using typename Moose::Functor<T>::FaceArg;
-  using typename Moose::Functor<T>::SingleSidedFaceArg;
-  using typename Moose::Functor<T>::ElemFromFaceArg;
-  using typename Moose::Functor<T>::ElemQpArg;
-  using typename Moose::Functor<T>::ElemSideQpArg;
-  using typename Moose::Functor<T>::ValueType;
-  using typename Moose::Functor<T>::GradientType;
-  using typename Moose::Functor<T>::DotType;
+  using typename Moose::FunctorImpl<T>::FaceArg;
+  using typename Moose::FunctorImpl<T>::SingleSidedFaceArg;
+  using typename Moose::FunctorImpl<T>::ElemFromFaceArg;
+  using typename Moose::FunctorImpl<T>::ElemQpArg;
+  using typename Moose::FunctorImpl<T>::ElemSideQpArg;
+  using typename Moose::FunctorImpl<T>::ValueType;
+  using typename Moose::FunctorImpl<T>::GradientType;
+  using typename Moose::FunctorImpl<T>::DotType;
 
   CellCenteredMapFunctor(const MooseMesh & mesh, const bool correct_face)
     : _mesh(mesh), _correct_face(correct_face)
@@ -46,10 +46,10 @@ public:
 
   bool isExtrapolatedBoundaryFace(const FaceInfo & fi) const override { return !fi.neighborPtr(); }
 
-  using Moose::Functor<T>::operator();
+  using Moose::FunctorImpl<T>::operator();
   ValueType operator()(const FaceInfo & fi) const { return (*this)(makeFace(fi)); }
 
-  using Moose::Functor<T>::gradient;
+  using Moose::FunctorImpl<T>::gradient;
   GradientType gradient(const FaceInfo & fi) const { return gradient(makeFace(fi)); }
 
 private:
@@ -82,7 +82,7 @@ private:
       return elem_value + this->gradient(&fi.elem()) * (fi.faceCentroid() - fi.elemCentroid());
   }
 
-  using Moose::Functor<T>::evaluateGradient;
+  using Moose::FunctorImpl<T>::evaluateGradient;
 
   GradientType evaluateGradient(const libMesh::Elem * const & elem,
                                 unsigned int) const override final

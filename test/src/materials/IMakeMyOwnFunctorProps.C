@@ -23,13 +23,13 @@ public:
   {
   }
 
-  using typename Moose::Functor<T>::FaceArg;
-  using typename Moose::Functor<T>::SingleSidedFaceArg;
-  using typename Moose::Functor<T>::ElemFromFaceArg;
-  using typename Moose::Functor<T>::ElemQpArg;
-  using typename Moose::Functor<T>::ElemSideQpArg;
-  using typename Moose::Functor<T>::FunctorType;
-  using typename Moose::Functor<T>::FunctorReturnType;
+  using typename Moose::FunctorImpl<T>::FaceArg;
+  using typename Moose::FunctorImpl<T>::SingleSidedFaceArg;
+  using typename Moose::FunctorImpl<T>::ElemFromFaceArg;
+  using typename Moose::FunctorImpl<T>::ElemQpArg;
+  using typename Moose::FunctorImpl<T>::ElemSideQpArg;
+  using typename Moose::FunctorImpl<T>::FunctorType;
+  using typename Moose::FunctorImpl<T>::FunctorReturnType;
 
 private:
   template <typename Space, typename Time>
@@ -66,8 +66,8 @@ private:
     return evaluateHelper(elem_side_qp, state);
   }
 
-  const Moose::Functor<T> & _var_functor;
-  const Moose::Functor<T> * const _prop_functor;
+  const Moose::FunctorImpl<T> & _var_functor;
+  const Moose::FunctorImpl<T> * const _prop_functor;
 };
 
 InputParameters

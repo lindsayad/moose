@@ -846,10 +846,10 @@ SystemBase::addVariable(const std::string & var_type,
       for (MooseIndex(components) component = 0; component < components; ++component)
         _numbered_vars[tid][var_num + component] = fe_var;
 
-      auto * const functor = dynamic_cast<Moose::FunctorBase *>(fe_var);
+      auto * const functor = dynamic_cast<Moose::FunctorImpl<ADReal> *>(fe_var);
       if (!functor)
         mooseError("This should be a functor");
-      _subproblem.addFunctor(name, const_cast<const Moose::FunctorBase *>(functor), tid);
+      _subproblem.addFunctor(name, *functor, tid);
     }
 
     if (var->blockRestricted())

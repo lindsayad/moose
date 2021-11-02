@@ -1073,15 +1073,6 @@ SubProblem::initialSetup()
       }
 }
 
-void
-SubProblem::addFunctor(const std::string & name,
-                       const Moose::FunctorBase * functor,
-                       const THREAD_ID tid)
-{
-  mooseAssert(tid < _functors.size(), "Too large a thread ID");
-  _functors[tid].emplace(std::make_pair(name, functor));
-}
-
 bool
 SubProblem::hasFunctor(const std::string & name, const THREAD_ID tid) const
 {

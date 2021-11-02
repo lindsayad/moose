@@ -12,19 +12,19 @@
 #include "MooseFunctor.h"
 
 template <typename T>
-class VectorComponentFunctor : public Moose::Functor<T>
+class VectorComponentFunctor : public Moose::FunctorImpl<T>
 {
 public:
-  using typename Moose::Functor<T>::FaceArg;
-  using typename Moose::Functor<T>::SingleSidedFaceArg;
-  using typename Moose::Functor<T>::ElemFromFaceArg;
-  using typename Moose::Functor<T>::ElemQpArg;
-  using typename Moose::Functor<T>::ElemSideQpArg;
-  using typename Moose::Functor<T>::ValueType;
-  using typename Moose::Functor<T>::GradientType;
-  using typename Moose::Functor<T>::DotType;
+  using typename Moose::FunctorImpl<T>::FaceArg;
+  using typename Moose::FunctorImpl<T>::SingleSidedFaceArg;
+  using typename Moose::FunctorImpl<T>::ElemFromFaceArg;
+  using typename Moose::FunctorImpl<T>::ElemQpArg;
+  using typename Moose::FunctorImpl<T>::ElemSideQpArg;
+  using typename Moose::FunctorImpl<T>::ValueType;
+  using typename Moose::FunctorImpl<T>::GradientType;
+  using typename Moose::FunctorImpl<T>::DotType;
   using VectorArg = typename libMesh::TensorTools::IncrementRank<T>::type;
-  using VectorFunctor = Moose::Functor<VectorArg>;
+  using VectorFunctor = Moose::FunctorImpl<VectorArg>;
 
   VectorComponentFunctor(const VectorFunctor & vector, const unsigned int component)
     : _vector(vector), _component(component)

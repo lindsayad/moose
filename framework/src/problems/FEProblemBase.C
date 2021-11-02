@@ -2081,12 +2081,18 @@ FEProblemBase::addFunction(const std::string & type,
         _factory.create<MooseFunctionBase>(type, name, parameters, tid);
     _functions.addObject(func, tid);
 
-    auto * const functor = dynamic_cast<Moose::FunctorBase *>(func.get());
-    if (!functor)
-      mooseError("This should be a functor");
-    addFunctor(name, const_cast<const Moose::FunctorBase *>(functor), tid);
-    if (_displaced_problem)
-      _displaced_problem->addFunctor(name, const_cast<const Moose::FunctorBase *>(functor), tid);
+    auto add_functor = [this, &name, tid](const auto & cast_functor) {
+      this->addFunctor(name, cast_functor, tid);
+      if (_displaced_problem)
+        _displaced_problem->addFunctor(name, cast_functor, tid);
+    };
+
+    if (auto * const functor = dynamic_cast<Moose::FunctorImpl<Real> *>(func.get()))
+      add_functor(*functor);
+    else if (auto * const functor = dynamic_cast<Moose::FunctorImpl<ADReal> *>(func.get()))
+      add_functor(*functor);
+    else
+      mooseError("Unrecognized function functor type");
   }
 }
 

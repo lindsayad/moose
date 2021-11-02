@@ -24,7 +24,7 @@ namespace FV
 template <typename T>
 VectorValue<T>
 greenGaussGradient(const Elem * const elem,
-                   const Moose::Functor<T> & functor,
+                   const FunctorImpl<T> & functor,
                    const bool two_term_boundary_expansion,
                    const MooseMesh & mesh,
                    const Moose::CoordinateSystemType coord_type,
@@ -246,7 +246,7 @@ greenGaussGradient(const Elem * const elem,
 template <typename T>
 TensorValue<T>
 greenGaussGradient(const Elem * const elem,
-                   const Moose::Functor<VectorValue<T>> & functor,
+                   const Moose::FunctorImpl<VectorValue<T>> & functor,
                    const bool two_term_boundary_expansion,
                    const MooseMesh & mesh,
                    const Moose::CoordinateSystemType coord_type,

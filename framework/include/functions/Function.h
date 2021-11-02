@@ -39,7 +39,7 @@ class FunctionTempl : public MooseFunctionBase,
                       public Restartable,
                       public MeshChangedInterface,
                       public ScalarCoupleable,
-                      public Moose::Functor<T>
+                      public Moose::FunctorImpl<T>
 {
 public:
   /**
@@ -82,7 +82,7 @@ public:
    */
   virtual RealVectorValue vectorCurl(Real t, const Point & p) const;
 
-  using Moose::Functor<T>::gradient;
+  using Moose::FunctorImpl<T>::gradient;
   /**
    * Function objects can optionally provide a gradient at a point. By default
    * this returns 0, you must override it.
@@ -111,14 +111,14 @@ public:
   void jacobianSetup() override;
 
 private:
-  using typename Moose::Functor<T>::FaceArg;
-  using typename Moose::Functor<T>::SingleSidedFaceArg;
-  using typename Moose::Functor<T>::ElemFromFaceArg;
-  using typename Moose::Functor<T>::ElemQpArg;
-  using typename Moose::Functor<T>::ElemSideQpArg;
-  using typename Moose::Functor<T>::ValueType;
-  using typename Moose::Functor<T>::GradientType;
-  using typename Moose::Functor<T>::DotType;
+  using typename Moose::FunctorImpl<T>::FaceArg;
+  using typename Moose::FunctorImpl<T>::SingleSidedFaceArg;
+  using typename Moose::FunctorImpl<T>::ElemFromFaceArg;
+  using typename Moose::FunctorImpl<T>::ElemQpArg;
+  using typename Moose::FunctorImpl<T>::ElemSideQpArg;
+  using typename Moose::FunctorImpl<T>::ValueType;
+  using typename Moose::FunctorImpl<T>::GradientType;
+  using typename Moose::FunctorImpl<T>::DotType;
 
   /**
    * @return the time associated with the requested \p state
