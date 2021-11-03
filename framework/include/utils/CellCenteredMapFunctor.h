@@ -128,10 +128,4 @@ private:
   {
     mooseError("not implemented");
   }
-
-  ValueType evaluate(const std::tuple<Moose::ElementType, unsigned int, SubdomainID> &,
-                     unsigned int) const override
-  {
-    mooseError("not implemented");
-  }
 };
