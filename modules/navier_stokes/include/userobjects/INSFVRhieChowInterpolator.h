@@ -44,6 +44,9 @@ public:
   void execute() override final;
   void finalize() override final;
 
+protected:
+  MooseMesh & _moose_mesh;
+
 private:
   void finalizeAData();
   VectorValue<ADReal> interpolateB(std::unordered_map<dof_id_type, VectorValue<ADReal>> & b_elem,
@@ -56,7 +59,6 @@ private:
   std::vector<unsigned int> _var_numbers;
   std::unordered_set<const Elem *> _elements_to_push_pull;
 
-  MooseMesh & _moose_mesh;
   const libMesh::MeshBase & _mesh;
   SystemBase & _sys;
   MooseVariableFieldBase & _u;

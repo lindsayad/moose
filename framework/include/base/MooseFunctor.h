@@ -688,16 +688,16 @@ public:
    */
   Functor(const FunctorImpl<T> & wrapped) : FunctorImpl<T>(), _wrapped(&wrapped) {}
 
-  template <template <typename> class FunctorIn>
-  Functor(FunctorIn<T> && wrapped)
+  template <typename FunctorIn>
+  Functor(FunctorIn && wrapped)
     : FunctorImpl<T>(),
-      _owned(std::make_unique<FunctorIn<T>>(std::move(wrapped))),
+      _owned(std::make_unique<FunctorIn>(std::move(wrapped))),
       _wrapped(_owned.get())
   {
   }
 
-  template <template <typename> class FunctorIn>
-  Functor(std::unique_ptr<FunctorIn<T>> && wrapped)
+  template <typename FunctorIn>
+  Functor(std::unique_ptr<FunctorIn> && wrapped)
     : FunctorImpl<T>(), _owned(std::move(wrapped)), _wrapped(_owned.get())
   {
   }
@@ -712,17 +712,17 @@ public:
     return *this;
   }
 
-  template <template <typename> class FunctorIn>
-  Functor<T> & operator=(FunctorIn<T> && wrapped)
+  template <typename FunctorIn>
+  Functor<T> & operator=(FunctorIn && wrapped)
   {
     _owned.reset();
-    _owned = std::make_unique<FunctorIn<T>>(std::move(wrapped));
+    _owned = std::make_unique<FunctorIn>(std::move(wrapped));
     _wrapped = _owned.get();
     return *this;
   }
 
-  template <template <typename> class FunctorIn>
-  Functor<T> & operator=(std::unique_ptr<FunctorIn<T>> && wrapped)
+  template <typename FunctorIn>
+  Functor<T> & operator=(std::unique_ptr<FunctorIn> && wrapped)
   {
     _owned.reset();
     _owned = std::move(wrapped);

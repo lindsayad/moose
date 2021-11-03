@@ -111,14 +111,17 @@ private:
       return elem_gradient;
   }
 
-  ValueType evaluate(const ElemFromFaceArg &, unsigned int) const override
+  ValueType evaluate(const ElemFromFaceArg & elem_from_face, unsigned int) const override
   {
-    mooseError("not implemented");
+    const auto * elem_arg = std::get<0>(elem_from_face);
+    if (!elem_arg)
+      elem_arg = &std::get<1>(elem_from_face)->elem();
+    return (*this)(elem_arg);
   }
 
-  ValueType evaluate(const SingleSidedFaceArg &, unsigned int) const override
+  ValueType evaluate(const SingleSidedFaceArg & ssf, unsigned int) const override
   {
-    mooseError("not implemented");
+    return (*this)(makeFace(*std::get<0>(ssf)));
   }
 
   ValueType evaluate(const ElemQpArg &, unsigned int) const override

@@ -21,9 +21,10 @@ velocity_interp_method='rc'
 
 [UserObjects]
   [rc]
-    type = INSFVRhieChowInterpolator
+    type = PINSFVRhieChowInterpolator
     u = u
     v = v
+    porosity = porosity
   []
 []
 

@@ -12,6 +12,7 @@
 #include "MooseMesh.h"
 #include "FaceInfo.h"
 #include "CellCenteredMapFunctor.h"
+#include "MathFVUtils.h"
 #include "libmesh/elem.h"
 
 #include <unordered_map>
@@ -24,7 +25,7 @@ namespace FV
 template <typename T, typename Map>
 void
 reconstruct(CellCenteredMapFunctor<T, Map> & output_functor,
-            const CellCenteredMapFunctor<T, Map> & input_functor,
+            const FunctorImpl<T> & input_functor,
             const unsigned int num_reconstructions,
             const bool two_term_expansion,
             const bool weight_with_sf,
@@ -39,7 +40,7 @@ reconstruct(CellCenteredMapFunctor<T, Map> & output_functor,
   for (const auto & fi : all_fi)
   {
     const Real weight = weight_with_sf ? fi.faceArea() * fi.faceCoord() : 1;
-    auto face_value = input_functor(fi);
+    auto face_value = input_functor(makeCDFace(fi));
     std::pair<T, Real> * neighbor_pr = nullptr;
     if (fi.neighborPtr() && fi.neighborPtr() != libMesh::remote_elem)
     {
@@ -53,7 +54,7 @@ reconstruct(CellCenteredMapFunctor<T, Map> & output_functor,
 
     if (two_term_expansion)
     {
-      auto face_gradient = input_functor.gradient(fi);
+      auto face_gradient = input_functor.gradient(makeCDFace(fi));
       if (fi.neighborPtr() && fi.neighborPtr() != libMesh::remote_elem)
         neighbor_pr->first += face_gradient * (fi.neighborCentroid() - fi.faceCentroid()) * weight;
       elem_pr.first += std::move(face_gradient) * (fi.elemCentroid() - fi.faceCentroid()) * weight;

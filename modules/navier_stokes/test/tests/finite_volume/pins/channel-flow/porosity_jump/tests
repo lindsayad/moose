@@ -54,4 +54,12 @@
     ad_indexing_type = 'global'
     cli_args = "Outputs/file_base='rc-discontinuous-epsjump'"
   []
+  [reconstruct-porosity]
+    type = 'Exodiff'
+    input = 2d-rc-epsjump.i
+    exodiff = reconstructed.e
+    cli_args = 'Outputs/file_base=reconstructed UserObjects/rc/reconstructions=10'
+    ad_indexing_type = 'global'
+    requirement = 'The system shall exhibit a monotonic pressure profile when a number of reconstructions (essentially smoothing) are applied to the porosity.'
+  []
 []
