@@ -802,18 +802,10 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
     // we already have a gradient ready to go
     return it->second;
 
-  const auto coord_type = this->_subproblem.getCoordSystem(elem->subdomain_id());
   auto pr = _elem_to_grad.emplace(
       elem,
-      Moose::FV::greenGaussGradient(elem,
-                                    *this,
-                                    _two_term_boundary_expansion,
-                                    this->_mesh,
-                                    coord_type,
-                                    coord_type == Moose::COORD_RZ
-                                        ? this->_subproblem.getAxisymmetricRadialCoord()
-                                        : libMesh::invalid_uint,
-                                    &_face_to_value));
+      Moose::FV::greenGaussGradient(
+          elem, *this, _two_term_boundary_expansion, this->_mesh, &_face_to_value));
   mooseAssert(pr.second, "Insertion should have just happened.");
   return pr.first->second;
 }

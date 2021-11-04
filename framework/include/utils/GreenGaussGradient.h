@@ -13,9 +13,7 @@
 #include "FVUtils.h"
 #include "MooseMeshUtils.h"
 #include "VectorComponentFunctor.h"
-
-template <typename>
-class MooseVariableFV;
+#include "libmesh/elem.h"
 
 namespace Moose
 {
@@ -27,10 +25,12 @@ greenGaussGradient(const Elem * const elem,
                    const FunctorImpl<T> & functor,
                    const bool two_term_boundary_expansion,
                    const MooseMesh & mesh,
-                   const Moose::CoordinateSystemType coord_type,
-                   const unsigned int rz_radial_coord = libMesh::invalid_uint,
                    std::unordered_map<const FaceInfo *, T> * const face_to_value_cache = nullptr)
 {
+  mooseAssert(elem, "This should be non-null");
+  const auto coord_type = mesh.getCoordSystem(elem->subdomain_id());
+  const auto rz_radial_coord = mesh.getAxisymmetricRadialCoord();
+
   T elem_value = functor(elem);
 
   // We'll save off the extrapolated boundary faces (ebf) for later assignment to the cache (these
@@ -228,8 +228,7 @@ greenGaussGradient(const Elem * const elem,
     mooseAssert(two_term_boundary_expansion,
                 "I believe we should only get singular systems when two-term boundary expansion is "
                 "being used");
-    const auto grad = greenGaussGradient(
-        elem, functor, false, mesh, coord_type, rz_radial_coord, face_to_value_cache);
+    const auto grad = greenGaussGradient(elem, functor, false, mesh, face_to_value_cache);
 
     // We failed to compute the extrapolated boundary faces with two-term expansion and callers of
     // this method may be relying on those values (e.g. if the caller is
@@ -249,21 +248,14 @@ greenGaussGradient(const Elem * const elem,
                    const Moose::FunctorImpl<VectorValue<T>> & functor,
                    const bool two_term_boundary_expansion,
                    const MooseMesh & mesh,
-                   const Moose::CoordinateSystemType coord_type,
-                   const unsigned int rz_radial_coord = libMesh::invalid_uint,
                    std::unordered_map<const FaceInfo *, T> * const face_to_value_cache = nullptr)
 {
   TensorValue<T> ret;
   for (const auto i : make_range(unsigned(LIBMESH_DIM)))
   {
     VectorComponentFunctor<T> scalar_functor(functor, i);
-    const auto row_gradient = greenGaussGradient(elem,
-                                                 scalar_functor,
-                                                 two_term_boundary_expansion,
-                                                 mesh,
-                                                 coord_type,
-                                                 rz_radial_coord,
-                                                 face_to_value_cache);
+    const auto row_gradient = greenGaussGradient(
+        elem, scalar_functor, two_term_boundary_expansion, mesh, face_to_value_cache);
     for (const auto j : make_range(unsigned(LIBMESH_DIM)))
       ret(i, j) = row_gradient(j);
   }

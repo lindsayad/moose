@@ -87,7 +87,7 @@ private:
   GradientType evaluateGradient(const libMesh::Elem * const & elem,
                                 unsigned int) const override final
   {
-    return Moose::FV::greenGaussGradient(elem, *this, true, _mesh, Moose::COORD_XYZ);
+    return Moose::FV::greenGaussGradient(elem, *this, true, _mesh);
   }
 
   GradientType evaluateGradient(const FaceArg & face, unsigned int) const override final

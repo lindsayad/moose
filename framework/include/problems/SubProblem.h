@@ -338,7 +338,7 @@ public:
   virtual void prepareShapes(unsigned int var, THREAD_ID tid) = 0;
   virtual void prepareFaceShapes(unsigned int var, THREAD_ID tid) = 0;
   virtual void prepareNeighborShapes(unsigned int var, THREAD_ID tid) = 0;
-  virtual Moose::CoordinateSystemType getCoordSystem(SubdomainID sid) const = 0;
+  Moose::CoordinateSystemType getCoordSystem(SubdomainID sid) const;
 
   /**
    * Returns the desired radial direction for RZ coordinate transformation
@@ -885,9 +885,6 @@ protected:
 
   CouplingMatrix _nonlocal_cm; /// nonlocal coupling matrix;
 
-  /// Type of coordinate system per subdomain
-  std::map<SubdomainID, Moose::CoordinateSystemType> _coord_sys;
-
   DiracKernelInfo _dirac_kernel_info;
 
   /// Map of material properties (block_id -> list of properties)
@@ -939,9 +936,6 @@ protected:
 
   /// Elements that should have Dofs ghosted to the local processor
   std::set<dof_id_type> _ghosted_elems;
-
-  /// Storage for RZ axis selection
-  unsigned int _rz_coord_axis;
 
   /// Flag to determine whether the problem is currently computing Jacobian
   bool _currently_computing_jacobian;

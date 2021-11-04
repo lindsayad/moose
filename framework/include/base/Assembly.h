@@ -78,6 +78,13 @@ void coordTransformFactor(const SubProblem & s,
                           C & factor,
                           SubdomainID neighbor_sub_id = libMesh::Elem::invalid_subdomain_id);
 
+template <typename P, typename C>
+void coordTransformFactor(const MooseMesh & mesh,
+                          SubdomainID sub_id,
+                          const P & point,
+                          C & factor,
+                          SubdomainID neighbor_sub_id = libMesh::Elem::invalid_subdomain_id);
+
 /**
  * Keeps track of stuff related to assembling
  *

@@ -1519,7 +1519,7 @@ SystemBase::cacheVarIndicesByFace(const std::vector<VariableName> & vars)
   }
 
   _mesh.cacheVarIndicesByFace(moose_vars);
-  _mesh.computeFaceInfoFaceCoords(_subproblem);
+  _mesh.computeFaceInfoFaceCoords();
 }
 
 #ifdef MOOSE_GLOBAL_AD_INDEXING

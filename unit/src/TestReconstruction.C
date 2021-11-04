@@ -38,10 +38,12 @@
 #include <memory>
 
 void
-testReconstruction(const Moose::CoordinateSystemType coord_type,
-                   const unsigned int rz_radial_coord = libMesh::invalid_uint)
+testReconstruction(const Moose::CoordinateSystemType coord_type)
 {
   const char * argv[2] = {"foo", "\0"};
+
+  MultiMooseEnum coord_type_enum("XYZ RZ RSPHERICAL", "XYZ");
+  coord_type_enum = (coord_type == Moose::COORD_XYZ) ? "XYZ" : "RZ";
 
   std::vector<unsigned int> num_elem = {64, 128, 256};
   std::vector<Real> errors;
@@ -81,6 +83,13 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
       mesh->setMeshBase(std::move(lm_mesh));
     }
 
+    mesh->prepare();
+    mesh->setCoordSystem({}, coord_type_enum);
+    mooseAssert(mesh->getAxisymmetricRadialCoord() == 0,
+                "This should be 0 because we haven't set anything.");
+    const auto & all_fi = mesh->allFaceInfo();
+    mesh->computeFaceInfoFaceCoords();
+
     auto & lm_mesh = mesh->getMesh();
 
     CellCenteredMapFunctor<RealVectorValue, std::unordered_map<dof_id_type, RealVectorValue>> u(
@@ -95,9 +104,6 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
       u[elem->id()] = value;
       u_linear[elem->id()] = value;
     }
-
-    const auto & all_fi = mesh->allFaceInfo();
-    mesh->applyCoordSysToFaceCoords(coord_type, rz_radial_coord);
 
     CellCenteredMapFunctor<RealVectorValue, std::unordered_map<dof_id_type, RealVectorValue>> up(
         *mesh, true);
@@ -208,4 +214,4 @@ testReconstruction(const Moose::CoordinateSystemType coord_type,
 
 TEST(TestReconstruction, Cartesian) { testReconstruction(Moose::COORD_XYZ); }
 
-TEST(TestReconstruction, Cylindrical) { testReconstruction(Moose::COORD_RZ, 0); }
+TEST(TestReconstruction, Cylindrical) { testReconstruction(Moose::COORD_RZ); }

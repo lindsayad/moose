@@ -40,18 +40,29 @@ coordTransformFactor(const SubProblem & s,
                      const SubdomainID sub_id,
                      const P & point,
                      C & factor,
+                     const SubdomainID neighbor_sub_id)
+{
+  coordTransformFactor(s.mesh(), sub_id, point, factor, neighbor_sub_id);
+}
+
+template <typename P, typename C>
+void
+coordTransformFactor(const MooseMesh & mesh,
+                     const SubdomainID sub_id,
+                     const P & point,
+                     C & factor,
                      const SubdomainID libmesh_dbg_var(neighbor_sub_id))
 {
   mooseAssert(neighbor_sub_id != libMesh::Elem::invalid_subdomain_id
-                  ? s.getCoordSystem(sub_id) == s.getCoordSystem(neighbor_sub_id)
+                  ? mesh.getCoordSystem(sub_id) == mesh.getCoordSystem(neighbor_sub_id)
                   : true,
               "Coordinate systems must be the same between element and neighbor");
-  const auto coord_type = s.getCoordSystem(sub_id);
+  const auto coord_type = mesh.getCoordSystem(sub_id);
   MooseMeshUtils::coordTransformFactor(
       point,
       factor,
       coord_type,
-      coord_type == Moose::COORD_RZ ? s.getAxisymmetricRadialCoord() : libMesh::invalid_uint);
+      coord_type == Moose::COORD_RZ ? mesh.getAxisymmetricRadialCoord() : libMesh::invalid_uint);
 }
 
 Assembly::Assembly(SystemBase & sys, THREAD_ID tid)
@@ -4748,6 +4759,16 @@ template void coordTransformFactor<Point, Real>(const SubProblem & s,
                                                 Real & factor,
                                                 SubdomainID neighbor_sub_id);
 template void coordTransformFactor<ADPoint, ADReal>(const SubProblem & s,
+                                                    SubdomainID sub_id,
+                                                    const ADPoint & point,
+                                                    ADReal & factor,
+                                                    SubdomainID neighbor_sub_id);
+template void coordTransformFactor<Point, Real>(const MooseMesh & mesh,
+                                                SubdomainID sub_id,
+                                                const Point & point,
+                                                Real & factor,
+                                                SubdomainID neighbor_sub_id);
+template void coordTransformFactor<ADPoint, ADReal>(const MooseMesh & mesh,
                                                     SubdomainID sub_id,
                                                     const ADPoint & point,
                                                     ADReal & factor,

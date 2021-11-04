@@ -1078,15 +1078,12 @@ public:
    */
   void cacheVarIndicesByFace(const std::vector<const MooseVariableBase *> & moose_vars);
 
-  void applyCoordSysToFaceCoords(Moose::CoordinateSystemType coord_type,
-                                 unsigned int rz_radial_coord = libMesh::invalid_uint);
-
   /**
    * Compute the face coordinate value for all \p FaceInfo objects. 'Coordinate' here means a
    * coordinate value associated with the coordinate system. For Cartesian coordinate systems,
    * 'coordinate' is simply '1'; in RZ, '2*pi*r', and in spherical, '4*pi*r^2'
    */
-  void computeFaceInfoFaceCoords(const SubProblem & subproblem);
+  void computeFaceInfoFaceCoords();
 
   /**
    * Set whether this mesh is displaced
@@ -1105,6 +1102,16 @@ public:
   {
     return _node_set_nodes;
   }
+
+  Moose::CoordinateSystemType getCoordSystem(SubdomainID sid) const;
+  void setCoordSystem(const std::vector<SubdomainName> & blocks, const MultiMooseEnum & coord_sys);
+  void setAxisymmetricCoordAxis(const MooseEnum & rz_coord_axis);
+  /**
+   * Returns the desired radial direction for RZ coordinate transformation
+   * @return The coordinate direction for the radial direction
+   */
+  unsigned int getAxisymmetricRadialCoord() const;
+  void checkCoordinateSystems();
 
 protected:
   /// Deprecated (DO NOT USE)
@@ -1464,6 +1471,12 @@ private:
 
   /// Build lower-d mesh for all sides
   void buildLowerDMesh();
+
+  /// Type of coordinate system per subdomain
+  std::map<SubdomainID, Moose::CoordinateSystemType> _coord_sys;
+
+  /// Storage for RZ axis selection
+  unsigned int _rz_coord_axis;
 
   template <typename T>
   struct MeshType;

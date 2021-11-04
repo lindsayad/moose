@@ -88,12 +88,6 @@ DisplacedProblem::isTransient() const
   return _mproblem.isTransient();
 }
 
-Moose::CoordinateSystemType
-DisplacedProblem::getCoordSystem(SubdomainID sid) const
-{
-  return _mproblem.getCoordSystem(sid);
-}
-
 std::set<dof_id_type> &
 DisplacedProblem::ghostedElems()
 {
