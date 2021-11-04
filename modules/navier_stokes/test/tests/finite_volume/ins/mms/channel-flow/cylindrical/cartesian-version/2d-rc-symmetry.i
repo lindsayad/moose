@@ -46,6 +46,48 @@ rho=1.1
   []
 []
 
+[AuxVariables]
+  [bx_out]
+    type = MooseVariableFVReal
+  []
+  [by_out]
+    type = MooseVariableFVReal
+  []
+  [b2x_out]
+    type = MooseVariableFVReal
+  []
+  [b2y_out]
+    type = MooseVariableFVReal
+  []
+[]
+
+[AuxKernels]
+  [bx_out]
+    type = FunctorADMatPropElementalAux
+    variable = bx_out
+    mat_prop = "bx"
+    execute_on = "timestep_end"
+  []
+  [by_out]
+    type = FunctorADMatPropElementalAux
+    variable = by_out
+    mat_prop = "by"
+    execute_on = "timestep_end"
+  []
+  [b2x_out]
+    type = FunctorADMatPropElementalAux
+    variable = b2x_out
+    mat_prop = "b2x"
+    execute_on = "timestep_end"
+  []
+  [b2y_out]
+    type = FunctorADMatPropElementalAux
+    variable = b2y_out
+    mat_prop = "b2y"
+    execute_on = "timestep_end"
+  []
+[]
+
 [ICs]
   [u]
     type = FunctionIC

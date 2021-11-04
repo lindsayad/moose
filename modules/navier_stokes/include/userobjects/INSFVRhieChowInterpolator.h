@@ -14,6 +14,7 @@
 #include "ADReal.h"
 #include "MooseTypes.h"
 #include "CellCenteredMapFunctor.h"
+#include "VectorComponentFunctor.h"
 #include "libmesh/vector_value.h"
 #include "libmesh/id_types.h"
 #include <unordered_map>
@@ -77,6 +78,10 @@ private:
   CellCenteredMapFunctor<libMesh::VectorValue<ADReal>,
                          std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>>>
       _b2;
+  VectorComponentFunctor<ADReal> _bx;
+  VectorComponentFunctor<ADReal> _by;
+  VectorComponentFunctor<ADReal> _b2x;
+  VectorComponentFunctor<ADReal> _b2y;
 };
 
 inline const ADReal &

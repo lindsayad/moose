@@ -68,7 +68,11 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
     _two_term_reconstruction(getParam<bool>("two_term_reconstruction")),
     _use_moukalled(getParam<MooseEnum>("b2_strategy") == "moukalled"),
     _b(_moose_mesh, true),
-    _b2(_moose_mesh, true)
+    _b2(_moose_mesh, true),
+    _bx(_b, 0),
+    _by(_b, 1),
+    _b2x(_b2, 0),
+    _b2y(_b2, 1)
 {
   _var_numbers.push_back(_u.number());
   if (_v)
@@ -78,6 +82,11 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
 
   if (&(UserObject::_subproblem) != &(TaggingInterface::_subproblem))
     mooseError("Different subproblems in INSFVRhieChowInterpolator!");
+
+  UserObject::_subproblem.addFunctor("bx", _bx, 0);
+  UserObject::_subproblem.addFunctor("by", _by, 0);
+  UserObject::_subproblem.addFunctor("b2x", _b2x, 0);
+  UserObject::_subproblem.addFunctor("b2y", _b2y, 0);
 }
 
 void
