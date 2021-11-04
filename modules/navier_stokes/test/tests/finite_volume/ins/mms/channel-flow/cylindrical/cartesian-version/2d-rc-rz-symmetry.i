@@ -198,29 +198,6 @@ offset=0e0
     boundary = 'right'
     function = 'exact_v'
   []
-  [u_axis]
-    type = INSFVSymmetryVelocityBC
-    variable = u
-    boundary = 'left'
-    mu = ${mu}
-    u = u
-    v = v
-    momentum_component = 'x'
-  []
-  [v_axis]
-    type = INSFVSymmetryVelocityBC
-    variable = v
-    boundary = 'left'
-    mu = ${mu}
-    u = u
-    v = v
-    momentum_component = 'y'
-  []
-  [p_axis]
-    type = INSFVSymmetryPressureBC
-    variable = pressure
-    boundary = 'left'
-  []
   [p]
     type = INSFVOutletPressureBC
     variable = pressure
@@ -254,11 +231,11 @@ offset=0e0
 [Functions]
 [exact_u]
   type = ParsedFunction
-  value = 'sin(x*pi)*cos(y*pi)'
+  value = 'sin(x*pi)^2*cos(y*pi)'
 []
 [forcing_u]
   type = ParsedFunction
-  value = 'pi^2*mu*sin(x*pi)*cos(y*pi) - 2*pi*rho*sin(x*pi)*sin(y*pi)*cos(x*pi)*cos(y*pi) - pi*sin(x*pi)*cos(1.6*y) - (-x*pi^2*mu*sin(x*pi)*cos(y*pi) + pi*mu*cos(x*pi)*cos(y*pi))/x + (2*x*pi*rho*sin(x*pi)*cos(x*pi)*cos(y*pi)^2 + rho*sin(x*pi)^2*cos(y*pi)^2)/x'
+  value = 'pi^2*mu*sin(x*pi)^2*cos(y*pi) - 2*pi*rho*sin(x*pi)^2*sin(y*pi)*cos(x*pi)*cos(y*pi) - pi*sin(x*pi)*cos(1.6*y) + (4*x*pi*rho*sin(x*pi)^3*cos(x*pi)*cos(y*pi)^2 + rho*sin(x*pi)^4*cos(y*pi)^2)/x - (-2*x*pi^2*mu*sin(x*pi)^2*cos(y*pi) + 2*x*pi^2*mu*cos(x*pi)^2*cos(y*pi) + 2*pi*mu*sin(x*pi)*cos(x*pi)*cos(y*pi))/x'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
@@ -268,7 +245,7 @@ offset=0e0
 []
 [forcing_v]
   type = ParsedFunction
-  value = 'pi^2*mu*cos(x*pi)*cos(y*pi) - 2*pi*rho*sin(y*pi)*cos(x*pi)^2*cos(y*pi) - 1.6*sin(1.6*y)*cos(x*pi) - (-x*pi^2*mu*cos(x*pi)*cos(y*pi) - pi*mu*sin(x*pi)*cos(y*pi))/x + (-x*pi*rho*sin(x*pi)^2*cos(y*pi)^2 + x*pi*rho*cos(x*pi)^2*cos(y*pi)^2 + rho*sin(x*pi)*cos(x*pi)*cos(y*pi)^2)/x'
+  value = 'pi^2*mu*cos(x*pi)*cos(y*pi) - 2*pi*rho*sin(y*pi)*cos(x*pi)^2*cos(y*pi) - 1.6*sin(1.6*y)*cos(x*pi) - (-x*pi^2*mu*cos(x*pi)*cos(y*pi) - pi*mu*sin(x*pi)*cos(y*pi))/x + (-x*pi*rho*sin(x*pi)^3*cos(y*pi)^2 + 2*x*pi*rho*sin(x*pi)*cos(x*pi)^2*cos(y*pi)^2 + rho*sin(x*pi)^2*cos(x*pi)*cos(y*pi)^2)/x'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
@@ -278,7 +255,7 @@ offset=0e0
 []
 [forcing_p]
   type = ParsedFunction
-  value = '-pi*rho*sin(y*pi)*cos(x*pi) + (x*pi*rho*cos(x*pi)*cos(y*pi) + rho*sin(x*pi)*cos(y*pi))/x'
+  value = '-pi*rho*sin(y*pi)*cos(x*pi) + (2*x*pi*rho*sin(x*pi)*cos(x*pi)*cos(y*pi) + rho*sin(x*pi)^2*cos(y*pi))/x'
   vars = 'rho'
   vals = '${rho}'
 []
