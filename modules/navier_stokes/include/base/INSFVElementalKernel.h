@@ -35,4 +35,7 @@ protected:
   {
     mooseError("INSFVElementalKernels must implement gatherRCData and not computeQpResidual");
   }
+
+private:
+  using FVElementalKernel::_current_elem;
 };
