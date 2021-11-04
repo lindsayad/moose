@@ -15,6 +15,7 @@
 #include "MooseMesh.h"
 #include "SystemBase.h"
 #include "NS.h"
+#include "Reconstructions.h"
 
 #include "libmesh/mesh_base.h"
 #include "libmesh/elem_range.h"
@@ -66,7 +67,7 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
     _standard_body_forces(getParam<bool>("standard_body_forces")),
     _two_term_reconstruction(getParam<bool>("two_term_reconstruction")),
     _use_moukalled(getParam<MooseEnum>("b2_strategy") == "moukalled"),
-    _b(_moose_mesh, false),
+    _b(_moose_mesh, true),
     _b2(_moose_mesh, true)
 {
   _var_numbers.push_back(_u.number());
@@ -194,66 +195,7 @@ INSFVRhieChowInterpolator::interpolateB(
 void
 INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
 {
-  const auto & dof_map = _sys.dofMap();
-  const auto & all_fi = _moose_mesh.allFaceInfo();
-  // reserve to avoid re-allocating all the time
   _b2.reserve(_fe_problem.getEvaluableElementRange().size());
-  std::unordered_map<dof_id_type, Real> sf_sfhat_sum;
-  if (!_use_moukalled)
-    sf_sfhat_sum.reserve(_fe_problem.getEvaluableElementRange().size());
-
-  for (const auto & fi : all_fi)
-  {
-    if (fi.neighborPtr() == remote_elem)
-      // Let's assume that this face information object is at our ghosted elements boundary and in
-      // that case we don't care about its face computation
-      continue;
-
-    if (_standard_body_forces)
-      continue;
-
-    const auto bf = _b(fi);
-
-    if (_use_moukalled)
-    {
-      const Point surface_vector = fi.normal() * fi.faceArea();
-      auto product = (bf * fi.dCF()) * surface_vector;
-
-      // Now should we compute _b2 for this element?
-      if (dof_map.is_evaluable(fi.elem(), _var_numbers[0]))
-        _b2[fi.elem().id()] += product * fi.gC() / fi.elemVolume();
-
-      // Or for the neighbor?
-      if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _var_numbers[0]))
-        _b2[fi.neighbor().id()] += std::move(product) * (1. - fi.gC()) / fi.neighborVolume();
-    }
-    else
-    {
-      const Point surface_vector = fi.normal() * fi.faceArea() * fi.faceCoord();
-      const auto sf_sfhat = fi.normal() * surface_vector;
-      const auto grad_bf = _b.gradient(fi);
-
-      // Now should we compute _b2 for this element?
-      if (dof_map.is_evaluable(fi.elem(), _var_numbers[0]))
-      {
-        auto interpolant = bf;
-        if (_two_term_reconstruction)
-          interpolant += grad_bf * (fi.elemCentroid() - fi.faceCentroid());
-        _b2[fi.elem().id()] += interpolant * sf_sfhat;
-        sf_sfhat_sum[fi.elem().id()] += sf_sfhat;
-      }
-
-      // Or for the neighbor?
-      if (fi.neighborPtr() && dof_map.is_evaluable(fi.neighbor(), _var_numbers[0]))
-      {
-        auto interpolant = bf;
-        if (_two_term_reconstruction)
-          interpolant += grad_bf * (fi.neighborCentroid() - fi.faceCentroid());
-        _b2[fi.neighbor().id()] += interpolant * sf_sfhat;
-        sf_sfhat_sum[fi.neighbor().id()] += sf_sfhat;
-      }
-    }
-  }
 
   if (_standard_body_forces)
   {
@@ -263,9 +205,7 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     return;
   }
 
-  if (!_use_moukalled)
-    for (auto & pr : _b2)
-      pr.second /= libmesh_map_find(sf_sfhat_sum, pr.first);
+  Moose::FV::reconstruct(_b2, _b, 1, false, false, _moose_mesh);
 }
 
 void
