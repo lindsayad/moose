@@ -44,34 +44,11 @@ PINSFVSymmetryVelocityBC::computeQpResidual()
 
   const auto face_eps = _eps(std::make_tuple(
       _face_info, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
-  return INSFVSymmetryVelocityBC::computeQpResidual() / face_eps;
-}
 
-void
-PINSFVSymmetryVelocityBC::gatherRCData(const FaceInfo & /*fi*/)
-{
-  // const Elem & elem = fi.elem();
-  // const Elem * const neighbor = fi.neighborPtr();
-  // const Point & normal = fi.normal();
-  // Real coord;
-  // coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
-  // const auto surface_vector = normal * fi.faceArea() * coord;
+  const auto insfv_residual = INSFVSymmetryVelocityBC::computeQpResidual();
 
-  // auto ft = fi.faceType(_var.name());
-  // const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
-  // const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
-  // const Point & boundary_elem_centroid =
-  //     var_on_elem_side ? fi.elemCentroid() : fi.neighborCentroid();
+  if (_computing_rc_data)
+    _a /= face_eps;
 
-  // mooseAssert(boundary_elem, "the boundary elem should be non-null");
-  // const auto face_mu = _mu(std::make_tuple(
-  //     &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
-  // const auto face_eps = _eps(std::make_tuple(
-  //     &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
-
-  // // Moukalled eqns. 15.154 - 15.156, adapted for porosity
-  // const ADReal coeff = 2. * face_mu / face_eps * surface_vector.norm() /
-  //                      std::abs((fi.faceCentroid() - boundary_elem_centroid) * normal) *
-  //                      normal(_index) * normal(_index);
-  // _rc_uo.addToA(boundary_elem, _index, coeff);
+  return insfv_residual / face_eps;
 }

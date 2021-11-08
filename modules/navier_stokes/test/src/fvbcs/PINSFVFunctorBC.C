@@ -11,6 +11,7 @@
 #include "NS.h"
 #include "SinglePhaseFluidProperties.h"
 #include "Function.h"
+#include "SystemBase.h"
 
 registerMooseObject("NavierStokesTestApp", PINSFVFunctorBC);
 
@@ -83,66 +84,55 @@ PINSFVFunctorBC::computeQpResidual()
   const auto ft = _face_info->faceType(_var.name());
   const bool out_of_elem = (ft == FaceInfo::VarFaceNeighbors::ELEM);
   const auto normal = out_of_elem ? _face_info->normal() : Point(-_face_info->normal());
+  const auto & elem = out_of_elem ? _face_info->elem() : _face_info->neighbor();
+  const auto sub_id = elem.subdomain_id();
 
   // No interpolation on a boundary so argument values to fi_elem_is_upwind do not
   // matter
-  const auto face = std::make_tuple(
-      _face_info, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains());
-  const VectorValue<ADReal> sup_vel(_sup_vel_x(face),
-                                    _sup_vel_y ? (*_sup_vel_y)(face) : ADReal(0),
-                                    _sup_vel_z ? (*_sup_vel_z)(face) : ADReal(0));
-  const auto rho = _rho(face);
+  const auto boundary_face =
+      std::make_tuple(_face_info, Moose::FV::LimiterType::CentralDifference, true, sub_id);
+
+  const VectorValue<ADReal> sup_vel(_sup_vel_x(boundary_face),
+                                    _sup_vel_y ? (*_sup_vel_y)(boundary_face) : ADReal(0),
+                                    _sup_vel_z ? (*_sup_vel_z)(boundary_face) : ADReal(0));
+  const auto rho = _rho(boundary_face);
 
   if (_eqn == "mass")
     return rho * sup_vel * normal;
   else if (_eqn == "momentum")
   {
-    const auto eps = _eps(face);
+    const auto eps = _eps(boundary_face);
+    // the value of our variable on the boundary could be a function of multiple degrees of freedom
+    // (think two term boundary expansion), as opposed to just a function of the degree of freedom
+    // at the adjoining cell centroid.
+    if (_computing_rc_data)
+    {
+      const auto dof_number = elem.dof_number(_sys.number(), _var.number(), 0);
+      _a = sup_vel(_index).derivatives()[dof_number];
+      _a *= rho / eps * sup_vel * normal;
+    }
     const auto rhou = sup_vel(_index) / eps * rho;
-    return rhou * sup_vel * normal + eps * _pressure(face) * normal(_index);
+    return rhou * sup_vel * normal + eps * _pressure(boundary_face) * normal(_index);
   }
   else
     mooseError("Unrecognized equation type ", _eqn);
 }
 
 void
-PINSFVFunctorBC::gatherRCData(const FaceInfo & /*fi*/)
+PINSFVFunctorBC::gatherRCData(const FaceInfo & fi)
 {
-  // This is copied from PINSFVMomentumAdvection for flow boundaries. In the future we should
-  // probably make this look more like the above computeQpResidual
+  _face_info = &fi;
+  _face_type = fi.faceType(_var.name());
 
-  // const Elem & elem = fi.elem();
-  // const Elem * const neighbor = fi.neighborPtr();
-  // const Point & normal = fi.normal();
-  // Real coord;
-  // coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
-  // const auto surface_vector = normal * fi.faceArea() * coord;
+  _computing_rc_data = true;
+  const auto saved_do_derivatives = ADReal::do_derivatives;
+  ADReal::do_derivatives = true;
+  // Fill-in the coefficient _a (but without multiplication by A)
+  computeQpResidual();
+  ADReal::do_derivatives = saved_do_derivatives;
+  _computing_rc_data = false;
 
-  // auto ft = fi.faceType(_var.name());
-  // mooseAssert((ft == FaceInfo::VarFaceNeighbors::ELEM) ||
-  //                 (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR),
-  //             "Do we want to allow internal flow boundaries?");
-  // const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
-  // Real residual_sign = var_on_elem_side ? 1. : -1.;
-  // const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
-
-  // mooseAssert(boundary_elem, "the boundary elem should be non-null");
-  // const auto boundary_face = std::make_tuple(
-  //     &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id());
-  // const auto face_rho = _rho(boundary_face);
-  // const auto face_eps = _eps(boundary_face);
-
-  // ADRealVectorValue face_velocity(_sup_vel_x(boundary_face));
-  // if (_sup_vel_y)
-  //   face_velocity(1) = (*_sup_vel_y)(boundary_face);
-  // if (_sup_vel_z)
-  //   face_velocity(2) = (*_sup_vel_z)(boundary_face);
-
-  // const auto advection_coeffs =
-  //     Moose::FV::interpCoeffs(_advected_interp_method, fi, true, face_velocity);
-  // const auto advection_coeff = var_on_elem_side ? advection_coeffs.first :
-  // advection_coeffs.second; const ADReal coeff =
-  //     face_rho * face_velocity / face_eps * surface_vector * advection_coeff * residual_sign;
-
-  // _rc_uo.addToA(boundary_elem, _index, coeff);
+  _rc_uo.addToA((_face_type == FaceInfo::VarFaceNeighbors::ELEM) ? &fi.elem() : fi.neighborPtr(),
+                _index,
+                _a * (fi.faceArea() * fi.faceCoord()));
 }

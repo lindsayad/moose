@@ -20,8 +20,8 @@ class INSFVMomentumDiffusion : public FVFluxKernel,
 public:
   static InputParameters validParams();
   INSFVMomentumDiffusion(const InputParameters & params);
-  void gatherRCData(const Elem &) override {}
-  void gatherRCData(const FaceInfo & fi) override;
+  void gatherRCData(const Elem &) override final {}
+  void gatherRCData(const FaceInfo & fi) override final;
   void initialSetup() override { INSFVFluxKernelInterface::initialSetup(*this); }
 
 protected:

@@ -35,8 +35,8 @@ public:
   static InputParameters validParams();
   INSFVMomentumAdvection(const InputParameters & params);
   void initialSetup() override;
-  void gatherRCData(const Elem &) override {}
-  void gatherRCData(const FaceInfo & fi) override;
+  void gatherRCData(const Elem &) override final {}
+  void gatherRCData(const FaceInfo & fi) override final;
 
 protected:
   /**

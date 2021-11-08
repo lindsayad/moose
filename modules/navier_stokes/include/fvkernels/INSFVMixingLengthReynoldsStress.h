@@ -22,10 +22,8 @@ public:
 
   INSFVMixingLengthReynoldsStress(const InputParameters & params);
 
-  void gatherRCData(const Elem &) override {}
-
-  // requires RC implementation
-  void gatherRCData(const FaceInfo &) override {}
+  void gatherRCData(const Elem &) override final {}
+  void gatherRCData(const FaceInfo &) override final;
 
 protected:
   ADReal computeQpResidual() override;
@@ -48,4 +46,13 @@ protected:
 
   /// Turbulent eddy mixing length
   const Moose::Functor<ADReal> & _mixing_len;
+
+  /// Whether we are currently computing Rhie-Chow data
+  bool _computing_rc_data = false;
+
+  /// Rhie-Chow element coefficient
+  ADReal _ae = 0;
+
+  /// Rhie-Chow neighbor coefficient
+  ADReal _an = 0;
 };

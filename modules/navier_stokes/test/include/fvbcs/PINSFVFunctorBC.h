@@ -23,9 +23,8 @@ public:
   static InputParameters validParams();
   PINSFVFunctorBC(const InputParameters & params);
 
-  void gatherRCData(const Elem &) override {}
-
-  void gatherRCData(const FaceInfo &) override;
+  void gatherRCData(const Elem &) override final {}
+  void gatherRCData(const FaceInfo &) override final;
 
 protected:
   virtual ADReal computeQpResidual() override;
@@ -50,4 +49,10 @@ protected:
 
   /// The interpolation method to use for the advected quantity
   Moose::FV::InterpMethod _advected_interp_method;
+
+  /// Whether we are computing Rhie-Chow data
+  bool _computing_rc_data = false;
+
+  /// Local variable to hold this object's contribution to the Rhie-Chow 'a' coefficient
+  ADReal _a = 0;
 };

@@ -18,12 +18,12 @@ public:
   static InputParameters validParams();
   INSFVMomentumTimeDerivative(const InputParameters & params);
 
-  // This will have to be implemented
-  void gatherRCData(const Elem &) override {}
+  void gatherRCData(const Elem &) override;
   void gatherRCData(const FaceInfo &) override {}
 
 protected:
-  ADReal computeQpResidual() override;
+  ADReal computeQpResidual(const Elem & elem);
+  ADReal computeQpResidual() override final;
 
   const Real & _rho;
 };

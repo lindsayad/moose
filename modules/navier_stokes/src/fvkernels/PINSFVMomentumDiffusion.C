@@ -53,113 +53,6 @@ PINSFVMomentumDiffusion::PINSFVMomentumDiffusion(const InputParameters & params)
                "both the momentum component and a superficial velocity material property.");
 }
 
-void
-PINSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
-{
-  // if (skipForBoundary(fi))
-  //   return;
-
-  const Elem & elem = fi.elem();
-  const Elem * const neighbor = fi.neighborPtr();
-  const Point & normal = fi.normal();
-  Real coord;
-  coordTransformFactor(_subproblem, elem.subdomain_id(), fi.faceCentroid(), coord);
-  const auto surface_vector = normal * fi.faceArea() * coord;
-
-  if (onBoundary(fi))
-  {
-    auto ft = fi.faceType(_var.name());
-    mooseAssert((ft == FaceInfo::VarFaceNeighbors::ELEM) ||
-                    (ft == FaceInfo::VarFaceNeighbors::NEIGHBOR),
-                "Do we want to allow internal boundaries?");
-    const bool var_on_elem_side = ft == FaceInfo::VarFaceNeighbors::ELEM;
-    const Elem * const boundary_elem = var_on_elem_side ? &elem : neighbor;
-    const Point & boundary_elem_centroid =
-        var_on_elem_side ? fi.elemCentroid() : fi.neighborCentroid();
-
-    mooseAssert(boundary_elem, "the boundary elem should be non-null");
-    mooseAssert(this->hasBlocks(boundary_elem->subdomain_id()),
-                "This object should exist on our boundary element subdomain ID");
-    const auto face_mu = _mu(std::make_tuple(
-        &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
-    const auto face_eps = _eps(std::make_tuple(
-        &fi, Moose::FV::LimiterType::CentralDifference, true, boundary_elem->subdomain_id()));
-
-    // Find the boundary id that has an associated INSFV boundary condition
-    // if a face has more than one bc_id
-    for (const auto bc_id : fi.boundaryIDs())
-    {
-      if (_no_slip_wall_boundaries.find(bc_id) != _no_slip_wall_boundaries.end())
-      {
-        // Need to account for viscous shear stress from wall
-        const ADReal coeff = face_mu / face_eps * surface_vector.norm() /
-                             std::abs((fi.faceCentroid() - boundary_elem_centroid) * normal) *
-                             (1 - normal(_index) * normal(_index));
-        _rc_uo.addToA(boundary_elem, _index, coeff);
-        return;
-      }
-
-      if (_flow_boundaries.find(bc_id) != _flow_boundaries.end())
-      {
-        if (_fully_developed_flow_boundaries.find(bc_id) == _fully_developed_flow_boundaries.end())
-        {
-          // We are not on a fully developed flow boundary, so we have a viscous term
-          // contribution. This term is slightly modified relative to the internal face term.
-          // Instead of the distance between elem and neighbor centroid, we just have the distance
-          // between the elem and face centroid. Specifically, the term below is the result of
-          // Moukalled 8.80, 8.82, and the orthogonal correction approach equation for E_f,
-          // equation 8.89. So relative to the internal face viscous term, we have substituted
-          // eqn. 8.82 for 8.78
-          // Note: If mu is an effective diffusivity, this should not be divided by face_eps
-          const ADReal coeff = face_mu / face_eps * surface_vector.norm() /
-                               (fi.faceCentroid() - boundary_elem_centroid).norm();
-          _rc_uo.addToA(boundary_elem, _index, coeff);
-        }
-        return;
-      }
-
-      if (_slip_wall_boundaries.find(bc_id) != _slip_wall_boundaries.end())
-        return;
-      // mooseError("Slip wall boundaries should have a flux bc such that we should never get
-      // here");
-
-      if (_symmetry_boundaries.find(bc_id) != _symmetry_boundaries.end())
-      {
-        // Moukalled eqns. 15.154 - 15.156, adapted for porosity
-        const ADReal coeff = 2. * face_mu / face_eps * surface_vector.norm() /
-                             std::abs((fi.faceCentroid() - boundary_elem_centroid) * normal) *
-                             normal(_index) * normal(_index);
-        _rc_uo.addToA(boundary_elem, _index, coeff);
-        return;
-        // mooseError("Symmetry boundaries should have a flux bc such that we should never get
-        // here");
-      }
-    }
-
-    const auto bc_id = *fi.boundaryIDs().begin();
-    mooseError("The INSFVMomentumAdvection object ",
-               this->name(),
-               " is not completely bounded by INSFVBCs. Please examine surface ",
-               bc_id,
-               " and your FVBCs blocks.");
-  }
-
-  // Else we are on an internal face
-
-  const auto face_mu = _mu(std::make_tuple(
-      &fi, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains(&fi)));
-  const auto face_eps = _eps(std::make_tuple(
-      &fi, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains(&fi)));
-
-  // Now add the viscous flux. Note that this includes only the orthogonal component! See
-  // Moukalled equations 8.80, 8.78, and the orthogonal correction approach equation for
-  // E_f, equation 8.69
-  const ADReal coeff = face_mu / face_eps * surface_vector.norm() /
-                       (fi.neighborCentroid() - fi.elemCentroid()).norm();
-  _rc_uo.addToA(&elem, _index, coeff);
-  _rc_uo.addToA(neighbor, _index, coeff);
-}
-
 ADReal
 PINSFVMomentumDiffusion::computeQpResidual()
 {
@@ -185,6 +78,26 @@ PINSFVMomentumDiffusion::computeQpResidual()
 
   // Compute face superficial velocity gradient
   auto dudn = gradUDotNormal();
+
+  if (_computing_rc_data)
+  {
+    if (_face_type == FaceInfo::VarFaceNeighbors::ELEM ||
+        _face_type == FaceInfo::VarFaceNeighbors::BOTH)
+    {
+      const auto dof_number = _face_info->elem().dof_number(_sys.number(), _var.number(), 0);
+      // A gradient is a linear combination of degrees of freedom so it's safe to straight-up index
+      // into the derivatives vector at the dof we care about
+      _ae = dudn.derivatives()[dof_number];
+      _ae *= -mu_eps_face;
+    }
+    if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR ||
+        _face_type == FaceInfo::VarFaceNeighbors::BOTH)
+    {
+      const auto dof_number = _face_info->neighbor().dof_number(_sys.number(), _var.number(), 0);
+      _an = dudn.derivatives()[dof_number];
+      _an *= mu_eps_face;
+    }
+  }
 
   // First term of residual
   ADReal residual = mu_eps_face * dudn;

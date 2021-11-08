@@ -10,6 +10,7 @@
 #include "INSFVMixingLengthReynoldsStress.h"
 #include "INSFVVelocityVariable.h"
 #include "NS.h"
+#include "SystemBase.h"
 
 registerMooseObject("NavierStokesApp", INSFVMixingLengthReynoldsStress);
 
@@ -111,6 +112,26 @@ INSFVMixingLengthReynoldsStress::computeQpResidual()
   const ADReal rho = _rho(std::make_tuple(
       _face_info, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains(_face_info)));
 
+  if (_computing_rc_data)
+  {
+    if (_face_type == FaceInfo::VarFaceNeighbors::ELEM ||
+        _face_type == FaceInfo::VarFaceNeighbors::BOTH)
+    {
+      const auto dof_number = _face_info->elem().dof_number(_sys.number(), _var.number(), 0);
+      // norm_strain_rate is a linear combination of degrees of freedom so it's safe to straight-up
+      // index into the derivatives vector at the dof we care about
+      _ae = norm_strain_rate.derivatives()[dof_number];
+      _ae *= -rho * eddy_diff;
+    }
+    if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR ||
+        _face_type == FaceInfo::VarFaceNeighbors::BOTH)
+    {
+      const auto dof_number = _face_info->neighbor().dof_number(_sys.number(), _var.number(), 0);
+      _an = norm_strain_rate.derivatives()[dof_number];
+      _an *= rho * eddy_diff;
+    }
+  }
+
   // Return the turbulent stress contribution to the momentum equation
   return -1 * rho * eddy_diff * norm_strain_rate;
 
@@ -118,4 +139,31 @@ INSFVMixingLengthReynoldsStress::computeQpResidual()
   return 0;
 
 #endif
+}
+
+void
+INSFVMixingLengthReynoldsStress::gatherRCData(const FaceInfo & fi)
+{
+  if (skipForBoundary(fi))
+    return;
+
+  _face_info = &fi;
+  _normal = fi.normal();
+  _face_type = fi.faceType(_var.name());
+
+  _computing_rc_data = true;
+  const auto saved_do_derivatives = ADReal::do_derivatives;
+  // We rely on derivative indexing
+  ADReal::do_derivatives = true;
+  // Fill-in the coefficients _ae and _an (but without multiplication by A)
+  computeQpResidual();
+  _computing_rc_data = false;
+  ADReal::do_derivatives = saved_do_derivatives;
+
+  if (_face_type == FaceInfo::VarFaceNeighbors::ELEM ||
+      _face_type == FaceInfo::VarFaceNeighbors::BOTH)
+    _rc_uo.addToA(&fi.elem(), _index, _ae * (fi.faceArea() * fi.faceCoord()));
+  if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR ||
+      _face_type == FaceInfo::VarFaceNeighbors::BOTH)
+    _rc_uo.addToA(fi.neighborPtr(), _index, _an * (fi.faceArea() * fi.faceCoord()));
 }

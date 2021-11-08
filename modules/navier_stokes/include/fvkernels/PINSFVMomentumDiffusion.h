@@ -19,8 +19,6 @@ class PINSFVMomentumDiffusion : public INSFVMomentumDiffusion
 public:
   static InputParameters validParams();
   PINSFVMomentumDiffusion(const InputParameters & params);
-  using INSFVMomentumDiffusion::gatherRCData;
-  void gatherRCData(const FaceInfo & fi) override;
 
 protected:
   ADReal computeQpResidual() override;
