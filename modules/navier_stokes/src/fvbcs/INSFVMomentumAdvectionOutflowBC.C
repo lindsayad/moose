@@ -114,10 +114,12 @@ INSFVMomentumAdvectionOutflowBC::gatherRCData(const FaceInfo & fi)
   _computing_rc_data = true;
   const auto saved_do_derivatives = ADReal::do_derivatives;
   ADReal::do_derivatives = true;
-  const auto residual = fi.faceArea() * fi.faceCoord() * computeQpResidual();
+  // Fill-in the coefficient _a (but without multiplication by A)
+  computeQpResidual();
   ADReal::do_derivatives = saved_do_derivatives;
   _computing_rc_data = false;
 
-  _rc_uo.addToA(
-      (_face_type == FaceInfo::VarFaceNeighbors::ELEM) ? &fi.elem() : fi.neighborPtr(), _index, _a);
+  _rc_uo.addToA((_face_type == FaceInfo::VarFaceNeighbors::ELEM) ? &fi.elem() : fi.neighborPtr(),
+                _index,
+                _a * (fi.faceArea() * fi.faceCoord()));
 }

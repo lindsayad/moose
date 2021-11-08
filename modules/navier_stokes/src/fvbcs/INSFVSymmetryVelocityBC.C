@@ -87,9 +87,11 @@ INSFVSymmetryVelocityBC::gatherRCData(const FaceInfo & fi)
   _face_type = fi.faceType(_var.name());
 
   _computing_rc_data = true;
-  const auto residual = fi.faceArea() * fi.faceCoord() * computeQpResidual();
+  // Fill-in the coefficient _a (but without multiplication by A)
+  computeQpResidual();
   _computing_rc_data = false;
 
-  _rc_uo.addToA(
-      (_face_type == FaceInfo::VarFaceNeighbors::ELEM) ? &fi.elem() : fi.neighborPtr(), _index, _a);
+  _rc_uo.addToA((_face_type == FaceInfo::VarFaceNeighbors::ELEM) ? &fi.elem() : fi.neighborPtr(),
+                _index,
+                _a * (fi.faceArea() * fi.faceCoord()));
 }

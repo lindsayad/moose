@@ -45,16 +45,17 @@ INSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
   const auto saved_do_derivatives = ADReal::do_derivatives;
   // We rely on derivative indexing
   ADReal::do_derivatives = true;
-  const auto residual = fi.faceArea() * fi.faceCoord() * computeQpResidual();
+  // Fill-in the coefficients _ae and _an (but without multiplication by A)
+  computeQpResidual();
   _computing_rc_data = false;
   ADReal::do_derivatives = saved_do_derivatives;
 
   if (_face_type == FaceInfo::VarFaceNeighbors::ELEM ||
       _face_type == FaceInfo::VarFaceNeighbors::BOTH)
-    _rc_uo.addToA(&fi.elem(), _index, _ae);
+    _rc_uo.addToA(&fi.elem(), _index, _ae * (fi.faceArea() * fi.faceCoord()));
   if (_face_type == FaceInfo::VarFaceNeighbors::NEIGHBOR ||
       _face_type == FaceInfo::VarFaceNeighbors::BOTH)
-    _rc_uo.addToA(fi.neighborPtr(), _index, _an);
+    _rc_uo.addToA(fi.neighborPtr(), _index, _an * (fi.faceArea() * fi.faceCoord()));
 }
 
 ADReal
