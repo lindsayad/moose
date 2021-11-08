@@ -26,12 +26,17 @@ namespace FV
 {
 inline std::
     tuple<const FaceInfo *, Moose::FV::LimiterType, bool, std::pair<SubdomainID, SubdomainID>>
+    makeCDFace(const FaceInfo & fi, const std::pair<SubdomainID, SubdomainID> & subs)
+{
+  return std::make_tuple(&fi, Moose::FV::LimiterType::CentralDifference, true, subs);
+}
+
+inline std::
+    tuple<const FaceInfo *, Moose::FV::LimiterType, bool, std::pair<SubdomainID, SubdomainID>>
     makeCDFace(const FaceInfo & fi)
 {
-  return std::make_tuple(
-      &fi,
-      Moose::FV::LimiterType::CentralDifference,
-      true,
+  return makeCDFace(
+      fi,
       std::make_pair(fi.elem().subdomain_id(),
                      fi.neighborPtr() ? fi.neighbor().subdomain_id() : Moose::INVALID_BLOCK_ID));
 }

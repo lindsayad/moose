@@ -61,8 +61,7 @@ INSFVMomentumDiffusion::gatherRCData(const FaceInfo & fi)
 ADReal
 INSFVMomentumDiffusion::computeQpResidual()
 {
-  const auto face = std::make_tuple(
-      _face_info, Moose::FV::LimiterType::CentralDifference, true, faceArgSubdomains());
+  const auto face = Moose::FV::makeCDFace(*_face_info, faceArgSubdomains());
   const auto dudn = _var.gradient(face) * _face_info->normal();
   const auto face_mu = _mu(face);
 

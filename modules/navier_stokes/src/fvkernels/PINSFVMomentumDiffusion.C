@@ -77,7 +77,8 @@ PINSFVMomentumDiffusion::computeQpResidual()
               true);
 
   // Compute face superficial velocity gradient
-  auto dudn = gradUDotNormal();
+  auto dudn =
+      _var.gradient(Moose::FV::makeCDFace(*_face_info, faceArgSubdomains())) * _face_info->normal();
 
   if (_computing_rc_data)
   {
