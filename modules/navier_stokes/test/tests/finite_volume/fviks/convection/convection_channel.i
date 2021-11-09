@@ -41,6 +41,7 @@ vel = 'velocity'
     type = INSFVRhieChowInterpolator
     u = u
     v = v
+    block = 0
   []
 []
 

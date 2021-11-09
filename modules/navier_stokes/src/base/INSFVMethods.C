@@ -10,7 +10,7 @@
 #include "INSFVMethods.h"
 
 ADReal
-findUStar(const ADReal mu, const ADReal rho, ADReal u, const Real dist)
+findUStar(const ADReal & mu, const ADReal & rho, const ADReal & u, const Real dist)
 {
   constexpr int MAX_ITERS{50};
   constexpr Real REL_TOLERANCE{1e-6};

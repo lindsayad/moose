@@ -43,6 +43,7 @@ advected_interp_method = 'average'
     type = INSFVRhieChowInterpolator
     u = u
     v = v
+    block = 0
   []
 []
 

@@ -24,8 +24,17 @@ velocity_face_value_caching = true
   []
 []
 
-[Problem]
-  fv_bcs_integrity_check = true
+[GlobalParams]
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = INSFVRhieChowInterpolator
+    u = u
+    v = v
+    w = w
+  []
 []
 
 [Variables]
@@ -65,7 +74,6 @@ velocity_face_value_caching = true
     u = u
     v = v
     w = w
-    mu = ${mu}
     rho = ${rho}
   []
 
@@ -80,19 +88,20 @@ velocity_face_value_caching = true
     u = u
     v = v
     w = w
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'x'
   []
   [u_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = u
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'x'
   []
   [u_pressure]
     type = INSFVMomentumPressure
     variable = u
     momentum_component = 'x'
-    p = pressure
+    pressure = pressure
   []
 
   [v_advection]
@@ -106,19 +115,20 @@ velocity_face_value_caching = true
     u = u
     v = v
     w = w
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'y'
   []
   [v_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = v
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'y'
   []
   [v_pressure]
     type = INSFVMomentumPressure
     variable = v
     momentum_component = 'y'
-    p = pressure
+    pressure = pressure
   []
 
   [w_advection]
@@ -132,19 +142,20 @@ velocity_face_value_caching = true
     u = u
     v = v
     w = w
-    mu = ${mu}
     rho = ${rho}
+    momentum_component = 'z'
   []
   [w_viscosity]
-    type = FVDiffusion
+    type = INSFVMomentumDiffusion
     variable = w
-    coeff = ${mu}
+    mu = ${mu}
+    momentum_component = 'z'
   []
   [w_pressure]
     type = INSFVMomentumPressure
     variable = w
     momentum_component = 'z'
-    p = pressure
+    pressure = pressure
   []
 []
 
@@ -172,16 +183,19 @@ velocity_face_value_caching = true
     type = INSFVNaturalFreeSlipBC
     boundary = 'top bottom front back'
     variable = u
+    momentum_component = 'x'
   []
   [walls-v]
     type = INSFVNaturalFreeSlipBC
     boundary = 'top bottom front back'
     variable = v
+    momentum_component = 'y'
   []
   [walls-w]
     type = INSFVNaturalFreeSlipBC
     boundary = 'top bottom front back'
     variable = w
+    momentum_component = 'z'
   []
 
   [outlet_p]

@@ -16,18 +16,6 @@ velocity_interp_method='rc'
   []
 []
 
-[GlobalParams]
-  rhie_chow_user_object = 'rc'
-[]
-
-[UserObjects]
-  [rc]
-    type = INSFVRhieChowInterpolator
-    u = u
-    v = v
-  []
-[]
-
 [Problem]
   fv_bcs_integrity_check = true
   coord_type = 'RZ'

@@ -94,6 +94,7 @@ INSFVWallFunctionBC::gatherRCData(const FaceInfo & fi)
 {
   _face_info = &fi;
   _face_type = fi.faceType(_var.name());
+  _normal = fi.normal();
 
   // Fill-in the coefficient _a (but without multiplication by A)
   computeQpResidual();

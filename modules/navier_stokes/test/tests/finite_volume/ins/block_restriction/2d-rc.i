@@ -14,6 +14,7 @@ restricted_blocks = '1'
     type = INSFVRhieChowInterpolator
     u = u
     v = v
+    block = ${restricted_blocks}
   []
 []
 

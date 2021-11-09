@@ -65,13 +65,8 @@ velocity_interp_method='rc'
     pressure = pressure
     u = u
     v = v
-<<<<<<< HEAD:modules/navier_stokes/test/tests/finite_volume/ins/channel-flow/one-elem-wide-channel.i
-    mu = ${mu}
-    rho = ${rho}
-=======
     rho = ${rho}
     momentum_component = 'x'
->>>>>>> More input file adaptation to RC user object:modules/navier_stokes/test/tests/finite_volume/ins/channel-flow/square-ambient-convection.i
   []
   [u_viscosity]
     type = INSFVMomentumDiffusion
@@ -111,32 +106,6 @@ velocity_interp_method='rc'
     momentum_component = 'y'
     pressure = pressure
   []
-<<<<<<< HEAD:modules/navier_stokes/test/tests/finite_volume/ins/channel-flow/one-elem-wide-channel.i
-=======
-
-  [energy_advection]
-    type = INSFVEnergyAdvection
-    variable = temperature
-    vel = 'velocity'
-    velocity_interp_method = ${velocity_interp_method}
-    advected_interp_method = ${advected_interp_method}
-    pressure = pressure
-    u = u
-    v = v
-    rho = ${rho}
-  []
-  [energy_diffusion]
-    type = FVDiffusion
-    coeff = ${k}
-    variable = temperature
-  []
-  [ambient_convection]
-    type = NSFVEnergyAmbientConvection
-    variable = temperature
-    T_ambient = 100
-    alpha = 'alpha'
-  []
->>>>>>> More input file adaptation to RC user object:modules/navier_stokes/test/tests/finite_volume/ins/channel-flow/square-ambient-convection.i
 []
 
 [FVBCs]
@@ -156,11 +125,13 @@ velocity_interp_method='rc'
     type = INSFVNaturalFreeSlipBC
     boundary = 'top bottom'
     variable = u
+    momentum_component = 'x'
   []
   [walls-v]
     type = INSFVNaturalFreeSlipBC
     boundary = 'top bottom'
     variable = v
+    momentum_component = 'y'
   []
   [outlet_p]
     type = INSFVOutletPressureBC
