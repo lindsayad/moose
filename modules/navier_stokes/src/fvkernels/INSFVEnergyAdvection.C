@@ -31,3 +31,23 @@ INSFVEnergyAdvection::INSFVEnergyAdvection(const InputParameters & params)
              "'--with-ad-indexing-type=global'");
 #endif
 }
+
+ADReal
+INSFVEnergyAdvection::computeQpResidual()
+{
+  ADReal adv_quant_interface;
+  ADRealVectorValue v;
+
+  const auto elem_face = elemFromFace();
+  const auto neighbor_face = neighborFromFace();
+
+  this->interpolate(_velocity_interp_method, v);
+  Moose::FV::interpolate(_advected_interp_method,
+                         adv_quant_interface,
+                         _adv_quant(elem_face),
+                         _adv_quant(neighbor_face),
+                         v,
+                         *_face_info,
+                         true);
+  return _normal * v * adv_quant_interface;
+}
