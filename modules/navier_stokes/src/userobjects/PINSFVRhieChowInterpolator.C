@@ -40,6 +40,8 @@ PINSFVRhieChowInterpolator::PINSFVRhieChowInterpolator(const InputParameters & p
 void
 PINSFVRhieChowInterpolator::residualSetup()
 {
+  INSFVRhieChowInterpolator::residualSetup();
+
   if (!_rec || _done)
     return;
 

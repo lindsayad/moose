@@ -35,6 +35,7 @@ INSFVRhieChowInterpolator::validParams()
 {
   auto params = GeneralUserObject::validParams();
   params += TaggingInterface::validParams();
+  params += BlockRestrictable::validParams();
   ExecFlagEnum & exec_enum = params.set<ExecFlagEnum>("execute_on", true);
   exec_enum.addAvailableFlags(EXEC_PRE_KERNELS);
   exec_enum = {EXEC_PRE_KERNELS};
@@ -43,10 +44,6 @@ INSFVRhieChowInterpolator::validParams()
   params.addParam<VariableName>("v", "The y-component of velocity");
   params.addParam<VariableName>("w", "The z-component of velocity");
   params.addParam<bool>("standard_body_forces", false, "Whether to just apply normal body forces");
-  params.addParam<bool>("two_term_reconstruction",
-                        true,
-                        "Whether to reconstruct from the face to the centroid using the face value "
-                        "*and* the face gradient, or just the face value.");
   MooseEnum b2_strategy("moukalled aguerre", "aguerre");
   params.addParam<MooseEnum>("b2_strategy", b2_strategy, "How to construct b2");
   return params;
@@ -55,6 +52,7 @@ INSFVRhieChowInterpolator::validParams()
 INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & params)
   : GeneralUserObject(params),
     TaggingInterface(this),
+    BlockRestrictable(this),
     _moose_mesh(UserObject::_subproblem.mesh()),
     _mesh(_moose_mesh.getMesh()),
     _sys(*getCheckedPointerParam<SystemBase *>("_sys")),
@@ -65,7 +63,6 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
                          : nullptr),
     _example(0),
     _standard_body_forces(getParam<bool>("standard_body_forces")),
-    _two_term_reconstruction(getParam<bool>("two_term_reconstruction")),
     _use_moukalled(getParam<MooseEnum>("b2_strategy") == "moukalled"),
     _b(_moose_mesh, true),
     _b2(_moose_mesh, true),
@@ -90,6 +87,23 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
 }
 
 void
+INSFVRhieChowInterpolator::initialSetup()
+{
+  const auto & sub_ids = blockRestricted() ? blockIDs() : _moose_mesh.meshSubdomains();
+  _elem_range =
+      std::make_unique<ConstElemRange>(_mesh.active_local_subdomain_set_elements_begin(sub_ids),
+                                       _mesh.active_local_subdomain_set_elements_end(sub_ids));
+}
+
+void
+INSFVRhieChowInterpolator::meshChanged()
+{
+  const auto & sub_ids = blockRestricted() ? blockIDs() : _moose_mesh.meshSubdomains();
+  _elem_range->reset(_mesh.active_local_subdomain_set_elements_begin(sub_ids),
+                     _mesh.active_local_subdomain_set_elements_end(sub_ids));
+}
+
+void
 INSFVRhieChowInterpolator::initialize()
 {
   _elements_to_push_pull.clear();
@@ -105,7 +119,7 @@ INSFVRhieChowInterpolator::execute()
   PARALLEL_TRY
   {
     GatherRCDataElementThread et(_fe_problem, _var_numbers);
-    Threads::parallel_reduce(*_moose_mesh.getActiveLocalElementRange(), et);
+    Threads::parallel_reduce(*_elem_range, et);
   }
   PARALLEL_CATCH;
 
@@ -221,7 +235,7 @@ void
 INSFVRhieChowInterpolator::applyBData()
 {
   const auto s = _sys.number();
-  for (auto * const elem : *_moose_mesh.getActiveLocalElementRange())
+  for (auto * const elem : *_elem_range)
   {
     const auto elem_volume = _assembly.elementVolume(elem);
     for (const auto i : index_range(_var_numbers))

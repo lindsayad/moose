@@ -11,12 +11,14 @@
 
 #include "GeneralUserObject.h"
 #include "TaggingInterface.h"
+#include "BlockRestrictable.h"
 #include "ADReal.h"
 #include "MooseTypes.h"
 #include "CellCenteredMapFunctor.h"
 #include "VectorComponentFunctor.h"
 #include "libmesh/vector_value.h"
 #include "libmesh/id_types.h"
+#include "libmesh/stored_range.h"
 #include <unordered_map>
 #include <set>
 #include <unordered_set>
@@ -28,7 +30,9 @@ class Elem;
 class MeshBase;
 }
 
-class INSFVRhieChowInterpolator : public GeneralUserObject, public TaggingInterface
+class INSFVRhieChowInterpolator : public GeneralUserObject,
+                                  public TaggingInterface,
+                                  public BlockRestrictable
 {
 public:
   static InputParameters validParams();
@@ -41,12 +45,17 @@ public:
   VectorValue<ADReal> getB3(const FaceInfo & fi) const;
   const VectorValue<ADReal> & rcCoeff(const libMesh::Elem * elem) const;
 
+  void initialSetup() override;
+  void meshChanged() override;
+
   void initialize() override final;
   void execute() override final;
   void finalize() override final;
 
 protected:
   MooseMesh & _moose_mesh;
+
+  std::unique_ptr<ConstElemRange> _elem_range;
 
 private:
   void finalizeAData();
@@ -67,7 +76,6 @@ private:
   MooseVariableFieldBase * const _w;
   const VectorValue<ADReal> _example;
   const bool _standard_body_forces;
-  const bool _two_term_reconstruction;
   const bool _use_moukalled;
 
   std::unordered_map<dof_id_type, libMesh::VectorValue<ADReal>> _a;
