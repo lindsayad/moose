@@ -82,16 +82,14 @@ greenGaussGradient(const Elem * const elem,
                            &grad_ebf_coeffs,
                            &grad_b,
                            &functor,
-                           &mesh,
                            two_term_boundary_expansion,
                            coord_type,
-                           rz_radial_coord,
-                           face_to_value_cache](const Elem & libmesh_dbg_var(functor_elem),
-                                                const Elem *,
-                                                const FaceInfo * const fi,
-                                                const Point & surface_vector,
-                                                Real coord,
-                                                const bool elem_has_info) {
+                           rz_radial_coord](const Elem & libmesh_dbg_var(functor_elem),
+                                            const Elem *,
+                                            const FaceInfo * const fi,
+                                            const Point & surface_vector,
+                                            Real coord,
+                                            const bool elem_has_info) {
       mooseAssert(fi, "We need a FaceInfo for this action_functor");
       mooseAssert(elem == &functor_elem,
                   "Just a sanity check that the element being passed in is the one we passed out.");
