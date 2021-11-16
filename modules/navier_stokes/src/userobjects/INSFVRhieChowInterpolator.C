@@ -44,8 +44,6 @@ INSFVRhieChowInterpolator::validParams()
   params.addParam<VariableName>("v", "The y-component of velocity");
   params.addParam<VariableName>("w", "The z-component of velocity");
   params.addParam<bool>("standard_body_forces", false, "Whether to just apply normal body forces");
-  MooseEnum b2_strategy("moukalled aguerre", "aguerre");
-  params.addParam<MooseEnum>("b2_strategy", b2_strategy, "How to construct b2");
   return params;
 }
 
@@ -63,7 +61,6 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
                          : nullptr),
     _example(0),
     _standard_body_forces(getParam<bool>("standard_body_forces")),
-    _use_moukalled(getParam<MooseEnum>("b2_strategy") == "moukalled"),
     _b(_moose_mesh, true),
     _b2(_moose_mesh, true),
     _bx(_b, 0),

@@ -14,7 +14,6 @@ velocity_interp_method='rc'
     u = u
     v = v
     standard_body_forces = false
-    b2_strategy = 'moukalled'
   []
 []
 
