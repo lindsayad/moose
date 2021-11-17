@@ -20,7 +20,7 @@ PINSFVMomentumDiffusion::validParams()
   auto params = INSFVMomentumDiffusion::validParams();
   params.addClassDescription("Viscous diffusion term, div(mu grad(u_d / eps)), in the porous media "
                              "incompressible Navier-Stokes momentum equation.");
-  params.addRequiredCoupledVar(NS::porosity, "Porosity auxiliary variable");
+  params.addRequiredParam<MooseFunctorName>(NS::porosity, "Porosity auxiliary variable");
   params.addParam<bool>(
       "smooth_porosity", false, "Whether to include the diffusion porosity gradient term");
   params.addParam<MooseFunctorName>(NS::superficial_velocity, "The superficial velocity");
@@ -33,7 +33,6 @@ PINSFVMomentumDiffusion::PINSFVMomentumDiffusion(const InputParameters & params)
     _vel(isParamValid(NS::superficial_velocity)
              ? &getFunctor<ADRealVectorValue>(NS::superficial_velocity)
              : nullptr),
-    _eps_var(dynamic_cast<const MooseVariableFVReal *>(getFieldVar(NS::porosity, 0))),
     _smooth_porosity(getParam<bool>("smooth_porosity"))
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
@@ -106,7 +105,8 @@ PINSFVMomentumDiffusion::computeQpResidual()
   if (_smooth_porosity)
   {
     // Get the face porosity gradient separately
-    const auto & grad_eps_face = MetaPhysicL::raw_value(_eps_var->adGradSln(*_face_info));
+    const auto & grad_eps_face =
+        MetaPhysicL::raw_value(_eps.gradient(Moose::FV::makeCDFace(*_face_info)));
 
     ADRealVectorValue term_elem = mu_elem / eps_elem / eps_elem * grad_eps_face;
     ADRealVectorValue term_neighbor = mu_neighbor / eps_neighbor / eps_neighbor * grad_eps_face;

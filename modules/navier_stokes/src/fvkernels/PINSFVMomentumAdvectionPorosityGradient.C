@@ -20,7 +20,7 @@ PINSFVMomentumAdvectionPorosityGradient::validParams()
   params.addClassDescription(
       "Porosity gradient spun from the advection term for the porous media Navier Stokes "
       "momentum equation.");
-  params.addRequiredCoupledVar(NS::porosity, "Porosity auxiliary variable");
+  params.addRequiredParam<MooseFunctorName>(NS::porosity, "Porosity");
 
   params.addRequiredParam<MooseFunctorName>("u", "The superficial velocity in the x direction.");
   params.addParam<MooseFunctorName>("v", 0, "The superficial velocity in the y direction.");
@@ -37,7 +37,7 @@ PINSFVMomentumAdvectionPorosityGradient::validParams()
 PINSFVMomentumAdvectionPorosityGradient::PINSFVMomentumAdvectionPorosityGradient(
     const InputParameters & params)
   : INSFVElementalKernel(params),
-    _eps_var(dynamic_cast<const MooseVariableFVReal *>(getFieldVar(NS::porosity, 0))),
+    _eps(getFunctor<ADReal>(NS::porosity)),
     _u(getFunctor<ADReal>("u")),
     _v(getFunctor<ADReal>("v")),
     _w(getFunctor<ADReal>("w")),
@@ -62,11 +62,11 @@ PINSFVMomentumAdvectionPorosityGradient::PINSFVMomentumAdvectionPorosityGradient
 void
 PINSFVMomentumAdvectionPorosityGradient::gatherRCData(const Elem & elem)
 {
-  const Real one_over_eps = 1 / MetaPhysicL::raw_value(_eps_var->getElemValue(&elem));
+  const Real one_over_eps = 1 / MetaPhysicL::raw_value(_eps(&elem));
   ADRealVectorValue V = {_u(&elem), _v(&elem), _w(&elem)};
 
   _rc_uo.addToB(&elem,
                 _index,
                 _rho * V(_index) * (-one_over_eps * one_over_eps) *
-                    (V * MetaPhysicL::raw_value(_eps_var->adGradSln(&elem))));
+                    (V * MetaPhysicL::raw_value(_eps.gradient(&elem))));
 }

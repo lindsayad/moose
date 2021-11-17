@@ -29,9 +29,6 @@ protected:
   /// Velocity as functors
   const Moose::Functor<ADRealVectorValue> * const _vel;
 
-  /// the porosity as a variable to be able to compute a face gradient
-  const MooseVariableFVReal * const _eps_var;
-
   /// Whether to add the porosity gradient term, only for continuous porosity
   const bool _smooth_porosity;
 };

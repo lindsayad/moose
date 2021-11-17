@@ -23,7 +23,7 @@ PINSFVMomentumAdvection::validParams()
   auto params = INSFVMomentumAdvection::validParams();
   params.addClassDescription("Object for advecting superficial momentum, e.g. rho*u_d, "
                              "in the porous media momentum equation");
-  params.addRequiredCoupledVar(NS::porosity, "Porosity auxiliary variable");
+  params.addRequiredParam<MooseFunctorName>(NS::porosity, "Porosity");
   params.addParam<bool>(
       "smooth_porosity", false, "Whether the porosity field is smooth or has discontinuities");
 
@@ -32,7 +32,6 @@ PINSFVMomentumAdvection::validParams()
 
 PINSFVMomentumAdvection::PINSFVMomentumAdvection(const InputParameters & params)
   : INSFVMomentumAdvection(params),
-    _eps_var(dynamic_cast<const MooseVariableFV<Real> *>(getFieldVar(NS::porosity, 0))),
     _eps(getFunctor<ADReal>(NS::porosity)),
     _smooth_porosity(getParam<bool>("smooth_porosity"))
 {
@@ -69,8 +68,8 @@ PINSFVMomentumAdvection::interpolate(Moose::FV::InterpMethod m, ADRealVectorValu
 
   // Avoid computing a pressure gradient near porosity jumps
   if (!_smooth_porosity)
-    if (MetaPhysicL::raw_value(_eps_var->adGradSln(elem)).norm() > 1e-12 ||
-        MetaPhysicL::raw_value(_eps_var->adGradSln(neighbor)).norm() > 1e-12)
+    if (MetaPhysicL::raw_value(_eps.gradient(elem)).norm() > 1e-12 ||
+        MetaPhysicL::raw_value(_eps.gradient(neighbor)).norm() > 1e-12)
       return;
 
   mooseAssert((neighbor && this->hasBlocks(neighbor->subdomain_id())),

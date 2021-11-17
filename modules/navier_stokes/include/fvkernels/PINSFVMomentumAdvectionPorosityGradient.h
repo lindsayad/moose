@@ -24,8 +24,8 @@ public:
   void gatherRCData(const Elem &) override;
 
 protected:
-  /// porosity variable to compute gradients
-  const MooseVariableFV<Real> * const _eps_var;
+  /// porosity functor to compute gradients
+  const Moose::Functor<ADReal> & _eps;
   /// superficial velocity x-component
   const Moose::Functor<ADReal> & _u;
   /// superficial velocity y-component
