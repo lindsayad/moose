@@ -17,6 +17,7 @@ public:
   static InputParameters validParams();
   PINSFVRhieChowInterpolator(const InputParameters & params);
   void residualSetup() override;
+  void meshChanged() override;
 
 protected:
   Moose::Functor<ADReal> * const _eps;

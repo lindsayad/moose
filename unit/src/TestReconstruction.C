@@ -89,6 +89,9 @@ testReconstruction(const Moose::CoordinateSystemType coord_type)
                 "This should be 0 because we haven't set anything.");
     const auto & all_fi = mesh->allFaceInfo();
     mesh->computeFaceInfoFaceCoords();
+    std::vector<const FaceInfo *> faces(all_fi.size());
+    for (const auto i : index_range(all_fi))
+      faces[i] = &all_fi[i];
 
     auto & lm_mesh = mesh->getMesh();
 
@@ -131,10 +134,10 @@ testReconstruction(const Moose::CoordinateSystemType coord_type)
       moukalled_reconstruct(u, up_moukalled);
     }
 
-    Moose::FV::reconstruct(up, u, 1, true, true, *mesh);
-    Moose::FV::reconstruct(up_weller, u, 1, false, true, *mesh);
-    Moose::FV::reconstruct(up_linear, u_linear, 1, true, true, *mesh);
-    Moose::FV::reconstruct(up_tano, u, 1, false, false, *mesh);
+    Moose::FV::reconstruct(up, u, 1, true, true, faces);
+    Moose::FV::reconstruct(up_weller, u, 1, false, true, faces);
+    Moose::FV::reconstruct(up_linear, u_linear, 1, true, true, faces);
+    Moose::FV::reconstruct(up_tano, u, 1, false, false, faces);
 
     Real error = 0;
     Real weller_error = 0;
@@ -171,7 +174,7 @@ testReconstruction(const Moose::CoordinateSystemType coord_type)
     tano_errors.push_back(tano_error);
 
     up_tano.clear();
-    Moose::FV::reconstruct(up_tano, u, 2, false, false, *mesh);
+    Moose::FV::reconstruct(up_tano, u, 2, false, false, faces);
 
     tano_error = 0;
     for (auto * const elem : lm_mesh.active_element_ptr_range())

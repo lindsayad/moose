@@ -29,35 +29,38 @@ reconstruct(CellCenteredMapFunctor<T, Map> & output_functor,
             const unsigned int num_reconstructions,
             const bool two_term_expansion,
             const bool weight_with_sf,
-            const MooseMesh & mesh)
+            const std::vector<const FaceInfo *> & faces)
 {
   if (!num_reconstructions)
     return;
 
   std::unordered_map<dof_id_type, std::pair<T, Real>> elem_to_num_denom;
 
-  const auto & all_fi = mesh.allFaceInfo();
-  for (const auto & fi : all_fi)
+  for (const auto * const face : faces)
   {
-    const Real weight = weight_with_sf ? fi.faceArea() * fi.faceCoord() : 1;
-    auto face_value = input_functor(makeCDFace(fi));
+    mooseAssert(face, "This must be non-null");
+    const Real weight = weight_with_sf ? face->faceArea() * face->faceCoord() : 1;
+    const auto face_arg = makeCDFace(*face);
+    auto face_value = input_functor(face_arg);
     std::pair<T, Real> * neighbor_pr = nullptr;
-    if (fi.neighborPtr() && fi.neighborPtr() != libMesh::remote_elem)
+    if (face->neighborPtr() && face->neighborPtr() != libMesh::remote_elem)
     {
-      neighbor_pr = &elem_to_num_denom[fi.neighbor().id()];
+      neighbor_pr = &elem_to_num_denom[face->neighbor().id()];
       neighbor_pr->first += face_value * weight;
       neighbor_pr->second += weight;
     }
-    auto & elem_pr = elem_to_num_denom[fi.elem().id()];
+    auto & elem_pr = elem_to_num_denom[face->elem().id()];
     elem_pr.first += std::move(face_value) * weight;
     elem_pr.second += weight;
 
     if (two_term_expansion)
     {
-      auto face_gradient = input_functor.gradient(makeCDFace(fi));
-      if (fi.neighborPtr() && fi.neighborPtr() != libMesh::remote_elem)
-        neighbor_pr->first += face_gradient * (fi.neighborCentroid() - fi.faceCentroid()) * weight;
-      elem_pr.first += std::move(face_gradient) * (fi.elemCentroid() - fi.faceCentroid()) * weight;
+      auto face_gradient = input_functor.gradient(face_arg);
+      if (face->neighborPtr() && face->neighborPtr() != libMesh::remote_elem)
+        neighbor_pr->first +=
+            face_gradient * (face->neighborCentroid() - face->faceCentroid()) * weight;
+      elem_pr.first +=
+          std::move(face_gradient) * (face->elemCentroid() - face->faceCentroid()) * weight;
     }
   }
 
@@ -72,7 +75,7 @@ reconstruct(CellCenteredMapFunctor<T, Map> & output_functor,
               num_reconstructions - 1,
               two_term_expansion,
               weight_with_sf,
-              mesh);
+              faces);
 }
 }
 }

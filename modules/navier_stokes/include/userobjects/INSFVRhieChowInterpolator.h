@@ -53,9 +53,13 @@ public:
   void finalize() override final;
 
 protected:
+  void buildMeshData();
+
   MooseMesh & _moose_mesh;
 
   std::unique_ptr<ConstElemRange> _elem_range;
+
+  std::vector<const FaceInfo *> _evaluable_fi;
 
 private:
   void finalizeAData();

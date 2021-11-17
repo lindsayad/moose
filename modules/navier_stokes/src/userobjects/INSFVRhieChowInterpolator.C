@@ -84,20 +84,52 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
 }
 
 void
-INSFVRhieChowInterpolator::initialSetup()
+INSFVRhieChowInterpolator::buildMeshData()
 {
   const auto & sub_ids = blockRestricted() ? blockIDs() : _moose_mesh.meshSubdomains();
   _elem_range =
       std::make_unique<ConstElemRange>(_mesh.active_local_subdomain_set_elements_begin(sub_ids),
                                        _mesh.active_local_subdomain_set_elements_end(sub_ids));
+
+  const auto & all_fi = _moose_mesh.allFaceInfo();
+  _evaluable_fi.reserve(all_fi.size());
+
+  const auto & eq = UserObject::_subproblem.es();
+  std::vector<const DofMap *> dof_maps(eq.n_systems());
+  for (const auto i : make_range(eq.n_systems()))
+  {
+    const auto & sys = eq.get_system(i);
+    dof_maps[i] = &sys.get_dof_map();
+  }
+
+  auto is_evaluable = [&dof_maps](const Elem & elem) {
+    if (&elem == libMesh::remote_elem)
+      return false;
+
+    for (const auto * const dof_map : dof_maps)
+      if (!dof_map->is_evaluable(elem))
+        return false;
+
+    return true;
+  };
+
+  for (const auto & fi : all_fi)
+    if (is_evaluable(fi.elem()) && (!fi.neighborPtr() || is_evaluable(fi.neighbor())))
+      _evaluable_fi.push_back(&fi);
+
+  _evaluable_fi.shrink_to_fit();
+}
+
+void
+INSFVRhieChowInterpolator::initialSetup()
+{
+  buildMeshData();
 }
 
 void
 INSFVRhieChowInterpolator::meshChanged()
 {
-  const auto & sub_ids = blockRestricted() ? blockIDs() : _moose_mesh.meshSubdomains();
-  _elem_range->reset(_mesh.active_local_subdomain_set_elements_begin(sub_ids),
-                     _mesh.active_local_subdomain_set_elements_end(sub_ids));
+  buildMeshData();
 }
 
 void
@@ -225,7 +257,7 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     return;
   }
 
-  Moose::FV::reconstruct(_b2, _b, 1, false, false, _moose_mesh);
+  Moose::FV::reconstruct(_b2, _b, 1, false, false, _evaluable_fi);
 }
 
 void

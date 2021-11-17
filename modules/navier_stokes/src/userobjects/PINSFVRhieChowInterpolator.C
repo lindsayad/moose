@@ -56,10 +56,17 @@ PINSFVRhieChowInterpolator::residualSetup()
   CellCenteredMapFunctor<ADReal, std::unordered_map<dof_id_type, ADReal>> reconstructed_eps(
       _moose_mesh, true);
   ADReal::do_derivatives = true;
-  Moose::FV::reconstruct(reconstructed_eps, *_eps, _rec, false, false, _moose_mesh);
+  Moose::FV::reconstruct(reconstructed_eps, *_eps, _rec, false, false, _evaluable_fi);
   ADReal::do_derivatives = false;
 
   (*_eps) = std::move(reconstructed_eps);
 
   _done = true;
+}
+
+void
+PINSFVRhieChowInterpolator::meshChanged()
+{
+  INSFVRhieChowInterpolator::meshChanged();
+  _done = false;
 }
