@@ -381,5 +381,43 @@ interpolate(const Limiter & limiter,
 
   return ret;
 }
+
+/**
+ * This creates a tuple of an element, \p FaceInfo, and subdomain ID. The element returned will
+ * correspond to the method argument. The \p FaceInfo part of the tuple will simply correspond to
+ * the current \p _face_info. The subdomain ID part of the tuple will correspond to the subdomain
+ * ID of the method element argument except in the case that the subdomain ID does not correspond
+ * to a subdomain ID that the \p obj is defined on. In that case the subdomain ID of the
+ * tuple will correspond to the subdomain ID of the element across the face, on which the \p obj
+ * *is* defined
+ */
+template <typename SubdomainRestrictable>
+std::tuple<const libMesh::Elem *, const FaceInfo *, SubdomainID>
+makeSidedFace(const SubdomainRestrictable & obj, const Elem * const elem, const FaceInfo & fi)
+{
+  if (elem && obj.hasBlocks(elem->subdomain_id()))
+    return std::make_tuple(elem, &fi, elem->subdomain_id());
+  else
+  {
+    const Elem * const elem_across = (elem == &fi.elem()) ? fi.neighborPtr() : &fi.elem();
+    mooseAssert(elem_across && obj.hasBlocks(elem_across->subdomain_id()),
+                "How are there no elements with subs on here!");
+    return std::make_tuple(elem, &fi, elem_across->subdomain_id());
+  }
+}
+
+/**
+ * Determine the subdomain ID pair that should be used when creating a face argument for a
+ * functor. As explained in the doxygen for \p makeSidedFace these
+ * subdomain IDs do not simply correspond to the subdomain IDs of the face information element pair;
+ * they must respect the block restriction of the \p obj
+ */
+template <typename SubdomainRestrictable>
+std::pair<SubdomainID, SubdomainID>
+faceArgSubdomains(const SubdomainRestrictable & obj, const FaceInfo & fi)
+{
+  return std::make_pair(std::get<2>(makeSidedFace(obj, &fi.elem(), fi)),
+                        std::get<2>(makeSidedFace(obj, fi.neighborPtr(), fi)));
+}
 }
 }

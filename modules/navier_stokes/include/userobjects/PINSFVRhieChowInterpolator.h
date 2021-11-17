@@ -16,11 +16,10 @@ class PINSFVRhieChowInterpolator : public INSFVRhieChowInterpolator
 public:
   static InputParameters validParams();
   PINSFVRhieChowInterpolator(const InputParameters & params);
-  void residualSetup() override;
-  void meshChanged() override;
 
 protected:
+  void interpolatorSetup() override;
+
   Moose::Functor<ADReal> * const _eps;
   const unsigned short _rec;
-  bool _done;
 };

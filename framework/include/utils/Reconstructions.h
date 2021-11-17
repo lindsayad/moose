@@ -22,14 +22,15 @@ namespace Moose
 {
 namespace FV
 {
-template <typename T, typename Map>
+template <typename T, typename Map, typename Consumer>
 void
 reconstruct(CellCenteredMapFunctor<T, Map> & output_functor,
             const FunctorImpl<T> & input_functor,
             const unsigned int num_reconstructions,
             const bool two_term_expansion,
             const bool weight_with_sf,
-            const std::vector<const FaceInfo *> & faces)
+            const std::vector<const FaceInfo *> & faces,
+            const Consumer & consumer)
 {
   if (!num_reconstructions)
     return;
@@ -40,7 +41,8 @@ reconstruct(CellCenteredMapFunctor<T, Map> & output_functor,
   {
     mooseAssert(face, "This must be non-null");
     const Real weight = weight_with_sf ? face->faceArea() * face->faceCoord() : 1;
-    const auto face_arg = makeCDFace(*face);
+    const auto sub_pair = faceArgSubdomains(consumer, *face);
+    const auto face_arg = makeCDFace(*face, sub_pair);
     auto face_value = input_functor(face_arg);
     std::pair<T, Real> * neighbor_pr = nullptr;
     if (face->neighborPtr() && face->neighborPtr() != libMesh::remote_elem)
@@ -75,7 +77,8 @@ reconstruct(CellCenteredMapFunctor<T, Map> & output_functor,
               num_reconstructions - 1,
               two_term_expansion,
               weight_with_sf,
-              faces);
+              faces,
+              consumer);
 }
 }
 }

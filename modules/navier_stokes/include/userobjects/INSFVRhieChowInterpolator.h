@@ -53,7 +53,7 @@ public:
   void finalize() override final;
 
 protected:
-  void buildMeshData();
+  virtual void interpolatorSetup();
 
   MooseMesh & _moose_mesh;
 

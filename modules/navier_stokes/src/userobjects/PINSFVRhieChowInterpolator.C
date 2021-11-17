@@ -35,38 +35,44 @@ PINSFVRhieChowInterpolator::PINSFVRhieChowInterpolator(const InputParameters & p
     _eps(isParamValid(NS::porosity)
              ? &const_cast<Moose::Functor<ADReal> &>(getFunctor<ADReal>(NS::porosity))
              : nullptr),
-    _rec(getParam<unsigned short>("reconstructions")),
-    _done(false)
+    _rec(getParam<unsigned short>("reconstructions"))
 {
-  if (_rec && !_eps)
-    paramError("reconstructions",
-               "If a non-zero number of 'reconstructions' is applied, then the parameter '",
-               NS::porosity,
-               "' must be supplied.");
+  if (_rec)
+  {
+    if (_eps)
+    {
+      if (_eps->wrapsType<MooseVariableBase>())
+        paramError(
+            NS::porosity,
+            "If we are reconstructing porosity, then the input porosity to this user object cannot "
+            "be a Moose variable. There are issues with reconstructing Moose variables: 1) initial "
+            "conditions are run after use object initial setup 2) reconstructing from a variable "
+            "requires ghosting the solution vectors 3) it's difficult to restrict the face "
+            "informations we evaluate reconstructions on such that we never query an algebraically "
+            "remote element due to things like two-term extrapolated boundary faces which trigger "
+            "gradient evaluations which trigger neighbor element evaluation");
+    }
+    else
+      paramError("reconstructions",
+                 "If a non-zero number of 'reconstructions' is applied, then the parameter '",
+                 NS::porosity,
+                 "' must be supplied.");
+  }
 }
 
 void
-PINSFVRhieChowInterpolator::residualSetup()
+PINSFVRhieChowInterpolator::interpolatorSetup()
 {
-  INSFVRhieChowInterpolator::residualSetup();
+  INSFVRhieChowInterpolator::interpolatorSetup();
 
-  if (!_rec || _done)
+  if (!_rec)
     return;
 
   CellCenteredMapFunctor<ADReal, std::unordered_map<dof_id_type, ADReal>> reconstructed_eps(
       _moose_mesh, true);
   ADReal::do_derivatives = true;
-  Moose::FV::reconstruct(reconstructed_eps, *_eps, _rec, false, false, _evaluable_fi);
+  Moose::FV::reconstruct(reconstructed_eps, *_eps, _rec, false, false, _evaluable_fi, *this);
   ADReal::do_derivatives = false;
 
   (*_eps) = std::move(reconstructed_eps);
-
-  _done = true;
-}
-
-void
-PINSFVRhieChowInterpolator::meshChanged()
-{
-  INSFVRhieChowInterpolator::meshChanged();
-  _done = false;
 }

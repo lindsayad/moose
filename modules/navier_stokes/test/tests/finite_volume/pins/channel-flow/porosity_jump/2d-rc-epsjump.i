@@ -209,6 +209,7 @@ velocity_interp_method='rc'
 []
 
 [Materials]
+  inactive = 'smooth'
   [ins_fv]
     type = INSFVMaterial
     u = 'u'
@@ -216,14 +217,26 @@ velocity_interp_method='rc'
     pressure = 'pressure'
     rho = ${rho}
   []
+  [jump]
+    type = FVADPropValPerSubdomainMaterial
+    prop_name = 'porosity'
+    subdomain_to_prop_value = '1 1
+                               2 0.5'
+  []
+  [smooth]
+    type = ADGenericFunctionFunctorMaterial
+    prop_names = 'porosity'
+    prop_values = 'smooth_jump'
+  []
 []
 
 [Executioner]
   type = Steady
   solve_type = 'NEWTON'
-  petsc_options_iname = '-pc_type -ksp_gmres_restart -sub_pc_type -sub_pc_factor_shift_type'
-  petsc_options_value = 'asm      100                lu           NONZERO'
+  petsc_options_iname = '-pc_type -pc_factor_shift_type'
+  petsc_options_value = 'lu       NONZERO'
   line_search = 'none'
+  nl_rel_tol = 1e-10
 []
 
 [Postprocessors]

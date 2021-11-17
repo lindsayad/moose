@@ -134,10 +134,16 @@ testReconstruction(const Moose::CoordinateSystemType coord_type)
       moukalled_reconstruct(u, up_moukalled);
     }
 
-    Moose::FV::reconstruct(up, u, 1, true, true, faces);
-    Moose::FV::reconstruct(up_weller, u, 1, false, true, faces);
-    Moose::FV::reconstruct(up_linear, u_linear, 1, true, true, faces);
-    Moose::FV::reconstruct(up_tano, u, 1, false, false, faces);
+    struct AllBlocks
+    {
+      bool hasBlocks(SubdomainID) const { return true; }
+    };
+
+    AllBlocks consumer;
+    Moose::FV::reconstruct(up, u, 1, true, true, faces, consumer);
+    Moose::FV::reconstruct(up_weller, u, 1, false, true, faces, consumer);
+    Moose::FV::reconstruct(up_linear, u_linear, 1, true, true, faces, consumer);
+    Moose::FV::reconstruct(up_tano, u, 1, false, false, faces, consumer);
 
     Real error = 0;
     Real weller_error = 0;
@@ -174,7 +180,7 @@ testReconstruction(const Moose::CoordinateSystemType coord_type)
     tano_errors.push_back(tano_error);
 
     up_tano.clear();
-    Moose::FV::reconstruct(up_tano, u, 2, false, false, faces);
+    Moose::FV::reconstruct(up_tano, u, 2, false, false, faces, consumer);
 
     tano_error = 0;
     for (auto * const elem : lm_mesh.active_element_ptr_range())

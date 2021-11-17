@@ -84,7 +84,7 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
 }
 
 void
-INSFVRhieChowInterpolator::buildMeshData()
+INSFVRhieChowInterpolator::interpolatorSetup()
 {
   const auto & sub_ids = blockRestricted() ? blockIDs() : _moose_mesh.meshSubdomains();
   _elem_range =
@@ -123,13 +123,13 @@ INSFVRhieChowInterpolator::buildMeshData()
 void
 INSFVRhieChowInterpolator::initialSetup()
 {
-  buildMeshData();
+  interpolatorSetup();
 }
 
 void
 INSFVRhieChowInterpolator::meshChanged()
 {
-  buildMeshData();
+  interpolatorSetup();
 }
 
 void
@@ -257,7 +257,7 @@ INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
     return;
   }
 
-  Moose::FV::reconstruct(_b2, _b, 1, false, false, _evaluable_fi);
+  Moose::FV::reconstruct(_b2, _b, 1, false, false, _evaluable_fi, *this);
 }
 
 void
