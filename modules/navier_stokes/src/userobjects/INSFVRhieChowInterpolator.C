@@ -114,7 +114,11 @@ INSFVRhieChowInterpolator::interpolatorSetup()
   };
 
   for (const auto & fi : all_fi)
-    if (is_evaluable(fi.elem()) && (!fi.neighborPtr() || is_evaluable(fi.neighbor())))
+    // check whether both elements are evaluable and whether at least one element in the face pair
+    // has a subdomain corresponding to our object
+    if (is_evaluable(fi.elem()) && (!fi.neighborPtr() || is_evaluable(fi.neighbor())) &&
+        (sub_ids.count(fi.elem().subdomain_id()) ||
+         (fi.neighborPtr() && sub_ids.count(fi.neighbor().subdomain_id()))))
       _evaluable_fi.push_back(&fi);
 
   _evaluable_fi.shrink_to_fit();
