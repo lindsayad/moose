@@ -102,13 +102,35 @@ INSFVRhieChowInterpolator::interpolatorSetup()
     dof_maps[i] = &sys.get_dof_map();
   }
 
-  auto is_evaluable = [&dof_maps](const Elem & elem) {
-    if (&elem == libMesh::remote_elem)
+  auto is_fi_elem_evaluable = [&dof_maps](const Elem & elem) {
+    auto is_evaluable = [&dof_maps](const Elem & elem) {
+      if (&elem == libMesh::remote_elem)
+        return false;
+
+      for (const auto * const dof_map : dof_maps)
+        if (!dof_map->is_evaluable(elem))
+          return false;
+
+      return true;
+    };
+
+    if (!is_evaluable(elem))
       return false;
 
-    for (const auto * const dof_map : dof_maps)
-      if (!dof_map->is_evaluable(elem))
-        return false;
+    // checking whether the element itself is evaluable is insufficient in some cases. If this
+    // element is on a boundary, then (second order) boundary face evaluation will require
+    // computation of a cell gradient which will require querying of neighbor cell values.
+    if (elem.on_boundary())
+    {
+      for (auto * const neighbor : elem.neighbor_ptr_range())
+      {
+        if (!neighbor)
+          continue;
+
+        if (!is_evaluable(*neighbor))
+          return false;
+      }
+    }
 
     return true;
   };
@@ -116,7 +138,8 @@ INSFVRhieChowInterpolator::interpolatorSetup()
   for (const auto & fi : all_fi)
     // check whether both elements are evaluable and whether at least one element in the face pair
     // has a subdomain corresponding to our object
-    if (is_evaluable(fi.elem()) && (!fi.neighborPtr() || is_evaluable(fi.neighbor())) &&
+    if (is_fi_elem_evaluable(fi.elem()) &&
+        (!fi.neighborPtr() || is_fi_elem_evaluable(fi.neighbor())) &&
         (sub_ids.count(fi.elem().subdomain_id()) ||
          (fi.neighborPtr() && sub_ids.count(fi.neighbor().subdomain_id()))))
       _evaluable_fi.push_back(&fi);
