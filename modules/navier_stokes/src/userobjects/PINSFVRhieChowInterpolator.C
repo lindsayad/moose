@@ -20,13 +20,6 @@ PINSFVRhieChowInterpolator::validParams()
   params.addParam<MooseFunctorName>(NS::porosity, "The porosity");
   params.addParam<unsigned short>(
       "reconstructions", 0, "The number of reconstructions to perform on the porosity");
-  params.addRelationshipManager(
-      "ElementSideNeighborLayers",
-      Moose::RelationshipManagerType::GEOMETRIC | Moose::RelationshipManagerType::ALGEBRAIC,
-      [](const InputParameters & obj_params, InputParameters & rm_params) {
-        rm_params.set<unsigned short>("layers") = obj_params.get<unsigned short>("reconstructions");
-        rm_params.set<bool>("use_displaced_mesh") = obj_params.get<bool>("use_displaced_mesh");
-      });
   return params;
 }
 

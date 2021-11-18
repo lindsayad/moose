@@ -32,7 +32,12 @@ INSFVMixingLengthReynoldsStress::validParams()
       "momentum_component",
       momentum_component,
       "The component of the momentum equation that this kernel applies to.");
-  params.set<unsigned short>("ghost_layers") = 2;
+  // We assume the worst, e.g. we are doing Rhie-Chow. In that case we need three layers. An 'a'
+  // coefficient evaluation at a face will necessitate evaluation of *this* object at every face of
+  // the adjoining element, necessitating a face gradient evaluation at those faces, necessitating a
+  // cell gradient evaluation in neighboring elements, necessitating cell value evaluations in
+  // neighbors of those neighbor elements
+  params.set<unsigned short>("ghost_layers") = 3;
   return params;
 }
 

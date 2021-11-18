@@ -18,8 +18,7 @@ INSFVMomentumDiffusion::validParams()
   auto params = FVFluxKernel::validParams();
   params += INSFVMomentumResidualObject::validParams();
   params.addRequiredParam<MaterialPropertyName>(NS::mu, "The viscosity");
-  // Yea this thing causes an insane stencil when doing Rhie-Chow
-  params.set<unsigned short>("ghost_layers") = 3;
+  params.set<unsigned short>("ghost_layers") = 2;
   return params;
 }
 
