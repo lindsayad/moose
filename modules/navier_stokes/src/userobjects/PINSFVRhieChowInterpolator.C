@@ -20,6 +20,13 @@ PINSFVRhieChowInterpolator::validParams()
   params.addParam<MooseFunctorName>(NS::porosity, "The porosity");
   params.addParam<unsigned short>(
       "reconstructions", 0, "The number of reconstructions to perform on the porosity");
+  params.addRelationshipManager(
+      "ElementSideNeighborLayers",
+      Moose::RelationshipManagerType::GEOMETRIC,
+      [](const InputParameters & obj_params, InputParameters & rm_params) {
+        rm_params.set<unsigned short>("layers") = obj_params.get<unsigned short>("reconstructions");
+        rm_params.set<bool>("use_displaced_mesh") = obj_params.get<bool>("use_displaced_mesh");
+      });
   return params;
 }
 
@@ -61,10 +68,19 @@ PINSFVRhieChowInterpolator::interpolatorSetup()
   if (!_rec)
     return;
 
+  const auto & all_fi = _moose_mesh.allFaceInfo();
+  _geometric_fi.reserve(all_fi.size());
+
+  for (const auto & fi : all_fi)
+    if (isFaceGeometricallyRelevant(fi))
+      _geometric_fi.push_back(&fi);
+
+  _geometric_fi.shrink_to_fit();
+
   CellCenteredMapFunctor<ADReal, std::unordered_map<dof_id_type, ADReal>> reconstructed_eps(
       _moose_mesh, true);
   ADReal::do_derivatives = true;
-  Moose::FV::reconstruct(reconstructed_eps, *_eps, _rec, false, false, _evaluable_fi, *this);
+  Moose::FV::reconstruct(reconstructed_eps, *_eps, _rec, false, false, _geometric_fi, *this);
   ADReal::do_derivatives = false;
 
   (*_eps) = std::move(reconstructed_eps);

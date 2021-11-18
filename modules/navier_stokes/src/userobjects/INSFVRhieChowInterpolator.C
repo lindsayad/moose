@@ -66,7 +66,8 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
     _bx(_b, 0),
     _by(_b, 1),
     _b2x(_b2, 0),
-    _b2y(_b2, 1)
+    _b2y(_b2, 1),
+    _sub_ids(blockRestricted() ? blockIDs() : _moose_mesh.meshSubdomains())
 {
   _var_numbers.push_back(_u.number());
   if (_v)
@@ -83,13 +84,31 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
   UserObject::_subproblem.addFunctor("b2y", _b2y, 0);
 }
 
+bool
+INSFVRhieChowInterpolator::isFaceGeometricallyRelevant(const FaceInfo & fi) const
+{
+  if (&fi.elem() == libMesh::remote_elem)
+    return false;
+
+  bool on_us = _sub_ids.count(fi.elem().subdomain_id());
+
+  if (fi.neighborPtr())
+  {
+    if (&fi.neighbor() == libMesh::remote_elem)
+      return false;
+
+    on_us = on_us || _sub_ids.count(fi.neighbor().subdomain_id());
+  }
+
+  return on_us;
+}
+
 void
 INSFVRhieChowInterpolator::interpolatorSetup()
 {
-  const auto & sub_ids = blockRestricted() ? blockIDs() : _moose_mesh.meshSubdomains();
   _elem_range =
-      std::make_unique<ConstElemRange>(_mesh.active_local_subdomain_set_elements_begin(sub_ids),
-                                       _mesh.active_local_subdomain_set_elements_end(sub_ids));
+      std::make_unique<ConstElemRange>(_mesh.active_local_subdomain_set_elements_begin(_sub_ids),
+                                       _mesh.active_local_subdomain_set_elements_end(_sub_ids));
 
   const auto & all_fi = _moose_mesh.allFaceInfo();
   _evaluable_fi.reserve(all_fi.size());
@@ -102,11 +121,11 @@ INSFVRhieChowInterpolator::interpolatorSetup()
     dof_maps[i] = &sys.get_dof_map();
   }
 
-  auto is_fi_elem_evaluable = [&dof_maps](const Elem & elem) {
-    auto is_evaluable = [&dof_maps](const Elem & elem) {
-      if (&elem == libMesh::remote_elem)
-        return false;
+  auto is_fi_evaluable = [this, &dof_maps](const FaceInfo & fi) {
+    if (!isFaceGeometricallyRelevant(fi))
+      return false;
 
+    auto is_elem_evaluable = [&dof_maps](const Elem & elem) {
       for (const auto * const dof_map : dof_maps)
         if (!dof_map->is_evaluable(elem))
           return false;
@@ -114,34 +133,36 @@ INSFVRhieChowInterpolator::interpolatorSetup()
       return true;
     };
 
-    if (!is_evaluable(elem))
+    // We definitely need the face info element to be evaluable in all cases
+    if (!is_elem_evaluable(fi.elem()))
       return false;
 
-    // checking whether the element itself is evaluable is insufficient in some cases. If this
-    // element is on a boundary, then (second order) boundary face evaluation will require
-    // computation of a cell gradient which will require querying of neighbor cell values.
-    if (elem.on_boundary())
-    {
-      for (auto * const neighbor : elem.neighbor_ptr_range())
-      {
-        if (!neighbor)
-          continue;
+    if (fi.neighborPtr())
+      // We're on an internal face and interpolation to this face will just entail linear
+      // interpolation from neighboring cell values. We'll just check then if the neighbor is
+      // evaluable (we've already checked the element)
+      return is_elem_evaluable(fi.neighbor());
 
-        if (!is_evaluable(*neighbor))
-          return false;
-      }
+    // Else we are a boundary face. Two-term boundary face extrapolation will require a cell value
+    // and gradient, which will require evaluations on all surrounding elements
+
+    mooseAssert(fi.elem().on_boundary(),
+                "If we don't have a neighbor pointer, then this element has to be on a boundary");
+
+    for (auto * const neighbor : fi.elem().neighbor_ptr_range())
+    {
+      if (!neighbor)
+        continue;
+
+      if ((neighbor == libMesh::remote_elem) || !is_elem_evaluable(*neighbor))
+        return false;
     }
 
     return true;
   };
 
   for (const auto & fi : all_fi)
-    // check whether both elements are evaluable and whether at least one element in the face pair
-    // has a subdomain corresponding to our object
-    if (is_fi_elem_evaluable(fi.elem()) &&
-        (!fi.neighborPtr() || is_fi_elem_evaluable(fi.neighbor())) &&
-        (sub_ids.count(fi.elem().subdomain_id()) ||
-         (fi.neighborPtr() && sub_ids.count(fi.neighbor().subdomain_id()))))
+    if (is_fi_evaluable(fi))
       _evaluable_fi.push_back(&fi);
 
   _evaluable_fi.shrink_to_fit();

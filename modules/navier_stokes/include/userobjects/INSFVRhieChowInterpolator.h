@@ -55,6 +55,11 @@ public:
 protected:
   virtual void interpolatorSetup();
 
+  /**
+   * @return whether this face is geometrically relevant to us
+   */
+  bool isFaceGeometricallyRelevant(const FaceInfo & fi) const;
+
   MooseMesh & _moose_mesh;
 
   std::unique_ptr<ConstElemRange> _elem_range;
@@ -93,6 +98,9 @@ private:
   VectorComponentFunctor<ADReal> _by;
   VectorComponentFunctor<ADReal> _b2x;
   VectorComponentFunctor<ADReal> _b2y;
+
+  /// The subdomain ids this object operates on
+  const std::set<SubdomainID> _sub_ids;
 };
 
 inline const ADReal &

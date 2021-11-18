@@ -22,4 +22,5 @@ protected:
 
   Moose::Functor<ADReal> * const _eps;
   const unsigned short _rec;
+  std::vector<const FaceInfo *> _geometric_fi;
 };
