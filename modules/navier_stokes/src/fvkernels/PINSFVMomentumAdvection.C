@@ -66,11 +66,11 @@ PINSFVMomentumAdvection::interpolate(Moose::FV::InterpMethod m, ADRealVectorValu
   if (m == Moose::FV::InterpMethod::Average)
     return;
 
-  // Avoid computing a pressure gradient near porosity jumps
-  if (!_smooth_porosity)
-    if (MetaPhysicL::raw_value(_eps.gradient(elem)).norm() > 1e-12 ||
-        MetaPhysicL::raw_value(_eps.gradient(neighbor)).norm() > 1e-12)
-      return;
+  // // Avoid computing a pressure gradient near porosity jumps
+  // if (!_smooth_porosity)
+  //   if (MetaPhysicL::raw_value(_eps.gradient(elem)).norm() > 1e-12 ||
+  //       MetaPhysicL::raw_value(_eps.gradient(neighbor)).norm() > 1e-12)
+  //     return;
 
   mooseAssert((neighbor && this->hasBlocks(neighbor->subdomain_id())),
               "We should be on an internal face...");

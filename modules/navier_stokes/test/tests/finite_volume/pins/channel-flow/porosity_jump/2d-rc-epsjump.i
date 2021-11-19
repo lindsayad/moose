@@ -122,6 +122,15 @@ velocity_interp_method='rc'
     porosity = porosity
     momentum_component = 'x'
   []
+  [u_friction]
+    type = PINSFVMomentumFriction
+    variable = u
+    momentum_component = 'x'
+    porosity = porosity
+    Darcy_name = 'Darcy_coefficient'
+    # Forchheimer_name = 'Forchheimer_coefficient'
+    rho = ${rho}
+  []
   [u_advection_porosity_gradient]
     type = PINSFVMomentumAdvectionPorosityGradient
     variable = u
@@ -161,6 +170,15 @@ velocity_interp_method='rc'
     pressure = pressure
     porosity = porosity
     momentum_component = 'y'
+  []
+  [v_friction]
+    type = PINSFVMomentumFriction
+    variable = v
+    momentum_component = 'y'
+    porosity = porosity
+    Darcy_name = 'Darcy_coefficient'
+    # Forchheimer_name = 'Forchheimer_coefficient'
+    rho = ${rho}
   []
   [v_advection_porosity_gradient]
     type = PINSFVMomentumAdvectionPorosityGradient
@@ -221,12 +239,24 @@ velocity_interp_method='rc'
     type = FVADPropValPerSubdomainMaterial
     prop_name = 'porosity'
     subdomain_to_prop_value = '1 1
-                               2 0.5'
+                               2 1'
   []
   [smooth]
     type = ADGenericFunctionFunctorMaterial
     prop_names = 'porosity'
     prop_values = 'smooth_jump'
+  []
+  [darcy]
+    type = ADGenericConstantVectorFunctorMaterial
+    prop_names = 'Darcy_coefficient'
+    prop_values = '1 1 1'
+    block = 1
+  []
+  [darcy_2]
+    type = ADGenericConstantVectorFunctorMaterial
+    prop_names = 'Darcy_coefficient'
+    prop_values = '10 10 10'
+    block = 2
   []
 []
 
