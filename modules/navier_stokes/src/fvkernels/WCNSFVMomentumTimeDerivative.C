@@ -68,13 +68,9 @@ WCNSFVMomentumTimeDerivative::gatherRCData(const Elem & elem)
   // INSFVMomentumTimeDerivative::gatherRCData
 
   _computing_rc_data = true;
-  const auto saved_do_derivatives = ADReal::do_derivatives;
-  // We rely on derivative indexing
-  ADReal::do_derivatives = true;
   // Fill-in the coefficient _a (but without multiplication by V)
   computeQpResidual(elem);
   _computing_rc_data = false;
-  ADReal::do_derivatives = saved_do_derivatives;
 
   _rc_uo.addToA(&elem, _index, _a * _assembly.elementVolume(&elem));
 }

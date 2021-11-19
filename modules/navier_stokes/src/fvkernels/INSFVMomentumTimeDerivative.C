@@ -45,13 +45,9 @@ INSFVMomentumTimeDerivative::computeQpResidual()
 void
 INSFVMomentumTimeDerivative::gatherRCData(const Elem & elem)
 {
-  const auto saved_do_derivatives = ADReal::do_derivatives;
-  // We rely on derivative indexing
-  ADReal::do_derivatives = true;
   const auto residual = computeQpResidual(elem) * _assembly.elementVolume(&elem);
   const auto dof_number = elem.dof_number(_sys.number(), _var.number(), 0);
   const Real a = residual.derivatives()[dof_number];
-  ADReal::do_derivatives = saved_do_derivatives;
 
   _rc_uo.addToA(&elem, _index, a);
 }

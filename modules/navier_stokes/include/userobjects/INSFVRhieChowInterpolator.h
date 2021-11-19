@@ -101,6 +101,12 @@ private:
 
   /// The subdomain ids this object operates on
   const std::set<SubdomainID> _sub_ids;
+
+  /// Mutex that prevents multiple threads from saving into the 'a' coefficients at the same time
+  static Threads::spin_mutex _a_mutex;
+
+  /// Mutex that prevents multiple threads from saving into the 'b' coefficients  at the same time
+  static Threads::spin_mutex _b_mutex;
 };
 
 inline const ADReal &
@@ -126,6 +132,8 @@ INSFVRhieChowInterpolator::addToA(const Elem * const elem,
                                   const unsigned int component,
                                   const ADReal & value)
 {
+  Threads::spin_mutex::scoped_lock lock(_a_mutex);
+
   if (elem->processor_id() != this->processor_id())
     _elements_to_push_pull.insert(elem);
 
@@ -139,6 +147,7 @@ INSFVRhieChowInterpolator::addToB(const Elem * const elem,
 {
   mooseAssert(elem->processor_id() == this->processor_id(), "Sources should be local");
 
+  Threads::spin_mutex::scoped_lock lock(_b_mutex);
   // We have our users write their RC data imagining that they've moved all terms to the LHS, but
   // the balance in Moukalled assumes that the body forces are on the RHS with positive sign, e.g.
   // 0 = -\nabla p + \mathbf{B}, so we must apply a minus sign here

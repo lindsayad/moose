@@ -125,11 +125,8 @@ PINSFVFunctorBC::gatherRCData(const FaceInfo & fi)
   _face_type = fi.faceType(_var.name());
 
   _computing_rc_data = true;
-  const auto saved_do_derivatives = ADReal::do_derivatives;
-  ADReal::do_derivatives = true;
   // Fill-in the coefficient _a (but without multiplication by A)
   computeQpResidual();
-  ADReal::do_derivatives = saved_do_derivatives;
   _computing_rc_data = false;
 
   _rc_uo.addToA((_face_type == FaceInfo::VarFaceNeighbors::ELEM) ? &fi.elem() : fi.neighborPtr(),
