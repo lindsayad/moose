@@ -25,5 +25,5 @@ protected:
   ADReal computeQpResidual() override;
 
   /// porosity of the medium
-  const MooseVariableFV<Real> * const _eps_var;
+  const Moose::Functor<ADReal> & _eps;
 };

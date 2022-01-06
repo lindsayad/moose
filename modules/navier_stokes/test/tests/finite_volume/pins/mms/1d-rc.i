@@ -13,6 +13,19 @@ velocity_interp_method='rc'
   []
 []
 
+[GlobalParams]
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = PINSFVRhieChowInterpolator
+    u = u
+    pressure = pressure
+    porosity = porosity
+  []
+[]
+
 [Variables]
   [u]
     type = PINSFVSuperficialVelocityVariable
@@ -43,7 +56,7 @@ velocity_interp_method='rc'
   []
   [forcing_u]
     type = ParsedFunction
-    value = '0.3125*pi^2*mu*cos((1/2)*x*pi) - 1.25*pi*rho*sin((1/2)*x*pi)*cos((1/2)*x*pi) + 0.8*cos(x)'
+    value = '0.25*pi^2*mu*cos((1/2)*x*pi) - 1.25*pi*rho*sin((1/2)*x*pi)*cos((1/2)*x*pi) + 0.8*cos(x)'
     vars = 'mu rho'
     vals = '${mu} ${rho}'
   []
@@ -57,7 +70,7 @@ velocity_interp_method='rc'
     vars = 'rho'
     vals = '${rho}'
   []
-[]
+  []
 
 [FVKernels]
   [mass]
@@ -65,10 +78,7 @@ velocity_interp_method='rc'
     variable = pressure
     advected_interp_method = ${advected_interp_method}
     velocity_interp_method = ${velocity_interp_method}
-    vel = 'velocity'
-    pressure = pressure
     u = u
-    mu = ${mu}
     rho = ${rho}
     porosity = porosity
   []
@@ -82,20 +92,19 @@ velocity_interp_method='rc'
     type = PINSFVMomentumAdvection
     variable = u
     advected_quantity = 'rhou'
-    vel = 'velocity'
     advected_interp_method = ${advected_interp_method}
     velocity_interp_method = ${velocity_interp_method}
-    pressure = pressure
     u = u
-    mu = ${mu}
     rho = ${rho}
     porosity = porosity
+    momentum_component = 'x'
   []
   [u_viscosity]
     type = PINSFVMomentumDiffusion
     variable = u
     mu = ${mu}
     porosity = porosity
+    momentum_component = 'x'
   []
   [u_pressure]
     type = PINSFVMomentumPressureFlux
@@ -105,9 +114,10 @@ velocity_interp_method='rc'
     momentum_component = 'x'
   []
   [u_forcing]
-    type = FVBodyForce
+    type = INSFVBodyForce
     variable = u
     function = forcing_u
+    momentum_component = 'x'
   []
 []
 

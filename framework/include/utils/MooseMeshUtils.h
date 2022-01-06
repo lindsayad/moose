@@ -14,6 +14,7 @@
 
 #include "MooseUtils.h"
 #include "MooseTypes.h"
+#include "FaceInfo.h"
 
 namespace MooseMeshUtils
 {
@@ -46,4 +47,39 @@ SubdomainID getSubdomainID(const SubdomainName & subdomain_name, const MeshBase 
 
 std::vector<subdomain_id_type> getSubdomainIDs(const libMesh::MeshBase & mesh,
                                                const std::vector<SubdomainName> & subdomain_name);
+
+template <typename P, typename C>
+void
+coordTransformFactor(const P & point,
+                     C & factor,
+                     const Moose::CoordinateSystemType coord_type,
+                     const unsigned int rz_radial_coord = libMesh::invalid_uint)
+{
+  switch (coord_type)
+  {
+    case Moose::COORD_XYZ:
+      factor = 1.0;
+      break;
+    case Moose::COORD_RZ:
+    {
+      mooseAssert(rz_radial_coord != libMesh::invalid_uint,
+                  "Must pass in a valid rz radial coordinate");
+      factor = 2 * M_PI * point(rz_radial_coord);
+      break;
+    }
+    case Moose::COORD_RSPHERICAL:
+      factor = 4 * M_PI * point(0) * point(0);
+      break;
+    default:
+      mooseError("Unknown coordinate system");
+  }
+}
+
+inline void
+computeFaceInfoFaceCoord(FaceInfo & fi,
+                         const Moose::CoordinateSystemType coord_type,
+                         const unsigned int rz_radial_coord = libMesh::invalid_uint)
+{
+  coordTransformFactor(fi.faceCentroid(), fi.faceCoord(), coord_type, rz_radial_coord);
+}
 }

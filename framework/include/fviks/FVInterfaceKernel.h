@@ -144,13 +144,13 @@ protected:
    * @return a tuple corresponding to the face info element, the face info, and the face info
    * element subdomain id for use with functors
    */
-  std::tuple<const libMesh::Elem *, const FaceInfo *, SubdomainID> elemFromFace() const;
+  Moose::ElemFromFaceArg elemFromFace(bool correct_skewness = false) const;
 
   /**
    * @return a tuple corresponding to the face info neighbor, the face info, and the face info
    * neighbor subdomain id for use with functors
    */
-  std::tuple<const libMesh::Elem *, const FaceInfo *, SubdomainID> neighborFromFace() const;
+  Moose::ElemFromFaceArg neighborFromFace(bool correct_skenewss = false) const;
 
   /// To be consistent with FE interfaces we introduce this quadrature point member. However, for FV
   /// calculations there should every only be one qudrature point and it should be located at the

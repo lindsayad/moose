@@ -11,5 +11,6 @@
     valgrind = HEAVY
     design = 'PINSFVEnergyTimeDerivative.md'
     recover = false # see #19126
+    threading = 'tbb openmp'
   []
 []

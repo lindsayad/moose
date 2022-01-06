@@ -11,6 +11,7 @@
 
 #include "FVMatAdvectionOutflowBC.h"
 #include "INSFVFullyDevelopedFlowBC.h"
+#include "INSFVMomentumResidualObject.h"
 
 class INSFVVelocityVariable;
 
@@ -20,11 +21,15 @@ class INSFVVelocityVariable;
  * when selecting a mean-pressure approach.
  */
 class INSFVMomentumAdvectionOutflowBC : public FVMatAdvectionOutflowBC,
-                                        public INSFVFullyDevelopedFlowBC
+                                        public INSFVFullyDevelopedFlowBC,
+                                        public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();
   INSFVMomentumAdvectionOutflowBC(const InputParameters & params);
+
+  void gatherRCData(const Elem &) override {}
+  void gatherRCData(const FaceInfo &) override;
 
 protected:
   virtual ADReal computeQpResidual() override;
@@ -38,4 +43,13 @@ protected:
 
   /// the dimension of the simulation
   const unsigned int _dim;
+
+  /// The density
+  const Moose::Functor<ADReal> & _rho;
+
+  /// whether we are computing Rhie-Chow data
+  bool _computing_rc_data;
+
+  /// A member to hold computation of the Rhie-Chow coefficient
+  ADReal _a = 0;
 };

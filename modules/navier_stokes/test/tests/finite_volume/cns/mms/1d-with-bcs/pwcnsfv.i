@@ -1,4 +1,3 @@
-mu=1e-15
 rho='rho'
 advected_interp_method='upwind'
 velocity_interp_method='rc'
@@ -10,6 +9,16 @@ cp=${fparse gamma*R_specific/(gamma-1)}
 
 [GlobalParams]
   two_term_boundary_expansion = true
+  rhie_chow_user_object = 'rc'
+[]
+
+[UserObjects]
+  [rc]
+    type = PINSFVRhieChowInterpolator
+    u = sup_vel_x
+    pressure = pressure
+    porosity = porosity
+  []
 []
 
 [Mesh]
@@ -81,10 +90,7 @@ cp=${fparse gamma*R_specific/(gamma-1)}
     variable = pressure
     advected_interp_method = ${advected_interp_method}
     velocity_interp_method = ${velocity_interp_method}
-    vel = 'velocity'
-    pressure = pressure
     u = sup_vel_x
-    mu = ${mu}
     rho = ${rho}
     porosity = porosity
   []
@@ -98,14 +104,12 @@ cp=${fparse gamma*R_specific/(gamma-1)}
     type = PINSFVMomentumAdvection
     variable = sup_vel_x
     advected_quantity = 'rhou'
-    vel = 'velocity'
     advected_interp_method = ${advected_interp_method}
     velocity_interp_method = ${velocity_interp_method}
-    pressure = pressure
     u = sup_vel_x
-    mu = ${mu}
     rho = ${rho}
     porosity = porosity
+    momentum_component = 'x'
   []
   [u_pressure]
     type = PINSFVMomentumPressureFlux
@@ -116,9 +120,10 @@ cp=${fparse gamma*R_specific/(gamma-1)}
     force_boundary_execution = false
   []
   [momentum_fn]
-    type = FVBodyForce
+    type = INSFVBodyForce
     variable = sup_vel_x
     function = 'forcing_rho_ud'
+    momentum_component = 'x'
   []
 []
 

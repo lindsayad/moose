@@ -20,4 +20,7 @@ class INSFVEnergyAdvection : public INSFVMomentumAdvection
 public:
   static InputParameters validParams();
   INSFVEnergyAdvection(const InputParameters & params);
+
+protected:
+  ADReal computeQpResidual() override;
 };

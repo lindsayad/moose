@@ -22,6 +22,9 @@ public:
   static InputParameters validParams();
   INSFVWallFunctionBC(const InputParameters & params);
 
+  using INSFVNaturalFreeSlipBC::gatherRCData;
+  void gatherRCData(const FaceInfo &) override final;
+
 protected:
   virtual ADReal computeQpResidual() override;
 
@@ -43,4 +46,7 @@ protected:
 
   /// dynamic viscosity
   const Moose::Functor<ADReal> & _mu;
+
+  /// Rhie-Chow coefficient
+  ADReal _a = 0;
 };
