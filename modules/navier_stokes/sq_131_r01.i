@@ -132,6 +132,11 @@ temp_ref = 316.99
     lambda = lambda
   []
 
+  [u_time]
+    type = INSFVMomentumTimeDerivative
+    variable = 'u'
+    rho = ${rho}
+  []
   [u_advection]
     type = INSFVMomentumAdvection
     variable = u
@@ -173,6 +178,11 @@ temp_ref = 316.99
     momentum_component = 'x'
   []
 
+  [v_time]
+    type = INSFVMomentumTimeDerivative
+    variable = v
+    rho = ${rho}
+  []
   [v_advection]
     type = INSFVMomentumAdvection
     variable = v
@@ -214,6 +224,12 @@ temp_ref = 316.99
     momentum_component = 'y'
   []
 
+  [temp_time]
+    type = INSFVEnergyTimeDerivative
+    variable = T
+    rho = ${rho}
+    cp_name = 'cp'
+  []
   [temp_conduction]
     type = FVDiffusion
     coeff = 'k'
@@ -303,21 +319,26 @@ temp_ref = 316.99
 #[]
 #
 [Executioner]
-  type = Steady
-#  dt = 0.01
-#  dtmin = 0.00001
-#  start_time = 0.0
-#  end_time = 100.0
-#  num_steps = 25000
-#  steady_state_detection = true
-#  steady_state_tolerance = 1e-6
-#
+  type = Transient
+  dtmin = 0.00001
+  start_time = 0.0
+  end_time = 100.0
+  num_steps = 25000
+  steady_state_detection = true
+  steady_state_tolerance = 1e-6
+  [TimeStepper]
+    type = IterationAdaptiveDT
+    optimal_iterations = 6
+    growth_factor = 1.5
+    dt = 0.01
+  []
   solve_type = 'NEWTON'
-  petsc_options_iname = '-pc_type -ksp_gmres_restart -sub_pc_type -sub_pc_factor_shift_type'
-  petsc_options_value = 'asm      300                lu           NONZERO'
-  nl_rel_tol = 1e-12
+  petsc_options_iname = '-pc_type -pc_factor_shift_type'
+  petsc_options_value = 'lu       NONZERO'
+  nl_rel_tol = 1e-8
+  nl_abs_tol = 1e-8
 []
-#
+
 [Outputs]
 print_linear_residuals = false
 perf_graph = true
