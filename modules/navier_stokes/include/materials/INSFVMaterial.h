@@ -28,9 +28,6 @@ protected:
   /// z-component velocity
   const MooseVariableFVReal * const _w_vel;
 
-  /// pressure variable
-  const MooseVariableFVReal & _p_var;
-
   /// density
   const Moose::Functor<ADReal> & _rho;
 

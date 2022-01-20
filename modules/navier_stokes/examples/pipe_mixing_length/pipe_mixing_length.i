@@ -257,7 +257,6 @@ ref_delta_P = ${fparse f * L / D * rho * bulk_u^2 / 2}
     type = INSFVMaterial
     u = 'u'
     v = 'v'
-    pressure = 'pressure'
     rho = ${rho}
   []
 []

@@ -240,7 +240,6 @@ velocity_interp_method='rc'
     type = INSFVMaterial
     u = 'u'
     v = 'v'
-    pressure = 'pressure'
     rho = ${rho}
   []
   [total_viscosity]

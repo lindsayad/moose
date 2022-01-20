@@ -236,7 +236,6 @@ cp = 1
     type = INSFVMaterial
     u = 'u'
     v = 'v'
-    pressure = 'pressure'
     temperature = 'T'
     rho = ${rho}
     block = 0

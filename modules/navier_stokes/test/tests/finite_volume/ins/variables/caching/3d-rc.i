@@ -190,7 +190,6 @@ velocity_face_value_caching = true
     u = 'u'
     v = 'v'
     w = 'w'
-    pressure = 'pressure'
     rho = ${rho}
   []
 []

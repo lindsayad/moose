@@ -240,7 +240,6 @@ restricted_blocks = '1'
     type = INSFVMaterial
     u = 'u'
     v = 'v'
-    pressure = 'pressure'
     temperature = 'temperature'
     rho = ${rho}
     block = ${restricted_blocks}

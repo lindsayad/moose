@@ -158,7 +158,6 @@ two_term_boundary_expansion=true
     type = INSFVMaterial
     u = 'u'
     v = 'v'
-    pressure = 'pressure'
     rho = ${rho}
   []
 []

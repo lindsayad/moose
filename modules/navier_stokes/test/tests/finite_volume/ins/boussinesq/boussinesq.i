@@ -254,7 +254,6 @@ temp_ref=${fparse hot_temp / 2.}
     type = INSFVMaterial
     u = 'u'
     v = 'v'
-    pressure = 'pressure'
     temperature = 'T'
     rho = ${rho}
   []

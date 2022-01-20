@@ -136,7 +136,6 @@ rho=1.0
     type = INSFVMaterial
     u = vel_x
     v = vel_y
-    pressure = 'pressure'
     rho = ${rho}
   []
 []

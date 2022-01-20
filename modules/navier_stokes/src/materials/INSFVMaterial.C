@@ -22,7 +22,6 @@ INSFVMaterial::validParams()
   params.addCoupledVar("v", "y-velocity"); // only required in 2D and 3D
   params.addCoupledVar("w", "z-velocity"); // only required in 3D
   params.addRequiredParam<MaterialPropertyName>("rho", "The value for the density");
-  params.addRequiredCoupledVar(NS::pressure, "The pressure variable.");
   params.addCoupledVar("temperature", "the temperature");
   params.addParam<MaterialPropertyName>("cp_name", "cp", "the name of the specific heat capacity");
   return params;
@@ -33,7 +32,6 @@ INSFVMaterial::INSFVMaterial(const InputParameters & parameters)
     _u_vel(*getVarHelper<MooseVariableFVReal>("u", 0)),
     _v_vel(isCoupled("v") ? getVarHelper<MooseVariableFVReal>("v", 0) : nullptr),
     _w_vel(isCoupled("w") ? getVarHelper<MooseVariableFVReal>("w", 0) : nullptr),
-    _p_var(*getVarHelper<MooseVariableFVReal>(NS::pressure, 0)),
     _rho(getFunctor<ADReal>("rho")),
     _has_temperature(isParamValid("temperature")),
     _temperature(_has_temperature ? getVarHelper<MooseVariableFVReal>("temperature", 0) : nullptr),

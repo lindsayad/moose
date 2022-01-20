@@ -257,7 +257,6 @@ hot_temp=310
     type = INSFVMaterial
     u = 'u'
     v = 'v'
-    pressure = 'pressure'
     temperature = 'T'
     rho = ${rho}
   []

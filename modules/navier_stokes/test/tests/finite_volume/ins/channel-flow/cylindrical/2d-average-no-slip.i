@@ -161,7 +161,6 @@ velocity_interp_method='average'
     type = INSFVMaterial
     u = 'u'
     v = 'v'
-    pressure = 'pressure'
     rho = ${rho}
   []
 []

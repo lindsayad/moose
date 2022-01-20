@@ -298,7 +298,6 @@ inlet_velocity = 0.001
     type = INSFVMaterial
     u = 'u'
     v = 'v'
-    pressure = 'pressure'
     temperature = 'T'
     rho = ${rho}
   []

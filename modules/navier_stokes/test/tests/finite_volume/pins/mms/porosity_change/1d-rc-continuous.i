@@ -150,7 +150,6 @@ velocity_interp_method='rc'
   [ins_fv]
     type = INSFVMaterial
     u = 'u'
-    pressure = 'pressure'
     rho = ${rho}
   []
 []

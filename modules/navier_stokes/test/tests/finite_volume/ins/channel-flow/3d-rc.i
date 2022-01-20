@@ -181,7 +181,6 @@ velocity_interp_method='rc'
     u = 'u'
     v = 'v'
     w = 'w'
-    pressure = 'pressure'
     rho = ${rho}
   []
 []
