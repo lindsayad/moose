@@ -212,8 +212,6 @@ inlet_v = 0.001
 [Materials]
   [ins_fv]
     type = INSFVMaterial
-    u = 'u'
-    v = 'v'
     temperature = 'T'
     rho = 'rho'
   []

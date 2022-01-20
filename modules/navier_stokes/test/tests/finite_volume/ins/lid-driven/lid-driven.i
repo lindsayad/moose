@@ -143,8 +143,6 @@ rho=1
 [Materials]
   [ins_fv]
     type = INSFVMaterial
-    u = 'u'
-    v = 'v'
     rho = ${rho}
   []
   [mu]

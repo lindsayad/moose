@@ -156,8 +156,6 @@ velocity_interp_method='average'
 [Materials]
   [ins_fv]
     type = INSFVMaterial
-    u = 'u'
-    v = 'v'
     rho = ${rho}
   []
 []

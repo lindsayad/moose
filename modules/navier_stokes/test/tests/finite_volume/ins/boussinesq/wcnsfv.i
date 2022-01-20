@@ -261,8 +261,6 @@ hot_temp=310
   []
   [ins_fv]
     type = INSFVMaterial
-    u = 'u'
-    v = 'v'
     temperature = 'T'
     rho = ${rho}
   []

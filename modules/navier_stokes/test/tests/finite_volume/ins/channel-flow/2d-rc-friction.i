@@ -160,8 +160,6 @@ velocity_interp_method='rc'
 [Materials]
   [ins_fv]
     type = INSFVMaterial
-    u = 'u'
-    v = 'v'
     rho = ${rho}
   []
   [friction_coefficient]

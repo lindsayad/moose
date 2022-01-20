@@ -238,8 +238,6 @@ restricted_blocks = '1'
 [Materials]
   [ins_fv]
     type = INSFVMaterial
-    u = 'u'
-    v = 'v'
     temperature = 'temperature'
     rho = ${rho}
     block = ${restricted_blocks}

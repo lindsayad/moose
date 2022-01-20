@@ -234,8 +234,6 @@ cp = 1
   []
   [ins_fv]
     type = INSFVMaterial
-    u = 'u'
-    v = 'v'
     temperature = 'T'
     rho = ${rho}
     block = 0

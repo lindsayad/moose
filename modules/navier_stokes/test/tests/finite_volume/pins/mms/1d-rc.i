@@ -135,7 +135,6 @@ velocity_interp_method='rc'
 [Materials]
   [ins_fv]
     type = INSFVMaterial
-    u = 'u'
     rho = ${rho}
   []
 []

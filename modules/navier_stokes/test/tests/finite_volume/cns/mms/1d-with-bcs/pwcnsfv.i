@@ -179,7 +179,6 @@ cp=${fparse gamma*R_specific/(gamma-1)}
   []
   [ins_fv]
     type = INSFVMaterial
-    u = sup_vel_x
     temperature = T_fluid
     rho = ${rho}
   []

@@ -242,8 +242,6 @@ forch=1.1
 [Materials]
   [ins_fv]
     type = INSFVMaterial
-    u = 'u'
-    v = 'v'
     rho = ${rho}
   []
   [darcy]

@@ -19,15 +19,6 @@ public:
   INSFVMaterial(const InputParameters & parameters);
 
 protected:
-  /// x-component velocity
-  const MooseVariableFVReal & _u_vel;
-
-  /// y-component velocity
-  const MooseVariableFVReal * const _v_vel;
-
-  /// z-component velocity
-  const MooseVariableFVReal * const _w_vel;
-
   /// density
   const Moose::Functor<ADReal> & _rho;
 

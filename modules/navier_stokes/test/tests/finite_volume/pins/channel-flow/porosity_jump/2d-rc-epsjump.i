@@ -175,8 +175,6 @@ velocity_interp_method='rc'
   inactive = 'smooth'
   [ins_fv]
     type = INSFVMaterial
-    u = 'u'
-    v = 'v'
     rho = ${rho}
   []
   [jump]

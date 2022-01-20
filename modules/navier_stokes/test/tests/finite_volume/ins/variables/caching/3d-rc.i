@@ -187,9 +187,6 @@ velocity_face_value_caching = true
 [Materials]
   [ins_fv]
     type = INSFVMaterial
-    u = 'u'
-    v = 'v'
-    w = 'w'
     rho = ${rho}
   []
 []

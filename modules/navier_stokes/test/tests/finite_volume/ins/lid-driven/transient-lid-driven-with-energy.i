@@ -213,8 +213,6 @@ advected_interp_method = 'average'
   []
   [ins_fv]
     type = INSFVMaterial
-    u = 'u'
-    v = 'v'
     temperature = 'T'
     rho = ${rho}
   []
