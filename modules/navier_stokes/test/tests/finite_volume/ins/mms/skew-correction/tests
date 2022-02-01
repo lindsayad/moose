@@ -12,4 +12,12 @@
     required_python_packages = 'pandas matplotlib'
     heavy = true
   []
+  [exo]
+    type = Exodiff
+    input = skewed-vortex.i
+    exodiff = skewed-vortex_out.e
+    cli_args = "Postprocessors/active=''"
+    ad_indexing_type = 'global'
+    requirement = 'The system shall be able to automatically expand its ghosting pattern when skew-corrected face gradients are involved in the simulation.'
+  []
 []
