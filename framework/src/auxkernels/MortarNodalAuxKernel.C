@@ -20,6 +20,8 @@ MortarNodalAuxKernelTempl<ComputeValueType>::validParams()
   InputParameters params = AuxKernelTempl<ComputeValueType>::validParams();
   params += MortarConsumerInterface::validParams();
   params.set<bool>("ghost_point_neighbors") = true;
+  params.addParam<bool>(
+      "incremental", false, "Whether to accumulate mortar auxiliary kernel value");
   return params;
 }
 
@@ -32,8 +34,12 @@ MortarNodalAuxKernelTempl<ComputeValueType>::MortarNodalAuxKernelTempl(
     MortarConsumerInterface(this),
     _displaced(this->template getParam<bool>("use_displaced_mesh")),
     _fe_problem(*this->template getCheckedPointerParam<FEProblemBase *>("_fe_problem_base")),
-    _msm_volume(0)
+    _msm_volume(0),
+    _incremental(this->template getParam<bool>("incremental")),
+    _u_old(uOld())
 {
+
+  Moose::out << "Is incremental: " << _incremental << "\n";
   if (!isNodal())
     paramError("variable", "MortarNodalAuxKernel derivatives populate nodal aux variables only.");
 }
@@ -84,7 +90,12 @@ MortarNodalAuxKernelTempl<ComputeValueType>::compute()
 
   // We have to reinit the node for this variable in order to get the dof index set for the node
   _var.reinitNode();
-  _var.setNodalValue(value / total_volume);
+
+  // Allow mortar auxiliary kernels to compute quantities incrementally
+  if (!_incremental)
+    _var.setNodalValue(value / total_volume);
+  else
+    _var.setNodalValue(value / total_volume + _u_old[0]);
 }
 
 template <typename ComputeValueType>
