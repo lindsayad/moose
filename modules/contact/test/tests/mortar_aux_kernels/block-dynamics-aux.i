@@ -134,7 +134,6 @@ offset = -0.19
     secondary_boundary = 10
     primary_subdomain = 4
     secondary_subdomain = 3
-    block = 3
     use_displaced_mesh = true
   []
   [gap_second]
@@ -144,7 +143,6 @@ offset = -0.19
     secondary_boundary = 10
     primary_subdomain = 4
     secondary_subdomain = 3
-    block = 3
     use_displaced_mesh = true
   []
   # [gap_vel]

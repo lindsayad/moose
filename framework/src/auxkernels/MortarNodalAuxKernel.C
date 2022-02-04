@@ -13,6 +13,18 @@
 
 #include "libmesh/quadrature.h"
 
+namespace
+{
+const InputParameters &
+setBoundaryParam(const InputParameters & params_in)
+{
+  InputParameters & ret = const_cast<InputParameters &>(params_in);
+  ret.set<std::vector<BoundaryName>>("boundary") = {
+      params_in.get<BoundaryName>("secondary_boundary")};
+  return ret;
+}
+}
+
 template <typename ComputeValueType>
 InputParameters
 MortarNodalAuxKernelTempl<ComputeValueType>::validParams()
@@ -22,13 +34,15 @@ MortarNodalAuxKernelTempl<ComputeValueType>::validParams()
   params.set<bool>("ghost_point_neighbors") = true;
   params.addParam<bool>(
       "incremental", false, "Whether to accumulate mortar auxiliary kernel value");
+  params.suppressParameter<std::vector<BoundaryName>>("boundary");
+  params.suppressParameter<std::vector<SubdomainName>>("block");
   return params;
 }
 
 template <typename ComputeValueType>
 MortarNodalAuxKernelTempl<ComputeValueType>::MortarNodalAuxKernelTempl(
     const InputParameters & parameters)
-  : AuxKernelTempl<ComputeValueType>(parameters),
+  : AuxKernelTempl<ComputeValueType>(setBoundaryParam(parameters)),
     MortarExecutorInterface(
         *this->template getCheckedPointerParam<FEProblemBase *>("_fe_problem_base")),
     MortarConsumerInterface(this),
@@ -69,7 +83,8 @@ MortarNodalAuxKernelTempl<ComputeValueType>::compute()
   const auto & its = amg().secondariesToMortarSegments(*_current_node);
   std::array<MortarNodalAuxKernelTempl<ComputeValueType> *, 1> consumers = {{this}};
 
-  auto act_functor = [&value, &total_volume, this]() {
+  auto act_functor = [&value, &total_volume, this]()
+  {
     _msm_volume = 0;
     value += computeValue();
     total_volume += _msm_volume;
