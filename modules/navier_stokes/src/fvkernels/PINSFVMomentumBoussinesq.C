@@ -32,8 +32,12 @@ PINSFVMomentumBoussinesq::PINSFVMomentumBoussinesq(const InputParameters & param
                "variable, of variable type PINSFVSuperficialVelocityVariable.");
 }
 
-ADReal
-PINSFVMomentumBoussinesq::computeQpResidual()
+void
+PINSFVMomentumBoussinesq::gatherRCData(const Elem & elem)
 {
-  return _eps(makeElemArg(_current_elem)) * INSFVMomentumBoussinesq::computeQpResidual();
+  const auto elem_arg = makeElemArg(&elem);
+  _rc_uo.addToB(&elem,
+                _index,
+                _eps(elem_arg) * _alpha(elem_arg) * _gravity(_index) * _rho *
+                    (_temperature(elem_arg) - _ref_temperature));
 }

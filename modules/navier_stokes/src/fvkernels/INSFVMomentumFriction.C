@@ -8,8 +8,6 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "INSFVMomentumFriction.h"
-#include "SystemBase.h"
-#include "MooseVariableFV.h"
 
 registerMooseObject("NavierStokesApp", INSFVMomentumFriction);
 
@@ -28,6 +26,10 @@ INSFVMomentumFriction::validParams()
                                     "Linear friction coefficient name as a material property");
   params.addParam<MooseFunctorName>("quadratic_coef_name",
                                     "Quadratic friction coefficient name as a material property");
+  params.addParam<MooseFunctorName>(
+      "drag_quantity",
+      "the quantity that the drag force is proportional to. If this is not supplied, then the "
+      "variable value will be used.");
   return params;
 }
 
@@ -37,7 +39,8 @@ INSFVMomentumFriction::INSFVMomentumFriction(const InputParameters & parameters)
                                                       : nullptr),
     _quadratic_friction(
         isParamValid("quadratic_coef_name") ? &getFunctor<ADReal>("quadratic_coef_name") : nullptr),
-    _use_linear_friction(isParamValid("linear_coef_name"))
+    _use_linear_friction(isParamValid("linear_coef_name")),
+    _drag_quantity(isParamValid("drag_quantity") ? getFunctor<ADReal>("drag_quantity") : _u_functor)
 {
   // Check that one and at most one friction coefficient has been provided
   if (isParamValid("linear_coef_name") + isParamValid("quadratic_coef_name") != 1)
@@ -49,15 +52,9 @@ void
 INSFVMomentumFriction::gatherRCData(const Elem & elem)
 {
   const auto elem_arg = makeElemArg(&elem);
-
-  auto coefficient = _use_linear_friction
-                         ? (*_linear_friction)(elem_arg)
-                         : (*_quadratic_friction)(elem_arg)*std::abs(_u_functor(elem_arg));
-
-  coefficient *= _assembly.elementVolume(&elem);
-
-  _rc_uo.addToA(&elem, _index, coefficient);
-
-  const auto dof_number = elem.dof_number(_sys.number(), _var.number(), 0);
-  processResidual(coefficient * _u_functor(elem_arg), dof_number);
+  _rc_uo.addToB(&elem,
+                _index,
+                _use_linear_friction ? (*_linear_friction)(elem_arg)*_drag_quantity(elem_arg)
+                                     : (*_quadratic_friction)(elem_arg)*_drag_quantity(elem_arg) *
+                                           std::abs(_drag_quantity(elem_arg)));
 }

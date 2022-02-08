@@ -7,10 +7,10 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "INSFVElementalKernel.h"
+#include "INSFVFDataKernel.h"
 
 InputParameters
-INSFVElementalKernel::validParams()
+INSFVFDataKernel::validParams()
 {
   auto params = FVElementalKernel::validParams();
   params += INSFVMomentumResidualObject::validParams();
@@ -19,20 +19,19 @@ INSFVElementalKernel::validParams()
   return params;
 }
 
-INSFVElementalKernel::INSFVElementalKernel(const InputParameters & params)
+INSFVFDataKernel::INSFVFDataKernel(const InputParameters & params)
   : FVElementalKernel(params), INSFVMomentumResidualObject(*this)
 {
   std::vector<std::string> tagging_params = {
       "vector_tags", "matrix_tags", "extra_vector_tags", "extra_matrix_tags"};
   for (const auto & tparam : tagging_params)
     if (params.isParamSetByUser(tparam))
-      paramError(
-          tparam,
-          "Tagging parameters have no effect if set on an 'INSFVElementalKernel'. Please set '",
-          tparam,
-          "' on the associated Rhie-Chow user-object '",
-          _rc_uo.name(),
-          "' instead.");
+      paramError(tparam,
+                 "Tagging parameters have no effect if set on an 'INSFVFDataKernel'. Please set '",
+                 tparam,
+                 "' on the associated Rhie-Chow user-object '",
+                 _rc_uo.name(),
+                 "' instead.");
 
-  _rc_uo.hasBodyForces(blockRestricted() ? blockIDs() : _mesh.meshSubdomains());
+  _rc_uo.hasFData(blockRestricted() ? blockIDs() : _mesh.meshSubdomains());
 }
