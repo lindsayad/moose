@@ -48,13 +48,7 @@ INSFVRhieChowInterpolator::validParams()
   params.addRequiredParam<VariableName>("u", "The x-component of velocity");
   params.addParam<VariableName>("v", "The y-component of velocity");
   params.addParam<VariableName>("w", "The z-component of velocity");
-  params.addParam<bool>(
-      "standard_body_forces", false, "Whether to just apply non-interpolated body forces");
-  params.addParam<bool>(
-      "standard_f_data",
-      false,
-      "Whether to just apply non-interpolated body forces with velocity, e.g. friction");
-  params.addParam<bool>("add_f_to_a", true, "Whether to add F to A");
+  params.addParam<bool>("standard_body_forces", false, "Whether to just apply normal body forces");
   params.addClassDescription("Performs interpolations and reconstructions of body forces and "
                              "computes face velocities.");
   return params;
@@ -85,13 +79,9 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
     _sub_ids(blockRestricted() ? blockIDs() : _moose_mesh.meshSubdomains()),
     _b(_moose_mesh, _sub_ids),
     _b2(_moose_mesh, _sub_ids),
-    _f(_moose_mesh, _sub_ids),
-    _f2(_moose_mesh, _sub_ids),
     _sys(*getCheckedPointerParam<SystemBase *>("_sys")),
     _example(0),
     _standard_body_forces(getParam<bool>("standard_body_forces")),
-    _standard_f_data(getParam<bool>("standard_f_data")),
-    _add_f_to_a(getParam<bool>("add_f_to_a")),
     _bx(_b, 0),
     _by(_b, 1),
     _bz(_b, 2),
@@ -102,8 +92,7 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
   if (!_p)
     paramError(NS::pressure, "the pressure must be a INSFVPressureVariable.");
 
-  auto fill_container = [this](const auto & name, auto & container)
-  {
+  auto fill_container = [this](const auto & name, auto & container) {
     for (const auto tid : make_range(libMesh::n_threads()))
     {
       auto * const var = static_cast<MooseVariableFVReal *>(
@@ -112,8 +101,7 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
     }
   };
 
-  auto check_blocks = [this](const auto & var)
-  {
+  auto check_blocks = [this](const auto & var) {
     if (blockIDs() != var.blockIDs())
       mooseError("Block restriction of interpolator user object '",
                  this->name(),
@@ -160,8 +148,7 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
   {
     _vel[tid] = std::make_unique<PiecewiseByBlockLambdaFunctor<ADRealVectorValue>>(
         name() + std::to_string(tid),
-        [this, tid](const auto & r, const auto & t) -> ADRealVectorValue
-        {
+        [this, tid](const auto & r, const auto & t) -> ADRealVectorValue {
           ADRealVectorValue velocity((*_us[tid])(r, t));
           if (_dim >= 2)
             velocity(1) = (*_vs[tid])(r, t);
@@ -270,13 +257,11 @@ INSFVRhieChowInterpolator::insfvSetup()
     dof_maps[i] = &sys.get_dof_map();
   }
 
-  auto is_fi_evaluable = [this, &dof_maps](const FaceInfo & fi)
-  {
+  auto is_fi_evaluable = [this, &dof_maps](const FaceInfo & fi) {
     if (!isFaceGeometricallyRelevant(fi))
       return false;
 
-    auto is_elem_evaluable = [&dof_maps](const Elem & elem)
-    {
+    auto is_elem_evaluable = [&dof_maps](const Elem & elem) {
       for (const auto * const dof_map : dof_maps)
         if (!dof_map->is_evaluable(elem))
           return false;
@@ -339,8 +324,6 @@ INSFVRhieChowInterpolator::initialize()
   _a.clear();
   _b.clear();
   _b2.clear();
-  _f.clear();
-  _f2.clear();
 }
 
 void
@@ -376,105 +359,91 @@ void
 INSFVRhieChowInterpolator::finalizeAData()
 {
 #ifdef MOOSE_GLOBAL_AD_INDEXING
-  if (this->n_processors() != 1)
+  if (this->n_processors() == 1)
+    // Easy return for serial case
+    return;
+
+  using Datum = std::pair<dof_id_type, VectorValue<ADReal>>;
+  std::unordered_map<processor_id_type, std::vector<Datum>> push_data;
+  std::unordered_map<processor_id_type, std::vector<dof_id_type>> pull_requests;
+  static const VectorValue<ADReal> example;
+
+  for (auto * const elem : _elements_to_push_pull)
   {
-    using Datum = std::pair<dof_id_type, VectorValue<ADReal>>;
-    std::unordered_map<processor_id_type, std::vector<Datum>> push_data;
-    std::unordered_map<processor_id_type, std::vector<dof_id_type>> pull_requests;
-    static const VectorValue<ADReal> example;
-
-    for (auto * const elem : _elements_to_push_pull)
-    {
-      const auto id = elem->id();
-      const auto pid = elem->processor_id();
-      auto it = _a.find(id);
-      mooseAssert(it != _a.end(), "We definitely should have found something");
-      push_data[pid].push_back(std::make_pair(id, it->second));
-      pull_requests[pid].push_back(id);
-    }
-
-    // First push
-    {
-      auto action_functor =
-          [this](const processor_id_type libmesh_dbg_var(pid), const std::vector<Datum> & sent_data)
-      {
-        mooseAssert(pid != this->processor_id(), "We do not send messages to ourself here");
-        for (const auto & pr : sent_data)
-          _a[pr.first] += pr.second;
-      };
-      TIMPI::push_parallel_vector_data(_communicator, push_data, action_functor);
-    }
-
-    // Then pull
-    {
-      auto gather_functor = [this](const processor_id_type libmesh_dbg_var(pid),
-                                   const std::vector<dof_id_type> & elem_ids,
-                                   std::vector<VectorValue<ADReal>> & data_to_fill)
-      {
-        mooseAssert(pid != this->processor_id(), "We shouldn't be gathering from ourselves.");
-        data_to_fill.resize(elem_ids.size());
-        for (const auto i : index_range(elem_ids))
-        {
-          const auto id = elem_ids[i];
-          auto it = _a.find(id);
-          mooseAssert(it != _a.end(), "We should hold the value for this locally");
-          data_to_fill[i] = it->second;
-        }
-      };
-
-      auto action_functor = [this](const processor_id_type libmesh_dbg_var(pid),
-                                   const std::vector<dof_id_type> & elem_ids,
-                                   const std::vector<VectorValue<ADReal>> & filled_data)
-      {
-        mooseAssert(pid != this->processor_id(),
-                    "The request filler shouldn't have been ourselves");
-        mooseAssert(elem_ids.size() == filled_data.size(), "I think these should be the same size");
-        for (const auto i : index_range(elem_ids))
-        {
-          const auto id = elem_ids[i];
-          auto it = _a.find(id);
-          mooseAssert(it != _a.end(), "We requested this so we must have it in the map");
-          it->second = filled_data[i];
-        }
-      };
-      TIMPI::pull_parallel_vector_data(
-          _communicator, pull_requests, gather_functor, action_functor, &example);
-    }
+    const auto id = elem->id();
+    const auto pid = elem->processor_id();
+    auto it = _a.find(id);
+    mooseAssert(it != _a.end(), "We definitely should have found something");
+    push_data[pid].push_back(std::make_pair(id, it->second));
+    pull_requests[pid].push_back(id);
   }
 
-  if (_add_f_to_a && hasFData())
-    for (auto & map_pr : _a)
-    {
-      auto & elem_a_value = map_pr.second;
-      const auto elem_id = map_pr.first;
-      const auto & value_to_add = libmesh_map_find(_f2, elem_id);
-      elem_a_value += value_to_add;
-    }
+  // First push
+  {
+    auto action_functor = [this](const processor_id_type libmesh_dbg_var(pid),
+                                 const std::vector<Datum> & sent_data) {
+      mooseAssert(pid != this->processor_id(), "We do not send messages to ourself here");
+      for (const auto & pr : sent_data)
+        _a[pr.first] += pr.second;
+    };
+    TIMPI::push_parallel_vector_data(_communicator, push_data, action_functor);
+  }
+
+  // Then pull
+  {
+    auto gather_functor = [this](const processor_id_type libmesh_dbg_var(pid),
+                                 const std::vector<dof_id_type> & elem_ids,
+                                 std::vector<VectorValue<ADReal>> & data_to_fill) {
+      mooseAssert(pid != this->processor_id(), "We shouldn't be gathering from ourselves.");
+      data_to_fill.resize(elem_ids.size());
+      for (const auto i : index_range(elem_ids))
+      {
+        const auto id = elem_ids[i];
+        auto it = _a.find(id);
+        mooseAssert(it != _a.end(), "We should hold the value for this locally");
+        data_to_fill[i] = it->second;
+      }
+    };
+
+    auto action_functor = [this](const processor_id_type libmesh_dbg_var(pid),
+                                 const std::vector<dof_id_type> & elem_ids,
+                                 const std::vector<VectorValue<ADReal>> & filled_data) {
+      mooseAssert(pid != this->processor_id(), "The request filler shouldn't have been ourselves");
+      mooseAssert(elem_ids.size() == filled_data.size(), "I think these should be the same size");
+      for (const auto i : index_range(elem_ids))
+      {
+        const auto id = elem_ids[i];
+        auto it = _a.find(id);
+        mooseAssert(it != _a.end(), "We requested this so we must have it in the map");
+        it->second = filled_data[i];
+      }
+    };
+    TIMPI::pull_parallel_vector_data(
+        _communicator, pull_requests, gather_functor, action_functor, &example);
+  }
 #else
   mooseError("INSFVRhieChowInterpolator only supported for global AD indexing.");
 #endif
 }
 
 void
-INSFVRhieChowInterpolator::computeFirstAndSecondOverBars(MapFunctor & foo,
-                                                         MapFunctor & foo2,
-                                                         const bool interpolate)
+INSFVRhieChowInterpolator::computeFirstAndSecondOverBars()
 {
-  foo2.reserve(_fe_problem.getEvaluableElementRange().size());
+  _b2.reserve(_fe_problem.getEvaluableElementRange().size());
 
-  if (!interpolate)
+  if (_standard_body_forces)
   {
-    for (const auto & pr : foo)
-      foo2[pr.first] = pr.second;
+    for (const auto & pr : _b)
+      _b2[pr.first] = pr.second;
 
     return;
   }
 
-  Moose::FV::interpolateReconstruct(foo2, foo, 1, false, _evaluable_fi, *this);
+  Moose::FV::interpolateReconstruct(_b2, _b, 1, false, _evaluable_fi, *this);
 }
 
 void
-INSFVRhieChowInterpolator::applyFooData(const bool is_b_data)
+INSFVRhieChowInterpolator::applyBData()
 {
   const auto s = _sys.number();
   for (auto * const elem : *_elem_range)
@@ -482,38 +451,9 @@ INSFVRhieChowInterpolator::applyFooData(const bool is_b_data)
     const auto elem_volume = _assembly.elementVolume(elem);
     for (const auto i : index_range(_var_numbers))
     {
-      const auto compute_residual = [this, elem, is_b_data, elem_volume, i]()
-      {
-        if (is_b_data)
-          // Body force term that is not a function of velocity
-          // negative here because we swapped the sign in addToB and so now we need to swap it back
-          return -elem_volume * libmesh_map_find(_b2, elem->id())(i);
-        else
-        {
-          // Body force term that *is* a function of velocity, e.g. friction
-          INSFVVelocityVariable * vel_comp = nullptr;
-          switch (i)
-          {
-            case 0:
-              vel_comp = _u;
-              break;
-            case 1:
-              vel_comp = _v;
-              break;
-            case 2:
-              vel_comp = _w;
-              break;
-            default:
-              mooseError("Invalid component");
-          }
-
-          mooseAssert(vel_comp, "This should be non-null now");
-          return libmesh_map_find(_f2, elem->id())(i) * (*vel_comp)(makeElemArg(elem));
-        }
-      };
-      const auto residual = compute_residual();
-
       const auto vn = _var_numbers[i];
+      // negative here because we swapped the sign in addToB and so now we need to swap it back
+      const auto residual = -elem_volume * _b2[elem->id()](i);
       const auto dof_index = elem->dof_number(s, vn, 0);
 
       if (_fe_problem.currentlyComputingJacobian())
@@ -530,10 +470,7 @@ INSFVRhieChowInterpolator::applyFooData(const bool is_b_data)
 }
 
 void
-INSFVRhieChowInterpolator::finalizeInterpolatedData(MapFunctor & foo,
-                                                    MapFunctor & foo2,
-                                                    const std::set<SubdomainID> & foo_sub_ids,
-                                                    const bool interpolate)
+INSFVRhieChowInterpolator::finalizeBData()
 {
 #ifdef MOOSE_GLOBAL_AD_INDEXING
   // First thing we do is to fill our _b map with 0's for any subdomains that do not have body force
@@ -541,15 +478,15 @@ INSFVRhieChowInterpolator::finalizeInterpolatedData(MapFunctor & foo,
   std::set<SubdomainID> forceless_subs;
   std::set_difference(_sub_ids.begin(),
                       _sub_ids.end(),
-                      foo_sub_ids.begin(),
-                      foo_sub_ids.end(),
+                      _sub_ids_with_body_forces.begin(),
+                      _sub_ids_with_body_forces.end(),
                       std::inserter(forceless_subs, forceless_subs.end()));
   for (const auto & elem : _mesh.active_local_subdomain_set_elements_ptr_range(forceless_subs))
-    foo[elem->id()] = 0;
+    _b[elem->id()] = 0;
 
   if (this->n_processors() > 1)
   {
-    // We do not have to push foo data because all that data should initially be
+    // We do not have to push _b data because all that data should initially be
     // local, e.g. we only loop over active local elements for FVElementalKernels
 
     std::unordered_map<processor_id_type, std::vector<dof_id_type>> pull_requests;
@@ -561,38 +498,39 @@ INSFVRhieChowInterpolator::finalizeInterpolatedData(MapFunctor & foo,
         pull_requests[pid].push_back(elem->id());
     }
 
-    auto gather_functor = [this, &foo](const processor_id_type libmesh_dbg_var(pid),
-                                       const std::vector<dof_id_type> & elem_ids,
-                                       std::vector<VectorValue<ADReal>> & data_to_fill)
-    {
+    auto gather_functor = [this](const processor_id_type libmesh_dbg_var(pid),
+                                 const std::vector<dof_id_type> & elem_ids,
+                                 std::vector<VectorValue<ADReal>> & data_to_fill) {
       mooseAssert(pid != this->processor_id(), "We shouldn't be gathering from ourselves.");
       data_to_fill.resize(elem_ids.size());
       for (const auto i : index_range(elem_ids))
       {
         const auto id = elem_ids[i];
-        data_to_fill[i] = libmesh_map_find(foo, id);
+        data_to_fill[i] = libmesh_map_find(_b, id);
       }
     };
 
-    auto action_functor = [this, &foo](const processor_id_type libmesh_dbg_var(pid),
-                                       const std::vector<dof_id_type> & elem_ids,
-                                       const std::vector<VectorValue<ADReal>> & filled_data)
-    {
+    auto action_functor = [this](const processor_id_type libmesh_dbg_var(pid),
+                                 const std::vector<dof_id_type> & elem_ids,
+                                 const std::vector<VectorValue<ADReal>> & filled_data) {
       mooseAssert(pid != this->processor_id(), "The request filler shouldn't have been ourselves");
       mooseAssert(elem_ids.size() == filled_data.size(), "I think these should be the same size");
       for (const auto i : index_range(elem_ids))
       {
         const auto id = elem_ids[i];
-        foo[id] = filled_data[i];
+        _b[id] = filled_data[i];
       }
     };
     TIMPI::pull_parallel_vector_data(
         _communicator, pull_requests, gather_functor, action_functor, &_example);
   }
 
-  // We can proceed to the overbar operations for foo. We only do the first and second overbars. The
+  // We can proceed to the overbar operations for _b. We only do the first and second overbars. The
   // third overbar is done on the fly when it is requested
-  computeFirstAndSecondOverBars(foo, foo2, interpolate);
+  computeFirstAndSecondOverBars();
+
+  // Add the b data to the residual/Jacobian
+  applyBData();
 #else
   mooseError("INSFVRhieChowInterpolator only supported for global AD indexing.");
 #endif
@@ -601,22 +539,9 @@ INSFVRhieChowInterpolator::finalizeInterpolatedData(MapFunctor & foo,
 void
 INSFVRhieChowInterpolator::finalize()
 {
-  if (hasBodyForces())
-  {
-    finalizeInterpolatedData(_b, _b2, _sub_ids_with_body_forces, !_standard_body_forces);
-    // Add the b data to the residual/Jacobian
-    applyFooData(true);
-  }
-
-  if (hasFData())
-  {
-    finalizeInterpolatedData(_f, _f2, _sub_ids_with_f_data, !_standard_f_data);
-    // Add the f data to the residual/Jacobian after multiplying by the velocity variable value
-    applyFooData(false);
-  }
-
-  // Must occur after we've interpolated F because we are going to add F into A
   finalizeAData();
+  if (hasBodyForces())
+    finalizeBData();
 }
 
 VectorValue<ADReal>
@@ -744,10 +669,4 @@ void
 INSFVRhieChowInterpolator::hasBodyForces(const std::set<SubdomainID> & sub_ids)
 {
   _sub_ids_with_body_forces.insert(sub_ids.begin(), sub_ids.end());
-}
-
-void
-INSFVRhieChowInterpolator::hasFData(const std::set<SubdomainID> & sub_ids)
-{
-  _sub_ids_with_f_data.insert(sub_ids.begin(), sub_ids.end());
 }
