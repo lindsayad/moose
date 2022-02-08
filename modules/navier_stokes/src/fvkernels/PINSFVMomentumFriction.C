@@ -15,7 +15,7 @@ registerMooseObject("NavierStokesApp", PINSFVMomentumFriction);
 InputParameters
 PINSFVMomentumFriction::validParams()
 {
-  InputParameters params = INSFVElementalKernel::validParams();
+  InputParameters params = INSFVBodyForceKernel::validParams();
   params.addClassDescription(
       "Computes a friction force term on fluid in porous media in the "
       "Navier Stokes i-th momentum equation in Rhie-Chow (incompressible) contexts.");
@@ -28,7 +28,7 @@ PINSFVMomentumFriction::validParams()
 }
 
 PINSFVMomentumFriction::PINSFVMomentumFriction(const InputParameters & params)
-  : INSFVElementalKernel(params),
+  : INSFVBodyForceKernel(params),
     _cL(isParamValid("Darcy_name") ? &getFunctor<ADRealVectorValue>("Darcy_name") : nullptr),
     _cQ(isParamValid("Forchheimer_name") ? &getFunctor<ADRealVectorValue>("Forchheimer_name")
                                          : nullptr),

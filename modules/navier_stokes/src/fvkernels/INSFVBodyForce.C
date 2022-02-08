@@ -15,7 +15,7 @@ registerMooseObject("NavierStokesApp", INSFVBodyForce);
 InputParameters
 INSFVBodyForce::validParams()
 {
-  auto params = INSFVElementalKernel::validParams();
+  auto params = INSFVBodyForceKernel::validParams();
   params.addClassDescription("Body force that contributes to the Rhie-Chow interpolation");
   params.addParam<Real>("scaling_factor", 1.0, "Coefficient to multiply by the body force term");
   params.addParam<MooseFunctorName>("functor", "1", "A functor that describes the body force");
@@ -26,7 +26,7 @@ INSFVBodyForce::validParams()
 }
 
 INSFVBodyForce::INSFVBodyForce(const InputParameters & parameters)
-  : INSFVElementalKernel(parameters),
+  : INSFVBodyForceKernel(parameters),
     _scale(getParam<Real>("scaling_factor")),
     _functor(getFunctor<ADReal>("functor")),
     _postprocessor(getPostprocessorValue("postprocessor"))

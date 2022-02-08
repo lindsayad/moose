@@ -15,16 +15,16 @@
 /**
  * An elemental kernel that momentum residual objects that add body forces should inherit from
  */
-class INSFVElementalKernel : public FVElementalKernel, public INSFVMomentumResidualObject
+class INSFVBodyForceKernel : public FVElementalKernel, public INSFVMomentumResidualObject
 {
 public:
   static InputParameters validParams();
-  INSFVElementalKernel(const InputParameters & params);
+  INSFVBodyForceKernel(const InputParameters & params);
 
   using INSFVMomentumResidualObject::gatherRCData;
   void gatherRCData(const FaceInfo &) override final {}
 
-  virtual ~INSFVElementalKernel() = default;
+  virtual ~INSFVBodyForceKernel() = default;
 
   void computeResidual() override final {}
   void computeJacobian() override final {}
@@ -33,7 +33,7 @@ public:
 protected:
   ADReal computeQpResidual() override final
   {
-    mooseError("INSFVElementalKernels must implement gatherRCData and not computeQpResidual");
+    mooseError("INSFVBodyForceKernels must implement gatherRCData and not computeQpResidual");
   }
 
 private:

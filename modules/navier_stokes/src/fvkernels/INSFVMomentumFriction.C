@@ -14,7 +14,7 @@ registerMooseObject("NavierStokesApp", INSFVMomentumFriction);
 InputParameters
 INSFVMomentumFriction::validParams()
 {
-  InputParameters params = INSFVElementalKernel::validParams();
+  InputParameters params = INSFVBodyForceKernel::validParams();
 
   params.addClassDescription("Implements a basic linear or quadratic friction model as "
                              "a volumetric force, for example for the X-momentum equation: "
@@ -34,7 +34,7 @@ INSFVMomentumFriction::validParams()
 }
 
 INSFVMomentumFriction::INSFVMomentumFriction(const InputParameters & parameters)
-  : INSFVElementalKernel(parameters),
+  : INSFVBodyForceKernel(parameters),
     _linear_friction(isParamValid("linear_coef_name") ? &getFunctor<ADReal>("linear_coef_name")
                                                       : nullptr),
     _quadratic_friction(

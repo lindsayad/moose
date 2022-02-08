@@ -9,18 +9,18 @@
 
 #pragma once
 
-#include "INSFVElementalKernel.h"
+#include "INSFVBodyForceKernel.h"
 
 /**
  * Imposes a gravitational force on the momentum equation in Rhie-Chow (incompressible) contexts
  */
-class INSFVMomentumGravity : public INSFVElementalKernel
+class INSFVMomentumGravity : public INSFVBodyForceKernel
 {
 public:
   static InputParameters validParams();
   INSFVMomentumGravity(const InputParameters & params);
 
-  using INSFVElementalKernel::gatherRCData;
+  using INSFVBodyForceKernel::gatherRCData;
   void gatherRCData(const Elem &) override;
 
 protected:

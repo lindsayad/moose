@@ -7,10 +7,10 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "INSFVElementalKernel.h"
+#include "INSFVBodyForceKernel.h"
 
 InputParameters
-INSFVElementalKernel::validParams()
+INSFVBodyForceKernel::validParams()
 {
   auto params = FVElementalKernel::validParams();
   params += INSFVMomentumResidualObject::validParams();
@@ -19,7 +19,7 @@ INSFVElementalKernel::validParams()
   return params;
 }
 
-INSFVElementalKernel::INSFVElementalKernel(const InputParameters & params)
+INSFVBodyForceKernel::INSFVBodyForceKernel(const InputParameters & params)
   : FVElementalKernel(params), INSFVMomentumResidualObject(*this)
 {
   std::vector<std::string> tagging_params = {
@@ -28,7 +28,7 @@ INSFVElementalKernel::INSFVElementalKernel(const InputParameters & params)
     if (params.isParamSetByUser(tparam))
       paramError(
           tparam,
-          "Tagging parameters have no effect if set on an 'INSFVElementalKernel'. Please set '",
+          "Tagging parameters have no effect if set on an 'INSFVBodyForceKernel'. Please set '",
           tparam,
           "' on the associated Rhie-Chow user-object '",
           _rc_uo.name(),

@@ -9,20 +9,20 @@
 
 #pragma once
 
-#include "INSFVElementalKernel.h"
+#include "INSFVBodyForceKernel.h"
 
 /**
  * Implements a linear or quadratic friction term for the momentum equation,
  * for use with Rhie Chow interpolation for weakly and incompressible Navier Stokes equations
  */
-class INSFVMomentumFriction : public INSFVElementalKernel
+class INSFVMomentumFriction : public INSFVBodyForceKernel
 {
 public:
   static InputParameters validParams();
 
   INSFVMomentumFriction(const InputParameters & parameters);
 
-  using INSFVElementalKernel::gatherRCData;
+  using INSFVBodyForceKernel::gatherRCData;
   void gatherRCData(const Elem &) override;
 
 protected:

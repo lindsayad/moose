@@ -9,19 +9,19 @@
 
 #pragma once
 
-#include "INSFVElementalKernel.h"
+#include "INSFVBodyForceKernel.h"
 
 /**
  * Imposes a Boussinesq force on the momentum equation. Useful for modeling natural convection
  * within an incompressible formulation of the Navier-Stokes equations
  */
-class INSFVMomentumBoussinesq : public INSFVElementalKernel
+class INSFVMomentumBoussinesq : public INSFVBodyForceKernel
 {
 public:
   static InputParameters validParams();
   INSFVMomentumBoussinesq(const InputParameters & params);
 
-  using INSFVElementalKernel::gatherRCData;
+  using INSFVBodyForceKernel::gatherRCData;
   void gatherRCData(const Elem &) override;
 
 protected:
