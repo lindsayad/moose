@@ -3420,6 +3420,13 @@ Assembly::cacheResidual()
 void
 Assembly::cacheResidual(dof_id_type dof, Real value, TagID tag_id)
 {
+  const Real scalar =
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+      _scaling_vector ? (*_scaling_vector)(dof) :
+#endif
+                      1.;
+  value *= scalar;
+
   const VectorTag & tag = _subproblem.getVectorTag(tag_id);
 
   _cached_residual_values[tag._type_id].push_back(value);
@@ -3436,22 +3443,9 @@ Assembly::cacheResidual(dof_id_type dof, Real value, const std::set<TagID> & tag
 // swapped argument order from above methods to be consistent with argument order for
 // Assembly::processDerivatives
 void
-Assembly::processResidual(Real value, const dof_id_type dof, const std::set<TagID> & tags)
+Assembly::processResidual(Real value, dof_id_type dof, const std::set<TagID> & tags)
 {
-  const Real scalar =
-#ifdef MOOSE_GLOBAL_AD_INDEXING
-      _scaling_vector ? (*_scaling_vector)(dof) :
-#endif
-                      1.;
-  value *= scalar;
-
-  for (const auto tag_id : tags)
-  {
-    const VectorTag & tag = _subproblem.getVectorTag(tag_id);
-
-    _cached_residual_values[tag._type_id].push_back(value);
-    _cached_residual_rows[tag._type_id].push_back(dof);
-  }
+  cacheResidual(dof, value, tags);
 }
 
 void
