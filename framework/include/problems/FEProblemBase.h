@@ -31,6 +31,7 @@
 #include "PerfGraphInterface.h"
 #include "Attributes.h"
 #include "MooseObjectWarehouse.h"
+#include "MooseCoordTransform.h"
 
 #include "libmesh/enum_quadrature_type.h"
 #include "libmesh/equation_systems.h"
@@ -1982,7 +1983,16 @@ public:
     _computing_scaling_residual = computing_scaling_residual;
   }
 
+  /**
+   * @return whether we are currently computing a residual for automatic scaling purposes
+   */
   bool computingScalingResidual() const override final { return _computing_scaling_residual; }
+
+  /**
+   * @return the coordinate transformation object that describes how to transform this problem's
+   * coordinate system into the canonical/reference coordinate system
+   */
+  MooseCoordTransform & coordTransform() { return _coord_transform; }
 
 protected:
   /// Create extra tagged vectors and matrices
@@ -2329,6 +2339,10 @@ private:
 
   /// Flag used to indicate whether we are computing the scaling Residual
   bool _computing_scaling_residual = false;
+
+  /// A coordinate transformation object that describes how to transform this problem's coordinate
+  /// system into the canonical/reference coordinate system
+  MooseCoordTransform _coord_transform;
 };
 
 using FVProblemBase = FEProblemBase;

@@ -179,6 +179,27 @@ FEProblemBase::validParams()
       "coord_type", coord_types, "Type of the coordinate system per block param");
   params.addParam<MooseEnum>(
       "rz_coord_axis", rz_coord_axis, "The rotation axis (X | Y) for axisymetric coordinates");
+  params.addParam<Real>("length_units_per_meter",
+                        "How many mesh length units are in a meter, e.g. if your mesh units are "
+                        "centimeters, then this parameter value should be 100.");
+  params.addRangeCheckedParam<Real>(
+      "alpha_rotation",
+      "0<=alpha_rotation<360",
+      "The number of degrees this problem's coordinate system is alpha-rotated using the Euler "
+      "angle ZXZ convention from https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix. If "
+      "not provided, then no alpha rotation is assumed");
+  params.addRangeCheckedParam<Real>(
+      "beta_rotation",
+      "0<=beta_rotation<360",
+      "The number of degrees this problem's coordinate system is beta-rotated using the Euler "
+      "angle ZXZ convention from https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix. If "
+      "not provided, then no beta rotation is assumed");
+  params.addRangeCheckedParam<Real>(
+      "gamma_rotation",
+      "0<=gamma_rotation<360",
+      "The number of degrees this problem's coordinate system is gamma-rotated using the Euler "
+      "angle ZXZ convention from https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix. If "
+      "not provided, then no gamma rotation is assumed");
   params.addParam<bool>(
       "kernel_coverage_check", true, "Set to false to disable kernel->subdomain coverage check");
   params.addParam<bool>("material_coverage_check",
@@ -314,7 +335,8 @@ FEProblemBase::FEProblemBase(const InputParameters & parameters)
     _u_dotdot_old_requested(false),
     _has_mortar(false),
     _num_grid_steps(0),
-    _displaced_neighbor_ref_pts("invert_elem_phys use_undisplaced_ref unset", "unset")
+    _displaced_neighbor_ref_pts("invert_elem_phys use_undisplaced_ref unset", "unset"),
+    _coord_transform(parameters)
 {
   //  Initialize static do_derivatives member. We initialize this to true so that all the default AD
   //  things that we setup early in the simulation actually get their derivative vectors initalized.

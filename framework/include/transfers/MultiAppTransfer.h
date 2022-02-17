@@ -19,6 +19,7 @@
 class MultiAppTransfer;
 class MooseMesh;
 class MultiApp;
+class MooseCoordTransform;
 
 template <>
 InputParameters validParams<MultiAppTransfer>();
@@ -68,6 +69,8 @@ protected:
   std::vector<MooseMesh *> _from_meshes;
   std::vector<Point> _to_positions;
   std::vector<Point> _from_positions;
+  std::vector<const MooseCoordTransform *> _to_transforms;
+  std::vector<const MooseCoordTransform *> _from_transforms;
 
   /// True if displaced mesh is used for the source mesh, otherwise false
   bool _displaced_source_mesh;

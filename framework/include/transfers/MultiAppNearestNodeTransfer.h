@@ -18,6 +18,7 @@ namespace libMesh
 {
 class DofObject;
 }
+class MooseCoordTransform;
 
 template <>
 InputParameters validParams<MultiAppNearestNodeTransfer>();
@@ -43,7 +44,12 @@ protected:
    * @param local true if we look at local nodes, otherwise we look at all nodes
    * @return The Node closest to point p.
    */
-  Node * getNearestNode(const Point & p, Real & distance, MooseMesh * mesh, bool local);
+  Node * getNearestNode(const Point & p,
+                        const MooseCoordTransform & p_transform,
+                        Real & distance,
+                        MooseMesh * mesh,
+                        const MooseCoordTransform & mesh_transform,
+                        bool local);
 
   /**
    * Return the distance between the given point and the farthest corner of the

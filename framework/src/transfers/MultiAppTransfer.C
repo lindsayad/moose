@@ -15,6 +15,7 @@
 #include "DisplacedProblem.h"
 #include "MultiApp.h"
 #include "MooseMesh.h"
+#include "MooseCoordTransform.h"
 
 #include "libmesh/parallel_algebra.h"
 #include "libmesh/mesh_tools.h"
@@ -117,32 +118,50 @@ MultiAppTransfer::getAppInfo()
   // when we do collective communication on this vector.
   _local2global_map.clear();
 
+  auto & main_problem = _multi_app->problemBase();
+  const auto & main_transform = main_problem.coordTransform();
+
   // Build the vectors for to problems, from problems, and subapps positions.
   switch (_direction)
   {
     case TO_MULTIAPP:
-      _from_problems.push_back(&_multi_app->problemBase());
+      _from_problems.push_back(&main_problem);
       _from_positions.push_back(Point(0., 0., 0.));
+      _from_transforms.push_back(&main_transform);
       for (unsigned int i_app = 0; i_app < _multi_app->numGlobalApps(); i_app++)
       {
         if (!_multi_app->hasLocalApp(i_app))
           continue;
         _local2global_map.push_back(i_app);
-        _to_problems.push_back(&_multi_app->appProblemBase(i_app));
-        _to_positions.push_back(_multi_app->position(i_app));
+
+        auto & subapp_problem = _multi_app->appProblemBase(i_app);
+        const auto position = _multi_app->position(i_app);
+        auto & subapp_transform = subapp_problem.coordTransform();
+        subapp_transform.setTranslationVector(main_transform(position));
+
+        _to_problems.push_back(&subapp_problem);
+        _to_positions.push_back(position);
+        _to_transforms.push_back(&subapp_transform);
       }
       break;
 
     case FROM_MULTIAPP:
-      _to_problems.push_back(&_multi_app->problemBase());
+      _to_problems.push_back(&main_problem);
       _to_positions.push_back(Point(0., 0., 0.));
       for (unsigned int i_app = 0; i_app < _multi_app->numGlobalApps(); i_app++)
       {
         if (!_multi_app->hasLocalApp(i_app))
           continue;
         _local2global_map.push_back(i_app);
-        _from_problems.push_back(&_multi_app->appProblemBase(i_app));
-        _from_positions.push_back(_multi_app->position(i_app));
+
+        auto & subapp_problem = _multi_app->appProblemBase(i_app);
+        const auto position = _multi_app->position(i_app);
+        auto & subapp_transform = subapp_problem.coordTransform();
+        subapp_transform.setTranslationVector(main_transform(position));
+
+        _from_problems.push_back(&subapp_problem);
+        _from_positions.push_back(position);
+        _from_transforms.push_back(&subapp_transform);
       }
       break;
   }
