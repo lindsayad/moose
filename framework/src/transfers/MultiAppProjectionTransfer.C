@@ -431,8 +431,6 @@ MultiAppProjectionTransfer::execute()
 
       for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
       {
-        Point qpt = xyz[qp];
-
         unsigned int lowest_app_rank = libMesh::invalid_uint;
         for (auto & values_ids : incoming_evals_ids)
         {
