@@ -3354,11 +3354,16 @@ NonlinearSystemBase::setupScalingGrouping()
          ++group_index)
       for (const auto & var_name : _scaling_group_variables[group_index])
       {
-        auto & fe_var = getVariable(/*tid=*/0, var_name);
-        auto map_pair = _var_to_group_var.insert(std::make_pair(fe_var.number(), group_index));
+        if (!hasVariable(var_name) && !hasScalarVariable(var_name))
+          mooseError("'", var_name, "' doesn't exist in the nonlinear system");
+
+        auto & var = hasVariable(var_name)
+                         ? static_cast<MooseVariableBase &>(getVariable(/*tid=*/0, var_name))
+                         : static_cast<MooseVariableBase &>(getScalarVariable(0, var_name));
+        auto map_pair = _var_to_group_var.insert(std::make_pair(var.number(), group_index));
         if (!map_pair.second)
           mooseError("Variable ", var_name, " is contained in multiple scaling grouplings");
-        var_numbers_covered.insert(fe_var.number());
+        var_numbers_covered.insert(var.number());
       }
 
     std::set_difference(var_numbers.begin(),
