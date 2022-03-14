@@ -1,5 +1,6 @@
 mu=.01
 rho=1
+l=.1
 
 [GlobalParams]
   velocity_interp_method = 'rc'
@@ -12,9 +13,9 @@ rho=1
     type = GeneratedMeshGenerator
     dim = 2
     xmin = 0
-    xmax = .1
+    xmax = ${l}
     ymin = 0
-    ymax = .1
+    ymax = ${l}
     nx = 20
     ny = 20
   []
@@ -38,9 +39,10 @@ rho=1
 
 [AuxVariables]
   [U]
-    order = CONSTANT
-    family = MONOMIAL
-    fv = true
+    type = MooseVariableFVReal
+  []
+  [Re]
+    type = MooseVariableFVReal
   []
 []
 
@@ -50,6 +52,13 @@ rho=1
     variable = U
     x = u
     y = v
+  []
+  [Re]
+    type = ReynoldsNumberFunctorAux
+    variable = Re
+    speed = speed
+    rho = ${rho}
+    mu = ${mu}
   []
 []
 
@@ -145,6 +154,12 @@ rho=1
     type = ADGenericFunctorMaterial
     prop_names = 'mu'
     prop_values = '${mu}'
+  []
+  [speed]
+    type = ADVectorMagnitudeFunctorMaterial
+    x_functor = u
+    y_functor = v
+    vector_magnitude_name = speed
   []
 []
 

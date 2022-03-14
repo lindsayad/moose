@@ -3,14 +3,16 @@ rho = 1
 k = 1
 cp = 1
 alpha = 1
-velocity_interp_method = 'rc'
-advected_interp_method = 'upwind'
+advected_interp_method = 'average'
 rayleigh=1e3
 hot_temp=${rayleigh}
+# hot_temp=1
 temp_ref=${fparse hot_temp / 2.}
+l=1e2
 
 [GlobalParams]
   rhie_chow_user_object = 'rc'
+  velocity_interp_method = 'rc'
 []
 
 [UserObjects]
@@ -19,6 +21,11 @@ temp_ref=${fparse hot_temp / 2.}
     u = u
     v = v
     pressure = pressure
+    # mu = 'mu'
+    # rho = 'rho'
+    # gravity = '0 -1 0'
+    # alpha_b = ${alpha}
+    # T_fluid = 'T'
   []
 []
 
@@ -40,16 +47,18 @@ temp_ref=${fparse hot_temp / 2.}
 [Variables]
   [u]
     type = INSFVVelocityVariable
+    initial_condition = 1e-12
   []
   [v]
     type = INSFVVelocityVariable
+    initial_condition = 1e-12
   []
   [pressure]
     type = INSFVPressureVariable
   []
   [T]
     type = INSFVEnergyVariable
-    scaling = 1e-4
+    # scaling = 1e-4
   []
   [lambda]
     family = SCALAR
@@ -122,8 +131,8 @@ temp_ref=${fparse hot_temp / 2.}
     type = INSFVMassAdvection
     variable = pressure
     advected_interp_method = ${advected_interp_method}
-    velocity_interp_method = ${velocity_interp_method}
     rho = ${rho}
+    # velocity_interp_method = 'average'
   []
   [mean_zero_pressure]
     type = FVScalarLagrangeMultiplier
@@ -131,13 +140,19 @@ temp_ref=${fparse hot_temp / 2.}
     lambda = lambda
   []
 
+  [u_time]
+    type = INSFVMomentumTimeDerivative
+    rho = ${rho}
+    momentum_component = 'x'
+    variable = u
+  []
   [u_advection]
     type = INSFVMomentumAdvection
     variable = u
-    velocity_interp_method = ${velocity_interp_method}
     advected_interp_method = ${advected_interp_method}
     rho = ${rho}
     momentum_component = 'x'
+    # velocity_interp_method = 'average'
   []
   [u_viscosity]
     type = INSFVMomentumDiffusion
@@ -168,13 +183,19 @@ temp_ref=${fparse hot_temp / 2.}
     momentum_component = 'x'
   []
 
+  [v_time]
+    type = INSFVMomentumTimeDerivative
+    rho = ${rho}
+    momentum_component = 'y'
+    variable = v
+  []
   [v_advection]
     type = INSFVMomentumAdvection
     variable = v
-    velocity_interp_method = ${velocity_interp_method}
     advected_interp_method = ${advected_interp_method}
     rho = ${rho}
     momentum_component = 'y'
+    # velocity_interp_method = 'average'
   []
   [v_viscosity]
     type = INSFVMomentumDiffusion
@@ -205,6 +226,11 @@ temp_ref=${fparse hot_temp / 2.}
     momentum_component = 'y'
   []
 
+  [temp_time]
+    type = INSFVEnergyTimeDerivative
+    variable = T
+    rho = ${rho}
+  []
   [temp_conduction]
     type = FVDiffusion
     coeff = 'k'
@@ -213,8 +239,8 @@ temp_ref=${fparse hot_temp / 2.}
   [temp_advection]
     type = INSFVEnergyAdvection
     variable = T
-    velocity_interp_method = ${velocity_interp_method}
     advected_interp_method = ${advected_interp_method}
+    # velocity_interp_method = 'average'
   []
 []
 
@@ -248,11 +274,15 @@ temp_ref=${fparse hot_temp / 2.}
   []
 []
 
+[Problem]
+  error_on_jacobian_nonzero_reallocation = false
+[]
+
 [Materials]
   [const_functor]
     type = ADGenericFunctorMaterial
-    prop_names = 'alpha_b cp k'
-    prop_values = '${alpha} ${cp} ${k}'
+    prop_names = 'alpha_b cp k mu rho'
+    prop_values = '${alpha} ${cp} ${k} ${mu} ${rho}'
   []
   [ins_fv]
     type = INSFVEnthalpyMaterial
@@ -268,15 +298,51 @@ temp_ref=${fparse hot_temp / 2.}
   []
 []
 
+[Preconditioning]
+  [smp]
+    type = SMP
+    full = true
+  []
+[]
 
 [Executioner]
-  type = Steady
+  # type = Steady
+  type = Transient
   solve_type = 'NEWTON'
+  # petsc_options = '-pc_svd_monitor'
+  # petsc_options_iname = '-pc_type'
+  # petsc_options_value = 'svd'
   petsc_options_iname = '-pc_type -ksp_gmres_restart -sub_pc_type -sub_pc_factor_shift_type'
   petsc_options_value = 'asm      300                lu           NONZERO'
-  nl_rel_tol = 1e-12
+  nl_rel_tol = 1e-8
+  nl_abs_tol = 1e-7
+  nl_max_its = 10
+  line_search = 'none'
+  l_max_its = 20
+  end_time = 1e9
+  [TimeStepper]
+    type = IterationAdaptiveDT
+    optimal_iterations = 6
+    dt = 1e-3
+    growth_factor = 1.2
+  []
 []
 
 [Outputs]
   exodus = true
+[]
+
+[Postprocessors]
+  [Rayleigh]
+    type = RayleighNumber
+    beta = ${alpha}
+    T_hot = ${hot_temp}
+    T_cold = 0
+    rho_ave = ${rho}
+    l = ${l}
+    mu_ave = ${mu}
+    k_ave = ${k}
+    cp_ave = ${cp}
+    gravity_magnitude = 1
+  []
 []
