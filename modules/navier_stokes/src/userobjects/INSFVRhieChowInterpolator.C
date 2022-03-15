@@ -487,7 +487,7 @@ INSFVRhieChowInterpolator::applyFooData(const bool is_b_data)
         if (is_b_data)
           // Body force term that is not a function of velocity
           // negative here because we swapped the sign in addToB and so now we need to swap it back
-          return -elem_volume * libmesh_map_find(_b2, elem->id())(i);
+          return elem_volume * libmesh_map_find(_b, elem->id())(i);
         else
         {
           // Body force term that *is* a function of velocity, e.g. friction
@@ -531,9 +531,9 @@ INSFVRhieChowInterpolator::applyFooData(const bool is_b_data)
 
 void
 INSFVRhieChowInterpolator::finalizeInterpolatedData(MapFunctor & foo,
-                                                    MapFunctor & foo2,
+                                                    MapFunctor & /*foo2*/,
                                                     const std::set<SubdomainID> & foo_sub_ids,
-                                                    const bool interpolate)
+                                                    const bool /*interpolate*/)
 {
 #ifdef MOOSE_GLOBAL_AD_INDEXING
   // First thing we do is to fill our _b map with 0's for any subdomains that do not have body force
@@ -590,9 +590,9 @@ INSFVRhieChowInterpolator::finalizeInterpolatedData(MapFunctor & foo,
         _communicator, pull_requests, gather_functor, action_functor, &_example);
   }
 
-  // We can proceed to the overbar operations for foo. We only do the first and second overbars. The
-  // third overbar is done on the fly when it is requested
-  computeFirstAndSecondOverBars(foo, foo2, interpolate);
+  // // We can proceed to the overbar operations for foo. We only do the first and second overbars. The
+  // // third overbar is done on the fly when it is requested
+  // computeFirstAndSecondOverBars(foo, foo2, interpolate);
 #else
   mooseError("INSFVRhieChowInterpolator only supported for global AD indexing.");
 #endif
@@ -665,79 +665,65 @@ INSFVRhieChowInterpolator::getVelocity(const Moose::FV::InterpMethod m,
   mooseAssert(neighbor && this->hasBlocks(neighbor->subdomain_id()),
               "We should be on an internal face...");
 
-  // Get pressure gradient. This is the uncorrected gradient plus a correction from cell centroid
-  // values on either side of the face
-  const VectorValue<ADReal> & grad_p = p.adGradSln(fi);
-
-  // Get uncorrected pressure gradient. This will use the element centroid gradient if we are
-  // along a boundary face
-  const VectorValue<ADReal> & unc_grad_p = p.uncorrectedAdGradSln(fi);
-
-  const Point & elem_centroid = fi.elemCentroid();
-  const Point & neighbor_centroid = fi.neighborCentroid();
-  Real elem_volume = fi.elemVolume();
-  Real neighbor_volume = fi.neighborVolume();
-
-  // Now we need to perform the computations of D
-  const VectorValue<ADReal> & elem_a = libmesh_map_find(_a, elem->id());
-
-  mooseAssert(UserObject::_subproblem.getCoordSystem(elem->subdomain_id()) ==
-                  UserObject::_subproblem.getCoordSystem(neighbor->subdomain_id()),
-              "Coordinate systems must be the same between the two elements");
-
-  Real coord;
-  coordTransformFactor(UserObject::_subproblem, elem->subdomain_id(), elem_centroid, coord);
-
-  elem_volume *= coord;
-
-  VectorValue<ADReal> elem_D = 0;
+  // Elem stuff
+  const auto elem_arg = makeElemArg(elem);
+  const auto elem_grad_p = p.gradient(elem_arg);
+  const auto elem_b = _b(elem_arg);
+  const auto elem_pb = elem_grad_p + elem_b;
+  const auto elem_a = libmesh_map_find(_a, elem->id());
+  const auto elem_volume = _assembly.elementVolume(elem);
+  // Project onto the normal
+  ADRealVectorValue elem_projection = (elem_pb * fi.normal()) * elem_volume * fi.normal();
   for (const auto i : make_range(_dim))
-  {
-    mooseAssert(elem_a(i).value() != 0, "We should not be dividing by zero");
-    elem_D(i) = elem_volume / elem_a(i);
-  }
+    elem_projection(i) /= elem_a(i);
 
-  VectorValue<ADReal> face_D;
-
-  const VectorValue<ADReal> & neighbor_a = libmesh_map_find(_a, neighbor->id());
-
-  coordTransformFactor(UserObject::_subproblem, neighbor->subdomain_id(), neighbor_centroid, coord);
-  neighbor_volume *= coord;
-
-  VectorValue<ADReal> neighbor_D = 0;
+  // Neighbor stuff
+  const auto neighbor_arg = makeElemArg(neighbor);
+  const auto neighbor_grad_p = p.gradient(neighbor_arg);
+  const auto neighbor_b = _b(neighbor_arg);
+  const auto neighbor_pb = neighbor_grad_p + neighbor_b;
+  const auto neighbor_a = libmesh_map_find(_a, neighbor->id());
+  const auto neighbor_volume = _assembly.elementVolume(neighbor);
+  // Project onto the normal
+  ADRealVectorValue neighbor_projection =
+      (neighbor_pb * fi.normal()) * neighbor_volume * fi.normal();
   for (const auto i : make_range(_dim))
+    neighbor_projection(i) /= neighbor_a(i);
+
+  const auto compute_face_value = [&fi](const auto & elem_value, const auto & neighbor_value)
   {
-    mooseAssert(neighbor_a(i).value() != 0, "We should not be dividing by zero");
-    neighbor_D(i) = neighbor_volume / neighbor_a(i);
-  }
+    typedef typename std::decay<decltype(elem_value)>::type FaceType;
+    FaceType face_value;
+    Moose::FV::interpolate(
+        Moose::FV::InterpMethod::Average, face_value, elem_value, neighbor_value, fi, true);
+    return face_value;
+  };
 
-  // We require this to ensure that the correct interpolation weights are used.
-  // This will change once the traditional weights are replaced by the weights
-  // that are used by the skewness-correction.
-  Moose::FV::InterpMethod coeff_interp_method = correct_skewness
-                                                    ? Moose::FV::InterpMethod::SkewCorrectedAverage
-                                                    : Moose::FV::InterpMethod::Average;
-  Moose::FV::interpolate(coeff_interp_method, face_D, elem_D, neighbor_D, fi, true);
+  const auto face_rc_linear_interpolation =
+      compute_face_value(elem_projection, neighbor_projection);
 
-  const auto face = Moose::FV::makeCDFace(
-      fi, Moose::FV::faceArgSubdomains(*this, fi), correct_skewness, correct_skewness);
+  const auto elem_center = fi.elemCentroid();
+  const auto neighbor_center = fi.neighborCentroid();
+  const auto face_center = fi.faceCentroid();
 
-  // evaluate face porosity, see (18) in Hanimann 2021 or (11) in Nordlund 2016
-  const auto face_eps = epsilon(tid)(face);
-  const auto b1 = hasBodyForces() ? _b(face) : VectorValue<ADReal>(0);
-  const auto b3 = hasBodyForces() ? _b2(face) : VectorValue<ADReal>(0);
-
-  // Perform the pressure correction. We don't use skewness-correction on the pressure since
-  // it only influences the averaged cell gradients which cancel out in the correction
-  // below.
+  // Zhang notation
+  const auto r_Ee = neighbor_center - face_center;
+  const auto r_Pe = elem_center - face_center;
+  const auto p_E = p(neighbor_arg);
+  const auto p_P = p(elem_arg);
+  const auto scalar_grad_p_e = p_E - p_P;
+  const auto scalar_Be = neighbor_b * r_Ee - elem_b * r_Pe;
+  const auto vector_pb_e =
+      fi.normal() * (scalar_grad_p_e + scalar_Be) / std::abs(fi.dCF() * fi.normal());
+  const auto face_a = compute_face_value(elem_a, neighbor_a);
+  const auto face_volume = compute_face_value(elem_volume, neighbor_volume);
+  ADRealVectorValue face_rc;
   for (const auto i : make_range(_dim))
-  {
-    velocity(i) -= face_D(i) * face_eps * (grad_p(i) - unc_grad_p(i));
-    if (hasBodyForces())
-      velocity(i) += face_D(i) * (b1(i) - b3(i));
-  }
+    face_rc(i) = vector_pb_e(i) * face_volume / face_a(i);
 
-  return velocity;
+  const auto rc_correction = face_rc_linear_interpolation - face_rc;
+
+  return velocity + rc_correction;
 }
 
 void

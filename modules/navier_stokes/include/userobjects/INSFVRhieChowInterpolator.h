@@ -326,8 +326,5 @@ INSFVRhieChowInterpolator::addToB(const Elem * const elem,
   mooseAssert(elem->processor_id() == this->processor_id(), "Sources should be local");
 
   Threads::spin_mutex::scoped_lock lock(_b_mutex);
-  // We have our users write their RC data imagining that they've moved all terms to the LHS, but
-  // the balance in Moukalled assumes that the body forces are on the RHS with positive sign, e.g.
-  // 0 = -\nabla p + \mathbf{B}, so we must apply a minus sign here
-  _b[elem->id()](component) -= value;
+  _b[elem->id()](component) += value;
 }
