@@ -23,16 +23,18 @@ temp_ref=${fparse hot_temp / 2.}
 []
 
 [Mesh]
-  [gen]
-    type = GeneratedMeshGenerator
-    dim = 2
-    xmin = 0
-    xmax = 1
-    ymin = 0
-    ymax = 1
-    nx = 32
-    ny = 32
-  []
+  # [gen]
+  #   type = GeneratedMeshGenerator
+  #   dim = 2
+  #   xmin = 0
+  #   xmax = 1
+  #   ymin = 0
+  #   ymax = 1
+  #   nx = 32
+  #   ny = 32
+  # []
+  file = 'square.msh'
+  uniform_refine = 2
 []
 
 [Variables]
@@ -73,6 +75,9 @@ temp_ref=${fparse hot_temp / 2.}
     order = FIRST
     family = MONOMIAL
   []
+  [skew]
+    type = MooseVariableFVReal
+  []
 []
 
 [AuxKernels]
@@ -103,6 +108,12 @@ temp_ref=${fparse hot_temp / 2.}
     function = 'T'
     execute_on = 'initial timestep_end'
     args = 'T'
+  []
+  [skew]
+    type = ElementQualityAux
+    metric = 'skew'
+    execute_on = 'initial timestep_end'
+    variable = skew
   []
 []
 
@@ -208,17 +219,10 @@ temp_ref=${fparse hot_temp / 2.}
 []
 
 [FVBCs]
-  [top_x]
-    type = INSFVNoSlipWallBC
-    variable = u
-    boundary = 'top'
-    function = 'lid_function'
-  []
-
   [no_slip_x]
     type = INSFVNoSlipWallBC
     variable = u
-    boundary = 'left right bottom'
+    boundary = 'left right top bottom'
     function = 0
   []
 
