@@ -129,6 +129,9 @@ extern const ExecFlagType EXEC_PRE_MULTIAPP_SETUP;
 extern const ExecFlagType EXEC_TRANSFER;
 extern const ExecFlagType EXEC_PRE_KERNELS;
 extern const ExecFlagType EXEC_ALWAYS;
+extern const ExecFlagType EXEC_FIXED_POINT_INITIAL;
+extern const ExecFlagType EXEC_FIXED_POINT_POST_TIMESTEP_BEGIN;
+extern const ExecFlagType EXEC_FIXED_POINT_POST_TIMESTEP_BEGIN_AGAIN;
 namespace Moose
 {
 

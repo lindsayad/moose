@@ -253,6 +253,15 @@ FixedPointSolve::solve()
           else
             _console << std::scientific << _fixed_point_initial_norm;
           _console << COLOR_DEFAULT << "\n" << std::endl;
+          if (_problem.timeStep() == 9)
+          {
+            auto & nl = _problem.getNonlinearSystemBase();
+            nl.associateVectorToTag(nl.getResidualNonTimeVector(), nl.residualVectorTag());
+            _console << "About to write exodus for initial fixed point residual" << std::endl;
+            _problem.execute(EXEC_FIXED_POINT_INITIAL);
+            _problem.outputStep(EXEC_FIXED_POINT_INITIAL);
+            nl.disassociateVectorFromTag(nl.getResidualNonTimeVector(), nl.residualVectorTag());
+          }
         }
       }
       else
@@ -361,6 +370,8 @@ FixedPointSolve::solveStep(Real & begin_norm,
     _problem.updateMeshXFEM();
 
   _problem.execute(EXEC_TIMESTEP_BEGIN);
+  if (_problem.timeStep() == 9 && _fixed_point_it == 0)
+    _problem.outputStep(EXEC_FIXED_POINT_POST_TIMESTEP_BEGIN);
 
   // Transform the fixed point postprocessors before solving, but after the timestep_begin transfers
   // have been received
@@ -377,6 +388,19 @@ FixedPointSolve::solveStep(Real & begin_norm,
 
       _console << COLOR_MAGENTA << "Fixed point residual norm after TIMESTEP_BEGIN MultiApps: "
                << Console::outputNorm(begin_norm_old, begin_norm) << std::endl;
+      if (_problem.timeStep() == 9 && _fixed_point_it == 0)
+      {
+        auto & nl = _problem.getNonlinearSystemBase();
+        _console << "About to write exodus for first execution after timestep-begin multiapps"
+                 << std::endl;
+
+        // Do it again
+        _problem.computeResidualL2Norm();
+        nl.associateVectorToTag(nl.getResidualNonTimeVector(), nl.residualVectorTag());
+        _problem.execute(EXEC_FIXED_POINT_POST_TIMESTEP_BEGIN_AGAIN);
+        _problem.outputStep(EXEC_FIXED_POINT_POST_TIMESTEP_BEGIN_AGAIN);
+        nl.disassociateVectorFromTag(nl.getResidualNonTimeVector(), nl.residualVectorTag());
+      }
     }
 
   // Perform output for timestep begin

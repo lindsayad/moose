@@ -964,7 +964,10 @@ getDefaultExecFlagEnum()
                               EXEC_TIMESTEP_BEGIN,
                               EXEC_FINAL,
                               EXEC_CUSTOM,
-                              EXEC_ALWAYS);
+                              EXEC_ALWAYS,
+                              EXEC_FIXED_POINT_INITIAL,
+                              EXEC_FIXED_POINT_POST_TIMESTEP_BEGIN,
+                              EXEC_FIXED_POINT_POST_TIMESTEP_BEGIN_AGAIN);
   return exec_enum;
 }
 

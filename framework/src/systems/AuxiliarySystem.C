@@ -26,9 +26,10 @@
 
 #include "libmesh/quadrature_gauss.h"
 #include "libmesh/node_range.h"
-#include "libmesh/numeric_vector.h"
+#include "libmesh/petsc_vector.h"
 #include "libmesh/default_coupling.h"
 #include "libmesh/string_to_enum.h"
+#include <petscvec.h>
 
 // AuxiliarySystem ////////
 
@@ -414,6 +415,15 @@ AuxiliarySystem::serializeSolution()
 void
 AuxiliarySystem::compute(ExecFlagType type)
 {
+  std::unique_ptr<NumericVector<Number>> copy;
+  if (type == EXEC_TIMESTEP_BEGIN && _fe_problem.timeStep() == 9 && _app.multiAppLevel() == 0)
+  {
+    copy = solution().clone();
+    Vec petsc_vec_copy = static_cast<PetscVector<Number> *>(copy.get())->vec();
+    auto ierr = VecCopy(static_cast<PetscVector<Number> &>(solution()).vec(), petsc_vec_copy);
+    LIBMESH_CHKERR(ierr);
+  }
+
   // avoid division by dt which might be zero.
   if (_fe_problem.dt() > 0. && _time_integrator)
     _time_integrator->preStep();
@@ -447,6 +457,15 @@ AuxiliarySystem::compute(ExecFlagType type)
     // compute time derivatives of nodal aux variables _after_ the values were updated
     if (_fe_problem.dt() > 0. && _time_integrator)
       _time_integrator->computeTimeDerivatives();
+  }
+
+  if (type == EXEC_TIMESTEP_BEGIN && _fe_problem.timeStep() == 9 && _app.multiAppLevel() == 0)
+  {
+    PetscBool equal;
+    auto ierr = VecEqual(static_cast<PetscVector<Number> &>(solution()).vec(),
+                         static_cast<PetscVector<Number> *>(copy.get())->vec(),
+                         &equal);
+    Moose::out << "Aux system vector compares " << equal << "\n";
   }
 
   if (_need_serialized_solution)
