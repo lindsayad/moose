@@ -806,6 +806,12 @@ FEProblemBase::initialSetup()
         _interface_materials.sort(tid);
       }
     }
+    std::vector<std::string> material_names;
+    const auto & mats = _materials.getObjects();
+    for (const auto & mat : mats)
+      material_names.push_back(mat->name());
+    Moose::out << "Sorted materials are '" << MooseUtils::join(material_names, ", ") << "'\n";
+    Moose::out.flush();
 
     {
       TIME_SECTION("computingInitialStatefulProps", 3, "Computing Initial Material Values");
