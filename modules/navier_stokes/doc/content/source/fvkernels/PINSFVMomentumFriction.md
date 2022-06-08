@@ -7,15 +7,21 @@ Forchheimer friction models:
 
 Darcy drag model
 \begin{equation}
-F_i = - f_i \frac{\rho v_i}{\epsilon}
+\epsilon F_i = - f_i \frac{\rho v_i}{\epsilon}
 \end{equation}
 Forchheimer drag model
 \begin{equation}
-F_i = - f_i \frac{\rho v_i}{\epsilon}
+\epsilon F_i = - f_i \frac{\rho v_i}{\epsilon}
 \end{equation}
-where $F_i$ is the i-th component of the friction force, f the friction factor, which may be anisotropic,
-$\epsilon$ the porosity and $\rho$ the fluid density and $v_i$ the fluid
-superficial velocity. Though the functional forms above are identical and their
+where $F_i$ is the i-th component of the friction force (denoted by $\mathbf{F_f}$ in [!eqref](pinsfv.md#eq:pinsfv_mom)), $f_i$ the friction factor, which may be anisotropic,
+$\epsilon$ the porosity and $\rho$ the fluid density and $v_i$ the i-th
+component of the fluid
+superficial velocity. We have used a negative sign to match the notation used in
+[!eqref](pinsfv.md#eq:pinsfv_mom) where the friction force is on the
+right-hand-side of the equation. When moved to the left-hand side, which is done
+when setting up a Newton scheme, the term becomes positive which is what is
+shown in the source code itself.
+Though the functional forms above are identical and their
 treatment in this kernel is identical, there is a fundamental conceptual
 difference. Darcy is meant to represent viscous effects and should
 have a linear dependence on the fluid velocity, whereas Forchheimer is meant to
@@ -37,14 +43,14 @@ the equation through by $L$, multiply the equation through by $\epsilon$, and do
 some term manipulation in order to yield:
 
 \begin{equation}
-\epsilon \nabla p = 150 \frac{\mu\epsilon}{\rho} \frac{1-\epsilon}{\epsilon d_p}^2 \frac{\rho v_i}{\epsilon} + 1.75 \frac{1-\epsilon}{\epsilon d_p} |\vec{v}| \frac{\rho v_i}{\epsilon}
+0 = -\epsilon \nabla p + \left(-150 \frac{\mu\epsilon}{\rho} \frac{1-\epsilon}{\epsilon d_p}^2 \frac{\rho v_i}{\epsilon} - 1.75 \frac{1-\epsilon}{\epsilon d_p} |\vec{v}| \frac{\rho v_i}{\epsilon}\right)
 \end{equation}
 
 If we define the hydraulic diameter as $D_h = \frac{\epsilon d_p}{1 -
 \epsilon}$, then the above equation can be rewritten as:
 
 \begin{equation}
-\epsilon \nabla p = 150 \frac{\mu\epsilon}{\rho} \frac{1}{D_h^2} \frac{\rho v_i}{\epsilon} + 1.75 \frac{1}{D_h} |\vec{v}| \frac{\rho v_i}{\epsilon}
+0 = -\epsilon \nabla p + \left(-150 \frac{\mu\epsilon}{\rho} \frac{1}{D_h^2} \frac{\rho v_i}{\epsilon} - 1.75 \frac{1}{D_h} |\vec{v}| \frac{\rho v_i}{\epsilon}\right)
 \end{equation}
 
 From this equation we can see that the Darcy coefficient is computed via

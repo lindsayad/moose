@@ -15,6 +15,7 @@ Mass equation:
 Momentum equation, with friction and gravity force as example forces:
 \begin{equation}
 \dfrac{\partial \rho \mathbf{v}_D}{\partial t} + \nabla \cdot (\dfrac{\rho}{\epsilon} \mathbf{v}_D \otimes \mathbf{v}_D) = \nabla \cdot (\mu \nabla \dfrac{\mathbf{v}_D}{\epsilon}) - \epsilon \nabla p + \epsilon (\mathbf{F}_g + \mathbf{F}_f)
+\label{eq:pinsfv_mom}
 \end{equation}
 
 Fluid phase energy equation, with a convective heat transfer term:
