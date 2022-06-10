@@ -89,6 +89,7 @@ LinearNodalConstraint::LinearNodalConstraint(const InputParameters & parameters)
     for (const auto & elem_id : elems)
       _subproblem.addGhostedElem(elem_id);
   }
+  const_cast<InputParameters &>(_pars).clear();
 }
 
 Real
