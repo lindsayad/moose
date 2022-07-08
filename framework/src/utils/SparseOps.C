@@ -8,7 +8,3 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "SparseOps.h"
-
-#ifdef MOOSE_SPARSE_AD
-thread_local SharedPool<DynamicSparseNumberArray<Real, libMesh::dof_id_type>> ad_derivatives_pool;
-#endif

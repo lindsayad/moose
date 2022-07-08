@@ -49,7 +49,9 @@ using MetaPhysicL::SharedPool;
 
 #ifdef MOOSE_SPARSE_AD
 
-typedef PoolDynamicSparseNumberArray<Real, libMesh::dof_id_type> DNDerivativeType;
+typedef DynamicSparseNumberArray<Real, libMesh::dof_id_type> DNDerivativeType;
+template <std::size_t>
+using DNDerivativeSize = DNDerivativeType;
 
 #else
 

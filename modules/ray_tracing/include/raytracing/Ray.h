@@ -15,6 +15,7 @@
 // MOOSE includes
 #include "MooseError.h"
 #include "MooseTypes.h"
+#include "SharedPool.h"
 
 // libMesh Includes
 #include "libmesh/parallel.h"
@@ -32,12 +33,6 @@ class TestRayLots;
 class RayBoundaryConditionBase;
 // Friend access to ChangeStartDirectionKey for accessing changeStartDirection()
 class RayKernelBase;
-// Friend access to NonResetCountersKey for accessing constructor/reset without counter reset
-namespace MooseUtils
-{
-template <class T>
-class SharedPool;
-}
 
 /// Type for a Ray's ID
 typedef unsigned long int RayID;

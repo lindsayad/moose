@@ -11,7 +11,7 @@
 
 #include "MooseError.h"
 #include "DualReal.h"
-#include "metaphysicl/dual_pool_dynamicsparsenumberarray.h"
+#include "metaphysicl/dualdynamicsparsenumberarray.h"
 #include "metaphysicl/metaphysicl_exceptions.h"
 
 #ifdef MOOSE_SPARSE_AD
@@ -32,18 +32,6 @@ derivInsert(DNDerivativeType & derivs, libMesh::dof_id_type index, Real value)
 #else
   derivs.insert(index) = value;
 #endif
-}
-}
-
-extern thread_local SharedPool<DynamicSparseNumberArray<Real, libMesh::dof_id_type>>
-    ad_derivatives_pool;
-namespace MetaPhysicL
-{
-template <>
-inline SharedPool<DynamicSparseNumberArray<Real, libMesh::dof_id_type>> &
-getPool()
-{
-  return ad_derivatives_pool;
 }
 }
 #endif
