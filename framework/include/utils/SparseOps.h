@@ -10,16 +10,15 @@
 #pragma once
 
 #include "MooseError.h"
-#include "metaphysicl/dualsemidynamicsparsenumberarray.h"
+#include "DualReal.h"
+#include "metaphysicl/dual_pool_dynamicsparsenumberarray.h"
 #include "metaphysicl/metaphysicl_exceptions.h"
 
+#ifdef MOOSE_SPARSE_AD
 namespace Moose
 {
-template <std::size_t N>
 inline void
-derivInsert(SemiDynamicSparseNumberArray<Real, libMesh::dof_id_type, NWrapper<N>> & derivs,
-            libMesh::dof_id_type index,
-            Real value)
+derivInsert(DNDerivativeType & derivs, libMesh::dof_id_type index, Real value)
 {
 #ifndef NDEBUG
   try
@@ -28,12 +27,22 @@ derivInsert(SemiDynamicSparseNumberArray<Real, libMesh::dof_id_type, NWrapper<N>
   }
   catch (MetaPhysicL::LogicError &)
   {
-    mooseError("The last insertion into the sparse derivative storage container exceeded the "
-               "underlying array size. Consider running `configure --with-derivative-size=<n>` to "
-               "obtain a larger underlying container");
+    mooseError("We should have unlimited container size");
   }
 #else
   derivs.insert(index) = value;
 #endif
 }
 }
+
+extern SharedPool<DynamicSparseNumberArray<Real, libMesh::dof_id_type>> ad_derivatives_pool;
+namespace MetaPhysicL
+{
+template <>
+inline SharedPool<DynamicSparseNumberArray<Real, libMesh::dof_id_type>> &
+getPool()
+{
+  return ad_derivatives_pool;
+}
+}
+#endif

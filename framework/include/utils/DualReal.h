@@ -26,27 +26,30 @@ class DualNumber;
 #endif
 template <typename, typename, typename>
 class SemiDynamicSparseNumberArray;
+template <typename, typename>
+class PoolDynamicSparseNumberArray;
+template <typename, typename>
+class DynamicSparseNumberArray;
 template <std::size_t, typename>
 class NumberArray;
 template <std::size_t N>
 struct NWrapper;
+template <typename>
+class SharedPool;
 }
 
 using libMesh::Real;
 using MetaPhysicL::DualNumber;
+using MetaPhysicL::DynamicSparseNumberArray;
 using MetaPhysicL::NumberArray;
 using MetaPhysicL::NWrapper;
+using MetaPhysicL::PoolDynamicSparseNumberArray;
 using MetaPhysicL::SemiDynamicSparseNumberArray;
+using MetaPhysicL::SharedPool;
 
 #ifdef MOOSE_SPARSE_AD
 
-typedef SemiDynamicSparseNumberArray<Real,
-                                     libMesh::dof_id_type,
-                                     NWrapper<MOOSE_AD_MAX_DOFS_PER_ELEM>>
-    DNDerivativeType;
-
-template <std::size_t N>
-using DNDerivativeSize = SemiDynamicSparseNumberArray<Real, libMesh::dof_id_type, NWrapper<N>>;
+typedef PoolDynamicSparseNumberArray<Real, libMesh::dof_id_type> DNDerivativeType;
 
 #else
 

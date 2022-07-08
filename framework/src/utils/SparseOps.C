@@ -7,11 +7,8 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#pragma once
+#include "SparseOps.h"
 
-#include "metaphysicl/shared_pool.h"
-
-namespace MooseUtils
-{
-using MetaPhysicL::SharedPool;
-}
+#ifdef MOOSE_SPARSE_AD
+SharedPool<DynamicSparseNumberArray<Real, libMesh::dof_id_type>> ad_derivatives_pool;
+#endif
