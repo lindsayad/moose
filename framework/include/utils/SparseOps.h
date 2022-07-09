@@ -35,7 +35,8 @@ derivInsert(DNDerivativeType & derivs, libMesh::dof_id_type index, Real value)
 }
 }
 
-extern SharedPool<DynamicSparseNumberArray<Real, libMesh::dof_id_type>> ad_derivatives_pool;
+extern thread_local SharedPool<DynamicSparseNumberArray<Real, libMesh::dof_id_type>>
+    ad_derivatives_pool;
 namespace MetaPhysicL
 {
 template <>

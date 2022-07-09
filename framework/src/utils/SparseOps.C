@@ -10,5 +10,5 @@
 #include "SparseOps.h"
 
 #ifdef MOOSE_SPARSE_AD
-SharedPool<DynamicSparseNumberArray<Real, libMesh::dof_id_type>> ad_derivatives_pool;
+thread_local SharedPool<DynamicSparseNumberArray<Real, libMesh::dof_id_type>> ad_derivatives_pool;
 #endif
