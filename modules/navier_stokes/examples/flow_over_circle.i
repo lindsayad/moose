@@ -2,11 +2,13 @@ mu=7e-4
 rho=1
 velocity_interp_method = 'rc'
 advected_interp_method = 'upwind'
+
 [GlobalParams]
   rhie_chow_user_object = 'rc'
 []
+
 [Mesh]
-  [./ccmg]
+  [ccmg]
     type = ConcentricCircleMeshGenerator
     num_sectors = 6
     radii = '0.2546 0.3368'
@@ -17,15 +19,9 @@ advected_interp_method = 'upwind'
     preserve_volumes = off
     smoothing_max_it = 3
   []
-  [side_sets_inlet]
-      type = SideSetsFromNormalsGenerator
-      input = ccmg
-      normals = '1 0 0'
-      new_boundary = '100'
-  []
   [rename_left]
     type = RenameBoundaryGenerator
-    input = side_sets_inlet
+    input = ccmg
     old_boundary = 'left'
     new_boundary = '101'
   []
@@ -43,38 +39,20 @@ advected_interp_method = 'upwind'
     transform = translate
     vector_value = '-5.5 -0.5 0'
   []
-  [side_sets_outlet]
-      type = SideSetsFromNormalsGenerator
-      input = move_it
-      normals = '-1 0 0'
-      new_boundary = '1000'
-  []
   [rename_right]
     type = RenameBoundaryGenerator
-    input = side_sets_outlet
+    input = move_it
     old_boundary = 'right'
-    new_boundary = '1001'
+    new_boundary = '102'
   []
   [stitch]
     type = StitchedMeshGenerator
     inputs = 'rename_left rename_right'
-    stitch_boundaries_pairs = '101 1001'
-  []
-  [side_sets_no_slip_top]
-    type = SideSetsFromNormalsGenerator
-    input = stitch
-    normals = '0 1 0'
-    new_boundary = 'no_slip_top'
-  []
-  [side_sets_no_slip_bottom]
-    type = SideSetsFromNormalsGenerator
-    input = side_sets_no_slip_top
-    normals = '0 -1 0'
-    new_boundary = 'no_slip_bottom'
+    stitch_boundaries_pairs = '101 102'
   []
   [in_between]
     type = SideSetsBetweenSubdomainsGenerator
-    input = side_sets_no_slip_bottom
+    input = stitch
     primary_block = 2
     paired_block = 1
     new_boundary = 'no_circle'
@@ -84,17 +62,101 @@ advected_interp_method = 'upwind'
     input = in_between
     block = '1'
   []
-  [rename_inlet]
-    type = RenameBoundaryGenerator
+  [create_fused_top_sideset]
     input = delete
-    old_boundary = '100'
-    new_boundary = 'inlet'
+    type = ParsedGenerateSideset
+    combinatorial_geometry = 'y > 0.49'
+    normal = '0 1 0'
+    new_sideset_name = 103
   []
-  [rename_outlet]
+  [top_left_block]
+    type = GeneratedMeshGenerator
+    xmin = -5.5
+    xmax = -0.5
+    ymin = 0.5
+    ymax = ${fparse 0.5 + 2. / 16.}
+    nx = 20
+    ny = 2
+    dim = 2
+  []
+  [rename_top_left_block]
+    input = top_left_block
+    type = RenameBlockGenerator
+    old_block = '0'
+    new_block = '100'
+  []
+  [rename_right_2]
+    input = rename_top_left_block
     type = RenameBoundaryGenerator
-    input = rename_inlet
-    old_boundary = '1000'
-    new_boundary = 'outlet'
+    old_boundary = 'right'
+    new_boundary = '104'
+  []
+  [top_right_block]
+    type = GeneratedMeshGenerator
+    xmin = -0.5
+    xmax = 0.5
+    ymin = 0.5
+    ymax = ${fparse 0.5 + 2. / 16.}
+    nx = 16
+    ny = 2
+    dim = 2
+  []
+  [rename_top_right_block]
+    input = top_right_block
+    type = RenameBlockGenerator
+    old_block = '0'
+    new_block = '101'
+  []
+  [rename_left_2]
+    input = rename_top_right_block
+    type = RenameBoundaryGenerator
+    old_boundary = 'left'
+    new_boundary = '105'
+  []
+  [stitch_2]
+    inputs = 'rename_right_2 rename_left_2'
+    type = StitchedMeshGenerator
+    stitch_boundaries_pairs = '104 105'
+  []
+  [create_fused_bottom_sideset]
+    input = stitch_2
+    type = ParsedGenerateSideset
+    combinatorial_geometry = 'y < 0.51'
+    normal = '0 -1 0'
+    new_sideset_name = 106
+  []
+  [stitch_3]
+    inputs = 'create_fused_top_sideset create_fused_bottom_sideset'
+    type = StitchedMeshGenerator
+    stitch_boundaries_pairs = '103 106'
+  []
+  [no_slip_top]
+    input = stitch_3
+    type = ParsedGenerateSideset
+    combinatorial_geometry = 'y > .615'
+    normal = '0 1 0'
+    new_sideset_name = 'no_slip_top'
+  []
+  [no_slip_bottom]
+    input = no_slip_top
+    type = ParsedGenerateSideset
+    combinatorial_geometry = 'y < -0.49'
+    normal = '0 -1 0'
+    new_sideset_name = 'no_slip_bottom'
+  []
+  [inlet]
+    input = no_slip_bottom
+    type = ParsedGenerateSideset
+    combinatorial_geometry = 'x > 0.49'
+    normal = '1 0 0'
+    new_sideset_name = 'inlet'
+  []
+  [outlet]
+    input = inlet
+    type = ParsedGenerateSideset
+    combinatorial_geometry = 'x < -5.49'
+    normal = '-1 0 0'
+    new_sideset_name = 'outlet'
   []
   uniform_refine = 2
 []
@@ -222,26 +284,26 @@ advected_interp_method = 'upwind'
 []
 
 [Functions]
-  [./inlet_func]
+  [inlet_func]
     type = ParsedFunction
     value = '-1'
-  [../]
+  []
 []
 
 [Materials]
-  [./const]
+  [const]
     type = GenericConstantMaterial
     prop_names = 'rho mu'
     prop_values = '${rho}  ${mu}'
-  [../]
+  []
 []
 
 [Preconditioning]
-  [./SMP] #What is PJFNK
+  [SMP]
     type = SMP
     full = true
     solve_type = 'NEWTON'
-  [../]
+  []
 []
 
 [Executioner]
@@ -264,7 +326,7 @@ advected_interp_method = 'upwind'
 []
 
 [Outputs]
-    exodus = true
-    csv = true
-    checkpoint = true
+  exodus = true
+  csv = true
+  checkpoint = true
 []
