@@ -1,7 +1,7 @@
-mu=7e-4
+mu=1e-3
 rho=1
 velocity_interp_method = 'rc'
-advected_interp_method = 'upwind'
+advected_interp_method = 'average'
 
 [GlobalParams]
   rhie_chow_user_object = 'rc'
@@ -30,7 +30,7 @@ advected_interp_method = 'upwind'
     dim = 2
     dx = '5'
     dy = '1'
-    ix = '20'
+    ix = '100'
     iy = '16'
   []
   [move_it]
@@ -75,7 +75,7 @@ advected_interp_method = 'upwind'
     xmax = -0.5
     ymin = 0.5
     ymax = ${fparse 0.5 + 2. / 16.}
-    nx = 20
+    nx = 100
     ny = 2
     dim = 2
   []
@@ -273,7 +273,7 @@ advected_interp_method = 'upwind'
     type = INSFVInletVelocityBC
     variable = vel_y
     boundary = 'inlet'
-    function = '1e-3 * exp(-t/60) * sin(t)'
+    function = '1e-1 * exp(-t/10) * sin(t)'
   []
   [outlet_p]
     type = INSFVOutletPressureBC
@@ -316,7 +316,9 @@ advected_interp_method = 'upwind'
   nl_rel_tol = 1e-8
   nl_abs_tol = 1e-12
   nl_max_its = 10
-  end_time = 100
+  end_time = 50
+  dtmax = 1
+  scheme = 'bdf2'
   [TimeStepper]
     type = IterationAdaptiveDT
     dt = 1e-5
@@ -329,4 +331,14 @@ advected_interp_method = 'upwind'
   exodus = true
   csv = true
   checkpoint = true
+[]
+
+[Postprocessors]
+  [Re]
+    type = ParsedPostprocessor
+    function = 'rho * U * D / mu'
+    constant_names = 'rho U D mu'
+    constant_expressions = '${rho} 1 ${fparse 2 * .2546} ${mu}'
+    pp_names = ''
+  []
 []
