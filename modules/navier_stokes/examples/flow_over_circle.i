@@ -15,7 +15,6 @@ advected_interp_method = 'average'
     rings = '4 3 4'
     has_outer_square = on
     pitch = 1
-    #portion = left_half
     preserve_volumes = off
     smoothing_max_it = 3
   []
@@ -26,22 +25,18 @@ advected_interp_method = 'average'
     new_boundary = '101'
   []
   [left]
-    type = CartesianMeshGenerator
+    type = GeneratedMeshGenerator
     dim = 2
-    dx = '5'
-    dy = '1'
-    ix = '100'
-    iy = '16'
-  []
-  [move_it]
-    type = TransformGenerator
-    input = left
-    transform = translate
-    vector_value = '-5.5 -0.5 0'
+    xmin = -4.5
+    xmax = -0.5
+    ymin = -0.5
+    ymax = 0.5
+    nx = '80'
+    ny = '16'
   []
   [rename_right]
     type = RenameBoundaryGenerator
-    input = move_it
+    input = left
     old_boundary = 'right'
     new_boundary = '102'
   []
@@ -71,11 +66,11 @@ advected_interp_method = 'average'
   []
   [top_left_block]
     type = GeneratedMeshGenerator
-    xmin = -5.5
+    xmin = -4.5
     xmax = -0.5
     ymin = 0.5
     ymax = ${fparse 0.5 + 2. / 16.}
-    nx = 100
+    nx = 80
     ny = 2
     dim = 2
   []
@@ -130,8 +125,56 @@ advected_interp_method = 'average'
     type = StitchedMeshGenerator
     stitch_boundaries_pairs = '103 106'
   []
-  [no_slip_top]
+  [fused_right]
     input = stitch_3
+    type = ParsedGenerateSideset
+    combinatorial_geometry = 'x > 0.49'
+    normal = '1 0 0'
+    new_sideset_name = 107
+  []
+  [inlet_block]
+    type = GeneratedMeshGenerator
+    nx = 40
+    ny = 18
+    dim = 2
+    ymin = -0.5
+    ymax = ${fparse 0.5 + 2. / 16.}
+    xmin = 0.5
+    xmax = 2.5
+  []
+  [rename_left_3]
+    input = inlet_block
+    type = RenameBoundaryGenerator
+    old_boundary = 'left'
+    new_boundary = '108'
+  []
+  [rename_inlet_block]
+    input = rename_left_3
+    type = RenameBlockGenerator
+    old_block = '0'
+    new_block = '102'
+  []
+  [stitch_4]
+    inputs = 'rename_inlet_block fused_right'
+    type = StitchedMeshGenerator
+    stitch_boundaries_pairs = '108 107'
+  []
+  [inlet]
+    input = stitch_4
+    combinatorial_geometry = 'x > 2.49'
+    normal = '1 0 0'
+    new_sideset_name = 'inlet'
+    type = ParsedGenerateSideset
+  []
+  [outlet]
+    input = inlet
+    type = ParsedGenerateSideset
+    combinatorial_geometry = 'x < -4.49'
+    normal = '-1 0 0'
+    new_sideset_name = 'outlet'
+  []
+  [no_slip_top]
+    input = outlet
     type = ParsedGenerateSideset
     combinatorial_geometry = 'y > .615'
     normal = '0 1 0'
@@ -143,20 +186,6 @@ advected_interp_method = 'average'
     combinatorial_geometry = 'y < -0.49'
     normal = '0 -1 0'
     new_sideset_name = 'no_slip_bottom'
-  []
-  [inlet]
-    input = no_slip_bottom
-    type = ParsedGenerateSideset
-    combinatorial_geometry = 'x > 0.49'
-    normal = '1 0 0'
-    new_sideset_name = 'inlet'
-  []
-  [outlet]
-    input = inlet
-    type = ParsedGenerateSideset
-    combinatorial_geometry = 'x < -5.49'
-    normal = '-1 0 0'
-    new_sideset_name = 'outlet'
   []
   uniform_refine = 2
 []
@@ -186,7 +215,6 @@ advected_interp_method = 'average'
 []
 
 [FVKernels]
-  # mass
   [mass]
     type = INSFVMassAdvection
     variable = pressure
@@ -253,16 +281,29 @@ advected_interp_method = 'average'
   [no_slip_x]
     type = INSFVNoSlipWallBC
     variable = vel_x
-    boundary = 'no_slip_top no_slip_bottom no_circle'
+    boundary = 'no_circle'
     function = 0
+  []
+  [free_slip_x]
+    type = INSFVNaturalFreeSlipBC
+    variable = vel_x
+    boundary = 'no_slip_top no_slip_bottom'
+    momentum_component = x
   []
 
   [no_slip_y]
     type = INSFVNoSlipWallBC
     variable = vel_y
-    boundary = 'no_slip_top no_slip_bottom no_circle'
+    boundary = 'no_circle'
     function = 0
   []
+  [free_slip_y]
+    type = INSFVNaturalFreeSlipBC
+    variable = vel_y
+    boundary = 'no_slip_top no_slip_bottom'
+    momentum_component = y
+  []
+
   [inlet_x]
     type = INSFVInletVelocityBC
     variable = vel_x
@@ -273,7 +314,7 @@ advected_interp_method = 'average'
     type = INSFVInletVelocityBC
     variable = vel_y
     boundary = 'inlet'
-    function = '1e-1 * exp(-t/10) * sin(t)'
+    function = 0
   []
   [outlet_p]
     type = INSFVOutletPressureBC
@@ -331,6 +372,7 @@ advected_interp_method = 'average'
   exodus = true
   csv = true
   checkpoint = true
+  file_base = equal_length
 []
 
 [Postprocessors]
