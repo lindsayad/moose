@@ -92,17 +92,17 @@ SetupMeshCompleteAction::act()
   {
     TIME_SECTION("deleteRemoteElems", 2, "Deleting Remote Elements");
 
-    if (_displaced_mesh &&
-        (_mesh->needsRemoteElemDeletion() != _displaced_mesh->needsRemoteElemDeletion()))
-      mooseError("Our reference and displaced meshes are not in sync with respect to whether we "
-                 "should delete remote elements.");
+    auto & lm_mesh = _mesh->getMesh();
 
-    // We currently only trigger the needsRemoteDeletion flag if somebody has requested a late
-    // geometric ghosting functor and/or we have a displaced mesh
-    if (_mesh->needsRemoteElemDeletion())
+    if (_displaced_mesh && (lm_mesh.is_serial() != _displaced_mesh->getMesh().is_serial()))
+      mooseError("Our reference and displaced meshes are not in sync with respect to whether we "
+                 "are a serialized mesh.");
+
+    if (!lm_mesh.is_replicated() && lm_mesh.is_serial())
     {
       // Must make sure to create the mortar meshes to build our data structures that ensure we will
-      // keep the correct elements in the mesh around
+      // keep the correct elements in the mesh around. Note that this task executes before we
+      // initialize the equation systems object
       _problem->updateMortarMesh();
       _mesh->deleteRemoteElements();
       if (_displaced_mesh)

@@ -985,16 +985,6 @@ public:
   using PeriodicNodeInfo = std::pair<const Node *, BoundaryID>;
 
   /**
-   * Set whether we need to delete remote elements
-   */
-  void needsRemoteElemDeletion(bool need_delete) { _need_delete = need_delete; }
-
-  /**
-   * Whether we need to delete remote elements
-   */
-  bool needsRemoteElemDeletion() const { return _need_delete; }
-
-  /**
    * Set whether to allow remote element removal
    */
   void allowRemoteElementRemoval(bool allow_removal);
@@ -1501,9 +1491,6 @@ private:
 
   /// Whether or not to allow generation of nodesets from sidesets
   bool _construct_node_list_from_side_list;
-
-  /// Whether we need to delete remote elements after init'ing the EquationSystems
-  bool _need_delete;
 
   /// Whether to allow removal of remote elements
   bool _allow_remote_element_removal;

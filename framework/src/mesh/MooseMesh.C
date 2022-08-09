@@ -192,7 +192,6 @@ MooseMesh::MooseMesh(const InputParameters & parameters)
     _regular_orthogonal_mesh(false),
     _allow_recovery(true),
     _construct_node_list_from_side_list(getParam<bool>("construct_node_list_from_side_list")),
-    _need_delete(false),
     _allow_remote_element_removal(true),
     _need_ghost_ghosted_boundaries(true),
     _is_displaced(false),
@@ -229,7 +228,6 @@ MooseMesh::MooseMesh(const MooseMesh & other_mesh)
     _patch_update_strategy(other_mesh._patch_update_strategy),
     _regular_orthogonal_mesh(false),
     _construct_node_list_from_side_list(other_mesh._construct_node_list_from_side_list),
-    _need_delete(other_mesh._need_delete),
     _allow_remote_element_removal(other_mesh._allow_remote_element_removal),
     _need_ghost_ghosted_boundaries(other_mesh._need_ghost_ghosted_boundaries),
     _coord_sys(other_mesh._coord_sys),
@@ -3347,12 +3345,6 @@ MooseMesh::allowRemoteElementRemoval(const bool allow_remote_element_removal)
   _allow_remote_element_removal = allow_remote_element_removal;
   if (_mesh)
     _mesh->allow_remote_element_removal(allow_remote_element_removal);
-
-  if (!allow_remote_element_removal)
-    // If we're not allowing remote element removal now, then we will need deletion later after late
-    // geoemetric ghosting functors have been added (late geometric ghosting functor addition
-    // happens when algebraic ghosting functors are added)
-    _need_delete = true;
 }
 
 void
