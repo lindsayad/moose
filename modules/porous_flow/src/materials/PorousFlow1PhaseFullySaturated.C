@@ -71,6 +71,6 @@ PorousFlow1PhaseFullySaturated::computeQpProperties()
 void
 PorousFlow1PhaseFullySaturated::buildQpPPSS()
 {
-  _porepressure[_qp][0] = _porepressure_var[_qp];
+  _porepressure[_qp][0] = _neighbor ? _porepressure_neighbor_var[_qp] : _porepressure_var[_qp];
   _saturation[_qp][0] = 1.0;
 }
