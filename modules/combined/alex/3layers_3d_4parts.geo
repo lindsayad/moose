@@ -81,16 +81,16 @@ Plane Surface(12) = {12};
 
 Recombine Surface {1:12};
 
-Transfinite Curve {1:12} = 10 Using Progression 1; // Circumferential layers of 1/4 circle
-Transfinite Curve {13:16} = 5 Using Progression 1;// Radial layers of circles
-Transfinite Curve {17:20} = 2 Using Progression 1;// Radial layers of mid region
-Transfinite Curve {21:24} = 5 Using Progression 1;// Radial layers of outer region
+Transfinite Curve {1:12} = 1 Using Progression 1; // Circumferential layers of 1/4 circle
+Transfinite Curve {13:16} = 1 Using Progression 1;// Radial layers of circles
+Transfinite Curve {17:20} = 1 Using Progression 1;// Radial layers of mid region
+Transfinite Curve {21:24} = 1 Using Progression 1;// Radial layers of outer region
 
 Transfinite Surface {1:12};
 
 Extrude {0, 0, height} {
   Surface{1:12};
-  Layers{40};
+  Layers{1};
   Recombine;
 }
 
