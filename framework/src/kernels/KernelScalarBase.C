@@ -50,21 +50,25 @@ KernelScalarBase::computeResidual()
   Kernel::computeResidual(); // compute and assemble regular variable contributions
 
   if (_use_scalar)
+    computeScalarResidual();
+}
+
+void
+KernelScalarBase::computeScalarResidual()
+{
+  std::vector<Real> scalar_residuals(_k_order);
+
+  for (_qp = 0; _qp < _qrule->n_points(); _qp++)
   {
-    std::vector<Real> scalar_residuals(_k_order);
-
-    for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-    {
-      initScalarQpResidual();
-      for (_h = 0; _h < _k_order; _h++)
-        scalar_residuals[_h] += _JxW[_qp] * _coord[_qp] * computeScalarQpResidual();
-    }
-
-    _assembly.processResiduals(scalar_residuals,
-                               _kappa_var_ptr->dofIndices(),
-                               _vector_tags,
-                               _kappa_var_ptr->scalingFactor());
+    initScalarQpResidual();
+    for (_h = 0; _h < _k_order; _h++)
+      scalar_residuals[_h] += _JxW[_qp] * _coord[_qp] * computeScalarQpResidual();
   }
+
+  _assembly.processResiduals(scalar_residuals,
+                             _kappa_var_ptr->dofIndices(),
+                             _vector_tags,
+                             _kappa_var_ptr->scalingFactor());
 }
 
 void

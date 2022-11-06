@@ -49,6 +49,11 @@ public:
 
 protected:
   /**
+   * Method for computing the scalar part of residual
+   */
+  virtual void computeScalarResidual();
+
+  /**
    * Method for computing the scalar part of residual at quadrature points
    */
   virtual Real computeScalarQpResidual() { return 0; }
@@ -67,18 +72,18 @@ protected:
   /**
    * Method for computing an off-diagonal jacobian component d-_kappa-residual / d-jvar
    */
-  void computeScalarOffDiagJacobian(const unsigned int jvar_num);
+  virtual void computeScalarOffDiagJacobian(const unsigned int jvar_num);
 
   /**
    * Method for computing an off-diagonal jacobian component at quadrature points.
    */
   virtual Real computeScalarQpOffDiagJacobian(const unsigned int /*jvar_num*/) { return 0; }
 
-  void computeOffDiagJacobianScalarLocal(const unsigned int svar_num);
+  virtual void computeOffDiagJacobianScalarLocal(const unsigned int svar_num);
   /**
    * Method for computing an off-diagonal jacobian component d-_kappa-residual / d-scalar
    */
-  void computeScalarOffDiagJacobianScalar(const unsigned int svar_num);
+  virtual void computeScalarOffDiagJacobianScalar(const unsigned int svar_num);
 
   /**
    * Method for computing an off-diagonal jacobian component at quadrature points.
