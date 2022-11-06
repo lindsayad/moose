@@ -19,7 +19,7 @@
 
 // #include "libmesh/quadrature.h"
 
-registerMooseObject("TensorMechanicsTestApp", HomogenizedTotalLagrangianStressDivergenceS);
+registerMooseObject("TensorMechanicsApp", HomogenizedTotalLagrangianStressDivergenceS);
 
 namespace
 {
@@ -28,7 +28,7 @@ setHTLSDSParam(const InputParameters & params_in)
 {
   // Reset the scalar_variable parameter to a relevant name for this physics
   InputParameters & ret = const_cast<InputParameters &>(params_in);
-  ret.set<VariableName>("scalar_variable") = {params_in.get<VariableName>("macro_gradient")};
+  ret.set<VariableName>("scalar_variable") = {params_in.get<VariableName>("macro_var")};
   return ret;
 }
 }
@@ -39,7 +39,8 @@ HomogenizedTotalLagrangianStressDivergenceS::validParams()
   InputParameters params = TotalLagrangianStressDivergenceS::validParams();
   params.addClassDescription("Total Lagrangian stress equilibrium kernel with "
                              "homogenization constraint Jacobian terms");
-  params.addRequiredCoupledVar("macro_gradient", "Optional scalar field with the macro gradient");
+  params.addRequiredParam<VariableName>("macro_var",
+                                        "Optional scalar field with the macro gradient");
   params.addRequiredParam<MultiMooseEnum>(
       "constraint_types",
       HomogenizationS::constraintType,
@@ -83,35 +84,38 @@ HomogenizedTotalLagrangianStressDivergenceS::computeScalarResidual()
 {
   std::vector<Real> scalar_residuals(_k_order);
 
-  for (_qp = 0; _qp < _qrule->n_points(); _qp++)
+  if (_alpha == 0) // only do for the first component
   {
-    initScalarQpResidual();
-    Real dV = _JxW[_qp] * _coord[_qp];
-    _h = 0;
-    for (auto && [indices, constraint] : _cmap)
+    for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     {
-      auto && [i, j] = indices;
-      auto && [ctype, ctarget] = constraint;
+      initScalarQpResidual();
+      Real dV = _JxW[_qp] * _coord[_qp];
+      _h = 0;
+      for (auto && [indices, constraint] : _cmap)
+      {
+        auto && [i, j] = indices;
+        auto && [ctype, ctarget] = constraint;
 
-      if (_large_kinematics)
-      {
-        if (ctype == HomogenizationS::ConstraintType::Stress)
-          scalar_residuals[_h++] += dV * _pk1[_qp](i, j) - ctarget->value(_t, _q_point[_qp]);
-        else if (ctype == HomogenizationS::ConstraintType::Strain)
-          scalar_residuals[_h++] +=
-              dV * _F[_qp](i, j) - (Real(i == j) + ctarget->value(_t, _q_point[_qp]));
+        if (_large_kinematics)
+        {
+          if (ctype == HomogenizationS::ConstraintType::Stress)
+            scalar_residuals[_h++] += dV * _pk1[_qp](i, j) - ctarget->value(_t, _q_point[_qp]);
+          else if (ctype == HomogenizationS::ConstraintType::Strain)
+            scalar_residuals[_h++] +=
+                dV * _F[_qp](i, j) - (Real(i == j) + ctarget->value(_t, _q_point[_qp]));
+          else
+            mooseError("Unknown constraint type in the integral!");
+        }
         else
-          mooseError("Unknown constraint type in the integral!");
-      }
-      else
-      {
-        if (ctype == HomogenizationS::ConstraintType::Stress)
-          scalar_residuals[_h++] += dV * _pk1[_qp](i, j) - ctarget->value(_t, _q_point[_qp]);
-        else if (ctype == HomogenizationS::ConstraintType::Strain)
-          scalar_residuals[_h++] += dV * 0.5 * (_F[_qp](i, j) + _F[_qp](j, i)) -
-                                    (Real(i == j) + ctarget->value(_t, _q_point[_qp]));
-        else
-          mooseError("Unknown constraint type in the integral!");
+        {
+          if (ctype == HomogenizationS::ConstraintType::Stress)
+            scalar_residuals[_h++] += dV * _pk1[_qp](i, j) - ctarget->value(_t, _q_point[_qp]);
+          else if (ctype == HomogenizationS::ConstraintType::Strain)
+            scalar_residuals[_h++] += dV * 0.5 * (_F[_qp](i, j) + _F[_qp](j, i)) -
+                                      (Real(i == j) + ctarget->value(_t, _q_point[_qp]));
+          else
+            mooseError("Unknown constraint type in the integral!");
+        }
       }
     }
   }
@@ -127,33 +131,37 @@ HomogenizedTotalLagrangianStressDivergenceS::computeScalarJacobian()
 {
   _local_ke.resize(_k_order, _k_order);
 
-  for (_qp = 0; _qp < _qrule->n_points(); _qp++)
+  if (_alpha == 0) // only do for the first component
   {
-    initScalarQpJacobian(_kappa_var);
-    Real dV = _JxW[_qp] * _coord[_qp];
-
-    _h = 0;
-    for (auto && [indices1, constraint1] : _cmap)
+    for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     {
-      auto && [i, j] = indices1;
-      auto && ctype = constraint1.first;
-      _l = 0;
-      for (auto && indices2 : _cmap)
+      initScalarQpJacobian(_kappa_var);
+      Real dV = _JxW[_qp] * _coord[_qp];
+
+      _h = 0;
+      for (auto && [indices1, constraint1] : _cmap)
       {
-        auto && [a, b] = indices2.first;
-        if (ctype == HomogenizationS::ConstraintType::Stress)
-          _local_ke(_h, _l++) += dV * _dpk1[_qp](i, j, a, b);
-        else if (ctype == HomogenizationS::ConstraintType::Strain)
+        auto && [i, j] = indices1;
+        auto && ctype = constraint1.first;
+        _l = 0;
+        for (auto && indices2 : _cmap)
         {
-          if (_large_kinematics)
-            _local_ke(_h, _l++) += dV * Real(i == a && j == b);
+          auto && [a, b] = indices2.first;
+          if (ctype == HomogenizationS::ConstraintType::Stress)
+            _local_ke(_h, _l++) += dV * _dpk1[_qp](i, j, a, b);
+          else if (ctype == HomogenizationS::ConstraintType::Strain)
+          {
+            if (_large_kinematics)
+              _local_ke(_h, _l++) += dV * Real(i == a && j == b);
+            else
+              _local_ke(_h, _l++) +=
+                  dV * 0.5 * Real(i == a && j == b) + 0.5 * Real(i == b && j == a);
+          }
           else
-            _local_ke(_h, _l++) += dV * 0.5 * Real(i == a && j == b) + 0.5 * Real(i == b && j == a);
+            mooseError("Unknown constraint type in Jacobian calculator!");
         }
-        else
-          mooseError("Unknown constraint type in Jacobian calculator!");
+        _h++;
       }
-      _h++;
     }
   }
 
