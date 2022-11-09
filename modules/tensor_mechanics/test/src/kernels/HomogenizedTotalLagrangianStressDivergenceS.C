@@ -19,7 +19,7 @@
 
 // #include "libmesh/quadrature.h"
 
-registerMooseObject("TensorMechanicsApp", HomogenizedTotalLagrangianStressDivergenceS);
+registerMooseObject("TensorMechanicsTestApp", HomogenizedTotalLagrangianStressDivergenceS);
 
 namespace
 {

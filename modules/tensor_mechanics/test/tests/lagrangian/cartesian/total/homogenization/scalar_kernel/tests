@@ -9,6 +9,7 @@
     cli_args = "Outputs/file_base=2d-strain_out constraint_types='strain none none strain strain "
                "none none none none' targets='strain11 strain12 strain22'"
     requirement = "Homogenization from scalar wrapper class with strain constraints hits the targets in 2D"
+    allow_test_objects = true
   []
   [2d-stress]
     type = CSVDiff
@@ -17,6 +18,7 @@
     cli_args = "Outputs/file_base=2d-stress_out constraint_types='stress none none stress stress "
                "none none none none' targets='stress11 stress12 stress22'"
     requirement = "Homogenization from scalar wrapper class with stress constraints hits the targets in 2D"
+    allow_test_objects = true
   []
   [2d-mixed]
     type = CSVDiff
@@ -25,5 +27,6 @@
     cli_args = "Outputs/file_base=2d-mixed_out constraint_types='stress none none stress strain none "
                "none none none' targets='stress11 stress12 strain22'"
     requirement = "Homogenization from scalar wrapper class with mixed stress and strain constraints hits the targets in 2D"
+    allow_test_objects = true
   []
 []

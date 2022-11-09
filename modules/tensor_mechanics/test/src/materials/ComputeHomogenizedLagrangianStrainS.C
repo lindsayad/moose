@@ -9,7 +9,7 @@
 
 #include "ComputeHomogenizedLagrangianStrainS.h"
 
-registerMooseObject("TensorMechanicsApp", ComputeHomogenizedLagrangianStrainS);
+registerMooseObject("TensorMechanicsTestApp", ComputeHomogenizedLagrangianStrainS);
 
 InputParameters
 ComputeHomogenizedLagrangianStrainS::validParams()
