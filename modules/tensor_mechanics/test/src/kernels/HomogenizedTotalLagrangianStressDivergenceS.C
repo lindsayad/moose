@@ -99,20 +99,20 @@ HomogenizedTotalLagrangianStressDivergenceS::computeScalarResidual()
         if (_large_kinematics)
         {
           if (ctype == HomogenizationS::ConstraintType::Stress)
-            scalar_residuals[_h++] += dV * _pk1[_qp](i, j) - ctarget->value(_t, _q_point[_qp]);
+            scalar_residuals[_h++] += dV * (_pk1[_qp](i, j) - ctarget->value(_t, _q_point[_qp]));
           else if (ctype == HomogenizationS::ConstraintType::Strain)
             scalar_residuals[_h++] +=
-                dV * _F[_qp](i, j) - (Real(i == j) + ctarget->value(_t, _q_point[_qp]));
+                dV * (_F[_qp](i, j) - (Real(i == j) + ctarget->value(_t, _q_point[_qp])));
           else
             mooseError("Unknown constraint type in the integral!");
         }
         else
         {
           if (ctype == HomogenizationS::ConstraintType::Stress)
-            scalar_residuals[_h++] += dV * _pk1[_qp](i, j) - ctarget->value(_t, _q_point[_qp]);
+            scalar_residuals[_h++] += dV * (_pk1[_qp](i, j) - ctarget->value(_t, _q_point[_qp]));
           else if (ctype == HomogenizationS::ConstraintType::Strain)
-            scalar_residuals[_h++] += dV * 0.5 * (_F[_qp](i, j) + _F[_qp](j, i)) -
-                                      (Real(i == j) + ctarget->value(_t, _q_point[_qp]));
+            scalar_residuals[_h++] += dV * (0.5 * (_F[_qp](i, j) + _F[_qp](j, i)) -
+                                            (Real(i == j) + ctarget->value(_t, _q_point[_qp])));
           else
             mooseError("Unknown constraint type in the integral!");
         }
@@ -148,14 +148,14 @@ HomogenizedTotalLagrangianStressDivergenceS::computeScalarJacobian()
         {
           auto && [a, b] = indices2.first;
           if (ctype == HomogenizationS::ConstraintType::Stress)
-            _local_ke(_h, _l++) += dV * _dpk1[_qp](i, j, a, b);
+            _local_ke(_h, _l++) += dV * (_dpk1[_qp](i, j, a, b));
           else if (ctype == HomogenizationS::ConstraintType::Strain)
           {
             if (_large_kinematics)
-              _local_ke(_h, _l++) += dV * Real(i == a && j == b);
+              _local_ke(_h, _l++) += dV * (Real(i == a && j == b));
             else
               _local_ke(_h, _l++) +=
-                  dV * 0.5 * Real(i == a && j == b) + 0.5 * Real(i == b && j == a);
+                  dV * (0.5 * Real(i == a && j == b) + 0.5 * Real(i == b && j == a));
           }
           else
             mooseError("Unknown constraint type in Jacobian calculator!");

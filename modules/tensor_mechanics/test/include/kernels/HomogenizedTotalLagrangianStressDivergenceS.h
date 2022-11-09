@@ -72,7 +72,7 @@ protected:
   /// Type of each constraint (stress or strain) for each component
   HomogenizationS::ConstraintMap _cmap;
 
-  /// The constraint type
+  /// The constraint type; initialize with 'none'
   HomogenizationS::ConstraintType _ctype = HomogenizationS::ConstraintType::None;
 
   /// Used internally to iterate over each scalar component
