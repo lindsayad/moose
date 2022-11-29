@@ -66,7 +66,6 @@ public:
                             DualReal & rho,
                             DualReal & drho_dp,
                             DualReal & drho_dT) const override;
-  propfuncWithDefinitionOverride(e, p, rho);
   virtual Real e_from_T_v(Real T, Real v) const override;
   virtual void e_from_T_v(Real T, Real v, Real & e, Real & de_dT, Real & de_dv) const override;
   virtual ADReal e_from_T_v(const ADReal & T, const ADReal & v) const override;
@@ -118,6 +117,8 @@ public:
   virtual ADReal c_from_p_T(const ADReal & p, const ADReal & T) const override;
   virtual void c_from_p_T(Real /*p*/, Real T, Real & c, Real & dc_dp, Real & dc_dT) const override;
 
+  propfuncWithDefinitionOverride(e, p, rho);
+
 protected:
   /// sets up the T(e) reverse lookup table
   void setupLookupTables();
@@ -130,8 +131,6 @@ protected:
   Real h_from_T(Real T) const;
   Real T_from_e(Real e) const;
   Real T_from_h(Real h) const;
-  template <typename CppType>
-  Real cv_from_T(const CppType & T) const;
   Real cp_from_T(Real T) const;
   void cv_from_T(Real T, Real & cv, Real & dcv_dT) const;
   void cp_from_T(Real T, Real & cp, Real & dcp_dT) const;
@@ -189,37 +188,11 @@ protected:
 
   /// Z(T) lookup table on uniform grid between _min_temperature and _max_temperature
   std::vector<Real> _Z_T_lookup;
+
+private:
+  /// helper template to compute constant volume heat capacity from temperature
+  template <typename CppType>
+  Real cv_from_T(const CppType & T) const;
 };
 
 #pragma GCC diagnostic pop
-
-template <typename CppType>
-CppType
-CaloricallyImperfectGas::e_from_p_rho_template(const CppType & p, const CppType & rho) const
-{
-  CppType T = p / (rho * _R_specific);
-  return e_from_p_T(p, T);
-}
-
-template <typename CppType>
-void
-CaloricallyImperfectGas::e_from_p_rho_template(
-    const CppType & p, const CppType & rho, CppType & e, CppType & de_dp, CppType & de_drho) const
-{
-  CppType T = p / (rho * _R_specific);
-  e = e_from_p_rho_template(p, rho);
-  CppType cv = cv_from_T(T);
-  de_dp = cv / (rho * _R_specific);
-  de_drho = -cv * p / (rho * rho * _R_specific);
-}
-
-template <typename CppType>
-Real
-CaloricallyImperfectGas::cv_from_T(const CppType & T) const
-{
-  const auto raw_T = MetaPhysicL::raw_value(T);
-  if (raw_T < _min_temperature || raw_T > _max_temperature)
-    outOfBounds("cv_from_T", raw_T, _min_temperature, _max_temperature);
-
-  return _e_T->timeDerivative(raw_T, Point());
-}

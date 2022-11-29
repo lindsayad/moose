@@ -62,8 +62,6 @@ public:
 
   virtual Real v_from_p_T(Real pressure, Real temperature) const override;
   virtual ADReal v_from_p_T(const ADReal & pressure, const ADReal & temperature) const override;
-  template <typename T>
-  T v_from_p_T_template(const T & pressure, const T & temperature) const;
   virtual void
   v_from_p_T(Real pressure, Real temperature, Real & v, Real & dv_dp, Real & dv_dT) const override;
   virtual void v_from_p_T(const ADReal & pressure,
@@ -71,15 +69,6 @@ public:
                           ADReal & v,
                           ADReal & dv_dp,
                           ADReal & dv_dT) const override;
-  template <typename T>
-  void
-  v_from_p_T_template(const T & pressure, const T & temperature, T & v, T & dv_dp, T & dv_dt) const;
-
-  template <typename T>
-  T rho_from_p_T_template(const T & pressure, const T & temperature) const;
-  template <typename T>
-  void rho_from_p_T_template(
-      const T & pressure, const T & temperature, T & rho, T & drho_dp, T & drho_dt) const;
 
   virtual void rho_from_p_T(
       Real pressure, Real temperature, Real & rho, Real & drho_dp, Real & drho_dT) const override;
@@ -91,26 +80,18 @@ public:
 
   Real p_from_v_e(Real v, Real e) const override;
   ADReal p_from_v_e(const ADReal & v, const ADReal & e) const override;
-  template <typename T>
-  T p_from_v_e_template(const T & v, const T & e) const;
 
   virtual Real e_from_p_rho(Real p, Real rho) const override;
   virtual ADReal e_from_p_rho(const ADReal & p, const ADReal & rho) const override;
-  template <typename T>
-  T e_from_p_rho_template(const T & p, const T & rho) const;
   void e_from_p_rho(Real p, Real rho, Real & e, Real & de_dp, Real & de_drho) const override;
   void e_from_p_rho(const ADReal & p,
                     const ADReal & rho,
                     ADReal & e,
                     ADReal & de_dp,
                     ADReal & de_drho) const override;
-  template <typename T>
-  void e_from_p_rho_template(const T & p, const T & rho, T & e, T & de_dp, T & de_drho) const;
 
   virtual Real e_from_p_T(Real pressure, Real temperature) const override;
   virtual ADReal e_from_p_T(const ADReal & pressure, const ADReal & temperature) const override;
-  template <typename T>
-  T e_from_p_T_template(const T & pressure, const T & temperature) const;
 
   virtual void
   e_from_p_T(Real pressure, Real temperature, Real & e, Real & de_dp, Real & de_dT) const override;
@@ -119,9 +100,6 @@ public:
                           ADReal & e,
                           ADReal & de_dp,
                           ADReal & de_dT) const override;
-  template <typename T>
-  void
-  e_from_p_T_template(const T & pressure, const T & temperature, T & e, T & de_dp, T & de_dT) const;
 
   ADReal e_from_v_h(const ADReal & v, const ADReal & h) const override;
 
@@ -130,14 +108,10 @@ public:
 
   virtual Real c_from_p_T(Real pressure, Real temperature) const override;
   virtual ADReal c_from_p_T(const ADReal & pressure, const ADReal & temperature) const override;
-  template <typename T>
-  T c_from_p_T_template(const T & pressure, const T & temperature) const;
   virtual ADReal c_from_v_e(const ADReal & v, const ADReal & e) const override;
 
   virtual Real cp_from_p_T(Real pressure, Real temperature) const override;
   virtual ADReal cp_from_p_T(const ADReal & pressure, const ADReal & temperature) const override;
-  template <typename T>
-  T cp_from_p_T_template(const T & pressure, const T & temperature) const;
 
   using SinglePhaseFluidProperties::cp_from_p_T;
 
@@ -145,22 +119,16 @@ public:
 
   virtual Real cv_from_p_T(Real pressure, Real temperature) const override;
   virtual ADReal cv_from_p_T(const ADReal & pressure, const ADReal & temperature) const override;
-  template <typename T>
-  T cv_from_p_T_template(const T & pressure, const T & temperature) const;
 
   virtual ADReal cv_from_v_e(const ADReal & v, const ADReal & e) const override;
 
   virtual Real mu_from_p_T(Real pressure, Real temperature) const override;
   virtual ADReal mu_from_p_T(const ADReal & pressure, const ADReal & temperature) const override;
-  template <typename T>
-  T mu_from_p_T_template(const T & pressure, const T & temperature) const;
 
   virtual void mu_from_p_T(
       Real pressure, Real temperature, Real & mu, Real & dmu_dp, Real & dmu_dT) const override;
 
   virtual Real mu_from_rho_T(Real density, Real temperature) const override;
-  template <typename T>
-  T mu_from_rho_T_template(const T & density, const T & temperature) const;
 
   void mu_from_rho_T(
       Real rho, Real temperature, Real drho_dT, Real & mu, Real & dmu_drho, Real & dmu_dT) const;
@@ -181,27 +149,17 @@ public:
 
   virtual Real k_from_p_T(Real pressure, Real temperature) const override;
   virtual ADReal k_from_p_T(const ADReal & pressure, const ADReal & temperature) const override;
-  template <typename T>
-  T k_from_p_T_template(const T & pressure, const T & temperature) const;
 
   virtual void
   k_from_p_T(Real pressure, Real temperature, Real & k, Real & dk_dp, Real & dk_dT) const override;
 
   virtual Real k_from_rho_T(Real density, Real temperature) const override;
-  template <typename T>
-  T k_from_rho_T_template(const T & density, const T & temperature) const;
 
   Real k_from_v_e(Real v, Real e) const override;
   ADReal k_from_v_e(const ADReal & v, const ADReal & e) const override;
-  template <typename T>
-  T k_from_v_e_template(const T & v, const T & e) const;
-
-  propfuncWithDefinitionOverride(s, p, T);
 
   virtual Real h_from_p_T(Real pressure, Real temperature) const override;
   virtual ADReal h_from_p_T(const ADReal & pressure, const ADReal & temperature) const override;
-  template <typename T>
-  T h_from_p_T_template(const T & pressure, const T & temperature) const;
 
   virtual void
   h_from_p_T(Real pressure, Real temperature, Real & h, Real & dh_dp, Real & dh_dT) const override;
@@ -210,16 +168,10 @@ public:
                           ADReal & h,
                           ADReal & dh_dp,
                           ADReal & dh_dT) const override;
-  template <typename T>
-  void
-  h_from_p_T_template(const T & pressure, const T & temperature, T & h, T & dh_dp, T & dh_dT) const;
 
   virtual Real vaporPressure(Real temperature) const override;
 
   virtual void vaporPressure(Real temperature, Real & psat, Real & dpsat_dT) const override;
-
-  template <typename T>
-  void vaporPressureTemplate(const T & temperature, T & psat, T & dpsat_dT) const;
 
   /**
    * Saturation temperature as a function of pressure
@@ -284,41 +236,6 @@ public:
   unsigned int subregion3(Real pressure, Real temperature) const;
 
   /**
-   * Specific volume in all subregions of region 3 EXCEPT subregion n (13).
-   *
-   * @param pi scaled water pressure
-   * @param theta scaled water temperature
-   * @param a to e constants
-   * @param sid subregion ID of the subregion
-   * @return volume water specific volume (m^3/kg)
-   */
-  template <typename T>
-  T subregionVolume(const T & pi,
-                    const T & theta,
-                    Real a,
-                    Real b,
-                    Real c,
-                    Real d,
-                    Real e,
-                    unsigned int sid) const;
-
-  /**
-   * Density function for Region 3 - supercritical water and steam
-   *
-   * To avoid iteration, use the backwards equations for region 3
-   * from Revised Supplementary Release on Backward Equations for
-   * Specific Volume as a Function of Pressure and Temperature v(p,T)
-   * for Region 3 of the IAPWS Industrial Formulation 1997 for the
-   * Thermodynamic Properties of Water and Steam.
-   *
-   * @param pressure water pressure (Pa)
-   * @param temperature water temperature (K)
-   * @return density (kg/m^3) in region 3
-   */
-  template <typename T>
-  T densityRegion3(const T & pressure, const T & temperature) const;
-
-  /**
    * Backwards equation T(p, h)
    * From Revised Release on the IAPWS Industrial Formulation 1997 for the
    * Thermodynamic Properties of Water and Steam
@@ -369,6 +286,22 @@ public:
   DualReal henryConstant(const DualReal & temperature, const std::vector<Real> & coeffs) const;
 
   /**
+   * Density function for Region 3 - supercritical water and steam
+   *
+   * To avoid iteration, use the backwards equations for region 3
+   * from Revised Supplementary Release on Backward Equations for
+   * Specific Volume as a Function of Pressure and Temperature v(p,T)
+   * for Region 3 of the IAPWS Industrial Formulation 1997 for the
+   * Thermodynamic Properties of Water and Steam.
+   *
+   * @param pressure water pressure (Pa)
+   * @param temperature water temperature (K)
+   * @return density (kg/m^3) in region 3
+   */
+  template <typename T>
+  T densityRegion3(const T & pressure, const T & temperature) const;
+
+  /**
    * Computes the pressure (first member of the pair) and temperature (second member of the pair) as
    * functions of specific volume and specific internal energy
    */
@@ -388,265 +321,12 @@ public:
    */
   template <typename T>
   std::pair<T, T> p_T_from_v_h(const T & v, const T & h) const;
+
   using SinglePhaseFluidProperties::p_T_from_v_h;
 
+  propfuncWithDefinitionOverride(s, p, T);
+
 protected:
-  /**
-   * Gibbs free energy in Region 1 - single phase liquid region
-   *
-   * From Eq. (7) From Revised Release on the IAPWS Industrial
-   * Formulation 1997 for the Thermodynamic Properties of Water
-   * and Steam, IAPWS 2007.
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return Gibbs free energy (-)
-   */
-  template <typename T>
-  T gamma1(const T & pi, const T & tau) const;
-
-  /**
-   * Derivative of Gibbs free energy in Region 1 wrt pi
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return derivative of Gibbs free energy wrt pi (-)
-   */
-  template <typename T>
-  T dgamma1_dpi(const T & pi, const T & tau) const;
-
-  /**
-   * Second derivative of Gibbs free energy in Region 1 wrt pi
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return second derivative of Gibbs free energy wrt pi (-)
-   */
-  template <typename T>
-  T d2gamma1_dpi2(const T & pi, const T & tau) const;
-
-  /**
-   * Derivative of Gibbs free energy in Region 1 wrt tau
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return derivative of Gibbs free energy wrt tau (-)
-   */
-  template <typename T>
-  T dgamma1_dtau(const T & pi, const T & tau) const;
-
-  /**
-   * Second derivative of Gibbs free energy in Region 1 wrt tau
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return second derivative of Gibbs free energy wrt tau (-)
-   */
-  template <typename T>
-  T d2gamma1_dtau2(const T & pi, const T & tau) const;
-
-  /**
-   * Second derivative of Gibbs free energy in Region 1 wrt pi and tau
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return second derivative of Gibbs free energy wrt pi and tau (-)
-   */
-  template <typename T>
-  T d2gamma1_dpitau(const T & pi, const T & tau) const;
-
-  /**
-   * Gibbs free energy in Region 2 - superheated steam
-   *
-   * From Eq. (15) From Revised Release on the IAPWS Industrial
-   * Formulation 1997 for the Thermodynamic Properties of Water
-   * and Steam, IAPWS 2007.
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return Gibbs free energy (-)
-   */
-  template <typename T>
-  T gamma2(const T & pi, const T & tau) const;
-
-  /**
-   * Derivative of Gibbs free energy in Region 2 wrt pi
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return derivative of Gibbs free energy wrt pi (-)
-   */
-  template <typename T>
-  T dgamma2_dpi(const T & pi, const T & tau) const;
-
-  /**
-   * Second derivative of Gibbs free energy in Region 2 wrt pi
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return second derivative of Gibbs free energy wrt pi (-)
-   */
-  template <typename T>
-  T d2gamma2_dpi2(const T & pi, const T & tau) const;
-
-  /**
-   * Derivative of Gibbs free energy in Region 2 wrt tau
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return derivative of Gibbs free energy wrt tau (-)
-   */
-  template <typename T>
-  T dgamma2_dtau(const T & pi, const T & tau) const;
-
-  /**
-   * Second derivative of Gibbs free energy in Region 2 wrt tau
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return second derivative of Gibbs free energy wrt tau (-)
-   */
-  template <typename T>
-  T d2gamma2_dtau2(const T & pi, const T & tau) const;
-
-  /**
-   * Second derivative of Gibbs free energy in Region 2 wrt pi and tau
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return second derivative of Gibbs free energy wrt pi and tau (-)
-   */
-  template <typename T>
-  T d2gamma2_dpitau(const T & pi, const T & tau) const;
-
-  /**
-   * Helmholtz free energy in Region 3
-   *
-   * From Eq. (28) From Revised Release on the IAPWS Industrial
-   * Formulation 1997 for the Thermodynamic Properties of Water
-   * and Steam, IAPWS 2007.
-   *
-   * @param delta reduced density (-)
-   * @param tau reduced temperature (-)
-   * @return Helmholtz free energy (-)
-   */
-  template <typename T>
-  T phi3(const T & delta, const T & tau) const;
-
-  /**
-   * Derivative of Helmholtz free energy in Region 3 wrt delta
-   *
-   * @param delta reduced density (-)
-   * @param tau reduced temperature (-)
-   * @return derivative of Helmholtz free energy wrt delta (-)
-   */
-  template <typename T>
-  T dphi3_ddelta(const T & delta, const T & tau) const;
-
-  /**
-   * Second derivative of Helmholtz free energy in Region 3 wrt delta
-   *
-   * @param delta reduced density (-)
-   * @param tau reduced temperature (-)
-   * @return second derivative of Helmholtz free energy wrt delta (-)
-   */
-  template <typename T>
-  T d2phi3_ddelta2(const T & delta, const T & tau) const;
-
-  /**
-   * Derivative of Helmholtz free energy in Region 3 wrt tau
-   *
-   * @param delta reduced density (-)
-   * @param tau reduced temperature (-)
-   * @return derivative of Helmholtz free energy wrt tau (-)
-   */
-  template <typename T>
-  T dphi3_dtau(const T & delta, const T & tau) const;
-
-  /**
-   * Second derivative of Helmholtz free energy in Region 3 wrt tau
-   *
-   * @param delta reduced density (-)
-   * @param tau reduced temperature (-)
-   * @return second derivative of Helmholtz free energy wrt tau (-)
-   */
-  template <typename T>
-  T d2phi3_dtau2(const T & delta, const T & tau) const;
-
-  /**
-   * Second derivative of Helmholtz free energy in Region 3 wrt delta and tau
-   *
-   * @param delta reduced density (-)
-   * @param tau reduced temperature (-)
-   * @return second derivative of Helmholtz free energy wrt delta and tau (-)
-   */
-  template <typename T>
-  T d2phi3_ddeltatau(const T & delta, const T & tau) const;
-
-  /**
-   * Gibbs free energy in Region 5
-   *
-   * From Eq. (32) From Revised Release on the IAPWS Industrial
-   * Formulation 1997 for the Thermodynamic Properties of Water
-   * and Steam, IAPWS 2007.
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return Gibbs free energy (-)
-   */
-  template <typename T>
-  T gamma5(const T & pi, const T & tau) const;
-
-  /**
-   * Derivative of Gibbs free energy in Region 5 wrt pi
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return derivative of Gibbs free energy wrt pi (-)
-   */
-  template <typename T>
-  T dgamma5_dpi(const T & pi, const T & tau) const;
-
-  /**
-   * Second derivative of Gibbs free energy in Region 5 wrt pi
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return second derivative of Gibbs free energy wrt pi (-)
-   */
-  template <typename T>
-  T d2gamma5_dpi2(const T & pi, const T & tau) const;
-
-  /**
-   * Derivative of Gibbs free energy in Region 5 wrt tau
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return derivative of Gibbs free energy wrt tau (-)
-   */
-  template <typename T>
-  T dgamma5_dtau(const T & pi, const T & tau) const;
-
-  /**
-   * Second derivative of Gibbs free energy in Region 5 wrt tau
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return second derivative of Gibbs free energy wrt tau (-)
-   */
-  template <typename T>
-  T d2gamma5_dtau2(const T & pi, const T & tau) const;
-
-  /**
-   * Second derivative of Gibbs free energy in Region 5 wrt pi and tau
-   *
-   * @param pi reduced pressure (-)
-   * @param tau reduced temperature (-)
-   * @return second derivative of Gibbs free energy wrt pi and tau (-)
-   */
-  template <typename T>
-  T d2gamma5_dpitau(const T & pi, const T & tau) const;
-
   /// Enum of subregion ids for region 3
   enum subregionEnum
   {
@@ -663,20 +343,6 @@ protected:
     WX,
     EF
   };
-
-  /**
-   * Boundaries between subregions in region 3.
-   * From Revised Supplementary Release on Backward Equations for
-   * Specific Volume as a Function of Pressure and Temperature v(p,T)
-   * for Region 3 of the IAPWS Industrial Formulation 1997 for the
-   * Thermodynamic Properties of Water and Steam
-   *
-   * @param pressure water pressure (Pa)
-   * @param xy string to select the boundary between two subregions
-   * @return temperature (K) along the boundary
-   */
-  template <typename T>
-  T tempXY(const T & pressure, subregionEnum xy) const;
 
   /**
    * Determines the phase region that the given pressure and enthaply values
@@ -1501,36 +1167,361 @@ private:
    */
   template <typename T>
   std::pair<T, T> T_drhodT_from_p_rho(const T & p, const T & rho) const;
+
+  template <typename T>
+  T v_from_p_T_template(const T & pressure, const T & temperature) const;
+
+  template <typename T>
+  void
+  v_from_p_T_template(const T & pressure, const T & temperature, T & v, T & dv_dp, T & dv_dt) const;
+
+  template <typename T>
+  T rho_from_p_T_template(const T & pressure, const T & temperature) const;
+  template <typename T>
+  void rho_from_p_T_template(
+      const T & pressure, const T & temperature, T & rho, T & drho_dp, T & drho_dt) const;
+
+  template <typename T>
+  T p_from_v_e_template(const T & v, const T & e) const;
+
+  template <typename T>
+  T e_from_p_rho_template(const T & p, const T & rho) const;
+
+  template <typename T>
+  void e_from_p_rho_template(const T & p, const T & rho, T & e, T & de_dp, T & de_drho) const;
+
+  template <typename T>
+  T e_from_p_T_template(const T & pressure, const T & temperature) const;
+
+  template <typename T>
+  void
+  e_from_p_T_template(const T & pressure, const T & temperature, T & e, T & de_dp, T & de_dT) const;
+
+  template <typename T>
+  T c_from_p_T_template(const T & pressure, const T & temperature) const;
+
+  template <typename T>
+  T cp_from_p_T_template(const T & pressure, const T & temperature) const;
+
+  template <typename T>
+  T cv_from_p_T_template(const T & pressure, const T & temperature) const;
+
+  template <typename T>
+  T mu_from_p_T_template(const T & pressure, const T & temperature) const;
+
+  template <typename T>
+  T mu_from_rho_T_template(const T & density, const T & temperature) const;
+
+  template <typename T>
+  T k_from_p_T_template(const T & pressure, const T & temperature) const;
+
+  template <typename T>
+  T k_from_rho_T_template(const T & density, const T & temperature) const;
+
+  template <typename T>
+  T k_from_v_e_template(const T & v, const T & e) const;
+
+  template <typename T>
+  T h_from_p_T_template(const T & pressure, const T & temperature) const;
+
+  template <typename T>
+  void
+  h_from_p_T_template(const T & pressure, const T & temperature, T & h, T & dh_dp, T & dh_dT) const;
+
+  template <typename T>
+  void vaporPressureTemplate(const T & temperature, T & psat, T & dpsat_dT) const;
+
+  /**
+   * Specific volume in all subregions of region 3 EXCEPT subregion n (13).
+   *
+   * @param pi scaled water pressure
+   * @param theta scaled water temperature
+   * @param a to e constants
+   * @param sid subregion ID of the subregion
+   * @return volume water specific volume (m^3/kg)
+   */
+  template <typename T>
+  T subregionVolume(const T & pi,
+                    const T & theta,
+                    Real a,
+                    Real b,
+                    Real c,
+                    Real d,
+                    Real e,
+                    unsigned int sid) const;
+
+  /**
+   * Gibbs free energy in Region 1 - single phase liquid region
+   *
+   * From Eq. (7) From Revised Release on the IAPWS Industrial
+   * Formulation 1997 for the Thermodynamic Properties of Water
+   * and Steam, IAPWS 2007.
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return Gibbs free energy (-)
+   */
+  template <typename T>
+  T gamma1(const T & pi, const T & tau) const;
+
+  /**
+   * Derivative of Gibbs free energy in Region 1 wrt pi
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return derivative of Gibbs free energy wrt pi (-)
+   */
+  template <typename T>
+  T dgamma1_dpi(const T & pi, const T & tau) const;
+
+  /**
+   * Second derivative of Gibbs free energy in Region 1 wrt pi
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return second derivative of Gibbs free energy wrt pi (-)
+   */
+  template <typename T>
+  T d2gamma1_dpi2(const T & pi, const T & tau) const;
+
+  /**
+   * Derivative of Gibbs free energy in Region 1 wrt tau
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return derivative of Gibbs free energy wrt tau (-)
+   */
+  template <typename T>
+  T dgamma1_dtau(const T & pi, const T & tau) const;
+
+  /**
+   * Second derivative of Gibbs free energy in Region 1 wrt tau
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return second derivative of Gibbs free energy wrt tau (-)
+   */
+  template <typename T>
+  T d2gamma1_dtau2(const T & pi, const T & tau) const;
+
+  /**
+   * Second derivative of Gibbs free energy in Region 1 wrt pi and tau
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return second derivative of Gibbs free energy wrt pi and tau (-)
+   */
+  template <typename T>
+  T d2gamma1_dpitau(const T & pi, const T & tau) const;
+
+  /**
+   * Gibbs free energy in Region 2 - superheated steam
+   *
+   * From Eq. (15) From Revised Release on the IAPWS Industrial
+   * Formulation 1997 for the Thermodynamic Properties of Water
+   * and Steam, IAPWS 2007.
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return Gibbs free energy (-)
+   */
+  template <typename T>
+  T gamma2(const T & pi, const T & tau) const;
+
+  /**
+   * Derivative of Gibbs free energy in Region 2 wrt pi
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return derivative of Gibbs free energy wrt pi (-)
+   */
+  template <typename T>
+  T dgamma2_dpi(const T & pi, const T & tau) const;
+
+  /**
+   * Second derivative of Gibbs free energy in Region 2 wrt pi
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return second derivative of Gibbs free energy wrt pi (-)
+   */
+  template <typename T>
+  T d2gamma2_dpi2(const T & pi, const T & tau) const;
+
+  /**
+   * Derivative of Gibbs free energy in Region 2 wrt tau
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return derivative of Gibbs free energy wrt tau (-)
+   */
+  template <typename T>
+  T dgamma2_dtau(const T & pi, const T & tau) const;
+
+  /**
+   * Second derivative of Gibbs free energy in Region 2 wrt tau
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return second derivative of Gibbs free energy wrt tau (-)
+   */
+  template <typename T>
+  T d2gamma2_dtau2(const T & pi, const T & tau) const;
+
+  /**
+   * Second derivative of Gibbs free energy in Region 2 wrt pi and tau
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return second derivative of Gibbs free energy wrt pi and tau (-)
+   */
+  template <typename T>
+  T d2gamma2_dpitau(const T & pi, const T & tau) const;
+
+  /**
+   * Helmholtz free energy in Region 3
+   *
+   * From Eq. (28) From Revised Release on the IAPWS Industrial
+   * Formulation 1997 for the Thermodynamic Properties of Water
+   * and Steam, IAPWS 2007.
+   *
+   * @param delta reduced density (-)
+   * @param tau reduced temperature (-)
+   * @return Helmholtz free energy (-)
+   */
+  template <typename T>
+  T phi3(const T & delta, const T & tau) const;
+
+  /**
+   * Derivative of Helmholtz free energy in Region 3 wrt delta
+   *
+   * @param delta reduced density (-)
+   * @param tau reduced temperature (-)
+   * @return derivative of Helmholtz free energy wrt delta (-)
+   */
+  template <typename T>
+  T dphi3_ddelta(const T & delta, const T & tau) const;
+
+  /**
+   * Second derivative of Helmholtz free energy in Region 3 wrt delta
+   *
+   * @param delta reduced density (-)
+   * @param tau reduced temperature (-)
+   * @return second derivative of Helmholtz free energy wrt delta (-)
+   */
+  template <typename T>
+  T d2phi3_ddelta2(const T & delta, const T & tau) const;
+
+  /**
+   * Derivative of Helmholtz free energy in Region 3 wrt tau
+   *
+   * @param delta reduced density (-)
+   * @param tau reduced temperature (-)
+   * @return derivative of Helmholtz free energy wrt tau (-)
+   */
+  template <typename T>
+  T dphi3_dtau(const T & delta, const T & tau) const;
+
+  /**
+   * Second derivative of Helmholtz free energy in Region 3 wrt tau
+   *
+   * @param delta reduced density (-)
+   * @param tau reduced temperature (-)
+   * @return second derivative of Helmholtz free energy wrt tau (-)
+   */
+  template <typename T>
+  T d2phi3_dtau2(const T & delta, const T & tau) const;
+
+  /**
+   * Second derivative of Helmholtz free energy in Region 3 wrt delta and tau
+   *
+   * @param delta reduced density (-)
+   * @param tau reduced temperature (-)
+   * @return second derivative of Helmholtz free energy wrt delta and tau (-)
+   */
+  template <typename T>
+  T d2phi3_ddeltatau(const T & delta, const T & tau) const;
+
+  /**
+   * Gibbs free energy in Region 5
+   *
+   * From Eq. (32) From Revised Release on the IAPWS Industrial
+   * Formulation 1997 for the Thermodynamic Properties of Water
+   * and Steam, IAPWS 2007.
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return Gibbs free energy (-)
+   */
+  template <typename T>
+  T gamma5(const T & pi, const T & tau) const;
+
+  /**
+   * Derivative of Gibbs free energy in Region 5 wrt pi
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return derivative of Gibbs free energy wrt pi (-)
+   */
+  template <typename T>
+  T dgamma5_dpi(const T & pi, const T & tau) const;
+
+  /**
+   * Second derivative of Gibbs free energy in Region 5 wrt pi
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return second derivative of Gibbs free energy wrt pi (-)
+   */
+  template <typename T>
+  T d2gamma5_dpi2(const T & pi, const T & tau) const;
+
+  /**
+   * Derivative of Gibbs free energy in Region 5 wrt tau
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return derivative of Gibbs free energy wrt tau (-)
+   */
+  template <typename T>
+  T dgamma5_dtau(const T & pi, const T & tau) const;
+
+  /**
+   * Second derivative of Gibbs free energy in Region 5 wrt tau
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return second derivative of Gibbs free energy wrt tau (-)
+   */
+  template <typename T>
+  T d2gamma5_dtau2(const T & pi, const T & tau) const;
+
+  /**
+   * Second derivative of Gibbs free energy in Region 5 wrt pi and tau
+   *
+   * @param pi reduced pressure (-)
+   * @param tau reduced temperature (-)
+   * @return second derivative of Gibbs free energy wrt pi and tau (-)
+   */
+  template <typename T>
+  T d2gamma5_dpitau(const T & pi, const T & tau) const;
+
+  /**
+   * Boundaries between subregions in region 3.
+   * From Revised Supplementary Release on Backward Equations for
+   * Specific Volume as a Function of Pressure and Temperature v(p,T)
+   * for Region 3 of the IAPWS Industrial Formulation 1997 for the
+   * Thermodynamic Properties of Water and Steam
+   *
+   * @param pressure water pressure (Pa)
+   * @param xy string to select the boundary between two subregions
+   * @return temperature (K) along the boundary
+   */
+  template <typename T>
+  T tempXY(const T & pressure, subregionEnum xy) const;
 };
 
 #pragma GCC diagnostic pop
-
-template <typename T>
-T
-Water97FluidProperties::dgamma1_dpi(const T & pi, const T & tau) const
-{
-  T sum = 0.0;
-  for (std::size_t i = 0; i < _n1.size(); ++i)
-    sum += -_n1[i] * _I1[i] * MathUtils::pow(7.1 - pi, _I1[i] - 1) *
-           MathUtils::pow(tau - 1.222, _J1[i]);
-
-  return sum;
-}
-
-template <typename T>
-T
-Water97FluidProperties::dgamma2_dpi(const T & pi, const T & tau) const
-{
-  // Ideal gas part of the Gibbs free energy
-  T dg0 = 1.0 / pi;
-
-  // Residual part of the Gibbs free energy
-  T dgr = 0.0;
-  for (std::size_t i = 0; i < _n2.size(); ++i)
-    dgr += _n2[i] * _I2[i] * MathUtils::pow(pi, _I2[i] - 1) * MathUtils::pow(tau - 0.5, _J2[i]);
-
-  return dg0 + dgr;
-}
 
 template <typename T>
 T
@@ -1576,578 +1567,32 @@ Water97FluidProperties::densityRegion3(const T & pressure, const T & temperature
 }
 
 template <typename T>
-T
-Water97FluidProperties::gamma1(const T & pi, const T & tau) const
+std::pair<T, T>
+Water97FluidProperties::p_T_from_v_e(const T & v, const T & e) const
 {
-  T sum = 0.0;
-  for (std::size_t i = 0; i < _n1.size(); ++i)
-    sum += _n1[i] * MathUtils::pow(7.1 - pi, _I1[i]) * MathUtils::pow(tau - 1.222, _J1[i]);
-
-  return sum;
+  const auto rho = 1 / v;
+  const auto p = p_from_v_e(v, e);
+  return {p, T_drhodT_from_p_rho(p, rho).first};
 }
 
 template <typename T>
-T
-Water97FluidProperties::d2gamma1_dpi2(const T & pi, const T & tau) const
+std::pair<T, T>
+Water97FluidProperties::rho_T_from_v_e(const T & v, const T & e) const
 {
-  T sum = 0.0;
-  for (std::size_t i = 0; i < _n1.size(); ++i)
-    sum += _n1[i] * _I1[i] * (_I1[i] - 1) * MathUtils::pow(7.1 - pi, _I1[i] - 2) *
-           MathUtils::pow(tau - 1.222, _J1[i]);
-
-  return sum;
+  const auto rho = 1 / v;
+  const auto p = p_from_v_e(v, e);
+  return {rho, T_drhodT_from_p_rho(p, rho).first};
 }
 
 template <typename T>
-T
-Water97FluidProperties::dgamma1_dtau(const T & pi, const T & tau) const
+std::pair<T, T>
+Water97FluidProperties::p_T_from_v_h(const T & v, const T & h) const
 {
-  T g = 0.0;
-  for (std::size_t i = 0; i < _n1.size(); ++i)
-    g += _n1[i] * _J1[i] * MathUtils::pow(7.1 - pi, _I1[i]) *
-         MathUtils::pow(tau - 1.222, _J1[i] - 1);
-
-  return g;
-}
-
-template <typename T>
-T
-Water97FluidProperties::d2gamma1_dtau2(const T & pi, const T & tau) const
-{
-  T dg = 0.0;
-  for (std::size_t i = 0; i < _n1.size(); ++i)
-    dg += _n1[i] * _J1[i] * (_J1[i] - 1) * MathUtils::pow(7.1 - pi, _I1[i]) *
-          MathUtils::pow(tau - 1.222, _J1[i] - 2);
-
-  return dg;
-}
-
-template <typename T>
-T
-Water97FluidProperties::d2gamma1_dpitau(const T & pi, const T & tau) const
-{
-  T dg = 0.0;
-  for (std::size_t i = 0; i < _n1.size(); ++i)
-    dg += -_n1[i] * _I1[i] * _J1[i] * MathUtils::pow(7.1 - pi, _I1[i] - 1) *
-          MathUtils::pow(tau - 1.222, _J1[i] - 1);
-
-  return dg;
-}
-
-template <typename T>
-T
-Water97FluidProperties::gamma2(const T & pi, const T & tau) const
-{
-  // Ideal gas part of the Gibbs free energy
-  T sum0 = 0.0;
-  for (std::size_t i = 0; i < _n02.size(); ++i)
-    sum0 += _n02[i] * MathUtils::pow(tau, _J02[i]);
-
-  T g0 = std::log(pi) + sum0;
-
-  // Residual part of the Gibbs free energy
-  T gr = 0.0;
-  for (std::size_t i = 0; i < _n2.size(); ++i)
-    gr += _n2[i] * MathUtils::pow(pi, _I2[i]) * MathUtils::pow(tau - 0.5, _J2[i]);
-
-  return g0 + gr;
-}
-
-template <typename T>
-T
-Water97FluidProperties::d2gamma2_dpi2(const T & pi, const T & tau) const
-{
-  // Ideal gas part of the Gibbs free energy
-  T dg0 = -1.0 / pi / pi;
-
-  // Residual part of the Gibbs free energy
-  T dgr = 0.0;
-  for (std::size_t i = 0; i < _n2.size(); ++i)
-    dgr += _n2[i] * _I2[i] * (_I2[i] - 1) * MathUtils::pow(pi, _I2[i] - 2) *
-           MathUtils::pow(tau - 0.5, _J2[i]);
-
-  return dg0 + dgr;
-}
-
-template <typename T>
-T
-Water97FluidProperties::dgamma2_dtau(const T & pi, const T & tau) const
-{
-  // Ideal gas part of the Gibbs free energy
-  T dg0 = 0.0;
-  for (std::size_t i = 0; i < _n02.size(); ++i)
-    dg0 += _n02[i] * _J02[i] * MathUtils::pow(tau, _J02[i] - 1);
-
-  // Residual part of the Gibbs free energy
-  T dgr = 0.0;
-  for (std::size_t i = 0; i < _n2.size(); ++i)
-    dgr += _n2[i] * _J2[i] * MathUtils::pow(pi, _I2[i]) * MathUtils::pow(tau - 0.5, _J2[i] - 1);
-
-  return dg0 + dgr;
-}
-
-template <typename T>
-T
-Water97FluidProperties::d2gamma2_dtau2(const T & pi, const T & tau) const
-{
-  // Ideal gas part of the Gibbs free energy
-  T dg0 = 0.0;
-  for (std::size_t i = 0; i < _n02.size(); ++i)
-    dg0 += _n02[i] * _J02[i] * (_J02[i] - 1) * MathUtils::pow(tau, _J02[i] - 2);
-
-  // Residual part of the Gibbs free energy
-  T dgr = 0.0;
-  for (std::size_t i = 0; i < _n2.size(); ++i)
-    dgr += _n2[i] * _J2[i] * (_J2[i] - 1) * MathUtils::pow(pi, _I2[i]) *
-           MathUtils::pow(tau - 0.5, _J2[i] - 2);
-
-  return dg0 + dgr;
-}
-
-template <typename T>
-T
-Water97FluidProperties::d2gamma2_dpitau(const T & pi, const T & tau) const
-{
-  // Ideal gas part of the Gibbs free energy
-  T dg0 = 0.0;
-
-  // Residual part of the Gibbs free energy
-  T dgr = 0.0;
-  for (std::size_t i = 0; i < _n2.size(); ++i)
-    dgr += _n2[i] * _I2[i] * _J2[i] * MathUtils::pow(pi, _I2[i] - 1) *
-           MathUtils::pow(tau - 0.5, _J2[i] - 1);
-
-  return dg0 + dgr;
-}
-
-template <typename T>
-T
-Water97FluidProperties::phi3(const T & delta, const T & tau) const
-{
-  T sum = 0.0;
-  for (std::size_t i = 1; i < _n3.size(); ++i)
-    sum += _n3[i] * MathUtils::pow(delta, _I3[i]) * MathUtils::pow(tau, _J3[i]);
-
-  return _n3[0] * std::log(delta) + sum;
-}
-
-template <typename T>
-T
-Water97FluidProperties::dphi3_ddelta(const T & delta, const T & tau) const
-{
-  T sum = 0.0;
-  for (std::size_t i = 1; i < _n3.size(); ++i)
-    sum += _n3[i] * _I3[i] * MathUtils::pow(delta, _I3[i] - 1) * MathUtils::pow(tau, _J3[i]);
-
-  return _n3[0] / delta + sum;
-}
-
-template <typename T>
-T
-Water97FluidProperties::d2phi3_ddelta2(const T & delta, const T & tau) const
-{
-  T sum = 0.0;
-  for (std::size_t i = 1; i < _n3.size(); ++i)
-    sum += _n3[i] * _I3[i] * (_I3[i] - 1) * MathUtils::pow(delta, _I3[i] - 2) *
-           MathUtils::pow(tau, _J3[i]);
-
-  return -_n3[0] / delta / delta + sum;
-}
-
-template <typename T>
-T
-Water97FluidProperties::dphi3_dtau(const T & delta, const T & tau) const
-{
-  T sum = 0.0;
-  for (std::size_t i = 1; i < _n3.size(); ++i)
-    sum += _n3[i] * _J3[i] * MathUtils::pow(delta, _I3[i]) * MathUtils::pow(tau, _J3[i] - 1);
-
-  return sum;
-}
-
-template <typename T>
-T
-Water97FluidProperties::d2phi3_dtau2(const T & delta, const T & tau) const
-{
-  T sum = 0.0;
-  for (std::size_t i = 1; i < _n3.size(); ++i)
-    sum += _n3[i] * _J3[i] * (_J3[i] - 1) * MathUtils::pow(delta, _I3[i]) *
-           MathUtils::pow(tau, _J3[i] - 2);
-
-  return sum;
-}
-
-template <typename T>
-T
-Water97FluidProperties::d2phi3_ddeltatau(const T & delta, const T & tau) const
-{
-  T sum = 0.0;
-  for (std::size_t i = 1; i < _n3.size(); ++i)
-    sum += _n3[i] * _I3[i] * _J3[i] * MathUtils::pow(delta, _I3[i] - 1) *
-           MathUtils::pow(tau, _J3[i] - 1);
-
-  return sum;
-}
-
-template <typename T>
-T
-Water97FluidProperties::gamma5(const T & pi, const T & tau) const
-{
-  // Ideal gas part of the Gibbs free energy
-  T sum0 = 0.0;
-  for (std::size_t i = 0; i < _n05.size(); ++i)
-    sum0 += _n05[i] * MathUtils::pow(tau, _J05[i]);
-
-  T g0 = std::log(pi) + sum0;
-
-  // Residual part of the Gibbs free energy
-  T gr = 0.0;
-  for (std::size_t i = 0; i < _n5.size(); ++i)
-    gr += _n5[i] * MathUtils::pow(pi, _I5[i]) * MathUtils::pow(tau, _J5[i]);
-
-  return g0 + gr;
-}
-
-template <typename T>
-T
-Water97FluidProperties::dgamma5_dpi(const T & pi, const T & tau) const
-{
-  // Ideal gas part of the Gibbs free energy
-  T dg0 = 1.0 / pi;
-
-  // Residual part of the Gibbs free energy
-  T dgr = 0.0;
-  for (std::size_t i = 0; i < _n5.size(); ++i)
-    dgr += _n5[i] * _I5[i] * MathUtils::pow(pi, _I5[i] - 1) * MathUtils::pow(tau, _J5[i]);
-
-  return dg0 + dgr;
-}
-
-template <typename T>
-T
-Water97FluidProperties::d2gamma5_dpi2(const T & pi, const T & tau) const
-{
-  // Ideal gas part of the Gibbs free energy
-  T dg0 = -1.0 / pi / pi;
-
-  // Residual part of the Gibbs free energy
-  T dgr = 0.0;
-  for (std::size_t i = 0; i < _n5.size(); ++i)
-    dgr += _n5[i] * _I5[i] * (_I5[i] - 1) * MathUtils::pow(pi, _I5[i] - 2) *
-           MathUtils::pow(tau, _J5[i]);
-
-  return dg0 + dgr;
-}
-
-template <typename T>
-T
-Water97FluidProperties::dgamma5_dtau(const T & pi, const T & tau) const
-{
-  // Ideal gas part of the Gibbs free energy
-  T dg0 = 0.0;
-  for (std::size_t i = 0; i < _n05.size(); ++i)
-    dg0 += _n05[i] * _J05[i] * MathUtils::pow(tau, _J05[i] - 1);
-
-  // Residual part of the Gibbs free energy
-  T dgr = 0.0;
-  for (std::size_t i = 0; i < _n5.size(); ++i)
-    dgr += _n5[i] * _J5[i] * MathUtils::pow(pi, _I5[i]) * MathUtils::pow(tau, _J5[i] - 1);
-
-  return dg0 + dgr;
-}
-
-template <typename T>
-T
-Water97FluidProperties::d2gamma5_dtau2(const T & pi, const T & tau) const
-{
-  // Ideal gas part of the Gibbs free energy
-  T dg0 = 0.0;
-  for (std::size_t i = 0; i < _n05.size(); ++i)
-    dg0 += _n05[i] * _J05[i] * (_J05[i] - 1) * MathUtils::pow(tau, _J05[i] - 2);
-
-  // Residual part of the Gibbs free energy
-  T dgr = 0.0;
-  for (std::size_t i = 0; i < _n5.size(); ++i)
-    dgr += _n5[i] * _J5[i] * (_J5[i] - 1) * MathUtils::pow(pi, _I5[i]) *
-           MathUtils::pow(tau, _J5[i] - 2);
-
-  return dg0 + dgr;
-}
-
-template <typename T>
-T
-Water97FluidProperties::d2gamma5_dpitau(const T & pi, const T & tau) const
-{
-  // Ideal gas part of the Gibbs free energy
-  T dg0 = 0.0;
-
-  // Residual part of the Gibbs free energy
-  T dgr = 0.0;
-  for (std::size_t i = 0; i < _n5.size(); ++i)
-    dgr +=
-        _n5[i] * _I5[i] * _J5[i] * MathUtils::pow(pi, _I5[i] - 1) * MathUtils::pow(tau, _J5[i] - 1);
-
-  return dg0 + dgr;
-}
-
-template <typename T>
-T
-Water97FluidProperties::tempXY(const T & pressure, const subregionEnum xy) const
-{
-  T pi = pressure / 1.0e6;
-
-  // Choose the constants based on the string xy
-  unsigned int row;
-
-  switch (xy)
-  {
-    case AB:
-      row = 0;
-      break;
-    case CD:
-      row = 1;
-      break;
-    case GH:
-      row = 2;
-      break;
-    case IJ:
-      row = 3;
-      break;
-    case JK:
-      row = 4;
-      break;
-    case MN:
-      row = 5;
-      break;
-    case OP:
-      row = 6;
-      break;
-    case QU:
-      row = 7;
-      break;
-    case RX:
-      row = 8;
-      break;
-    case UV:
-      row = 9;
-      break;
-    case WX:
-      row = 10;
-      break;
-    default:
-      row = 0;
-  }
-
-  T sum = 0.0;
-
-  if (xy == AB || xy == OP || xy == WX)
-    for (std::size_t i = 0; i < _tempXY_n[row].size(); ++i)
-      sum += _tempXY_n[row][i] * MathUtils::pow(std::log(pi), _tempXY_I[row][i]);
-  else if (xy == EF)
-    sum += 3.727888004 * (pi - _p_critical / 1.0e6) + _T_critical;
-  else
-    for (std::size_t i = 0; i < _tempXY_n[row].size(); ++i)
-      sum += _tempXY_n[row][i] * MathUtils::pow(pi, _tempXY_I[row][i]);
-
-  return sum;
-}
-
-template <typename T>
-void
-Water97FluidProperties::vaporPressureTemplate(const T & temperature, T & psat, T & dpsat_dT) const
-{
-  // Check whether the input temperature is within the region of validity of this equation.
-  // Valid for 273.15 K <= t <= 647.096 K
-  if (temperature < 273.15 || temperature > _T_critical)
-    mooseException(name(),
-                   ": vaporPressure(): Temperature is outside range 273.15 K <= T <= 647.096 K");
-
-  T theta, dtheta_dT, theta2, a, b, c, da_dtheta, db_dtheta, dc_dtheta;
-  theta = temperature + _n4[8] / (temperature - _n4[9]);
-  dtheta_dT = 1.0 - _n4[8] / (temperature - _n4[9]) / (temperature - _n4[9]);
-  theta2 = theta * theta;
-
-  a = theta2 + _n4[0] * theta + _n4[1];
-  b = _n4[2] * theta2 + _n4[3] * theta + _n4[4];
-  c = _n4[5] * theta2 + _n4[6] * theta + _n4[7];
-
-  da_dtheta = 2.0 * theta + _n4[0];
-  db_dtheta = 2.0 * _n4[2] * theta + _n4[3];
-  dc_dtheta = 2.0 * _n4[5] * theta + _n4[6];
-
-  T denominator = -b + std::sqrt(b * b - 4.0 * a * c);
-
-  psat = Utility::pow<4>(2.0 * c / denominator) * 1.0e6;
-
-  // The derivative wrt temperature is given by the chain rule
-  T dpsat = 4.0 * Utility::pow<3>(2.0 * c / denominator);
-  dpsat *= (2.0 * dc_dtheta / denominator -
-            2.0 * c / denominator / denominator *
-                (-db_dtheta + std::pow(b * b - 4.0 * a * c, -0.5) *
-                                  (b * db_dtheta - 2.0 * da_dtheta * c - 2.0 * a * dc_dtheta)));
-  dpsat_dT = dpsat * dtheta_dT * 1.0e6;
-}
-
-inline void
-Water97FluidProperties::vaporPressure(const Real temperature, Real & psat, Real & dpsat_dT) const
-{
-  vaporPressureTemplate(temperature, psat, dpsat_dT);
-}
-
-template <typename T>
-void
-Water97FluidProperties::rho_from_p_T_template(
-    const T & pressure, const T & temperature, T & rho, T & drho_dp, T & drho_dT) const
-{
-  auto functor = [this](const auto & pressure, const auto & temperature)
-  { return this->rho_from_p_T_template(pressure, temperature); };
-
-  xyDerivatives(pressure, temperature, rho, drho_dp, drho_dT, functor);
-}
-
-template <typename T>
-T
-Water97FluidProperties::v_from_p_T_template(const T & pressure, const T & temperature) const
-{
-  return 1 / rho_from_p_T_template(pressure, temperature);
-}
-
-template <typename T>
-void
-Water97FluidProperties::v_from_p_T_template(
-    const T & pressure, const T & temperature, T & v, T & dv_dp, T & dv_dT) const
-{
-  auto functor = [this](const auto & pressure, const auto & temperature)
-  { return this->v_from_p_T_template(pressure, temperature); };
-
-  xyDerivatives(pressure, temperature, v, dv_dp, dv_dT, functor);
-}
-
-template <typename T>
-T
-Water97FluidProperties::e_from_p_T_template(const T & pressure, const T & temperature) const
-{
-  T internal_energy, pi, tau;
-
-  // Determine which region the point is in
-  unsigned int region =
-      inRegion(MetaPhysicL::raw_value(pressure), MetaPhysicL::raw_value(temperature));
-  switch (region)
-  {
-    case 1:
-      pi = pressure / _p_star[0];
-      tau = _T_star[0] / temperature;
-      internal_energy =
-          _Rw * temperature * (tau * dgamma1_dtau(pi, tau) - pi * dgamma1_dpi(pi, tau));
-      break;
-
-    case 2:
-      pi = pressure / _p_star[1];
-      tau = _T_star[1] / temperature;
-      internal_energy =
-          _Rw * temperature * (tau * dgamma2_dtau(pi, tau) - pi * dgamma2_dpi(pi, tau));
-      break;
-
-    case 3:
-    {
-      // Calculate density first, then use that in Helmholtz free energy
-      T density3 = densityRegion3(pressure, temperature);
-      T delta = density3 / _rho_critical;
-      tau = _T_star[2] / temperature;
-      internal_energy = _Rw * temperature * tau * dphi3_dtau(delta, tau);
-      break;
-    }
-
-    case 5:
-      pi = pressure / _p_star[4];
-      tau = _T_star[4] / temperature;
-      internal_energy =
-          _Rw * temperature * (tau * dgamma5_dtau(pi, tau) - pi * dgamma5_dpi(pi, tau));
-      break;
-
-    default:
-      mooseError("inRegion() has given an incorrect region");
-  }
-  // Output in J/kg
-  return internal_energy;
-}
-
-template <typename T>
-void
-Water97FluidProperties::e_from_p_T_template(
-    const T & pressure, const T & temperature, T & e, T & de_dp, T & de_dT) const
-{
-  T pi, tau, dinternal_energy_dp, dinternal_energy_dT;
-
-  // Determine which region the point is in
-  unsigned int region =
-      inRegion(MetaPhysicL::raw_value(pressure), MetaPhysicL::raw_value(temperature));
-  switch (region)
-  {
-    case 1:
-    {
-      pi = pressure / _p_star[0];
-      tau = _T_star[0] / temperature;
-      T dgdp = dgamma1_dpi(pi, tau);
-      T d2gdpt = d2gamma1_dpitau(pi, tau);
-      dinternal_energy_dp =
-          _Rw * temperature * (tau * d2gdpt - dgdp - pi * d2gamma1_dpi2(pi, tau)) / _p_star[0];
-      dinternal_energy_dT =
-          _Rw * (pi * tau * d2gdpt - tau * tau * d2gamma1_dtau2(pi, tau) - pi * dgdp);
-      break;
-    }
-
-    case 2:
-    {
-      pi = pressure / _p_star[1];
-      tau = _T_star[1] / temperature;
-      T dgdp = dgamma2_dpi(pi, tau);
-      T d2gdpt = d2gamma2_dpitau(pi, tau);
-      dinternal_energy_dp =
-          _Rw * temperature * (tau * d2gdpt - dgdp - pi * d2gamma2_dpi2(pi, tau)) / _p_star[1];
-      dinternal_energy_dT =
-          _Rw * (pi * tau * d2gdpt - tau * tau * d2gamma2_dtau2(pi, tau) - pi * dgdp);
-      break;
-    }
-
-    case 3:
-    {
-      // Calculate density first, then use that in Helmholtz free energy
-      T density3 = densityRegion3(pressure, temperature);
-      T delta = density3 / _rho_critical;
-      tau = _T_star[2] / temperature;
-      T dpdd = dphi3_ddelta(delta, tau);
-      T d2pddt = d2phi3_ddeltatau(delta, tau);
-      T d2pdd2 = d2phi3_ddelta2(delta, tau);
-      dinternal_energy_dp =
-          _T_star[2] * d2pddt / _rho_critical /
-          (2.0 * temperature * delta * dpdd + temperature * delta * delta * d2pdd2);
-      dinternal_energy_dT =
-          -_Rw * (delta * tau * d2pddt * (dpdd - tau * d2pddt) / (2.0 * dpdd + delta * d2pdd2) +
-                  tau * tau * d2phi3_dtau2(delta, tau));
-      break;
-    }
-
-    case 5:
-    {
-      pi = pressure / _p_star[4];
-      tau = _T_star[4] / temperature;
-      T dgdp = dgamma5_dpi(pi, tau);
-      T d2gdpt = d2gamma5_dpitau(pi, tau);
-      dinternal_energy_dp =
-          _Rw * temperature * (tau * d2gdpt - dgdp - pi * d2gamma5_dpi2(pi, tau)) / _p_star[4];
-      dinternal_energy_dT =
-          _Rw * (pi * tau * d2gdpt - tau * tau * d2gamma5_dtau2(pi, tau) - pi * dgdp);
-      break;
-    }
-
-    default:
-      mooseError("inRegion has given an incorrect region");
-  }
-
-  e = this->e_from_p_T(pressure, temperature);
-  de_dp = dinternal_energy_dp;
-  de_dT = dinternal_energy_dT;
+  T pressure, temperature;
+  bool conversion_succeeded;
+  p_T_from_v_h(
+      v, h, _p_initial_guess, _T_initial_guess, pressure, temperature, conversion_succeeded);
+  return {std::move(pressure), std::move(temperature)};
 }
 
 template <typename T>
@@ -2179,368 +1624,14 @@ Water97FluidProperties::T_drhodT_from_p_rho(const T & p, const T & rho) const
 }
 
 template <typename T>
-std::pair<T, T>
-Water97FluidProperties::p_T_from_v_e(const T & v, const T & e) const
-{
-  const auto rho = 1 / v;
-  const auto p = p_from_v_e(v, e);
-  return {p, T_drhodT_from_p_rho(p, rho).first};
-}
-
-template <typename T>
-std::pair<T, T>
-Water97FluidProperties::rho_T_from_v_e(const T & v, const T & e) const
-{
-  const auto rho = 1 / v;
-  const auto p = p_from_v_e(v, e);
-  return {rho, T_drhodT_from_p_rho(p, rho).first};
-}
-
-template <typename T>
-T
-Water97FluidProperties::c_from_p_T_template(const T & pressure, const T & temperature) const
-{
-  T speed2, pi, tau, delta;
-
-  // Determine which region the point is in
-  unsigned int region =
-      inRegion(MetaPhysicL::raw_value(pressure), MetaPhysicL::raw_value(temperature));
-  switch (region)
-  {
-    case 1:
-      pi = pressure / _p_star[0];
-      tau = _T_star[0] / temperature;
-      speed2 = _Rw * temperature * Utility::pow<2>(dgamma1_dpi(pi, tau)) /
-               (Utility::pow<2>(dgamma1_dpi(pi, tau) - tau * d2gamma1_dpitau(pi, tau)) /
-                    (tau * tau * d2gamma1_dtau2(pi, tau)) -
-                d2gamma1_dpi2(pi, tau));
-      break;
-
-    case 2:
-      pi = pressure / _p_star[1];
-      tau = _T_star[1] / temperature;
-      speed2 = _Rw * temperature * Utility::pow<2>(pi * dgamma2_dpi(pi, tau)) /
-               ((-pi * pi * d2gamma2_dpi2(pi, tau)) +
-                Utility::pow<2>(pi * dgamma2_dpi(pi, tau) - tau * pi * d2gamma2_dpitau(pi, tau)) /
-                    (tau * tau * d2gamma2_dtau2(pi, tau)));
-      break;
-
-    case 3:
-    {
-      // Calculate density first, then use that in Helmholtz free energy
-      T density3 = densityRegion3(pressure, temperature);
-      delta = density3 / _rho_critical;
-      tau = _T_star[2] / temperature;
-      speed2 =
-          _Rw * temperature *
-          (2.0 * delta * dphi3_ddelta(delta, tau) + delta * delta * d2phi3_ddelta2(delta, tau) -
-           Utility::pow<2>(delta * dphi3_ddelta(delta, tau) -
-                           delta * tau * d2phi3_ddeltatau(delta, tau)) /
-               (tau * tau * d2phi3_dtau2(delta, tau)));
-      break;
-    }
-
-    case 5:
-      pi = pressure / _p_star[4];
-      tau = _T_star[4] / temperature;
-      speed2 = _Rw * temperature * Utility::pow<2>(pi * dgamma5_dpi(pi, tau)) /
-               ((-pi * pi * d2gamma5_dpi2(pi, tau)) +
-                Utility::pow<2>(pi * dgamma5_dpi(pi, tau) - tau * pi * d2gamma5_dpitau(pi, tau)) /
-                    (tau * tau * d2gamma5_dtau2(pi, tau)));
-      break;
-
-    default:
-      mooseError("inRegion() has given an incorrect region");
-  }
-
-  return std::sqrt(speed2);
-}
-
-template <typename T>
-T
-Water97FluidProperties::cp_from_p_T_template(const T & pressure, const T & temperature) const
-{
-  T specific_heat, pi, tau, delta;
-
-  // Determine which region the point is in
-  unsigned int region =
-      inRegion(MetaPhysicL::raw_value(pressure), MetaPhysicL::raw_value(temperature));
-  switch (region)
-  {
-    case 1:
-      pi = pressure / _p_star[0];
-      tau = _T_star[0] / temperature;
-      specific_heat = -_Rw * tau * tau * d2gamma1_dtau2(pi, tau);
-      break;
-
-    case 2:
-      pi = pressure / _p_star[1];
-      tau = _T_star[1] / temperature;
-      specific_heat = -_Rw * tau * tau * d2gamma2_dtau2(pi, tau);
-      break;
-
-    case 3:
-    {
-      // Calculate density first, then use that in Helmholtz free energy
-      T density3 = densityRegion3(pressure, temperature);
-      delta = density3 / _rho_critical;
-      tau = _T_star[2] / temperature;
-      specific_heat =
-          _Rw *
-          (-tau * tau * d2phi3_dtau2(delta, tau) +
-           (delta * dphi3_ddelta(delta, tau) - delta * tau * d2phi3_ddeltatau(delta, tau)) *
-               (delta * dphi3_ddelta(delta, tau) - delta * tau * d2phi3_ddeltatau(delta, tau)) /
-               (2.0 * delta * dphi3_ddelta(delta, tau) +
-                delta * delta * d2phi3_ddelta2(delta, tau)));
-      break;
-    }
-
-    case 5:
-      pi = pressure / _p_star[4];
-      tau = _T_star[4] / temperature;
-      specific_heat = -_Rw * tau * tau * d2gamma5_dtau2(pi, tau);
-      break;
-
-    default:
-      mooseError("inRegion() has given an incorrect region");
-  }
-  return specific_heat;
-}
-
-template <typename T>
-T
-Water97FluidProperties::cv_from_p_T_template(const T & pressure, const T & temperature) const
-{
-  T specific_heat, pi, tau, delta;
-
-  // Determine which region the point is in
-  unsigned int region =
-      inRegion(MetaPhysicL::raw_value(pressure), MetaPhysicL::raw_value(temperature));
-  switch (region)
-  {
-    case 1:
-      pi = pressure / _p_star[0];
-      tau = _T_star[0] / temperature;
-      specific_heat =
-          _Rw * (-tau * tau * d2gamma1_dtau2(pi, tau) +
-                 Utility::pow<2>(dgamma1_dpi(pi, tau) - tau * d2gamma1_dpitau(pi, tau)) /
-                     d2gamma1_dpi2(pi, tau));
-      break;
-
-    case 2:
-      pi = pressure / _p_star[1];
-      tau = _T_star[1] / temperature;
-      specific_heat =
-          _Rw * (-tau * tau * d2gamma2_dtau2(pi, tau) +
-                 Utility::pow<2>(dgamma2_dpi(pi, tau) - tau * d2gamma2_dpitau(pi, tau)) /
-                     d2gamma2_dpi2(pi, tau));
-      break;
-
-    case 3:
-    {
-      // Calculate density first, then use that in Helmholtz free energy
-      T density3 = densityRegion3(pressure, temperature);
-      delta = density3 / _rho_critical;
-      tau = _T_star[2] / temperature;
-      specific_heat = _Rw * (-tau * tau * d2phi3_dtau2(delta, tau));
-      break;
-    }
-
-    case 5:
-      pi = pressure / _p_star[4];
-      tau = _T_star[4] / temperature;
-      specific_heat =
-          _Rw * (-tau * tau * d2gamma5_dtau2(pi, tau) +
-                 Utility::pow<2>(dgamma5_dpi(pi, tau) - tau * d2gamma5_dpitau(pi, tau)) /
-                     d2gamma5_dpi2(pi, tau));
-      break;
-
-    default:
-      mooseError("inRegion() has given an incorrect region");
-  }
-  return specific_heat;
-}
-
-template <typename T>
-T
-Water97FluidProperties::k_from_rho_T_template(const T & density, const T & temperature) const
-{
-  // Scale the density and temperature. Note that the scales are slightly
-  // different to the critical values used in IAPWS-IF97
-  T Tbar = temperature / 647.26;
-  T rhobar = density / 317.7;
-
-  // Ideal gas component
-  T sum0 = 0.0;
-
-  for (std::size_t i = 0; i < _k_a.size(); ++i)
-    sum0 += _k_a[i] * MathUtils::pow(Tbar, i);
-
-  T lambda0 = std::sqrt(Tbar) * sum0;
-
-  // The contribution due to finite density
-  T lambda1 = -0.39707 + 0.400302 * rhobar +
-              1.06 * std::exp(-0.171587 * Utility::pow<2>(rhobar + 2.392190));
-
-  // Critical enhancement
-  T DeltaT = std::abs(Tbar - 1.0) + 0.00308976;
-  T Q = 2.0 + 0.0822994 / std::pow(DeltaT, 0.6);
-  T S = (Tbar >= 1.0 ? 1.0 / DeltaT : 10.0932 / std::pow(DeltaT, 0.6));
-
-  T lambda2 = (0.0701309 / Utility::pow<10>(Tbar) + 0.011852) * std::pow(rhobar, 1.8) *
-                  std::exp(0.642857 * (1.0 - std::pow(rhobar, 2.8))) +
-              0.00169937 * S * std::pow(rhobar, Q) *
-                  std::exp((Q / (1.0 + Q)) * (1.0 - std::pow(rhobar, 1.0 + Q))) -
-              1.02 * std::exp(-4.11717 * std::pow(Tbar, 1.5) - 6.17937 / Utility::pow<5>(rhobar));
-
-  return lambda0 + lambda1 + lambda2;
-}
-
-template <typename T>
-T
-Water97FluidProperties::k_from_p_T_template(const T & pressure, const T & temperature) const
-{
-  T rho = this->rho_from_p_T(pressure, temperature);
-  return this->k_from_rho_T_template(rho, temperature);
-}
-
-template <typename T>
-T
-Water97FluidProperties::k_from_v_e_template(const T & v, const T & e) const
-{
-  const auto [p, temperature] = p_T_from_v_e(v, e);
-  return k_from_p_T_template(p, temperature);
-}
-
-template <typename T>
-T
-Water97FluidProperties::p_from_v_e_template(const T & v, const T & e) const
-{
-  const auto rho = 1 / v;
-  // For NewtonSolve
-  // y = e
-  // x = rho
-  // z = p
-  auto lambda = [this](const T & rho, const T & p, T & e, T & de_drho, T & de_dp)
-  { e_from_p_rho(p, rho, e, de_dp, de_drho); };
-  return FluidPropertiesUtils::NewtonSolve(rho, e, _p_initial_guess, _tolerance, lambda).first;
-}
-
-template <typename T>
-T
-Water97FluidProperties::e_from_p_rho_template(const T & p, const T & rho) const
-{
-  const auto temperature = T_drhodT_from_p_rho(p, rho).first;
-  return e_from_p_T_template(p, temperature);
-}
-
-template <typename T>
 void
-Water97FluidProperties::e_from_p_rho_template(
-    const T & p, const T & rho, T & e, T & de_dp, T & de_drho) const
-{
-  auto functor = [this](const auto & p, const auto & rho)
-  { return this->e_from_p_rho_template(p, rho); };
-
-  xyDerivatives(p, rho, e, de_dp, de_drho, functor);
-}
-
-template <typename T>
-T
-Water97FluidProperties::mu_from_rho_T_template(const T & density, const T & temperature) const
-{
-  const T mu_star = 1.e-6;
-  const T rhobar = density / _rho_critical;
-  const T Tbar = temperature / _T_critical;
-
-  // Viscosity in limit of zero density
-  T sum0 = 0.0;
-  for (std::size_t i = 0; i < _mu_H0.size(); ++i)
-    sum0 += _mu_H0[i] / MathUtils::pow(Tbar, i);
-
-  const T mu0 = 100.0 * std::sqrt(Tbar) / sum0;
-
-  // Residual component due to finite density
-  T sum1 = 0.0;
-  for (unsigned int i = 0; i < 6; ++i)
-  {
-    const T fact = MathUtils::pow(1.0 / Tbar - 1.0, i);
-    for (unsigned int j = 0; j < 7; ++j)
-      sum1 += fact * _mu_Hij[i][j] * MathUtils::pow(rhobar - 1.0, j);
-  }
-
-  const T mu1 = std::exp(rhobar * sum1);
-
-  // The water viscosity (in Pa.s) is then given by
-  return mu_star * mu0 * mu1;
-}
-
-template <typename T>
-std::pair<T, T>
-Water97FluidProperties::p_T_from_v_h(const T & v, const T & h) const
-{
-  T pressure, temperature;
-  bool conversion_succeeded;
-  p_T_from_v_h(
-      v, h, _p_initial_guess, _T_initial_guess, pressure, temperature, conversion_succeeded);
-  return {std::move(pressure), std::move(temperature)};
-}
-
-template <typename T>
-T
-Water97FluidProperties::h_from_p_T_template(const T & pressure, const T & temperature) const
-{
-  T enthalpy, pi, tau, delta;
-
-  // Determine which region the point is in
-  unsigned int region =
-      inRegion(MetaPhysicL::raw_value(pressure), MetaPhysicL::raw_value(temperature));
-  switch (region)
-  {
-    case 1:
-      pi = pressure / _p_star[0];
-      tau = _T_star[0] / temperature;
-      enthalpy = _Rw * _T_star[0] * dgamma1_dtau(pi, tau);
-      break;
-
-    case 2:
-      pi = pressure / _p_star[1];
-      tau = _T_star[1] / temperature;
-      enthalpy = _Rw * _T_star[1] * dgamma2_dtau(pi, tau);
-      break;
-
-    case 3:
-    {
-      // Calculate density first, then use that in Helmholtz free energy
-      T density3 = densityRegion3(pressure, temperature);
-      delta = density3 / _rho_critical;
-      tau = _T_star[2] / temperature;
-      enthalpy =
-          _Rw * temperature * (tau * dphi3_dtau(delta, tau) + delta * dphi3_ddelta(delta, tau));
-      break;
-    }
-
-    case 5:
-      pi = pressure / _p_star[4];
-      tau = _T_star[4] / temperature;
-      enthalpy = _Rw * _T_star[4] * dgamma5_dtau(pi, tau);
-      break;
-
-    default:
-      mooseError("Water97FluidProperties::inRegion has given an incorrect region");
-  }
-  return enthalpy;
-}
-
-template <typename T>
-void
-Water97FluidProperties::h_from_p_T_template(
-    const T & pressure, const T & temperature, T & h, T & dh_dp, T & dh_dT) const
+Water97FluidProperties::rho_from_p_T_template(
+    const T & pressure, const T & temperature, T & rho, T & drho_dp, T & drho_dT) const
 {
   auto functor = [this](const auto & pressure, const auto & temperature)
-  { return this->h_from_p_T_template(pressure, temperature); };
+  { return this->rho_from_p_T_template(pressure, temperature); };
 
-  xyDerivatives(pressure, temperature, h, dh_dp, dh_dT, functor);
+  xyDerivatives(pressure, temperature, rho, drho_dp, drho_dT, functor);
 }
 
 template <typename T>
@@ -2581,66 +1672,4 @@ Water97FluidProperties::rho_from_p_T_template(const T & pressure, const T & temp
       mooseError("inRegion() has given an incorrect region");
   }
   return density;
-}
-
-template <typename T>
-T
-Water97FluidProperties::mu_from_p_T_template(const T & pressure, const T & temperature) const
-{
-  T rho = this->rho_from_p_T_template(pressure, temperature);
-  return this->mu_from_rho_T_template(rho, temperature);
-}
-
-template <typename T>
-T
-Water97FluidProperties::s_from_p_T_template(const T & pressure, const T & temperature) const
-{
-  T entropy, pi, tau, density3, delta;
-
-  // Determine which region the point is in
-  unsigned int region =
-      inRegion(MetaPhysicL::raw_value(pressure), MetaPhysicL::raw_value(temperature));
-  switch (region)
-  {
-    case 1:
-      pi = pressure / _p_star[0];
-      tau = _T_star[0] / temperature;
-      entropy = _Rw * (tau * dgamma1_dtau(pi, tau) - gamma1(pi, tau));
-      break;
-
-    case 2:
-      pi = pressure / _p_star[1];
-      tau = _T_star[1] / temperature;
-      entropy = _Rw * (tau * dgamma2_dtau(pi, tau) - gamma2(pi, tau));
-      break;
-
-    case 3:
-      // Calculate density first, then use that in Helmholtz free energy
-      density3 = densityRegion3(pressure, temperature);
-      delta = density3 / _rho_critical;
-      tau = _T_star[2] / temperature;
-      entropy = _Rw * (tau * dphi3_dtau(delta, tau) - phi3(delta, tau));
-      break;
-
-    case 5:
-      pi = pressure / _p_star[4];
-      tau = _T_star[4] / temperature;
-      entropy = _Rw * (tau * dgamma5_dtau(pi, tau) - gamma5(pi, tau));
-      break;
-
-    default:
-      mooseError("inRegion() has given an incorrect region");
-  }
-  return entropy;
-}
-
-template <typename T>
-void
-Water97FluidProperties::s_from_p_T_template(
-    const T & pressure, const T & temperature, T & s, T & ds_dp, T & ds_dT) const
-{
-  auto functor = [this](const auto & pressure, const auto & temperature)
-  { return this->s_from_p_T_template(pressure, temperature); };
-
-  xyDerivatives(pressure, temperature, s, ds_dp, ds_dT, functor);
 }

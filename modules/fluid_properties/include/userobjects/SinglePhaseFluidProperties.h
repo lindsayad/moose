@@ -84,6 +84,7 @@
  * Adds Real and ADReal declarations of functions that have an implementation.
  */
 #define propfuncWithDefinitionOverride(want, prop1, prop2)                                         \
+public:                                                                                            \
   Real want##_from_##prop1##_##prop2(Real, Real) const override;                                   \
   void want##_from_##prop1##_##prop2(                                                              \
       Real prop1, Real prop2, Real & val, Real & d##want##d1, Real & d##want##d2) const override;  \
@@ -93,6 +94,8 @@
                                      ADReal & val,                                                 \
                                      ADReal & d##want##d1,                                         \
                                      ADReal & d##want##d2) const override;                         \
+                                                                                                   \
+private:                                                                                           \
   template <typename CppType>                                                                      \
   CppType want##_from_##prop1##_##prop2##_template(const CppType & prop1, const CppType & prop2)   \
       const;                                                                                       \

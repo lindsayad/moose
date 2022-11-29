@@ -156,6 +156,37 @@ CaloricallyImperfectGas::fluidName() const
   return "caloric_imperfect_gas";
 }
 
+template <typename CppType>
+Real
+CaloricallyImperfectGas::cv_from_T(const CppType & T) const
+{
+  const auto raw_T = MetaPhysicL::raw_value(T);
+  if (raw_T < _min_temperature || raw_T > _max_temperature)
+    outOfBounds("cv_from_T", raw_T, _min_temperature, _max_temperature);
+
+  return _e_T->timeDerivative(raw_T, Point());
+}
+
+template <typename CppType>
+CppType
+CaloricallyImperfectGas::e_from_p_rho_template(const CppType & p, const CppType & rho) const
+{
+  CppType T = p / (rho * _R_specific);
+  return e_from_p_T(p, T);
+}
+
+template <typename CppType>
+void
+CaloricallyImperfectGas::e_from_p_rho_template(
+    const CppType & p, const CppType & rho, CppType & e, CppType & de_dp, CppType & de_drho) const
+{
+  CppType T = p / (rho * _R_specific);
+  e = e_from_p_rho_template(p, rho);
+  CppType cv = cv_from_T(T);
+  de_dp = cv / (rho * _R_specific);
+  de_drho = -cv * p / (rho * rho * _R_specific);
+}
+
 Real
 CaloricallyImperfectGas::e_from_T(Real T) const
 {
