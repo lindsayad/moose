@@ -75,9 +75,11 @@ protected:
   const MaterialProperty<RealTensorValue> & _inertia_resistance_coeff;
   const MaterialProperty<RealTensorValue> & _viscous_resistance_coeff;
 
-  // Helper function for mapping Moose variable numberings into
-  // the "canonical" numbering for the porous medium equations.
-  unsigned map_var_number(unsigned var);
+  /**
+   * Helper function for mapping Moose variable numberings into
+   * the "canonical" numbering for the porous medium equations.
+   */
+  unsigned int mapVarNumber(unsigned int var) const;
 
   const SinglePhaseFluidProperties & _eos;
 
