@@ -33,6 +33,6 @@ ElementSidesL2Norm::getValue()
 Real
 ElementSidesL2Norm::computeQpIntegral()
 {
-  auto & u = _u[_qp];
+  const auto & u = MetaPhysicL::raw_value(_u[_qp]);
   return u * u;
 }

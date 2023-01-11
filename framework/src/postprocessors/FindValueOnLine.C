@@ -23,8 +23,8 @@ FindValueOnLine::validParams()
   params.addClassDescription("Find a specific target value along a sampling line. The variable "
                              "values along the line should change monotonically. The target value "
                              "is searched using a bisection algorithm.");
-  params.addParam<Point>("start_point", "Start point of the sampling line.");
-  params.addParam<Point>("end_point", "End point of the sampling line.");
+  params.addParam<RawPoint>("start_point", "Start point of the sampling line.");
+  params.addParam<RawPoint>("end_point", "End point of the sampling line.");
   params.addParam<Real>("target", "Target value to locate.");
   params.addParam<bool>(
       "error_if_not_found",
@@ -47,8 +47,8 @@ FindValueOnLine::validParams()
 FindValueOnLine::FindValueOnLine(const InputParameters & parameters)
   : GeneralPostprocessor(parameters),
     Coupleable(this, false),
-    _start_point(getParam<Point>("start_point")),
-    _end_point(getParam<Point>("end_point")),
+    _start_point(getParam<RawPoint>("start_point")),
+    _end_point(getParam<RawPoint>("end_point")),
     _length((_end_point - _start_point).norm()),
     _target(getParam<Real>("target")),
     _error_if_not_found(getParam<bool>("error_if_not_found")),
@@ -124,7 +124,7 @@ FindValueOnLine::execute()
   {
     // find midpoint
     s = (s_left + s_right) / 2.0;
-    Point p = s * (_end_point - _start_point) + _start_point;
+    RawPoint p = s * (_end_point - _start_point) + _start_point;
 
     // sample value
     value = getValueAtPoint(p);
@@ -158,7 +158,7 @@ FindValueOnLine::execute()
 }
 
 Real
-FindValueOnLine::getValueAtPoint(const Point & p)
+FindValueOnLine::getValueAtPoint(const RawPoint & p)
 {
   const Elem * elem = (*_pl)(p);
 
@@ -181,7 +181,7 @@ FindValueOnLine::getValueAtPoint(const Point & p)
       // element is local
       _point_vec[0] = p;
       _subproblem.reinitElemPhys(elem, _point_vec, 0);
-      value = _coupled_var.sln()[0];
+      value = MetaPhysicL::raw_value(_coupled_var.sln()[0]);
     }
   }
 

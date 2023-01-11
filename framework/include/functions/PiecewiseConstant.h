@@ -28,7 +28,7 @@ public:
    * \param pt The point in space (x,y,z) (unused)
    * \return The value of the function at the specified time
    */
-  virtual Real value(Real t, const Point & p) const override;
+  virtual GeomReal value(Real t, const Point & p) const override;
   virtual ADReal value(const ADReal & t, const ADPoint & p) const override;
 
   /**
@@ -37,9 +37,9 @@ public:
    * \param pt The point in space (x,y,z) (unused)
    * \return The time derivative of the function at the specified time
    */
-  virtual Real timeDerivative(Real t, const Point & pt) const override;
-  virtual Real integral() const override;
-  virtual Real average() const override;
+  virtual GeomReal timeDerivative(Real t, const Point & pt) const override;
+  virtual GeomReal integral() const override;
+  virtual GeomReal average() const override;
 
 private:
   /// Enum for which direction to apply values

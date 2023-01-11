@@ -35,12 +35,12 @@ PolyCoupledDirichletBC::computeQpResidual()
   Real a = libMesh::pi;
   Real b = 3;
   Real e = 4;
-  Real x = (*_current_node)(0);
-  Real y = (*_current_node)(1);
-  Real z = (*_current_node)(2);
+  Real x = MetaPhysicL::raw_value((*_current_node)(0));
+  Real y = MetaPhysicL::raw_value((*_current_node)(1));
+  Real z = MetaPhysicL::raw_value((*_current_node)(2));
   Real t = _t;
   Real u = a * x * x * x * y * t + b * y * y * z + e * x * y * z * z * z * z;
 
   // Our function gets added here.
-  return _u[_qp] - (u);
+  return _u[_qp] - u;
 }

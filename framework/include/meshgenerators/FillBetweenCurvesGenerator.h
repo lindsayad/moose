@@ -29,9 +29,9 @@ protected:
   /// Name of the mesh which contains the second input boundary
   const MeshGeneratorName _input_name_2;
   /// Translation applied to the first input mesh
-  const Point _mesh_1_shift;
+  const RawPoint _mesh_1_shift;
   /// Translation applied to the second input mesh
-  const Point _mesh_2_shift;
+  const RawPoint _mesh_2_shift;
   /// Number of sublayers of the mesh to be generated
   const unsigned int _num_layers;
   /// Subdomain ID to be assigned to the generated transition layer

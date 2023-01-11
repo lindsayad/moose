@@ -39,11 +39,12 @@ namespace libMesh
 class QBase;
 }
 
-template <typename OutputType>
-class MooseVariableDataFV : public MooseVariableDataBase<OutputType>, public MeshChangedInterface
+template <typename RawOutputType>
+class MooseVariableDataFV : public MooseVariableDataBase<RawOutputType>, public MeshChangedInterface
 {
 public:
   // type for gradient, second and divergence of template class OutputType
+  typedef typename MakeOutput<RawOutputType>::type OutputType;
   typedef typename TensorTools::IncrementRank<OutputType>::type OutputGradient;
   typedef typename TensorTools::IncrementRank<OutputGradient>::type OutputSecond;
   typedef typename TensorTools::DecrementRank<OutputType>::type OutputDivergence;
@@ -67,7 +68,7 @@ public:
   typedef typename Moose::DOFType<OutputType>::type OutputData;
   typedef MooseArray<OutputData> DoFValue;
 
-  MooseVariableDataFV(const MooseVariableFV<OutputType> & var,
+  MooseVariableDataFV(const MooseVariableFV<RawOutputType> & var,
                       SystemBase & sys,
                       THREAD_ID tid,
                       Moose::ElementType element_type,
@@ -140,32 +141,32 @@ public:
    */
   const FieldVariableCurl & curlSln(Moose::SolutionState state) const;
 
-  const ADTemplateVariableValue<OutputType> & adSln() const
+  const ADTemplateVariableValue<RawOutputType> & adSln() const
   {
     _need_ad = _need_ad_u = true;
     return _ad_u;
   }
 
-  const ADTemplateVariableGradient<OutputType> & adGradSln() const
+  const ADTemplateVariableGradient<RawOutputType> & adGradSln() const
   {
     _need_ad = _need_ad_grad_u = true;
     return _ad_grad_u;
   }
 
-  const ADTemplateVariableGradient<OutputType> & adGradSlnDot() const
+  const ADTemplateVariableGradient<RawOutputType> & adGradSlnDot() const
   {
     mooseError("Gradient of time derivative not yet implemented for FV");
   }
 
-  const ADTemplateVariableSecond<OutputType> & adSecondSln() const
+  const ADTemplateVariableSecond<RawOutputType> & adSecondSln() const
   {
     _need_ad = _need_ad_second_u = true;
     return _ad_second_u;
   }
 
-  const ADTemplateVariableValue<OutputType> & adUDot() const;
+  const ADTemplateVariableValue<RawOutputType> & adUDot() const;
 
-  const ADTemplateVariableValue<OutputType> & adUDotDot() const;
+  const ADTemplateVariableValue<RawOutputType> & adUDotDot() const;
 
   const FieldVariableValue & uDot() const;
 
@@ -219,8 +220,8 @@ public:
   const DoFValue & dofValuesDotOld() const;
   const DoFValue & dofValuesDotDot() const;
   const DoFValue & dofValuesDotDotOld() const;
-  const MooseArray<Number> & dofValuesDuDotDu() const;
-  const MooseArray<Number> & dofValuesDuDotDotDu() const;
+  const VariableValue & dofValuesDuDotDu() const;
+  const VariableValue & dofValuesDuDotDotDu() const;
 
   /**
    * Return the AD dof values
@@ -314,15 +315,15 @@ private:
   FieldVariableCurl _curl_u_older;
 
   /// AD u
-  ADTemplateVariableValue<OutputShape> _ad_u;
-  ADTemplateVariableGradient<OutputShape> _ad_grad_u;
-  ADTemplateVariableSecond<OutputShape> _ad_second_u;
+  ADTemplateVariableValue<RawOutputType> _ad_u;
+  ADTemplateVariableGradient<RawOutputType> _ad_grad_u;
+  ADTemplateVariableSecond<RawOutputType> _ad_second_u;
   MooseArray<DualReal> _ad_dof_values;
   MooseArray<DualReal> _ad_dofs_dot;
   MooseArray<DualReal> _ad_dofs_dotdot;
-  ADTemplateVariableValue<OutputShape> _ad_u_dot;
-  ADTemplateVariableValue<OutputShape> _ad_u_dotdot;
-  ADTemplateVariableGradient<OutputShape> _ad_grad_u_dot;
+  ADTemplateVariableValue<RawOutputType> _ad_u_dot;
+  ADTemplateVariableValue<RawOutputType> _ad_u_dotdot;
+  ADTemplateVariableGradient<RawOutputType> _ad_grad_u_dot;
 
   // time derivatives
 
@@ -368,70 +369,70 @@ private:
   /// A dummy ADReal variable
   ADReal _ad_real_dummy = 0;
 
-  using MooseVariableDataBase<OutputType>::_var;
-  using MooseVariableDataBase<OutputType>::_sys;
-  using MooseVariableDataBase<OutputType>::_subproblem;
-  using MooseVariableDataBase<OutputType>::_need_vector_tag_dof_u;
-  using MooseVariableDataBase<OutputType>::_need_matrix_tag_dof_u;
-  using MooseVariableDataBase<OutputType>::_vector_tags_dof_u;
-  using MooseVariableDataBase<OutputType>::_matrix_tags_dof_u;
-  using MooseVariableDataBase<OutputType>::_vector_tag_u;
-  using MooseVariableDataBase<OutputType>::_need_vector_tag_u;
-  using MooseVariableDataBase<OutputType>::_vector_tag_grad;
-  using MooseVariableDataBase<OutputType>::_need_vector_tag_grad;
-  using MooseVariableDataBase<OutputType>::_matrix_tag_u;
-  using MooseVariableDataBase<OutputType>::_need_matrix_tag_u;
-  using MooseVariableDataBase<OutputType>::_dof_indices;
-  using MooseVariableDataBase<OutputType>::_has_dof_values;
-  using MooseVariableDataBase<OutputType>::fetchDoFValues;
-  using MooseVariableDataBase<OutputType>::assignNodalValue;
-  using MooseVariableDataBase<OutputType>::zeroSizeDofValues;
-  using MooseVariableDataBase<OutputType>::_solution_tag;
-  using MooseVariableDataBase<OutputType>::_old_solution_tag;
-  using MooseVariableDataBase<OutputType>::_older_solution_tag;
-  using MooseVariableDataBase<OutputType>::_previous_nl_solution_tag;
-  using MooseVariableDataBase<OutputType>::_dof_map;
-  using MooseVariableDataBase<OutputType>::_need_u_dot;
-  using MooseVariableDataBase<OutputType>::_need_u_dotdot;
-  using MooseVariableDataBase<OutputType>::_need_u_dot_old;
-  using MooseVariableDataBase<OutputType>::_need_u_dotdot_old;
-  using MooseVariableDataBase<OutputType>::_need_du_dot_du;
-  using MooseVariableDataBase<OutputType>::_need_du_dotdot_du;
-  using MooseVariableDataBase<OutputType>::_need_grad_dot;
-  using MooseVariableDataBase<OutputType>::_need_grad_dotdot;
-  using MooseVariableDataBase<OutputType>::_need_dof_values_dot;
-  using MooseVariableDataBase<OutputType>::_need_dof_values_dotdot;
-  using MooseVariableDataBase<OutputType>::_need_dof_values_dot_old;
-  using MooseVariableDataBase<OutputType>::_need_dof_values_dotdot_old;
-  using MooseVariableDataBase<OutputType>::_need_dof_du_dot_du;
-  using MooseVariableDataBase<OutputType>::_need_dof_du_dotdot_du;
-  using MooseVariableDataBase<OutputType>::_dof_values_dot;
-  using MooseVariableDataBase<OutputType>::_dof_values_dotdot;
-  using MooseVariableDataBase<OutputType>::_dof_values_dot_old;
-  using MooseVariableDataBase<OutputType>::_dof_values_dotdot_old;
-  using MooseVariableDataBase<OutputType>::_dof_du_dot_du;
-  using MooseVariableDataBase<OutputType>::_dof_du_dotdot_du;
-  using MooseVariableDataBase<OutputType>::_tid;
-  using MooseVariableDataBase<OutputType>::_nodal_value_dot;
-  using MooseVariableDataBase<OutputType>::_nodal_value_dotdot;
-  using MooseVariableDataBase<OutputType>::_nodal_value_dot_old;
-  using MooseVariableDataBase<OutputType>::_nodal_value_dotdot_old;
-  using MooseVariableDataBase<OutputType>::_required_vector_tags;
+  using MooseVariableDataBase<RawOutputType>::_var;
+  using MooseVariableDataBase<RawOutputType>::_sys;
+  using MooseVariableDataBase<RawOutputType>::_subproblem;
+  using MooseVariableDataBase<RawOutputType>::_need_vector_tag_dof_u;
+  using MooseVariableDataBase<RawOutputType>::_need_matrix_tag_dof_u;
+  using MooseVariableDataBase<RawOutputType>::_vector_tags_dof_u;
+  using MooseVariableDataBase<RawOutputType>::_matrix_tags_dof_u;
+  using MooseVariableDataBase<RawOutputType>::_vector_tag_u;
+  using MooseVariableDataBase<RawOutputType>::_need_vector_tag_u;
+  using MooseVariableDataBase<RawOutputType>::_vector_tag_grad;
+  using MooseVariableDataBase<RawOutputType>::_need_vector_tag_grad;
+  using MooseVariableDataBase<RawOutputType>::_matrix_tag_u;
+  using MooseVariableDataBase<RawOutputType>::_need_matrix_tag_u;
+  using MooseVariableDataBase<RawOutputType>::_dof_indices;
+  using MooseVariableDataBase<RawOutputType>::_has_dof_values;
+  using MooseVariableDataBase<RawOutputType>::fetchDoFValues;
+  using MooseVariableDataBase<RawOutputType>::assignNodalValue;
+  using MooseVariableDataBase<RawOutputType>::zeroSizeDofValues;
+  using MooseVariableDataBase<RawOutputType>::_solution_tag;
+  using MooseVariableDataBase<RawOutputType>::_old_solution_tag;
+  using MooseVariableDataBase<RawOutputType>::_older_solution_tag;
+  using MooseVariableDataBase<RawOutputType>::_previous_nl_solution_tag;
+  using MooseVariableDataBase<RawOutputType>::_dof_map;
+  using MooseVariableDataBase<RawOutputType>::_need_u_dot;
+  using MooseVariableDataBase<RawOutputType>::_need_u_dotdot;
+  using MooseVariableDataBase<RawOutputType>::_need_u_dot_old;
+  using MooseVariableDataBase<RawOutputType>::_need_u_dotdot_old;
+  using MooseVariableDataBase<RawOutputType>::_need_du_dot_du;
+  using MooseVariableDataBase<RawOutputType>::_need_du_dotdot_du;
+  using MooseVariableDataBase<RawOutputType>::_need_grad_dot;
+  using MooseVariableDataBase<RawOutputType>::_need_grad_dotdot;
+  using MooseVariableDataBase<RawOutputType>::_need_dof_values_dot;
+  using MooseVariableDataBase<RawOutputType>::_need_dof_values_dotdot;
+  using MooseVariableDataBase<RawOutputType>::_need_dof_values_dot_old;
+  using MooseVariableDataBase<RawOutputType>::_need_dof_values_dotdot_old;
+  using MooseVariableDataBase<RawOutputType>::_need_dof_du_dot_du;
+  using MooseVariableDataBase<RawOutputType>::_need_dof_du_dotdot_du;
+  using MooseVariableDataBase<RawOutputType>::_dof_values_dot;
+  using MooseVariableDataBase<RawOutputType>::_dof_values_dotdot;
+  using MooseVariableDataBase<RawOutputType>::_dof_values_dot_old;
+  using MooseVariableDataBase<RawOutputType>::_dof_values_dotdot_old;
+  using MooseVariableDataBase<RawOutputType>::_dof_du_dot_du;
+  using MooseVariableDataBase<RawOutputType>::_dof_du_dotdot_du;
+  using MooseVariableDataBase<RawOutputType>::_tid;
+  using MooseVariableDataBase<RawOutputType>::_nodal_value_dot;
+  using MooseVariableDataBase<RawOutputType>::_nodal_value_dotdot;
+  using MooseVariableDataBase<RawOutputType>::_nodal_value_dot_old;
+  using MooseVariableDataBase<RawOutputType>::_nodal_value_dotdot_old;
+  using MooseVariableDataBase<RawOutputType>::_required_vector_tags;
 };
 
 /////////////////////// General template definitions //////////////////////////////////////
 
-template <typename OutputType>
+template <typename RawOutputType>
 const MooseArray<ADReal> &
-MooseVariableDataFV<OutputType>::adDofValues() const
+MooseVariableDataFV<RawOutputType>::adDofValues() const
 {
   _need_ad = true;
   return _ad_dof_values;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 inline bool
-MooseVariableDataFV<OutputType>::safeToComputeADUDot() const
+MooseVariableDataFV<RawOutputType>::safeToComputeADUDot() const
 {
   // If we don't have a time integrator then we have no way to calculate _ad_u_dot because we rely
   // on calls to TimeIntegrator::computeADTimeDerivatives. Another potential situation where
@@ -442,9 +443,9 @@ MooseVariableDataFV<OutputType>::safeToComputeADUDot() const
   return _time_integrator && (_var.kind() == Moose::VAR_NONLINEAR);
 }
 
-template <typename OutputType>
-inline const ADTemplateVariableValue<OutputType> &
-MooseVariableDataFV<OutputType>::adUDot() const
+template <typename RawOutputType>
+inline const ADTemplateVariableValue<RawOutputType> &
+MooseVariableDataFV<RawOutputType>::adUDot() const
 {
   _need_ad = _need_ad_u_dot = true;
 
@@ -455,9 +456,9 @@ MooseVariableDataFV<OutputType>::adUDot() const
   return _ad_u_dot;
 }
 
-template <typename OutputType>
-const ADTemplateVariableValue<OutputType> &
-MooseVariableDataFV<OutputType>::adUDotDot() const
+template <typename RawOutputType>
+const ADTemplateVariableValue<RawOutputType> &
+MooseVariableDataFV<RawOutputType>::adUDotDot() const
 {
   _need_ad = _need_ad_u_dotdot = true;
 
@@ -468,16 +469,16 @@ MooseVariableDataFV<OutputType>::adUDotDot() const
   return _ad_u_dotdot;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 const std::vector<dof_id_type> &
-MooseVariableDataFV<OutputType>::dofIndices() const
+MooseVariableDataFV<RawOutputType>::dofIndices() const
 {
-  return const_cast<MooseVariableDataFV<OutputType> *>(this)->initDofIndices();
+  return const_cast<MooseVariableDataFV<RawOutputType> *>(this)->initDofIndices();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 unsigned int
-MooseVariableDataFV<OutputType>::numberOfDofs() const
+MooseVariableDataFV<RawOutputType>::numberOfDofs() const
 {
   return dofIndices().size();
 }

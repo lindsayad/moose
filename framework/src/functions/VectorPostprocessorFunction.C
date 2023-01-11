@@ -59,7 +59,7 @@ VectorPostprocessorFunction::VectorPostprocessorFunction(const InputParameters &
   }
 }
 
-Real
+GeomReal
 VectorPostprocessorFunction::value(Real t, const Point & p) const
 {
   return valueInternal(t, p);
@@ -88,6 +88,6 @@ VectorPostprocessorFunction::valueInternal(const T & t, const P & p) const
     _last_update = now;
   }
 
-  const T x = _component == 3 ? t : p(_component);
+  const T x = _component == 3 ? t : MetaPhysicL::raw_value(p(_component));
   return _linear_interp->sample(x);
 }

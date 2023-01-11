@@ -74,11 +74,14 @@ ArrayDiffusion::computeQpResidual(RealEigenVector & residual)
   //   vector = matrix * vector;
   // See http://eigen.tuxfamily.org/dox/group__TopicAliasing.html for more details.
   if (_d)
-    residual.noalias() = (*_d)[_qp] * _grad_u[_qp] * _array_grad_test[_i][_qp];
+    residual.noalias() =
+        (*_d)[_qp] * MetaPhysicL::raw_value(_grad_u[_qp] * _array_grad_test[_i][_qp]);
   else if (_d_array)
-    residual.noalias() = (*_d_array)[_qp].asDiagonal() * _grad_u[_qp] * _array_grad_test[_i][_qp];
+    residual.noalias() = (*_d_array)[_qp].asDiagonal() *
+                         MetaPhysicL::raw_value(_grad_u[_qp] * _array_grad_test[_i][_qp]);
   else
-    residual.noalias() = (*_d_2d_array)[_qp] * _grad_u[_qp] * _array_grad_test[_i][_qp];
+    residual.noalias() =
+        (*_d_2d_array)[_qp] * MetaPhysicL::raw_value(_grad_u[_qp] * _array_grad_test[_i][_qp]);
 }
 
 RealEigenVector

@@ -38,7 +38,7 @@ ArrayFunctionIC::value(const Point & p)
 {
   RealEigenVector v(_var.count());
   for (unsigned int i = 0; i < _var.count(); ++i)
-    v(i) = _func[i]->value(_t, p);
+    v(i) = MetaPhysicL::raw_value(_func[i]->value(_t, p));
   return v;
 }
 
@@ -48,7 +48,7 @@ ArrayFunctionIC::gradient(const Point & p)
   RealVectorArrayValue v(_var.count(), LIBMESH_DIM);
   for (unsigned int i = 0; i < _var.count(); ++i)
   {
-    auto gd = _func[i]->gradient(_t, p);
+    auto gd = MetaPhysicL::raw_value(_func[i]->gradient(_t, p));
     for (const auto j : make_range(Moose::dim))
       v(i, j) = gd(j);
   }

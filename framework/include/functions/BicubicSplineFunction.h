@@ -24,11 +24,11 @@ public:
   BicubicSplineFunction(const InputParameters & parameters);
 
   using Function::value;
-  virtual Real value(Real t, const Point & p) const override;
+  virtual GeomReal value(Real t, const Point & p) const override;
 
-  virtual Real derivative(const Point & p, unsigned int deriv_var) const;
-  virtual RealGradient gradient(Real t, const Point & p) const override;
-  virtual Real secondDerivative(const Point & p, unsigned int deriv_var) const;
+  virtual GeomReal derivative(const Point & p, unsigned int deriv_var) const;
+  virtual GeomRealGradient gradient(Real t, const Point & p) const override;
+  virtual GeomReal secondDerivative(const Point & p, unsigned int deriv_var) const;
 
 protected:
   mutable BicubicSplineInterpolation _ipol;

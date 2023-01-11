@@ -49,7 +49,7 @@ BuildArrayVariableAux::compute()
   {
     _local_sol(j).resize(_var.count());
     for (MooseIndex(_var.count()) i = 0; i < _var.count(); ++i)
-      _local_sol(j)(i) = (*_component_dofs[i])[j];
+      _local_sol(j)(i) = MetaPhysicL::raw_value((*_component_dofs[i])[j]);
   }
   _var.setDofValues(_local_sol);
 }

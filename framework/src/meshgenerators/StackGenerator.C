@@ -149,5 +149,5 @@ Real
 StackGenerator::computeWidth(const MeshBase & mesh, const int & dim)
 {
   BoundingBox bbox = MeshTools::create_bounding_box(mesh);
-  return bbox.max()(dim - 1) - bbox.min()(dim - 1);
+  return MetaPhysicL::raw_value(bbox.max()(dim - 1) - bbox.min()(dim - 1));
 }

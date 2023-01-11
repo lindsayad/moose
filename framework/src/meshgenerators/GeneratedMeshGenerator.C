@@ -195,7 +195,7 @@ GeneratedMeshGenerator::generate()
                  "Size must equal to the product of number of elements in all directions");
     for (auto & elem : mesh->element_ptr_range())
     {
-      const Point p = elem->vertex_average();
+      const auto p = MetaPhysicL::raw_value(elem->vertex_average());
       unsigned int ix = std::floor((p(0) - _xmin) / (_xmax - _xmin) * _nx);
       unsigned int iy = std::floor((p(1) - _ymin) / (_ymax - _ymin) * _ny);
       unsigned int iz = std::floor((p(2) - _zmin) / (_zmax - _zmin) * _nz);
@@ -264,7 +264,8 @@ GeneratedMeshGenerator::generate()
           // Compute the scaled "index" of the current point.  This
           // will either be close to a whole integer or a whole
           // integer+0.5 for quadratic nodes.
-          Real float_index = (node(dir) - mins[dir]) * nelem[dir] / width[dir];
+          Real float_index =
+              (MetaPhysicL::raw_value(node(dir)) - mins[dir]) * nelem[dir] / width[dir];
 
           Real integer_part = 0;
           Real fractional_part = std::modf(float_index, &integer_part);

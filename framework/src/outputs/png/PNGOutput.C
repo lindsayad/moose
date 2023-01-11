@@ -106,13 +106,13 @@ PNGOutput::makeMeshFunc()
 
   // Set up the mesh_function
   if (_nl_sys_num == libMesh::invalid_uint)
-    _mesh_function =
-        std::make_unique<MeshFunction>(*_es_ptr,
-                                       _problem_ptr->getAuxiliarySystem().serializedSolution(),
-                                       _problem_ptr->getAuxiliarySystem().dofMap(),
-                                       var_nums);
+    _mesh_function = std::make_unique<MeshFunction<Number>>(
+        *_es_ptr,
+        _problem_ptr->getAuxiliarySystem().serializedSolution(),
+        _problem_ptr->getAuxiliarySystem().dofMap(),
+        var_nums);
   else
-    _mesh_function = std::make_unique<MeshFunction>(
+    _mesh_function = std::make_unique<MeshFunction<Number>>(
         *_es_ptr,
         _problem_ptr->getNonlinearSystem(_nl_sys_num).serializedSolution(),
         _problem_ptr->getNonlinearSystem(_nl_sys_num).dofMap(),
@@ -328,8 +328,8 @@ void
 PNGOutput::makePNG()
 {
   // Get the max and min of the BoundingBox
-  Point max_point = _box.max();
-  Point min_point = _box.min();
+  auto max_point = MetaPhysicL::raw_value(_box.max());
+  auto min_point = MetaPhysicL::raw_value(_box.min());
 
   // The the total distance on the x and y axes.
   Real dist_x = max_point(0) - min_point(0);

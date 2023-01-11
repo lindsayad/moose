@@ -52,10 +52,10 @@ CompositeFunction::CompositeFunction(const InputParameters & parameters)
   }
 }
 
-Real
+GeomReal
 CompositeFunction::value(Real t, const Point & p) const
 {
-  Real val = _scale_factor;
+  GeomReal val = _scale_factor;
 
   for (const auto & func : _f)
     val *= func->value(t, p);

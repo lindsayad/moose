@@ -59,13 +59,13 @@ findContactPoint(PenetrationInfo & p_info,
 
   const std::vector<Point> & phys_point = fe_side->get_xyz();
 
-  const std::vector<RealGradient> & dxyz_dxi = fe_side->get_dxyzdxi();
-  const std::vector<RealGradient> & d2xyz_dxi2 = fe_side->get_d2xyzdxi2();
-  const std::vector<RealGradient> & d2xyz_dxieta = fe_side->get_d2xyzdxideta();
+  const auto & dxyz_dxi = fe_side->get_dxyzdxi();
+  const auto & d2xyz_dxi2 = fe_side->get_d2xyzdxi2();
+  const auto & d2xyz_dxieta = fe_side->get_d2xyzdxideta();
 
-  const std::vector<RealGradient> & dxyz_deta = fe_side->get_dxyzdeta();
-  const std::vector<RealGradient> & d2xyz_deta2 = fe_side->get_d2xyzdeta2();
-  const std::vector<RealGradient> & d2xyz_detaxi = fe_side->get_d2xyzdxideta();
+  const auto & dxyz_deta = fe_side->get_dxyzdeta();
+  const auto & d2xyz_deta2 = fe_side->get_d2xyzdeta2();
+  const auto & d2xyz_detaxi = fe_side->get_d2xyzdxideta();
 
   if (dim == 1)
   {
@@ -75,7 +75,7 @@ findContactPoint(PenetrationInfo & p_info,
         primary_elem->master_point(primary_elem->get_node_index(nearest_node));
     std::vector<Point> elem_points = {p_info._closest_point_ref};
 
-    const std::vector<RealGradient> & elem_dxyz_dxi = fe_elem->get_dxyzdxi();
+    const auto & elem_dxyz_dxi = fe_elem->get_dxyzdxi();
 
     fe_elem->reinit(primary_elem, &elem_points);
 
@@ -107,14 +107,14 @@ findContactPoint(PenetrationInfo & p_info,
 
   std::vector<Point> points = {ref_point};
   fe_side->reinit(side, &points);
-  RealGradient d = secondary_point - phys_point[0];
+  auto d = secondary_point - phys_point[0];
 
   Real update_size = std::numeric_limits<Real>::max();
 
   // Least squares
   for (unsigned int it = 0; it < 3 && update_size > TOLERANCE * 1e3; ++it)
   {
-    DenseMatrix<Real> jac(dim - 1, dim - 1);
+    DenseMatrix<GeomReal> jac(dim - 1, dim - 1);
 
     jac(0, 0) = -(dxyz_dxi[0] * dxyz_dxi[0]);
 
@@ -125,14 +125,14 @@ findContactPoint(PenetrationInfo & p_info,
       jac(1, 1) = -(dxyz_deta[0] * dxyz_deta[0]);
     }
 
-    DenseVector<Real> rhs(dim - 1);
+    DenseVector<GeomReal> rhs(dim - 1);
 
     rhs(0) = dxyz_dxi[0] * d;
 
     if (dim - 1 == 2)
       rhs(1) = dxyz_deta[0] * d;
 
-    DenseVector<Real> update(dim - 1);
+    DenseVector<GeomReal> update(dim - 1);
 
     jac.lu_solve(rhs, update);
 
@@ -145,7 +145,7 @@ findContactPoint(PenetrationInfo & p_info,
     fe_side->reinit(side, &points);
     d = secondary_point - phys_point[0];
 
-    update_size = update.l2_norm();
+    update_size = MetaPhysicL::raw_value(update.l2_norm());
   }
 
   update_size = std::numeric_limits<Real>::max();
@@ -157,7 +157,7 @@ findContactPoint(PenetrationInfo & p_info,
   {
     d = secondary_point - phys_point[0];
 
-    DenseMatrix<Real> jac(dim - 1, dim - 1);
+    DenseMatrix<GeomReal> jac(dim - 1, dim - 1);
 
     jac(0, 0) = (d2xyz_dxi2[0] * d) - (dxyz_dxi[0] * dxyz_dxi[0]);
 
@@ -169,14 +169,14 @@ findContactPoint(PenetrationInfo & p_info,
       jac(1, 1) = (d2xyz_deta2[0] * d) - (dxyz_deta[0] * dxyz_deta[0]);
     }
 
-    DenseVector<Real> rhs(dim - 1);
+    DenseVector<GeomReal> rhs(dim - 1);
 
     rhs(0) = -dxyz_dxi[0] * d;
 
     if (dim - 1 == 2)
       rhs(1) = -dxyz_deta[0] * d;
 
-    DenseVector<Real> update(dim - 1);
+    DenseVector<GeomReal> update(dim - 1);
 
     jac.lu_solve(rhs, update);
 
@@ -189,7 +189,7 @@ findContactPoint(PenetrationInfo & p_info,
     fe_side->reinit(side, &points);
     d = secondary_point - phys_point[0];
 
-    update_size = update.l2_norm();
+    update_size = MetaPhysicL::raw_value(update.l2_norm());
   }
 
   /*
@@ -221,7 +221,7 @@ findContactPoint(PenetrationInfo & p_info,
   }
 
   // If the point has not penetrated the face, make the distance negative
-  const Real dot(d * p_info._normal);
+  const auto dot = d * p_info._normal;
   if (dot > 0.0)
     p_info._distance = -p_info._distance;
 
@@ -238,8 +238,8 @@ findContactPoint(PenetrationInfo & p_info,
     fe_side->reinit(side, &points);
     Point closest_point_on_face(phys_point[0]);
 
-    RealGradient off_face = closest_point_on_face - p_info._closest_point;
-    Real tangential_distance = off_face.norm();
+    auto off_face = closest_point_on_face - p_info._closest_point;
+    auto tangential_distance = off_face.norm();
     p_info._tangential_distance = tangential_distance;
     if (tangential_distance <= tangential_tolerance)
     {
@@ -247,8 +247,8 @@ findContactPoint(PenetrationInfo & p_info,
     }
   }
 
-  const std::vector<std::vector<Real>> & phi = fe_side->get_phi();
-  const std::vector<std::vector<RealGradient>> & grad_phi = fe_side->get_dphi();
+  const auto & phi = fe_side->get_phi();
+  const auto & grad_phi = fe_side->get_dphi();
 
   points[0] = p_info._closest_point_ref;
   fe_side->reinit(side, &points);
@@ -265,8 +265,8 @@ restrictPointToFace(Point & p, const Elem * side, std::vector<const Node *> & of
 {
   const ElemType t(side->type());
   off_edge_nodes.clear();
-  Real & xi = p(0);
-  Real & eta = p(1);
+  auto & xi = p(0);
+  auto & eta = p(1);
 
   switch (t)
   {
@@ -326,7 +326,7 @@ restrictPointToFace(Point & p, const Elem * side, std::vector<const Node *> & of
       }
       else if ((xi + eta) > 1.0)
       {
-        Real delta = (xi + eta - 1.0) / 2.0;
+        auto delta = (xi + eta - 1.0) / 2.0;
         xi -= delta;
         eta -= delta;
         off_edge_nodes.push_back(side->node_ptr(1));

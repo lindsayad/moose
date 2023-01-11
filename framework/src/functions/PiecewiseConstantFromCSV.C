@@ -68,7 +68,7 @@ PiecewiseConstantFromCSV::initialSetup()
                    std::to_string(_read_prop_user_object->getNumProperties()));
 }
 
-Real
+GeomReal
 PiecewiseConstantFromCSV::value(Real, const Point & p) const
 {
   if (_read_type == PropertyReadFile::ReadTypeEnum::ELEMENT ||

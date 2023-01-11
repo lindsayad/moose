@@ -48,32 +48,34 @@ class NumericVector;
 /// Real                Real                  Real
 /// RealVectorValue     RealVectorValue       Real
 /// RealEigenVector      Real                  RealEigenVector
-template <typename OutputType>
-class MooseVariableFV : public MooseVariableField<OutputType>
+template <typename RawOutputType>
+class MooseVariableFV : public MooseVariableField<RawOutputType>
 {
 public:
-  using OutputGradient = typename MooseVariableField<OutputType>::OutputGradient;
-  using OutputSecond = typename MooseVariableField<OutputType>::OutputSecond;
-  using OutputDivergence = typename MooseVariableField<OutputType>::OutputDivergence;
+  using OutputType = typename MooseVariableField<RawOutputType>::OutputType;
+  using OutputGradient = typename MooseVariableField<RawOutputType>::OutputGradient;
+  using OutputSecond = typename MooseVariableField<RawOutputType>::OutputSecond;
+  using OutputDivergence = typename MooseVariableField<RawOutputType>::OutputDivergence;
 
-  using FieldVariableValue = typename MooseVariableField<OutputType>::FieldVariableValue;
-  using FieldVariableGradient = typename MooseVariableField<OutputType>::FieldVariableGradient;
-  using FieldVariableSecond = typename MooseVariableField<OutputType>::FieldVariableSecond;
-  using FieldVariableCurl = typename MooseVariableField<OutputType>::FieldVariableCurl;
-  using FieldVariableDivergence = typename MooseVariableField<OutputType>::FieldVariableDivergence;
+  using FieldVariableValue = typename MooseVariableField<RawOutputType>::FieldVariableValue;
+  using FieldVariableGradient = typename MooseVariableField<RawOutputType>::FieldVariableGradient;
+  using FieldVariableSecond = typename MooseVariableField<RawOutputType>::FieldVariableSecond;
+  using FieldVariableCurl = typename MooseVariableField<RawOutputType>::FieldVariableCurl;
+  using FieldVariableDivergence =
+      typename MooseVariableField<RawOutputType>::FieldVariableDivergence;
 
-  using OutputShape = typename MooseVariableField<OutputType>::OutputShape;
-  using OutputShapeGradient = typename MooseVariableField<OutputType>::OutputShapeGradient;
-  using OutputShapeSecond = typename MooseVariableField<OutputType>::OutputShapeSecond;
-  using OutputShapeDivergence = typename MooseVariableField<OutputType>::OutputShapeDivergence;
+  using OutputShape = typename MooseVariableField<RawOutputType>::OutputShape;
+  using OutputShapeGradient = typename MooseVariableField<RawOutputType>::OutputShapeGradient;
+  using OutputShapeSecond = typename MooseVariableField<RawOutputType>::OutputShapeSecond;
+  using OutputShapeDivergence = typename MooseVariableField<RawOutputType>::OutputShapeDivergence;
 
-  using OutputData = typename MooseVariableField<OutputType>::OutputData;
-  using DoFValue = typename MooseVariableField<OutputType>::DoFValue;
+  using OutputData = typename MooseVariableField<RawOutputType>::OutputData;
+  using DoFValue = typename MooseVariableField<RawOutputType>::DoFValue;
 
-  using FieldVariablePhiValue = typename MooseVariableField<OutputType>::FieldVariablePhiValue;
+  using FieldVariablePhiValue = typename MooseVariableField<RawOutputType>::FieldVariablePhiValue;
   using FieldVariablePhiGradient =
-      typename MooseVariableField<OutputType>::FieldVariablePhiGradient;
-  using FieldVariablePhiSecond = typename MooseVariableField<OutputType>::FieldVariablePhiSecond;
+      typename MooseVariableField<RawOutputType>::FieldVariablePhiGradient;
+  using FieldVariablePhiSecond = typename MooseVariableField<RawOutputType>::FieldVariablePhiSecond;
 
   static InputParameters validParams();
 
@@ -247,11 +249,11 @@ public:
   const VariableValue & duDotDotDuNeighbor() const { return _neighbor_data->duDotDotDu(); }
 
   /// AD
-  const ADTemplateVariableValue<OutputType> & adSln() const override
+  const ADTemplateVariableValue<RawOutputType> & adSln() const override
   {
     return _element_data->adSln();
   }
-  const ADTemplateVariableGradient<OutputType> & adGradSln() const override
+  const ADTemplateVariableGradient<RawOutputType> & adGradSln() const override
   {
     return _element_data->adGradSln();
   }
@@ -296,45 +298,45 @@ public:
    */
   ADReal getBoundaryFaceValue(const FaceInfo & fi) const;
 
-  const ADTemplateVariableSecond<OutputType> & adSecondSln() const override
+  const ADTemplateVariableSecond<RawOutputType> & adSecondSln() const override
   {
     return _element_data->adSecondSln();
   }
-  const ADTemplateVariableValue<OutputType> & adUDot() const override
+  const ADTemplateVariableValue<RawOutputType> & adUDot() const override
   {
     return _element_data->adUDot();
   }
-  const ADTemplateVariableValue<OutputType> & adUDotDot() const override
+  const ADTemplateVariableValue<RawOutputType> & adUDotDot() const override
   {
     return _element_data->adUDotDot();
   }
-  const ADTemplateVariableGradient<OutputType> & adGradSlnDot() const override
+  const ADTemplateVariableGradient<RawOutputType> & adGradSlnDot() const override
   {
     return _element_data->adGradSlnDot();
   }
 
   /// neighbor AD
-  const ADTemplateVariableValue<OutputType> & adSlnNeighbor() const override
+  const ADTemplateVariableValue<RawOutputType> & adSlnNeighbor() const override
   {
     return _neighbor_data->adSln();
   }
-  const ADTemplateVariableGradient<OutputType> & adGradSlnNeighbor() const override
+  const ADTemplateVariableGradient<RawOutputType> & adGradSlnNeighbor() const override
   {
     return _neighbor_data->adGradSln();
   }
-  const ADTemplateVariableSecond<OutputType> & adSecondSlnNeighbor() const override
+  const ADTemplateVariableSecond<RawOutputType> & adSecondSlnNeighbor() const override
   {
     return _neighbor_data->adSecondSln();
   }
-  const ADTemplateVariableValue<OutputType> & adUDotNeighbor() const override
+  const ADTemplateVariableValue<RawOutputType> & adUDotNeighbor() const override
   {
     return _neighbor_data->adUDot();
   }
-  const ADTemplateVariableValue<OutputType> & adUDotDotNeighbor() const override
+  const ADTemplateVariableValue<RawOutputType> & adUDotDotNeighbor() const override
   {
     return _neighbor_data->adUDotDot();
   }
-  const ADTemplateVariableGradient<OutputType> & adGradSlnNeighborDot() const override
+  const ADTemplateVariableGradient<RawOutputType> & adGradSlnNeighborDot() const override
   {
     return _neighbor_data->adGradSlnDot();
   }
@@ -394,10 +396,10 @@ public:
   const DoFValue & dofValuesDotDotNeighbor() const override;
   const DoFValue & dofValuesDotDotOld() const override;
   const DoFValue & dofValuesDotDotOldNeighbor() const override;
-  const MooseArray<Number> & dofValuesDuDotDu() const override;
-  const MooseArray<Number> & dofValuesDuDotDuNeighbor() const override;
-  const MooseArray<Number> & dofValuesDuDotDotDu() const override;
-  const MooseArray<Number> & dofValuesDuDotDotDuNeighbor() const override;
+  const VariableValue & dofValuesDuDotDu() const override;
+  const VariableValue & dofValuesDuDotDuNeighbor() const override;
+  const VariableValue & dofValuesDuDotDotDu() const override;
+  const VariableValue & dofValuesDuDotDotDuNeighbor() const override;
 
   /// Returns the AD dof values.
   const MooseArray<ADReal> & adDofValues() const override;
@@ -410,7 +412,7 @@ public:
   /// @param elem The element we are computing on
   /// @param phi Evaluated shape functions at a point
   /// @return The variable gradient value
-  typename OutputTools<OutputType>::OutputGradient getGradient(const Elem * elem) const;
+  OutputGradient getGradient(const Elem * elem) const;
 
   /// Returns true if a Dirichlet BC exists on the current face.  This only
   /// works if the variable has been initialized on a face with
@@ -443,7 +445,7 @@ public:
    */
   ADReal getInternalFaceValue(const FaceInfo & fi, const bool correct_skewness = false) const;
 
-  using FunctorArg = typename Moose::ADType<OutputType>::type;
+  using FunctorArg = typename Moose::ADType<RawOutputType>::type;
   using typename Moose::FunctorBase<FunctorArg>::ValueType;
   using typename Moose::FunctorBase<FunctorArg>::DotType;
   using typename Moose::FunctorBase<FunctorArg>::GradientType;
@@ -487,9 +489,9 @@ protected:
                                                   bool two_term_expansion) const;
 
 private:
-  using MooseVariableField<OutputType>::evaluate;
-  using MooseVariableField<OutputType>::evaluateGradient;
-  using MooseVariableField<OutputType>::evaluateDot;
+  using MooseVariableField<RawOutputType>::evaluate;
+  using MooseVariableField<RawOutputType>::evaluateGradient;
+  using MooseVariableField<RawOutputType>::evaluateDot;
   using ElemArg = Moose::ElemArg;
   using ElemFromFaceArg = Moose::ElemFromFaceArg;
   using FaceArg = Moose::FaceArg;
@@ -578,10 +580,10 @@ protected:
   usingMooseVariableBaseMembers;
 
   /// Holder for all the data associated with the "main" element
-  std::unique_ptr<MooseVariableDataFV<OutputType>> _element_data;
+  std::unique_ptr<MooseVariableDataFV<RawOutputType>> _element_data;
 
   /// Holder for all the data associated with the neighbor element
-  std::unique_ptr<MooseVariableDataFV<OutputType>> _neighbor_data;
+  std::unique_ptr<MooseVariableDataFV<RawOutputType>> _neighbor_data;
 
 private:
   /// The current (ghosted) solution. Note that this needs to be stored as a reference to a pointer
@@ -627,24 +629,24 @@ private:
   DotType evaluateFaceDotHelper(const FaceCallingArg & face) const;
 };
 
-template <typename OutputType>
+template <typename RawOutputType>
 inline const MooseArray<ADReal> &
-MooseVariableFV<OutputType>::adDofValues() const
+MooseVariableFV<RawOutputType>::adDofValues() const
 {
   return _element_data->adDofValues();
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::ValueType
-MooseVariableFV<OutputType>::evaluate(const ElemArg & elem_arg, unsigned int) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::ValueType
+MooseVariableFV<RawOutputType>::evaluate(const ElemArg & elem_arg, unsigned int) const
 {
   return getElemValue(elem_arg.elem);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 template <typename FaceCallingArg>
 ADReal
-MooseVariableFV<OutputType>::getInternalFaceValue(const FaceCallingArg & face) const
+MooseVariableFV<RawOutputType>::getInternalFaceValue(const FaceCallingArg & face) const
 {
   const FaceInfo * const fi = face.fi;
   mooseAssert(fi, "The face information must be non-null");
@@ -654,10 +656,10 @@ MooseVariableFV<OutputType>::getInternalFaceValue(const FaceCallingArg & face) c
   return getInternalFaceValue(*fi, face.correct_skewness);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 template <typename FaceCallingArg>
-typename MooseVariableFV<OutputType>::DotType
-MooseVariableFV<OutputType>::evaluateFaceDotHelper(const FaceCallingArg & face) const
+typename MooseVariableFV<RawOutputType>::DotType
+MooseVariableFV<RawOutputType>::evaluateFaceDotHelper(const FaceCallingArg & face) const
 {
   const FaceInfo * const fi = face.fi;
   mooseAssert(fi, "The face information must be non-null");
@@ -690,55 +692,56 @@ MooseVariableFV<OutputType>::evaluateFaceDotHelper(const FaceCallingArg & face) 
   }
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::GradientType
-MooseVariableFV<OutputType>::evaluateGradient(const ElemArg & elem_arg, unsigned int) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::GradientType
+MooseVariableFV<RawOutputType>::evaluateGradient(const ElemArg & elem_arg, unsigned int) const
 {
   return adGradSln(elem_arg.elem, elem_arg.correct_skewness);
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::GradientType
-MooseVariableFV<OutputType>::evaluateGradient(const FaceArg & face, unsigned int) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::GradientType
+MooseVariableFV<RawOutputType>::evaluateGradient(const FaceArg & face, unsigned int) const
 {
   mooseAssert(face.fi, "We must have a non-null face information");
   return adGradSln(*face.fi, face.correct_skewness);
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::GradientType
-MooseVariableFV<OutputType>::evaluateGradient(const SingleSidedFaceArg & face, unsigned int) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::GradientType
+MooseVariableFV<RawOutputType>::evaluateGradient(const SingleSidedFaceArg & face,
+                                                 unsigned int) const
 {
   const auto * const fi = face.fi;
   mooseAssert(fi, "We must have a non-null face information");
   return adGradSln(*fi, face.correct_skewness);
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::DotType
-MooseVariableFV<OutputType>::evaluateDot(const FaceArg & face, unsigned int) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::DotType
+MooseVariableFV<RawOutputType>::evaluateDot(const FaceArg & face, unsigned int) const
 {
   return evaluateFaceDotHelper(face);
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::DotType
-MooseVariableFV<OutputType>::evaluateDot(const SingleSidedFaceArg & face, unsigned int) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::DotType
+MooseVariableFV<RawOutputType>::evaluateDot(const SingleSidedFaceArg & face, unsigned int) const
 {
   return evaluateFaceDotHelper(face);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::setActiveTags(const std::set<TagID> & vtags)
+MooseVariableFV<RawOutputType>::setActiveTags(const std::set<TagID> & vtags)
 {
   _element_data->setActiveTags(vtags);
   _neighbor_data->setActiveTags(vtags);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 const std::vector<dof_id_type> &
-MooseVariableFV<OutputType>::dofIndicesLower() const
+MooseVariableFV<RawOutputType>::dofIndicesLower() const
 {
   static const std::vector<dof_id_type> empty;
   return empty;

@@ -28,7 +28,7 @@
 class MooseEnum;
 template <typename T>
 class MooseArray;
-typedef MooseArray<Real> VariableValue;
+typedef MooseArray<GeomReal> VariableValue;
 template <typename>
 class ColumnMajorMatrixTempl;
 namespace libMesh

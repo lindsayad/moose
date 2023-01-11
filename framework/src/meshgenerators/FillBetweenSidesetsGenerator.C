@@ -28,10 +28,10 @@ FillBetweenSidesetsGenerator::validParams()
       "boundary_1", "the first boundary that needs to be connected.");
   params.addRequiredParam<std::vector<BoundaryName>>(
       "boundary_2", "the second boundary that needs to be connected.");
-  params.addParam<Point>(
-      "mesh_1_shift", Point(0.0, 0.0, 0.0), "Translation vector to be applied to input_mesh_1");
-  params.addParam<Point>(
-      "mesh_2_shift", Point(0.0, 0.0, 0.0), "Translation vector to be applied to input_mesh_2");
+  params.addParam<RawPoint>(
+      "mesh_1_shift", RawPoint(0.0, 0.0, 0.0), "Translation vector to be applied to input_mesh_1");
+  params.addParam<RawPoint>(
+      "mesh_2_shift", RawPoint(0.0, 0.0, 0.0), "Translation vector to be applied to input_mesh_2");
   params.addRequiredRangeCheckedParam<unsigned int>(
       "num_layers", "num_layers>0", "Number of layers of elements created between the boundaries.");
   params.addParam<subdomain_id_type>("block_id", 1, "ID to be assigned to the transition layer.");
@@ -83,8 +83,8 @@ FillBetweenSidesetsGenerator::FillBetweenSidesetsGenerator(const InputParameters
     _input_name_2(getParam<MeshGeneratorName>("input_mesh_2")),
     _boundary_1(getParam<std::vector<BoundaryName>>("boundary_1")),
     _boundary_2(getParam<std::vector<BoundaryName>>("boundary_2")),
-    _mesh_1_shift(getParam<Point>("mesh_1_shift")),
-    _mesh_2_shift(getParam<Point>("mesh_2_shift")),
+    _mesh_1_shift(getParam<RawPoint>("mesh_1_shift")),
+    _mesh_2_shift(getParam<RawPoint>("mesh_2_shift")),
     _num_layers(getParam<unsigned int>("num_layers")),
     _block_id(getParam<subdomain_id_type>("block_id")),
     _input_boundary_1_id(getParam<boundary_id_type>("input_boundary_1_id")),

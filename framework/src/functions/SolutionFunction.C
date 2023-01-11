@@ -82,14 +82,14 @@ SolutionFunction::initialSetup()
   _solution_object_var_index = _solution_object_ptr->getLocalVarIndex(var_name);
 }
 
-Real
+GeomReal
 SolutionFunction::value(Real t, const Point & p) const
 {
   return _scale_factor * (_solution_object_ptr->pointValue(t, p, _solution_object_var_index)) +
          _add_factor;
 }
 
-RealGradient
+GeomRealGradient
 SolutionFunction::gradient(Real t, const Point & p) const
 {
   return _scale_factor *

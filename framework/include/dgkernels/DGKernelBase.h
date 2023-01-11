@@ -123,7 +123,7 @@ protected:
   std::vector<AuxVariableName> _diag_save_in_strings;
 
   /// The volume (or length) of the current neighbor
-  const Real & getNeighborElemVolume() const { return _assembly.neighborVolume(); }
+  const GeomReal & getNeighborElemVolume() const { return _assembly.neighborVolume(); }
 
 public:
   // boundary id used for internal edges (all DG kernels lives on this boundary id -- a made-up

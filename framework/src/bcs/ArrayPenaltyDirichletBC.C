@@ -38,11 +38,12 @@ ArrayPenaltyDirichletBC::ArrayPenaltyDirichletBC(const InputParameters & paramet
 void
 ArrayPenaltyDirichletBC::computeQpResidual(RealEigenVector & residual)
 {
-  residual = _p * _test[_i][_qp] * (_u[_qp] - _v);
+  residual = _p * MetaPhysicL::raw_value(_test[_i][_qp]) * (MetaPhysicL::raw_value(_u[_qp]) - _v);
 }
 
 RealEigenVector
 ArrayPenaltyDirichletBC::computeQpJacobian()
 {
-  return RealEigenVector::Constant(_count, _p * _phi[_j][_qp] * _test[_i][_qp]);
+  return RealEigenVector::Constant(
+      _count, _p * MetaPhysicL::raw_value(_phi[_j][_qp]) * MetaPhysicL::raw_value(_test[_i][_qp]));
 }

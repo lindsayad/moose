@@ -57,12 +57,14 @@ FVScalarLagrangeMultiplierConstraint::computeResidual()
   mooseAssert(_local_re.size() == 1, "We should only have a single dof");
   mooseAssert(_lambda.size() == 1 && _lambda_var.order() == 1,
               "The lambda variable should be first order");
-  _local_re(0) += MetaPhysicL::raw_value(_lambda[0]) * _assembly.elemVolume();
+  _local_re(0) +=
+      MetaPhysicL::raw_value(_lambda[0]) * MetaPhysicL::raw_value(_assembly.elemVolume());
   accumulateTaggedLocalResidual();
 
   // LM residual. We may not have any actual ScalarKernels in our simulation so we need to manually
   // make sure the scalar residuals get cached for later addition
-  const auto lm_r = MetaPhysicL::raw_value(computeQpResidual()) * _assembly.elemVolume();
+  const auto lm_r =
+      MetaPhysicL::raw_value(computeQpResidual()) * MetaPhysicL::raw_value(_assembly.elemVolume());
   mooseAssert(_lambda_var.dofIndices().size() == 1, "We should only have a single dof");
   _assembly.processResidual(lm_r, _lambda_var.dofIndices()[0], _vector_tags);
 }

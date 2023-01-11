@@ -63,8 +63,8 @@ protected:
   unsigned int _qp;
   const MooseArray<Point> & _q_point;
   const QBase * const & _qrule;
-  const MooseArray<Real> & _JxW;
-  const MooseArray<Real> & _coord;
+  const MooseArray<GeomReal> & _JxW;
+  const MooseArray<GeomReal> & _coord;
 
   BoundaryID _boundary_id;
 

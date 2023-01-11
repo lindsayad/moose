@@ -23,7 +23,7 @@ class Elem;
 
 // Using statements
 using libMesh::Elem;
-using libMesh::Real;
+using libMesh::GeomReal;
 
 /**
  * Holds xi^(1), xi^(2), and other data for a given mortar segment.
@@ -41,7 +41,7 @@ struct MortarSegmentInfo
   /**
    * Construct a MortarSegmentInfo object with the given xi values.
    */
-  MortarSegmentInfo(Real x1a, Real x1b, Real x2a, Real x2b);
+  MortarSegmentInfo(GeomReal x1a, GeomReal x1b, GeomReal x2a, GeomReal x2b);
 
   // MortarSegmentInfo(const MortarSegmentInfo &) = default;
 
@@ -62,12 +62,12 @@ struct MortarSegmentInfo
    */
   bool hasPrimary() const;
 
-  Real xi1_a, xi1_b;
-  Real xi2_a, xi2_b;
+  GeomReal xi1_a, xi1_b;
+  GeomReal xi2_a, xi2_b;
   const Elem * secondary_elem;
   const Elem * primary_elem;
 
   // A magic number to let us determine when xi values have not been
   // initialized yet.
-  static const Real invalid_xi;
+  static const GeomReal invalid_xi;
 };

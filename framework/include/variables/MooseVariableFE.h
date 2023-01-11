@@ -42,45 +42,48 @@ typedef MooseVariableFE<RealEigenVector> ArrayMooseVariable;
  * RealEigenVector     Real                  RealEigenVector
  *
  */
-template <typename OutputType>
-class MooseVariableFE : public MooseVariableField<OutputType>
+template <typename RawOutputType>
+class MooseVariableFE : public MooseVariableField<RawOutputType>
 {
 public:
-  using OutputGradient = typename MooseVariableField<OutputType>::OutputGradient;
-  using OutputSecond = typename MooseVariableField<OutputType>::OutputSecond;
-  using OutputDivergence = typename MooseVariableField<OutputType>::OutputDivergence;
+  using OutputType = typename MooseVariableField<RawOutputType>::OutputType;
+  using OutputGradient = typename MooseVariableField<RawOutputType>::OutputGradient;
+  using OutputSecond = typename MooseVariableField<RawOutputType>::OutputSecond;
+  using OutputDivergence = typename MooseVariableField<RawOutputType>::OutputDivergence;
 
-  using FieldVariableValue = typename MooseVariableField<OutputType>::FieldVariableValue;
-  using FieldVariableGradient = typename MooseVariableField<OutputType>::FieldVariableGradient;
-  using FieldVariableSecond = typename MooseVariableField<OutputType>::FieldVariableSecond;
-  using FieldVariableCurl = typename MooseVariableField<OutputType>::FieldVariableCurl;
-  using FieldVariableDivergence = typename MooseVariableField<OutputType>::FieldVariableDivergence;
+  using FieldVariableValue = typename MooseVariableField<RawOutputType>::FieldVariableValue;
+  using FieldVariableGradient = typename MooseVariableField<RawOutputType>::FieldVariableGradient;
+  using FieldVariableSecond = typename MooseVariableField<RawOutputType>::FieldVariableSecond;
+  using FieldVariableCurl = typename MooseVariableField<RawOutputType>::FieldVariableCurl;
+  using FieldVariableDivergence =
+      typename MooseVariableField<RawOutputType>::FieldVariableDivergence;
 
-  using OutputShape = typename MooseVariableField<OutputType>::OutputShape;
-  using OutputShapeGradient = typename MooseVariableField<OutputType>::OutputShapeGradient;
-  using OutputShapeSecond = typename MooseVariableField<OutputType>::OutputShapeSecond;
-  using OutputShapeDivergence = typename MooseVariableField<OutputType>::OutputShapeDivergence;
+  using OutputShape = typename MooseVariableField<RawOutputType>::OutputShape;
+  using OutputShapeGradient = typename MooseVariableField<RawOutputType>::OutputShapeGradient;
+  using OutputShapeSecond = typename MooseVariableField<RawOutputType>::OutputShapeSecond;
+  using OutputShapeDivergence = typename MooseVariableField<RawOutputType>::OutputShapeDivergence;
 
-  using FieldVariablePhiValue = typename MooseVariableField<OutputType>::FieldVariablePhiValue;
+  using FieldVariablePhiValue = typename MooseVariableField<RawOutputType>::FieldVariablePhiValue;
   using FieldVariablePhiGradient =
-      typename MooseVariableField<OutputType>::FieldVariablePhiGradient;
-  using FieldVariablePhiSecond = typename MooseVariableField<OutputType>::FieldVariablePhiSecond;
-  using FieldVariablePhiCurl = typename MooseVariableField<OutputType>::FieldVariablePhiCurl;
+      typename MooseVariableField<RawOutputType>::FieldVariablePhiGradient;
+  using FieldVariablePhiSecond = typename MooseVariableField<RawOutputType>::FieldVariablePhiSecond;
+  using FieldVariablePhiCurl = typename MooseVariableField<RawOutputType>::FieldVariablePhiCurl;
   using FieldVariablePhiDivergence =
-      typename MooseVariableField<OutputType>::FieldVariablePhiDivergence;
+      typename MooseVariableField<RawOutputType>::FieldVariablePhiDivergence;
 
-  using FieldVariableTestValue = typename MooseVariableField<OutputType>::FieldVariableTestValue;
+  using FieldVariableTestValue = typename MooseVariableField<RawOutputType>::FieldVariableTestValue;
   using FieldVariableTestGradient =
-      typename MooseVariableField<OutputType>::FieldVariableTestGradient;
-  using FieldVariableTestSecond = typename MooseVariableField<OutputType>::FieldVariableTestSecond;
-  using FieldVariableTestCurl = typename MooseVariableField<OutputType>::FieldVariableTestCurl;
+      typename MooseVariableField<RawOutputType>::FieldVariableTestGradient;
+  using FieldVariableTestSecond =
+      typename MooseVariableField<RawOutputType>::FieldVariableTestSecond;
+  using FieldVariableTestCurl = typename MooseVariableField<RawOutputType>::FieldVariableTestCurl;
   using FieldVariableTestDivergence =
-      typename MooseVariableField<OutputType>::FieldVariableTestDivergence;
+      typename MooseVariableField<RawOutputType>::FieldVariableTestDivergence;
 
-  using OutputData = typename MooseVariableField<OutputType>::OutputData;
-  using DoFValue = typename MooseVariableField<OutputType>::DoFValue;
+  using OutputData = typename MooseVariableField<RawOutputType>::OutputData;
+  using DoFValue = typename MooseVariableField<RawOutputType>::DoFValue;
 
-  using FunctorArg = typename Moose::ADType<OutputType>::type;
+  using FunctorArg = typename Moose::ADType<RawOutputType>::type;
   using typename Moose::FunctorBase<FunctorArg>::FunctorReturnType;
   using typename Moose::FunctorBase<FunctorArg>::ValueType;
   using typename Moose::FunctorBase<FunctorArg>::GradientType;
@@ -323,54 +326,54 @@ public:
   const FieldVariableCurl & curlSlnOlder() const { return _element_data->curlSln(Moose::Older); }
 
   /// AD
-  const ADTemplateVariableValue<OutputType> & adSln() const override
+  const ADTemplateVariableValue<RawOutputType> & adSln() const override
   {
     return _element_data->adSln();
   }
 
-  const ADTemplateVariableGradient<OutputType> & adGradSln() const override
+  const ADTemplateVariableGradient<RawOutputType> & adGradSln() const override
   {
     return _element_data->adGradSln();
   }
-  const ADTemplateVariableSecond<OutputType> & adSecondSln() const override
+  const ADTemplateVariableSecond<RawOutputType> & adSecondSln() const override
   {
     return _element_data->adSecondSln();
   }
-  const ADTemplateVariableValue<OutputType> & adUDot() const override
+  const ADTemplateVariableValue<RawOutputType> & adUDot() const override
   {
     return _element_data->adUDot();
   }
-  const ADTemplateVariableValue<OutputType> & adUDotDot() const override
+  const ADTemplateVariableValue<RawOutputType> & adUDotDot() const override
   {
     return _element_data->adUDotDot();
   }
-  const ADTemplateVariableGradient<OutputType> & adGradSlnDot() const override
+  const ADTemplateVariableGradient<RawOutputType> & adGradSlnDot() const override
   {
     return _element_data->adGradSlnDot();
   }
 
   /// neighbor AD
-  const ADTemplateVariableValue<OutputType> & adSlnNeighbor() const override
+  const ADTemplateVariableValue<RawOutputType> & adSlnNeighbor() const override
   {
     return _neighbor_data->adSln();
   }
-  const ADTemplateVariableGradient<OutputType> & adGradSlnNeighbor() const override
+  const ADTemplateVariableGradient<RawOutputType> & adGradSlnNeighbor() const override
   {
     return _neighbor_data->adGradSln();
   }
-  const ADTemplateVariableSecond<OutputType> & adSecondSlnNeighbor() const override
+  const ADTemplateVariableSecond<RawOutputType> & adSecondSlnNeighbor() const override
   {
     return _neighbor_data->adSecondSln();
   }
-  const ADTemplateVariableValue<OutputType> & adUDotNeighbor() const override
+  const ADTemplateVariableValue<RawOutputType> & adUDotNeighbor() const override
   {
     return _neighbor_data->adUDot();
   }
-  const ADTemplateVariableValue<OutputType> & adUDotDotNeighbor() const override
+  const ADTemplateVariableValue<RawOutputType> & adUDotDotNeighbor() const override
   {
     return _neighbor_data->adUDotDot();
   }
-  const ADTemplateVariableGradient<OutputType> & adGradSlnNeighborDot() const override
+  const ADTemplateVariableGradient<RawOutputType> & adGradSlnNeighborDot() const override
   {
     return _neighbor_data->adGradSlnDot();
   }
@@ -464,7 +467,7 @@ public:
   const VariableValue & duDotDotDuNeighbor() const { return _neighbor_data->duDotDotDu(); }
 
   /// lower-d element solution
-  const ADTemplateVariableValue<OutputType> & adSlnLower() const { return _lower_data->adSln(); }
+  const ADTemplateVariableValue<RawOutputType> & adSlnLower() const { return _lower_data->adSln(); }
   const FieldVariableValue & slnLower() const { return _lower_data->sln(Moose::Current); }
   const FieldVariableValue & slnLowerOld() const { return _lower_data->sln(Moose::Old); }
 
@@ -558,10 +561,10 @@ public:
   const DoFValue & dofValuesDotDotNeighborResidual() const;
   const DoFValue & dofValuesDotDotOld() const override;
   const DoFValue & dofValuesDotDotOldNeighbor() const override;
-  const MooseArray<Number> & dofValuesDuDotDu() const override;
-  const MooseArray<Number> & dofValuesDuDotDuNeighbor() const override;
-  const MooseArray<Number> & dofValuesDuDotDotDu() const override;
-  const MooseArray<Number> & dofValuesDuDotDotDuNeighbor() const override;
+  const VariableValue & dofValuesDuDotDu() const override;
+  const VariableValue & dofValuesDuDotDuNeighbor() const override;
+  const VariableValue & dofValuesDuDotDotDu() const override;
+  const VariableValue & dofValuesDuDotDotDuNeighbor() const override;
 
   /**
    * Return the AD dof values
@@ -658,7 +661,7 @@ public:
   const DoFValue & nodalVectorTagValue(TagID tag) const override;
   const DoFValue & nodalMatrixTagValue(TagID tag) const;
 
-  const typename Moose::ADType<OutputType>::type & adNodalValue() const;
+  const typename Moose::ADType<RawOutputType>::type & adNodalValue() const;
 
   virtual void computeNodalValues() override;
   virtual void computeNodalNeighborValues() override;
@@ -671,16 +674,16 @@ protected:
   usingMooseVariableBaseMembers;
 
   /// Holder for all the data associated with the "main" element
-  std::unique_ptr<MooseVariableData<OutputType>> _element_data;
+  std::unique_ptr<MooseVariableData<RawOutputType>> _element_data;
 
   /// Holder for all the data associated with the neighbor element
-  std::unique_ptr<MooseVariableData<OutputType>> _neighbor_data;
+  std::unique_ptr<MooseVariableData<RawOutputType>> _neighbor_data;
 
   /// Holder for all the data associated with the lower dimeensional element
-  std::unique_ptr<MooseVariableData<OutputType>> _lower_data;
+  std::unique_ptr<MooseVariableData<RawOutputType>> _lower_data;
 
 private:
-  using MooseVariableField<OutputType>::evaluate;
+  using MooseVariableField<RawOutputType>::evaluate;
   using ElemArg = Moose::ElemArg;
   using ElemFromFaceArg = Moose::ElemFromFaceArg;
   using ElemQpArg = Moose::ElemQpArg;
@@ -707,23 +710,23 @@ private:
   }
 };
 
-template <typename OutputType>
+template <typename RawOutputType>
 inline const MooseArray<ADReal> &
-MooseVariableFE<OutputType>::adDofValues() const
+MooseVariableFE<RawOutputType>::adDofValues() const
 {
   return _element_data->adDofValues();
 }
 
-template <typename OutputType>
-inline const typename Moose::ADType<OutputType>::type &
-MooseVariableFE<OutputType>::adNodalValue() const
+template <typename RawOutputType>
+inline const typename Moose::ADType<RawOutputType>::type &
+MooseVariableFE<RawOutputType>::adNodalValue() const
 {
   return _element_data->adNodalValue();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::setActiveTags(const std::set<TagID> & vtags)
+MooseVariableFE<RawOutputType>::setActiveTags(const std::set<TagID> & vtags)
 {
   _element_data->setActiveTags(vtags);
   _neighbor_data->setActiveTags(vtags);

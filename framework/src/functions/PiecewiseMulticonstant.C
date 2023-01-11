@@ -62,13 +62,13 @@ PiecewiseMulticonstant::sample(const GridPoint & pt) const
   return _gridded_data->evaluateFcn(arg);
 }
 
-RealGradient
+GeomRealGradient
 PiecewiseMulticonstant::gradient(Real, const Point &) const
 {
   return 0.0;
 }
 
-Real
+GeomReal
 PiecewiseMulticonstant::timeDerivative(Real, const Point &) const
 {
   return 0.0;

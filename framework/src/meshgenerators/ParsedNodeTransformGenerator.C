@@ -72,10 +72,10 @@ ParsedNodeTransformGenerator::generate()
   for (auto & node : mesh->node_ptr_range())
   {
     for (const auto i : make_range(3))
-      _func_params[i] = (*node)(i);
+      _func_params[i] = MetaPhysicL::raw_value((*node)(i));
 
     for (const auto i : make_range(3))
-      (*node)(i) = evaluate(_functions[i], _func_name[i]);
+      (*node)(i) = MetaPhysicL::raw_value(evaluate(_functions[i], _func_name[i]));
   }
 
   return mesh;

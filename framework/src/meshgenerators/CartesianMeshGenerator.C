@@ -249,7 +249,7 @@ CartesianMeshGenerator::generate()
   MeshBase::element_iterator el_end = mesh->active_elements_end();
   for (; el != el_end; ++el)
   {
-    const Point p = (*el)->vertex_average();
+    const auto p = MetaPhysicL::raw_value((*el)->vertex_average());
     unsigned int ix = std::floor(p(0));
     unsigned int iy = std::floor(p(1));
     unsigned int iz = std::floor(p(2));
@@ -279,7 +279,7 @@ CartesianMeshGenerator::generate()
       MeshBase::node_iterator node_end = mesh->active_nodes_end();
       for (; node != node_end; ++node)
       {
-        unsigned int i = (*(*node))(0) + 0.5;
+        unsigned int i = MetaPhysicL::raw_value((*(*node))(0)) + 0.5;
         (*(*node))(0) = mapx.at(i);
       }
       break;
@@ -312,9 +312,9 @@ CartesianMeshGenerator::generate()
       MeshBase::node_iterator node_end = mesh->active_nodes_end();
       for (; node != node_end; ++node)
       {
-        unsigned int i = (*(*node))(0) + 0.5;
+        unsigned int i = MetaPhysicL::raw_value((*(*node))(0)) + 0.5;
         (*(*node))(0) = mapx.at(i);
-        unsigned int j = (*(*node))(1) + 0.5;
+        unsigned int j = MetaPhysicL::raw_value((*(*node))(1)) + 0.5;
         (*(*node))(1) = mapy.at(j);
       }
       break;
@@ -357,11 +357,11 @@ CartesianMeshGenerator::generate()
       MeshBase::node_iterator node_end = mesh->active_nodes_end();
       for (; node != node_end; ++node)
       {
-        unsigned int i = (*(*node))(0) + 0.5;
+        unsigned int i = MetaPhysicL::raw_value((*(*node))(0)) + 0.5;
         (*(*node))(0) = mapx.at(i);
-        unsigned int j = (*(*node))(1) + 0.5;
+        unsigned int j = MetaPhysicL::raw_value((*(*node))(1)) + 0.5;
         (*(*node))(1) = mapy.at(j);
-        unsigned int k = (*(*node))(2) + 0.5;
+        unsigned int k = MetaPhysicL::raw_value((*(*node))(2)) + 0.5;
         (*(*node))(2) = mapz.at(k);
       }
       break;

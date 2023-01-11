@@ -38,7 +38,7 @@ protected:
   const Node * const & _current_node;
 
   /// Value of the unknown variable this BC is acting on
-  const RealEigenVector & _u;
+  const GeomRealEigenVector & _u;
 
   /**
    * Compute this BC's contribution to the residual at the current quadrature point,

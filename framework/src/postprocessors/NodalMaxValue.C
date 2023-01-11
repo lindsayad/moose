@@ -36,7 +36,7 @@ NodalMaxValue::initialize()
 void
 NodalMaxValue::execute()
 {
-  _value = std::max(_value, _u[_qp]);
+  _value = std::max(_value, MetaPhysicL::raw_value(_u[_qp]));
 }
 
 Real

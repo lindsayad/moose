@@ -29,7 +29,7 @@ protected:
   /// holds the boundary names for the sidesets
   std::vector<BoundaryName> _boundary_names;
   /// holds the normals used to generate sidesets
-  std::vector<Point> _normals;
+  std::vector<RawPoint> _normals;
   /// a map from the boundaries to the normals
   std::map<BoundaryID, RealVectorValue> & _boundary_to_normal_map;
   /// a tolerance for comparing normals

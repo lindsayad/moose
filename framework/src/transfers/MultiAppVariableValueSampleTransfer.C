@@ -103,7 +103,7 @@ MultiAppVariableValueSampleTransfer::execute()
             from_sub_problem.reinitElemPhys(elem, point_vec, 0);
 
             mooseAssert(from_var.sln().size() == 1, "No values in u!");
-            value = from_var.sln()[0];
+            value = MetaPhysicL::raw_value(from_var.sln()[0]);
           }
 
           _communicator.max(value);

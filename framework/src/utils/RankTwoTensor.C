@@ -10,8 +10,8 @@
 #include "DualRealOps.h"
 #include "RankTwoTensorImplementation.h"
 
-template class RankTwoTensorTempl<Real>;
-template class RankTwoTensorTempl<DualReal>;
+template class RankTwoTensorTempl<GeomReal>;
+// template class RankTwoTensorTempl<DualReal>;
 
 namespace MathUtils
 {

@@ -84,7 +84,7 @@ protected:
    * @param p2 the second point used to calculate the distance
    * @return the Euclidean distance between the two given points
    */
-  Real euclideanDistance(const Point p1, const Point p2);
+  Real euclideanDistance(const Point & p1, const Point & p2);
 
   usingFunctionParserUtilsMembers(false);
 };

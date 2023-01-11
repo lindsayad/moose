@@ -107,7 +107,7 @@ PiecewiseMultilinear::sampleInternal(const MooseADWrapper<GridPoint, is_ad> pt) 
   return f / weight;
 }
 
-RealGradient
+GeomRealGradient
 PiecewiseMultilinear::gradient(Real t, const Point & p) const
 {
   RealGradient grad;
@@ -127,7 +127,7 @@ PiecewiseMultilinear::gradient(Real t, const Point & p) const
   return grad;
 }
 
-Real
+GeomReal
 PiecewiseMultilinear::timeDerivative(Real t, const Point & p) const
 {
   return (sample(pointInGrid<false>(t + _epsilon, p)) - sample(pointInGrid<false>(t, p))) /

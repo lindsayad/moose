@@ -19,9 +19,9 @@ LineSegment::closest_point(const Point & p, bool clamp_to_segment, Point & close
 {
   Point p0_p = p - _p0;
   Point p0_p1 = _p1 - _p0;
-  Real p0_p1_2 = p0_p1.norm_sq();
-  Real perp = p0_p(0) * p0_p1(0) + p0_p(1) * p0_p1(1) + p0_p(2) * p0_p1(2);
-  Real t = perp / p0_p1_2;
+  auto p0_p1_2 = p0_p1.norm_sq();
+  auto perp = p0_p(0) * p0_p1(0) + p0_p(1) * p0_p1(1) + p0_p(2) * p0_p1(2);
+  auto t = perp / p0_p1_2;
   bool on_segment = true;
 
   if (t < 0.0 || t > 1.0)
@@ -78,11 +78,11 @@ LineSegment::intersect(const Plane & pl, Point & intersect_p) const
    */
 
   Point pl0 = pl.get_planar_point();
-  RealVectorValue N = pl.unit_normal(_p0);
-  RealVectorValue I = (_p1 - _p0).unit();
+  auto N = pl.unit_normal(_p0);
+  auto I = (_p1 - _p0).unit();
 
-  Real numerator = (pl0 - _p0) * N;
-  Real denominator = I * N;
+  auto numerator = (pl0 - _p0) * N;
+  auto denominator = I * N;
 
   // The Line is parallel to the plane
   if (std::abs(denominator) < 1.e-10)
@@ -97,7 +97,7 @@ LineSegment::intersect(const Plane & pl, Point & intersect_p) const
     return false;
   }
 
-  Real d = numerator / denominator;
+  auto d = numerator / denominator;
 
   // Make sure we haven't moved off the line segment!
   if (d + libMesh::TOLERANCE < 0 || d - libMesh::TOLERANCE > (_p1 - _p0).norm())
@@ -132,11 +132,11 @@ LineSegment::intersect(const LineSegment & l, Point & intersect_p) const
    *
    *   s = (c x b) * (a x b) / | a x b |^2
    */
-  RealVectorValue a = _p1 - _p0;
-  RealVectorValue b = l._p1 - l._p0;
-  RealVectorValue c = l._p0 - _p0;
+  auto a = _p1 - _p0;
+  auto b = l._p1 - l._p0;
+  auto c = l._p0 - _p0;
 
-  RealVectorValue v = a.cross(b);
+  auto v = a.cross(b);
 
   // Check for parallel lines
   if (std::abs(v.norm()) < 1.e-10 && std::abs(c.cross(a).norm()) < 1.e-10)
@@ -148,12 +148,12 @@ LineSegment::intersect(const LineSegment & l, Point & intersect_p) const
   }
 
   // Check that the lines are coplanar
-  Real concur = c * (a.cross(b));
+  auto concur = c * (a.cross(b));
   if (std::abs(concur) > 1.e-10)
     return false;
 
-  Real s = (c.cross(b) * v) / (v * v);
-  Real t = (c.cross(a) * v) / (v * v);
+  auto s = (c.cross(b) * v) / (v * v);
+  auto t = (c.cross(a) * v) / (v * v);
 
   // if s and t are between 0 and 1 then the Line Segments intersect
   // TODO: We could handle other case of clamping to the end of Line
@@ -192,14 +192,14 @@ LineSegment::intersect(const LineSegment & l, Point & intersect_p) const
    * Case 3: The line intersect at a single point
    *         vleft cross vright = zero
    *         vleft (Denominator) = non-zero
-  RealVectorValue v0 = _p1 - _p0;
-  RealVectorValue v1 = l._p1 - l._p0;
-  RealVectorValue v2 = l._p0 - _p0;
+  auto v0 = _p1 - _p0;
+  auto v1 = l._p1 - l._p0;
+  auto v2 = l._p0 - _p0;
 
-  RealVectorValue vbot = v0.cross(v1);
-  RealVectorValue vtop = v2.cross(v1);
+  auto vbot = v0.cross(v1);
+  auto vtop = v2.cross(v1);
 
-  RealVectorValue crossed = vleft.cross(vright);
+  auto crossed = vleft.cross(vright);
 
   // Case 1: No intersection
   if (std::abs(vleft.cross(vright).size()) > 1.e-10)
@@ -217,7 +217,7 @@ LineSegment::intersect(const LineSegment & l, Point & intersect_p) const
   //TODO: We could detect whether the Line Segments actually overlap
   //      instead of whether the Lines are co-linear
 
-  Real a = vright.size()/vleft.size();
+  auto a = vright.size()/vleft.size();
   intersect_p = _p0 + a*v0;
   return true;
      */

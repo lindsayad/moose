@@ -99,7 +99,7 @@ InterfaceKernelBase::InterfaceKernelBase(const InputParameters & parameters)
 {
 }
 
-const Real &
+const GeomReal &
 InterfaceKernelBase::getNeighborElemVolume()
 {
   return _assembly.neighborVolume();

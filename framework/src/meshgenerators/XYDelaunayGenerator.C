@@ -353,11 +353,13 @@ XYDelaunayGenerator::generate()
 
       // We have to translate from MeshedHole points to mesh
       // sides.
-      std::unordered_map<Point, Point> next_hole_boundary_point;
+      std::unordered_map<RawPoint, RawPoint> next_hole_boundary_point;
       const int np = mh.n_points();
       for (auto pi : make_range(1, np))
-        next_hole_boundary_point[mh.point(pi - 1)] = mh.point(pi);
-      next_hole_boundary_point[mh.point(np - 1)] = mh.point(0);
+        next_hole_boundary_point[MetaPhysicL::raw_value(mh.point(pi - 1))] =
+            MetaPhysicL::raw_value(mh.point(pi));
+      next_hole_boundary_point[MetaPhysicL::raw_value(mh.point(np - 1))] =
+          MetaPhysicL::raw_value(mh.point(0));
 
       int found_hole_sides = 0;
       for (auto elem : hole_mesh.element_ptr_range())
@@ -368,9 +370,9 @@ XYDelaunayGenerator::generate()
         auto ns = elem->n_sides();
         for (auto s : make_range(ns))
         {
-          auto it_s = next_hole_boundary_point.find(elem->point(s));
+          auto it_s = next_hole_boundary_point.find(MetaPhysicL::raw_value(elem->point(s)));
           if (it_s != next_hole_boundary_point.end())
-            if (it_s->second == elem->point((s + 1) % ns))
+            if (it_s->second == MetaPhysicL::raw_value(elem->point((s + 1) % ns)))
             {
               hole_boundary_info.add_side(elem, s, new_hole_bcid);
               ++found_hole_sides;
@@ -386,9 +388,10 @@ XYDelaunayGenerator::generate()
         auto ns = elem->n_sides();
         for (auto s : make_range(ns))
         {
-          auto it_s = next_hole_boundary_point.find(elem->point((s + 1) % ns));
+          auto it_s =
+              next_hole_boundary_point.find(MetaPhysicL::raw_value(elem->point((s + 1) % ns)));
           if (it_s != next_hole_boundary_point.end())
-            if (it_s->second == elem->point(s))
+            if (it_s->second == MetaPhysicL::raw_value(elem->point(s)))
             {
               mesh_boundary_info.add_side(elem, s, inner_bcid);
               ++found_inner_sides;

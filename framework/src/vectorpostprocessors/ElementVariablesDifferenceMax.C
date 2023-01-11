@@ -78,18 +78,19 @@ ElementVariablesDifferenceMax::execute()
   for (unsigned int qp = 0; qp < _qrule->n_points(); ++qp)
   {
     // Get the difference
-    const Real difference = _furthest_from_zero ? std::abs(_a[qp] - _b[qp]) : _a[qp] - _b[qp];
+    const Real difference =
+        MetaPhysicL::raw_value(_furthest_from_zero ? std::abs(_a[qp] - _b[qp]) : _a[qp] - _b[qp]);
 
     // Assign the appropriate values if a new maximum is found
     if (difference > _all[MAXIMUM_DIFFERENCE])
     {
       _all[MAXIMUM_DIFFERENCE] = difference;
-      _all[MAXIMUM_DIFFERENCE_A_VALUE] = _a[qp];
-      _all[MAXIMUM_DIFFERENCE_B_VALUE] = _b[qp];
+      _all[MAXIMUM_DIFFERENCE_A_VALUE] = MetaPhysicL::raw_value(_a[qp]);
+      _all[MAXIMUM_DIFFERENCE_B_VALUE] = MetaPhysicL::raw_value(_b[qp]);
 
-      _all[MAXIMUM_DIFFERENCE_X] = _q_point[qp](0);
-      _all[MAXIMUM_DIFFERENCE_Y] = _q_point[qp](1);
-      _all[MAXIMUM_DIFFERENCE_Z] = _q_point[qp](2);
+      _all[MAXIMUM_DIFFERENCE_X] = MetaPhysicL::raw_value(_q_point[qp](0));
+      _all[MAXIMUM_DIFFERENCE_Y] = MetaPhysicL::raw_value(_q_point[qp](1));
+      _all[MAXIMUM_DIFFERENCE_Z] = MetaPhysicL::raw_value(_q_point[qp](2));
     }
   }
 }

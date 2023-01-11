@@ -73,7 +73,7 @@ public:
     const Point & point2 = _mesh.point(idx_p2);
 
     // Compute Euclidean distance, squared
-    return (point1 - point2).norm_sq();
+    return MetaPhysicL::raw_value((point1 - point2).norm_sq());
   }
 
   /**
@@ -85,7 +85,7 @@ public:
     libmesh_assert_less(idx, _mesh.n_nodes());
     libmesh_assert_less(dim, 3);
 
-    return _mesh.point(idx)(dim);
+    return MetaPhysicL::raw_value(_mesh.point(idx)(dim));
   }
 
   /**
@@ -168,7 +168,7 @@ public:
     const Point & point2 = _mesh.point(idx_p2);
 
     // Compute Euclidean distance, squared
-    return (point1 - point2).norm_sq();
+    return MetaPhysicL::raw_value((point1 - point2).norm_sq());
   }
 
   /**
@@ -184,7 +184,7 @@ public:
     if (!_legal_point_indices.count(static_cast<dof_id_type>(idx)))
       return std::numeric_limits<coord_t>::max();
 
-    return _mesh.point(idx)(dim);
+    return MetaPhysicL::raw_value(_mesh.point(idx)(dim));
   }
 
   /**

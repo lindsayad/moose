@@ -30,6 +30,7 @@
 #include "ElementIDInterface.h"
 #include "UserObject.h"
 #include "FunctorInterface.h"
+#include "libmesh/fe_transformation_base.h"
 
 // forward declarations
 template <typename ComputeValueType>
@@ -220,7 +221,7 @@ protected:
   /// number of local dofs for elemental variables
   unsigned int _n_local_dofs;
 
-  typedef typename Moose::DOFType<ComputeValueType>::type OutputData;
+  typedef typename Moose::DOFType<typename MakeOutput<ComputeValueType>::type>::type OutputData;
 
   /// for holding local load
   DenseVector<OutputData> _local_re;

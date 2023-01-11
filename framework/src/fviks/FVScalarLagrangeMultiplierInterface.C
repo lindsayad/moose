@@ -39,7 +39,7 @@ FVScalarLagrangeMultiplierInterface::computeResidual(const FaceInfo & fi)
   const auto var_neigh_num = _elem_is_one ? var2().number() : var1().number();
 
   const auto r =
-      MetaPhysicL::raw_value(_lambda[0]) * fi.faceArea() * fi.faceCoord() * (2 * _elem_is_one - 1);
+      MetaPhysicL::raw_value(_lambda[0] * fi.faceArea() * fi.faceCoord()) * (2 * _elem_is_one - 1);
 
   // Primal residual
   processResidual(r, var_elem_num, false);
@@ -47,7 +47,7 @@ FVScalarLagrangeMultiplierInterface::computeResidual(const FaceInfo & fi)
 
   // LM residual. We may not have any actual ScalarKernels in our simulation so we need to manually
   // make sure the scalar residuals get cached for later addition
-  const auto lm_r = MetaPhysicL::raw_value(computeQpResidual()) * fi.faceArea() * fi.faceCoord();
+  const auto lm_r = MetaPhysicL::raw_value(computeQpResidual() * fi.faceArea() * fi.faceCoord());
   _assembly.processResidual(lm_r, _lambda_var.dofIndices()[0], _vector_tags);
 }
 

@@ -37,5 +37,6 @@ NodalExtremeValue::NodalExtremeValue(const InputParameters & parameters)
 std::pair<Real, Real>
 NodalExtremeValue::getProxyValuePair()
 {
-  return std::make_pair(_proxy_variable[_qp], _u[_qp]);
+  return std::make_pair(MetaPhysicL::raw_value(_proxy_variable[_qp]),
+                        MetaPhysicL::raw_value(_u[_qp]));
 }

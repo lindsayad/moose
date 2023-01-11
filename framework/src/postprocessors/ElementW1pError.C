@@ -39,8 +39,8 @@ ElementW1pError::getValue()
 Real
 ElementW1pError::computeQpIntegral()
 {
-  RealGradient graddiff = _grad_u[_qp] - _func.gradient(_t, _q_point[_qp]);
-  Real funcdiff = _u[_qp] - _func.value(_t, _q_point[_qp]);
+  RealGradient graddiff = MetaPhysicL::raw_value(_grad_u[_qp] - _func.gradient(_t, _q_point[_qp]));
+  Real funcdiff = MetaPhysicL::raw_value(_u[_qp] - _func.value(_t, _q_point[_qp]));
 
   // Raise the absolute function value difference to the pth power
   Real val = std::pow(std::abs(funcdiff), _p);

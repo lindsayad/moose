@@ -122,11 +122,11 @@ PatternedMeshGenerator::generate()
   // If not (their value is 0 by default), compute them
   auto bbox = MeshTools::create_bounding_box(*_meshes[0]);
   if (_x_width == 0)
-    _x_width = bbox.max()(0) - bbox.min()(0);
+    _x_width = MetaPhysicL::raw_value(bbox.max()(0) - bbox.min()(0));
   if (_y_width == 0)
-    _y_width = bbox.max()(1) - bbox.min()(1);
+    _y_width = MetaPhysicL::raw_value(bbox.max()(1) - bbox.min()(1));
   if (_z_width == 0)
-    _z_width = bbox.max()(2) - bbox.min()(2);
+    _z_width = MetaPhysicL::raw_value(bbox.max()(2) - bbox.min()(2));
 
   // Build each row mesh
   for (MooseIndex(_pattern) i = 0; i < _pattern.size(); ++i)

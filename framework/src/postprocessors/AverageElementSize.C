@@ -34,7 +34,7 @@ AverageElementSize::initialize()
 void
 AverageElementSize::execute()
 {
-  _total_size += _current_elem->hmax();
+  _total_size += MetaPhysicL::raw_value(_current_elem->hmax());
   _elems++;
 }
 

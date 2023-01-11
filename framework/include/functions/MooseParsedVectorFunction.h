@@ -28,11 +28,11 @@ public:
 
   MooseParsedVectorFunction(const InputParameters & parameters);
 
-  virtual RealVectorValue vectorValue(Real t, const Point & p) const override;
+  virtual GeomRealVectorValue vectorValue(Real t, const Point & p) const override;
 
-  virtual RealVectorValue vectorCurl(Real t, const Point & p) const override;
+  virtual GeomRealVectorValue vectorCurl(Real t, const Point & p) const override;
 
-  virtual RealGradient gradient(Real t, const Point & p) const override;
+  virtual GeomRealGradient gradient(Real t, const Point & p) const override;
 
   virtual void initialSetup() override;
 

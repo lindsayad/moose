@@ -41,15 +41,15 @@ MooseParsedFunctionTempl<T>::MooseParsedFunctionTempl(const InputParameters & pa
 }
 
 template <typename T>
-Real
+GeomReal
 MooseParsedFunctionTempl<T>::value(Real t, const Point & p) const
 {
   mooseAssert(_function_ptr, "ParsedFunction should have been initialized");
-  return _function_ptr->evaluate<Real>(t, p);
+  return _function_ptr->evaluate<GeomReal>(t, p);
 }
 
 template <typename T>
-RealGradient
+GeomRealGradient
 MooseParsedFunctionTempl<T>::gradient(Real t, const Point & p) const
 {
   mooseAssert(_function_ptr, "ParsedFunction should have been initialized");
@@ -57,7 +57,7 @@ MooseParsedFunctionTempl<T>::gradient(Real t, const Point & p) const
 }
 
 template <typename T>
-Real
+GeomReal
 MooseParsedFunctionTempl<T>::timeDerivative(Real t, const Point & p) const
 {
   mooseAssert(_function_ptr, "ParsedFunction should have been initialized");
@@ -65,7 +65,7 @@ MooseParsedFunctionTempl<T>::timeDerivative(Real t, const Point & p) const
 }
 
 template <typename T>
-RealVectorValue
+GeomRealVectorValue
 MooseParsedFunctionTempl<T>::vectorValue(Real /*t*/, const Point & /*p*/) const
 {
   mooseError("The vectorValue method is not defined in ParsedFunction");

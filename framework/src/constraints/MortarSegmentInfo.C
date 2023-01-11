@@ -15,7 +15,7 @@
 using namespace libMesh;
 
 // Initialize constant static members.
-const Real MortarSegmentInfo::invalid_xi = 99;
+const GeomReal MortarSegmentInfo::invalid_xi = 99;
 
 MortarSegmentInfo::MortarSegmentInfo()
   : xi1_a(invalid_xi),
@@ -27,7 +27,7 @@ MortarSegmentInfo::MortarSegmentInfo()
 {
 }
 
-MortarSegmentInfo::MortarSegmentInfo(Real x1a, Real x1b, Real x2a, Real x2b)
+MortarSegmentInfo::MortarSegmentInfo(GeomReal x1a, GeomReal x1b, GeomReal x2a, GeomReal x2b)
   : xi1_a(x1a), xi1_b(x1b), xi2_a(x2a), xi2_b(x2b), secondary_elem(nullptr), primary_elem(nullptr)
 {
 }

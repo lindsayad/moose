@@ -15,6 +15,7 @@
 #include <fstream>
 
 #include "libmesh/parallel.h"
+#include "libmesh/vector_value.h"
 
 // MOOSE includes
 #include "MooseEnum.h"
@@ -108,7 +109,7 @@ public:
    * Get the data in Point format. This performs checks that the data
    * is of valid dimensions to do so.
    */
-  const std::vector<Point> getDataAsPoints() const;
+  const std::vector<RawPoint> getDataAsPoints() const;
 
   ///@{
   /**

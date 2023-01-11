@@ -34,7 +34,7 @@ PenaltyDirichletNodalKernel::PenaltyDirichletNodalKernel(const InputParameters &
 Real
 PenaltyDirichletNodalKernel::computeQpResidual()
 {
-  return _p * (-_v + _u[_qp]);
+  return _p * MetaPhysicL::raw_value(-_v + _u[_qp]);
 }
 
 Real

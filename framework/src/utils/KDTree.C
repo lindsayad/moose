@@ -33,13 +33,14 @@ KDTree::neighborSearch(const Point & query_point,
 }
 
 void
-KDTree::neighborSearch(const Point & query_point,
+KDTree::neighborSearch(const Point & query_point_in,
                        unsigned int patch_size,
                        std::vector<std::size_t> & return_index,
                        std::vector<Real> & return_dist_sqr)
 {
   return_index.resize(patch_size);
 
+  const auto & query_point = MetaPhysicL::raw_value(query_point_in);
   std::size_t n_result =
       _kd_tree->knnSearch(&query_point(0), patch_size, return_index.data(), return_dist_sqr.data());
 
@@ -51,10 +52,11 @@ KDTree::neighborSearch(const Point & query_point,
 }
 
 void
-KDTree::radiusSearch(const Point & query_point,
+KDTree::radiusSearch(const Point & query_point_in,
                      Real radius,
                      std::vector<std::pair<std::size_t, Real>> & indices_dist)
 {
   nanoflann::SearchParams sp;
+  const auto & query_point = MetaPhysicL::raw_value(query_point_in);
   _kd_tree->radiusSearch(&query_point(0), radius * radius, indices_dist, sp);
 }

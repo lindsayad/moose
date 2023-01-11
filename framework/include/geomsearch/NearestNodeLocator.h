@@ -45,7 +45,7 @@ public:
   /**
    * Valid to call this after findNodes() has been called to get the distance to the nearest node.
    */
-  Real distance(dof_id_type node_id);
+  GeomReal distance(dof_id_type node_id);
 
   /**
    * Valid to call this after findNodes() has been called to get a pointer to the nearest node.
@@ -84,7 +84,7 @@ public:
     NearestNodeInfo();
 
     const Node * _nearest_node;
-    Real _distance;
+    GeomReal _distance;
   };
 
 protected:

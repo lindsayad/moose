@@ -31,5 +31,5 @@ Real
 SphericalAverage::computeDistance()
 {
   // overwrite this method to implement cylindrical averages etc.
-  return (_q_point[_qp] - _origin).norm();
+  return MetaPhysicL::raw_value((_q_point[_qp] - _origin).norm());
 }

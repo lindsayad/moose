@@ -30,7 +30,7 @@ ReactionNodalKernel::ReactionNodalKernel(const InputParameters & parameters)
 Real
 ReactionNodalKernel::computeQpResidual()
 {
-  return _coeff * _u[_qp];
+  return _coeff * MetaPhysicL::raw_value(_u[_qp]);
 }
 
 Real

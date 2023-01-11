@@ -27,7 +27,7 @@ ConstantFunction::ConstantFunction(const InputParameters & parameters)
 {
 }
 
-Real
+GeomReal
 ConstantFunction::value(Real, const Point &) const
 {
   return _value;
@@ -39,14 +39,14 @@ ConstantFunction::value(const ADReal &, const ADPoint &) const
   return _value;
 }
 
-Real
+GeomReal
 ConstantFunction::timeDerivative(Real /*t*/, const Point & /*p*/) const
 {
   return 0;
 }
 
-RealVectorValue
+GeomRealVectorValue
 ConstantFunction::gradient(Real /*t*/, const Point & /*p*/) const
 {
-  return RealVectorValue(0);
+  return GeomRealVectorValue(0);
 }

@@ -64,7 +64,7 @@ public:
    * \param p The Point in space (x,y,z)
    * \return A scalar of the function evaluated at the time and location
    */
-  virtual Real value(Real t, const Point & p) const;
+  virtual GeomReal value(Real t, const Point & p) const;
 
   /**
    * Override this to evaluate the scalar function at point (t,x,y,z), using dual numbers by default
@@ -91,7 +91,7 @@ public:
    * \param p The Point in space (x,y,z)
    * \return A vector of the function evaluated at the time and location
    */
-  virtual RealVectorValue vectorValue(Real t, const Point & p) const;
+  virtual GeomRealVectorValue vectorValue(Real t, const Point & p) const;
 
   /**
    * Override this to evaluate the curl of the vector function at a point (t,x,y,z),
@@ -100,7 +100,7 @@ public:
    * \param p The Point in space (x,y,z)
    * \return A vector of the curl of the function evaluated at the time and location
    */
-  virtual RealVectorValue vectorCurl(Real t, const Point & p) const;
+  virtual GeomRealVectorValue vectorCurl(Real t, const Point & p) const;
 
   using Moose::FunctorBase<T>::gradient;
   /**
@@ -110,7 +110,7 @@ public:
    * \param p The Point in space (x,y,z)
    * \return A gradient of the function evaluated at the time and location
    */
-  virtual RealGradient gradient(Real t, const Point & p) const;
+  virtual GeomRealGradient gradient(Real t, const Point & p) const;
 
   /**
    * Get the time derivative of the function
@@ -118,7 +118,7 @@ public:
    * \param p The point in space (x,y,z)
    * \return The time derivative of the function at the specified time and location
    */
-  virtual Real timeDerivative(Real t, const Point & p) const;
+  virtual GeomReal timeDerivative(Real t, const Point & p) const;
 
   ///@{ Helpers to call timeDerivative(t,x,y,z)
   template <typename U>
@@ -128,10 +128,10 @@ public:
   ///@}
 
   // Not defined
-  virtual Real integral() const;
+  virtual GeomReal integral() const;
 
   // Not defined
-  virtual Real average() const;
+  virtual GeomReal average() const;
 
   void timestepSetup() override;
   void residualSetup() override;
@@ -253,11 +253,11 @@ FunctionTempl<T>::timeDerivative(const U & t, const U & x, const U & y, const U 
   return timeDerivative(t, p);
 }
 
-class Function : public FunctionTempl<Real>
+class Function : public FunctionTempl<GeomReal>
 {
 public:
-  static InputParameters validParams() { return FunctionTempl<Real>::validParams(); }
-  Function(const InputParameters & params) : FunctionTempl<Real>(params) {}
+  static InputParameters validParams() { return FunctionTempl<GeomReal>::validParams(); }
+  Function(const InputParameters & params) : FunctionTempl<GeomReal>(params) {}
 };
 
 typedef FunctionTempl<ADReal> ADFunction;

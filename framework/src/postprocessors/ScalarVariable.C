@@ -48,7 +48,7 @@ ScalarVariable::execute()
   const DofMap & dof_map = _var.dofMap();
   const dof_id_type dof = _var.dofIndices()[_idx];
   if (dof >= dof_map.first_dof() && dof < dof_map.end_dof())
-    _value = _var.sln()[_idx];
+    _value = MetaPhysicL::raw_value(_var.sln()[_idx]);
 }
 
 Real

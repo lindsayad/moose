@@ -39,5 +39,5 @@ FunctionSideIntegral::threadJoin(const UserObject & y)
 Real
 FunctionSideIntegral::computeQpIntegral()
 {
-  return _func.value(_t, _q_point[_qp]);
+  return MetaPhysicL::raw_value(_func.value(_t, _q_point[_qp]));
 }

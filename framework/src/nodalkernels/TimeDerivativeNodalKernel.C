@@ -29,11 +29,11 @@ TimeDerivativeNodalKernel::TimeDerivativeNodalKernel(const InputParameters & par
 Real
 TimeDerivativeNodalKernel::computeQpResidual()
 {
-  return _u_dot[_qp];
+  return MetaPhysicL::raw_value(_u_dot[_qp]);
 }
 
 Real
 TimeDerivativeNodalKernel::computeQpJacobian()
 {
-  return _du_dot_du[_qp];
+  return MetaPhysicL::raw_value(_du_dot_du[_qp]);
 }

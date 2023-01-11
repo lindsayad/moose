@@ -23,6 +23,7 @@
 #include "libmesh/quadrature.h"
 #include "libmesh/dense_vector.h"
 #include "libmesh/dense_vector.h"
+#include "libmesh/fe_transformation_base.h"
 
 /**
  * Class for stuff related to variables
@@ -36,14 +37,15 @@
  * RealEigenVector      Real                  RealEigenVector
  *
  */
-template <typename OutputType>
+template <typename RawOutputType>
 class MooseVariableField : public MooseVariableFieldBase,
-                           public Moose::FunctorBase<typename Moose::ADType<OutputType>::type>,
+                           public Moose::FunctorBase<typename Moose::ADType<RawOutputType>::type>,
                            public MeshChangedInterface
 
 {
 public:
   // type for gradient, second and divergence of template class OutputType
+  typedef typename MakeOutput<RawOutputType>::type OutputType;
   typedef typename TensorTools::IncrementRank<OutputType>::type OutputGradient;
   typedef typename TensorTools::IncrementRank<OutputGradient>::type OutputSecond;
   typedef typename TensorTools::DecrementRank<OutputType>::type OutputDivergence;
@@ -98,62 +100,62 @@ public:
   /**
    * AD solution getter
    */
-  virtual const ADTemplateVariableValue<OutputType> & adSln() const = 0;
+  virtual const ADTemplateVariableValue<RawOutputType> & adSln() const = 0;
 
   /**
    * AD neighbor solution getter
    */
-  virtual const ADTemplateVariableValue<OutputType> & adSlnNeighbor() const = 0;
+  virtual const ADTemplateVariableValue<RawOutputType> & adSlnNeighbor() const = 0;
 
   /**
    * AD grad solution getter
    */
-  virtual const ADTemplateVariableGradient<OutputType> & adGradSln() const = 0;
+  virtual const ADTemplateVariableGradient<RawOutputType> & adGradSln() const = 0;
 
   /**
    * AD grad of time derivative solution getter
    */
-  virtual const ADTemplateVariableGradient<OutputType> & adGradSlnDot() const = 0;
+  virtual const ADTemplateVariableGradient<RawOutputType> & adGradSlnDot() const = 0;
 
   /**
    * AD grad neighbor solution getter
    */
-  virtual const ADTemplateVariableGradient<OutputType> & adGradSlnNeighbor() const = 0;
+  virtual const ADTemplateVariableGradient<RawOutputType> & adGradSlnNeighbor() const = 0;
 
   /**
    * AD grad of time derivative neighbor solution getter
    */
-  virtual const ADTemplateVariableGradient<OutputType> & adGradSlnNeighborDot() const = 0;
+  virtual const ADTemplateVariableGradient<RawOutputType> & adGradSlnNeighborDot() const = 0;
 
   /**
    * AD second solution getter
    */
-  virtual const ADTemplateVariableSecond<OutputType> & adSecondSln() const = 0;
+  virtual const ADTemplateVariableSecond<RawOutputType> & adSecondSln() const = 0;
 
   /**
    * AD second neighbor solution getter
    */
-  virtual const ADTemplateVariableSecond<OutputType> & adSecondSlnNeighbor() const = 0;
+  virtual const ADTemplateVariableSecond<RawOutputType> & adSecondSlnNeighbor() const = 0;
 
   /**
    * AD time derivative getter
    */
-  virtual const ADTemplateVariableValue<OutputType> & adUDot() const = 0;
+  virtual const ADTemplateVariableValue<RawOutputType> & adUDot() const = 0;
 
   /**
    * AD second time derivative getter
    */
-  virtual const ADTemplateVariableValue<OutputType> & adUDotDot() const = 0;
+  virtual const ADTemplateVariableValue<RawOutputType> & adUDotDot() const = 0;
 
   /**
    * AD neighbor time derivative getter
    */
-  virtual const ADTemplateVariableValue<OutputType> & adUDotNeighbor() const = 0;
+  virtual const ADTemplateVariableValue<RawOutputType> & adUDotNeighbor() const = 0;
 
   /**
    * AD neighbor second time derivative getter
    */
-  virtual const ADTemplateVariableValue<OutputType> & adUDotDotNeighbor() const = 0;
+  virtual const ADTemplateVariableValue<RawOutputType> & adUDotDotNeighbor() const = 0;
 
   /**
    * Return the AD dof values
@@ -324,10 +326,10 @@ public:
   virtual const DoFValue & dofValuesDotDotNeighbor() const = 0;
   virtual const DoFValue & dofValuesDotDotOld() const = 0;
   virtual const DoFValue & dofValuesDotDotOldNeighbor() const = 0;
-  virtual const MooseArray<Number> & dofValuesDuDotDu() const = 0;
-  virtual const MooseArray<Number> & dofValuesDuDotDuNeighbor() const = 0;
-  virtual const MooseArray<Number> & dofValuesDuDotDotDu() const = 0;
-  virtual const MooseArray<Number> & dofValuesDuDotDotDuNeighbor() const = 0;
+  virtual const VariableValue & dofValuesDuDotDu() const = 0;
+  virtual const VariableValue & dofValuesDuDotDuNeighbor() const = 0;
+  virtual const VariableValue & dofValuesDuDotDotDu() const = 0;
+  virtual const VariableValue & dofValuesDuDotDotDuNeighbor() const = 0;
 
   /**
    * tag values getters
@@ -352,7 +354,7 @@ public:
   using BlockRestrictable::hasBlocks;
 
 protected:
-  using FunctorArg = typename Moose::ADType<OutputType>::type;
+  using FunctorArg = typename Moose::ADType<RawOutputType>::type;
   using Moose::FunctorBase<FunctorArg>::evaluate;
   using Moose::FunctorBase<FunctorArg>::evaluateGradient;
   using Moose::FunctorBase<FunctorArg>::evaluateDot;

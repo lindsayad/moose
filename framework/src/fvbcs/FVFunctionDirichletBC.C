@@ -31,5 +31,5 @@ FVFunctionDirichletBC::FVFunctionDirichletBC(const InputParameters & parameters)
 Real
 FVFunctionDirichletBC::boundaryValue(const FaceInfo & fi) const
 {
-  return _function.value(_t, fi.faceCentroid());
+  return MetaPhysicL::raw_value(_function.value(_t, fi.faceCentroid()));
 }

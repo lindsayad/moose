@@ -27,7 +27,7 @@ ValueJumpIndicator::ValueJumpIndicator(const InputParameters & parameters)
 Real
 ValueJumpIndicator::computeQpIntegral()
 {
-  Real jump = _u[_qp] - _u_neighbor[_qp];
+  Real jump = MetaPhysicL::raw_value(_u[_qp] - _u_neighbor[_qp]);
 
   return jump * jump;
 }

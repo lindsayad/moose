@@ -168,7 +168,7 @@ PenetrationLocator::reinit()
   detectPenetration();
 }
 
-Real
+GeomReal
 PenetrationLocator::penetrationDistance(dof_id_type node_id)
 {
   PenetrationInfo * info = _penetration_info[node_id];

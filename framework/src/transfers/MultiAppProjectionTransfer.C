@@ -145,8 +145,8 @@ MultiAppProjectionTransfer::assembleL2(EquationSystems & es, const std::string &
   DenseMatrix<Number> Ke;
   DenseVector<Number> Fe;
   std::vector<dof_id_type> dof_indices;
-  const std::vector<Real> & JxW = fe->get_JxW();
-  const std::vector<std::vector<Real>> & phi = fe->get_phi();
+  const auto & JxW = MetaPhysicL::raw_value(fe->get_JxW());
+  const auto & phi = MetaPhysicL::raw_value(fe->get_phi());
   auto & system_matrix = system.get_system_matrix();
 
   for (const auto & elem : to_mesh.active_local_element_ptr_range())
@@ -321,7 +321,7 @@ MultiAppProjectionTransfer::execute()
   }
 
   // Setup the local mesh functions.
-  std::vector<MeshFunction *> local_meshfuns(froms_per_proc[processor_id()], NULL);
+  std::vector<MeshFunction<Number> *> local_meshfuns(froms_per_proc[processor_id()], NULL);
   for (unsigned int i_from = 0; i_from < _from_problems.size(); i_from++)
   {
     FEProblemBase & from_problem = *_from_problems[i_from];
@@ -330,7 +330,7 @@ MultiAppProjectionTransfer::execute()
     System & from_sys = from_var.sys().system();
     unsigned int from_var_num = from_sys.variable_number(from_var.name());
 
-    MeshFunction * from_func = new MeshFunction(
+    auto * from_func = new MeshFunction<Number>(
         from_problem.es(), *from_sys.current_local_solution, from_sys.get_dof_map(), from_var_num);
     from_func->init();
     from_func->enable_out_of_mesh_mode(OutOfMeshValue);

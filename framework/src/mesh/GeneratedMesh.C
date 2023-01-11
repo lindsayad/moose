@@ -262,7 +262,8 @@ GeneratedMesh::buildMesh()
           // Compute the scaled "index" of the current point.  This
           // will either be close to a whole integer or a whole
           // integer+0.5 for quadratic nodes.
-          Real float_index = (node(dir) - mins[dir]) * nelem[dir] / width[dir];
+          Real float_index =
+              (MetaPhysicL::raw_value(node(dir)) - mins[dir]) * nelem[dir] / width[dir];
 
           Real integer_part = 0;
           Real fractional_part = std::modf(float_index, &integer_part);

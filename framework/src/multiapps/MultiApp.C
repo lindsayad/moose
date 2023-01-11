@@ -496,7 +496,7 @@ MultiApp::fillPositions()
       file.setFormatFlag(MooseUtils::DelimitedFileReader::FormatFlag::ROWS);
       file.read();
 
-      const std::vector<Point> & data = file.getDataAsPoints();
+      const auto & data = file.getDataAsPoints();
       for (const auto & d : data)
         _positions.push_back(d);
 
@@ -693,12 +693,12 @@ MultiApp::keepSolutionDuringRestore(bool keep_solution_during_restore)
 void
 MultiApp::transformBoundingBox(BoundingBox & box, const MultiAppCoordTransform & transform)
 {
-  const Real min_x = box.first(0);
-  const Real max_x = box.second(0);
-  const Real min_y = box.first(1);
-  const Real max_y = box.second(1);
-  const Real min_z = box.first(2);
-  const Real max_z = box.second(2);
+  const auto & min_x = box.first(0);
+  const auto & max_x = box.second(0);
+  const auto & min_y = box.first(1);
+  const auto & max_y = box.second(1);
+  const auto & min_z = box.first(2);
+  const auto & max_z = box.second(2);
 
   std::array<Point, 8> box_corners = {{Point(min_x, min_y, min_z),
                                        Point(max_x, min_y, min_z),

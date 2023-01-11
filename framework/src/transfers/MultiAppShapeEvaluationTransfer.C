@@ -233,7 +233,7 @@ MultiAppShapeEvaluationTransfer::transferVariable(unsigned int i)
   }
 
   // Setup the local mesh functions.
-  std::vector<std::shared_ptr<MeshFunction>> local_meshfuns;
+  std::vector<std::shared_ptr<MeshFunction<Number>>> local_meshfuns;
   for (unsigned int i_from = 0; i_from < _from_problems.size(); ++i_from)
   {
     FEProblemBase & from_problem = *_from_problems[i_from];
@@ -245,18 +245,18 @@ MultiAppShapeEvaluationTransfer::transferVariable(unsigned int i)
     System & from_sys = from_var.sys().system();
     unsigned int from_var_num = from_sys.variable_number(from_var.name());
 
-    std::shared_ptr<MeshFunction> from_func;
+    std::shared_ptr<MeshFunction<Number>> from_func;
     // TODO: make MultiAppTransfer give me the right es
     if (_displaced_source_mesh && from_problem.getDisplacedProblem())
-      from_func.reset(new MeshFunction(from_problem.getDisplacedProblem()->es(),
-                                       *from_sys.current_local_solution,
-                                       from_sys.get_dof_map(),
-                                       from_var_num));
+      from_func.reset(new MeshFunction<Number>(from_problem.getDisplacedProblem()->es(),
+                                               *from_sys.current_local_solution,
+                                               from_sys.get_dof_map(),
+                                               from_var_num));
     else
-      from_func.reset(new MeshFunction(from_problem.es(),
-                                       *from_sys.current_local_solution,
-                                       from_sys.get_dof_map(),
-                                       from_var_num));
+      from_func.reset(new MeshFunction<Number>(from_problem.es(),
+                                               *from_sys.current_local_solution,
+                                               from_sys.get_dof_map(),
+                                               from_var_num));
     from_func->init();
     from_func->enable_out_of_mesh_mode(OutOfMeshValue);
     local_meshfuns.push_back(from_func);

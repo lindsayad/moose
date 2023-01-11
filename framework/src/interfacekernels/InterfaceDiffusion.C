@@ -33,7 +33,7 @@ InterfaceDiffusion::InterfaceDiffusion(const InputParameters & parameters)
 Real
 InterfaceDiffusion::computeQpResidual(Moose::DGResidualType type)
 {
-  Real r = 0;
+  GeomReal r = 0;
 
   switch (type)
   {
@@ -46,13 +46,13 @@ InterfaceDiffusion::computeQpResidual(Moose::DGResidualType type)
       break;
   }
 
-  return r;
+  return MetaPhysicL::raw_value(r);
 }
 
 Real
 InterfaceDiffusion::computeQpJacobian(Moose::DGJacobianType type)
 {
-  Real jac = 0;
+  GeomReal jac = 0;
 
   switch (type)
   {
@@ -69,5 +69,5 @@ InterfaceDiffusion::computeQpJacobian(Moose::DGJacobianType type)
       break;
   }
 
-  return jac;
+  return MetaPhysicL::raw_value(jac);
 }

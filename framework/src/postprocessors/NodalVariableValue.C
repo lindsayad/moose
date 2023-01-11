@@ -65,7 +65,8 @@ NodalVariableValue::execute()
   _value = 0;
 
   if (_node_ptr && _node_ptr->processor_id() == processor_id())
-    _value = _subproblem.getStandardVariable(_tid, _var_name).getNodalValue(*_node_ptr);
+    _value = MetaPhysicL::raw_value(
+        _subproblem.getStandardVariable(_tid, _var_name).getNodalValue(*_node_ptr));
 }
 
 Real

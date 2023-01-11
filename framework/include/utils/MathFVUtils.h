@@ -200,7 +200,7 @@ InterpMethod selectInterpolationMethod(const std::string & interp_method);
  * @return a pair where the first Real is c_1 and the second Real is c_2
  */
 template <typename Vector = RealVectorValue>
-std::pair<Real, Real>
+std::pair<GeomReal, GeomReal>
 interpCoeffs(const InterpMethod m,
              const FaceInfo & fi,
              const bool one_is_elem,

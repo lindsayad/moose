@@ -28,5 +28,5 @@ ElementAverageTimeDerivative::ElementAverageTimeDerivative(const InputParameters
 Real
 ElementAverageTimeDerivative::computeQpIntegral()
 {
-  return _u_dot[_qp];
+  return MetaPhysicL::raw_value(_u_dot[_qp]);
 }

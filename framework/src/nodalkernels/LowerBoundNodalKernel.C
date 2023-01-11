@@ -47,9 +47,9 @@ LowerBoundNodalKernel::computeQpResidual()
 {
   for (auto bnd_id : _bnd_ids)
     if (_mesh.isBoundaryNode(_current_node->id(), bnd_id))
-      return _u[_qp];
+      return MetaPhysicL::raw_value(_u[_qp]);
 
-  return std::min(_u[_qp], _v[_qp] - _lower_bound);
+  return MetaPhysicL::raw_value(std::min(_u[_qp], _v[_qp] - _lower_bound));
 }
 
 Real

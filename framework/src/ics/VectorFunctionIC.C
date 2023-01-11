@@ -51,6 +51,7 @@ VectorFunctionIC::value(const Point & p)
   if (_function)
     return _function->vectorValue(_t, p);
   else
-    return RealVectorValue(
-        _function_x.value(_t, p), _function_y.value(_t, p), _function_z.value(_t, p));
+    return RealVectorValue(MetaPhysicL::raw_value(_function_x.value(_t, p)),
+                           MetaPhysicL::raw_value(_function_y.value(_t, p)),
+                           MetaPhysicL::raw_value(_function_z.value(_t, p)));
 }

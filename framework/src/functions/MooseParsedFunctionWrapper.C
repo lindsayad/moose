@@ -22,8 +22,8 @@ MooseParsedFunctionWrapper::MooseParsedFunctionWrapper(FEProblemBase & feproblem
 {
   initialize();
 
-  _function_ptr =
-      std::make_unique<ParsedFunction<Real, RealGradient>>(_function_str, &_vars, &_initial_vals);
+  _function_ptr = std::make_unique<ParsedFunction<GeomReal, GeomRealGradient>>(
+      _function_str, &_vars, &_initial_vals);
 
   for (auto & v : _vars)
     _addr.push_back(&_function_ptr->getVarAddress(v));
@@ -32,7 +32,7 @@ MooseParsedFunctionWrapper::MooseParsedFunctionWrapper(FEProblemBase & feproblem
 MooseParsedFunctionWrapper::~MooseParsedFunctionWrapper() {}
 
 template <>
-Real
+GeomReal
 MooseParsedFunctionWrapper::evaluate(Real t, const Point & p)
 {
   update();
@@ -41,35 +41,35 @@ MooseParsedFunctionWrapper::evaluate(Real t, const Point & p)
 }
 
 template <>
-DenseVector<Real>
+DenseVector<GeomReal>
 MooseParsedFunctionWrapper::evaluate(Real t, const Point & p)
 {
   update();
   updateFunctionValues(t, p);
-  DenseVector<Real> output(LIBMESH_DIM);
+  DenseVector<GeomReal> output(LIBMESH_DIM);
   (*_function_ptr)(p, t, output);
   return output;
 }
 
 template <>
-RealVectorValue
+GeomRealVectorValue
 MooseParsedFunctionWrapper::evaluate(Real t, const Point & p)
 {
-  DenseVector<Real> output = evaluate<DenseVector<Real>>(t, p);
+  DenseVector<GeomReal> output = evaluate<DenseVector<GeomReal>>(t, p);
 
-  return RealVectorValue(output(0)
+  return GeomRealVectorValue(output(0)
 #if LIBMESH_DIM > 1
-                             ,
-                         output(1)
+                                 ,
+                             output(1)
 #endif
 #if LIBMESH_DIM > 2
-                             ,
-                         output(2)
+                                 ,
+                             output(2)
 #endif
   );
 }
 
-RealGradient
+GeomRealGradient
 MooseParsedFunctionWrapper::evaluateGradient(Real t, const Point & p)
 {
   update();
@@ -77,7 +77,7 @@ MooseParsedFunctionWrapper::evaluateGradient(Real t, const Point & p)
   return _function_ptr->gradient(p, t);
 }
 
-Real
+GeomReal
 MooseParsedFunctionWrapper::evaluateDot(Real t, const Point & p)
 {
   update();

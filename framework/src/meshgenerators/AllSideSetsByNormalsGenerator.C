@@ -64,7 +64,7 @@ AllSideSetsByNormalsGenerator::generate()
       if (elem->neighbor_ptr(side))
         continue;
 
-      const std::vector<Point> & normals = _fe_face->get_normals();
+      const auto & normals = MetaPhysicL::raw_value(_fe_face->get_normals());
       _fe_face->reinit(elem, side);
 
       {

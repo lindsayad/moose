@@ -37,5 +37,5 @@ FunctionDiracSource::addPoints()
 Real
 FunctionDiracSource::computeQpResidual()
 {
-  return -_test[_i][_qp] * _function.value(_t, _p);
+  return MetaPhysicL::raw_value(-_test[_i][_qp] * _function.value(_t, _p));
 }

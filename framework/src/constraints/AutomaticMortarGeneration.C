@@ -145,21 +145,30 @@ public:
         auto it = _amg._secondary_node_to_nodal_normal.find(elem->node_ptr(n));
         if (it != _amg._secondary_node_to_nodal_normal.end())
         {
-          _nodal_normals_system->solution->set(dof_indices_nnx[n], it->second(0));
-          _nodal_normals_system->solution->set(dof_indices_nny[n], it->second(1));
-          _nodal_normals_system->solution->set(dof_indices_nnz[n], it->second(2));
+          _nodal_normals_system->solution->set(dof_indices_nnx[n],
+                                               MetaPhysicL::raw_value(it->second(0)));
+          _nodal_normals_system->solution->set(dof_indices_nny[n],
+                                               MetaPhysicL::raw_value(it->second(1)));
+          _nodal_normals_system->solution->set(dof_indices_nnz[n],
+                                               MetaPhysicL::raw_value(it->second(2)));
         }
 
         auto it_tangent = _amg._secondary_node_to_hh_nodal_tangents.find(elem->node_ptr(n));
         if (it_tangent != _amg._secondary_node_to_hh_nodal_tangents.end())
         {
-          _nodal_normals_system->solution->set(dof_indices_t1x[n], it_tangent->second[0](0));
-          _nodal_normals_system->solution->set(dof_indices_t1y[n], it_tangent->second[0](1));
-          _nodal_normals_system->solution->set(dof_indices_t1z[n], it_tangent->second[0](2));
+          _nodal_normals_system->solution->set(dof_indices_t1x[n],
+                                               MetaPhysicL::raw_value(it_tangent->second[0](0)));
+          _nodal_normals_system->solution->set(dof_indices_t1y[n],
+                                               MetaPhysicL::raw_value(it_tangent->second[0](1)));
+          _nodal_normals_system->solution->set(dof_indices_t1z[n],
+                                               MetaPhysicL::raw_value(it_tangent->second[0](2)));
 
-          _nodal_normals_system->solution->set(dof_indices_t2x[n], it_tangent->second[1](0));
-          _nodal_normals_system->solution->set(dof_indices_t2y[n], it_tangent->second[1](1));
-          _nodal_normals_system->solution->set(dof_indices_t2z[n], it_tangent->second[1](2));
+          _nodal_normals_system->solution->set(dof_indices_t2x[n],
+                                               MetaPhysicL::raw_value(it_tangent->second[1](0)));
+          _nodal_normals_system->solution->set(dof_indices_t2y[n],
+                                               MetaPhysicL::raw_value(it_tangent->second[1](1)));
+          _nodal_normals_system->solution->set(dof_indices_t2z[n],
+                                               MetaPhysicL::raw_value(it_tangent->second[1](2)));
         }
 
       } // end loop over nodes
@@ -621,12 +630,12 @@ AutomaticMortarGeneration::buildMortarSegmentMesh()
     const Elem * right_primary_elem =
         (primary_node_neighbors.size() == 2) ? primary_node_neighbors[1] : nullptr;
 
-    Real left_xi2 = MortarSegmentInfo::invalid_xi, right_xi2 = MortarSegmentInfo::invalid_xi;
+    GeomReal left_xi2 = MortarSegmentInfo::invalid_xi, right_xi2 = MortarSegmentInfo::invalid_xi;
 
     // Storage for z-component of cross products for determining
     // orientation.
-    std::array<Real, 2> secondary_node_cps;
-    std::vector<Real> primary_node_cps(primary_node_neighbors.size());
+    std::array<GeomReal, 2> secondary_node_cps;
+    std::vector<GeomReal> primary_node_cps(primary_node_neighbors.size());
 
     // Store z-component of left and right secondary node cross products with the nodal normal.
     for (unsigned int nid = 0; nid < 2; ++nid)
@@ -1012,7 +1021,7 @@ AutomaticMortarGeneration::buildMortarSegmentMesh3d()
     {
       const Elem * secondary_side_elem = *el;
 
-      const Real secondary_volume = secondary_side_elem->volume();
+      const GeomReal secondary_volume = secondary_side_elem->volume();
 
       // If this Elem is not in the current secondary subdomain, go on to the next one.
       if (secondary_side_elem->subdomain_id() != secondary_subd_id)
@@ -1070,31 +1079,30 @@ AutomaticMortarGeneration::buildMortarSegmentMesh3d()
       // Search point for performing Nanoflann (k-d tree) searches.
       // In each case we use the center point of the original element (not sub-elements for second
       // order elements). This is to do search for all sub-elements simultaneously
-      std::array<Real, 3> query_pt;
       Point center_point;
       switch (secondary_side_elem->type())
       {
         case TRI3:
         case QUAD4:
           center_point = mortar_segment_helper[0]->center();
-          query_pt = {{center_point(0), center_point(1), center_point(2)}};
           break;
         case TRI6:
           center_point = mortar_segment_helper[1]->center();
-          query_pt = {{center_point(0), center_point(1), center_point(2)}};
           break;
         case QUAD8:
           center_point = mortar_segment_helper[4]->center();
-          query_pt = {{center_point(0), center_point(1), center_point(2)}};
           break;
         case QUAD9:
           center_point = secondary_side_elem->point(8);
-          query_pt = {{center_point(0), center_point(1), center_point(2)}};
           break;
         default:
           mooseError(
               "Face element type: ", secondary_side_elem->type(), "not supported for 3D mortar");
       }
+
+      const auto & raw_center_point = MetaPhysicL::raw_value(center_point);
+      std::array<Real, 3> query_pt = {
+          {raw_center_point(0), raw_center_point(1), raw_center_point(2)}};
 
       // The number of results we want to get. These results will only be used to find
       // a single element with non-trivial overlap, after an element is identified a breadth
@@ -1426,9 +1434,9 @@ AutomaticMortarGeneration::msmStatistics()
     {
       // Add secondary and primary elem volumes to statistics vector
       if (el->subdomain_id() == secondary_subd_id)
-        secondary.push_back(el->volume());
+        secondary.push_back(MetaPhysicL::raw_value(el->volume()));
       else if (el->subdomain_id() == primary_subd_id)
-        primary.push_back(el->volume());
+        primary.push_back(MetaPhysicL::raw_value(el->volume()));
     }
 
     // Note: when we allow more than one primary secondary pair will need to make
@@ -1436,7 +1444,7 @@ AutomaticMortarGeneration::msmStatistics()
     for (auto msm_elem : _mortar_segment_mesh->active_local_element_ptr_range())
     {
       // Add msm elem volume to statistic vector
-      msm.push_back(msm_elem->volume());
+      msm.push_back(MetaPhysicL::raw_value(msm_elem->volume()));
     }
 
     // Create table
@@ -1483,7 +1491,7 @@ AutomaticMortarGeneration::computeIncorrectEdgeDroppingInactiveLMNodes()
   // List of inactive nodes on local secondary elements
   std::unordered_set<dof_id_type> inactive_node_ids;
 
-  std::unordered_map<const Elem *, Real> active_volume{};
+  std::unordered_map<const Elem *, GeomReal> active_volume{};
 
   for (const auto & pr : _primary_secondary_subdomain_id_pairs)
     for (const auto el : _mesh.active_subdomain_elements_ptr_range(pr.second))
@@ -1707,7 +1715,7 @@ AutomaticMortarGeneration::computeNodalGeometry()
   // vertex node, for a 1D mortar mesh, the vector length will be two. If it is an interior node,
   // the vector will be length 1. The first member of the pair is that element's normal at the node.
   // The second member is that element's JxW at the node
-  std::map<dof_id_type, std::vector<std::pair<Point, Real>>> node_to_normals_map;
+  std::map<dof_id_type, std::vector<std::pair<Point, GeomReal>>> node_to_normals_map;
 
   /// The _periodic flag tells us whether we want to inward vs outward facing normals
   Real sign = _periodic ? -1 : 1;
@@ -1794,9 +1802,9 @@ AutomaticMortarGeneration::householderOrthogolization(const Point & nodal_normal
   mooseAssert(MooseUtils::absoluteFuzzyEqual(nodal_normal.norm(), 1),
               "The input nodal normal should have unity norm");
 
-  const Real nx = nodal_normal(0);
-  const Real ny = nodal_normal(1);
-  const Real nz = nodal_normal(2);
+  const auto & nx = nodal_normal(0);
+  const auto & ny = nodal_normal(1);
+  const auto & nz = nodal_normal(2);
 
   // See Lopes DS, Silva MT, Ambrosio JA. Tangent vectors to a 3-D surface normal: A geometric tool
   // to find orthogonal vectors based on the Householder transformation. Computer-Aided Design. 2013
@@ -1819,7 +1827,7 @@ AutomaticMortarGeneration::householderOrthogolization(const Point & nodal_normal
     return;
   }
 
-  const Real h = h_vector.norm();
+  const auto & h = h_vector.norm();
 
   nodal_tangent_one(0) = -2.0 * h_vector(0) * h_vector(1) / (h * h);
   nodal_tangent_one(1) = 1.0 - 2.0 * h_vector(1) * h_vector(1) / (h * h);
@@ -1901,8 +1909,9 @@ AutomaticMortarGeneration::projectSecondaryNodesSinglePair(
       Point nodal_normal = _secondary_node_to_nodal_normal.at(secondary_node);
 
       // Data structure for performing Nanoflann searches.
-      std::array<Real, 3> query_pt = {
-          {(*secondary_node)(0), (*secondary_node)(1), (*secondary_node)(2)}};
+      std::array<Real, 3> query_pt = {{MetaPhysicL::raw_value((*secondary_node)(0)),
+                                       MetaPhysicL::raw_value((*secondary_node)(1)),
+                                       MetaPhysicL::raw_value((*secondary_node)(2))}};
 
       // The number of results we want to get.  We'll look for a
       // "few" nearest nodes, hopefully that is enough to let us
@@ -1951,13 +1960,13 @@ AutomaticMortarGeneration::projectSecondaryNodesSinglePair(
 
           // Now generically solve for xi2
           auto && order = primary_elem_candidate->default_order();
-          DualNumber<Real> xi2_dn{0, 1};
+          DualNumber<GeomReal, GeomReal, true> xi2_dn{0, 1};
           unsigned int current_iterate = 0, max_iterates = 10;
 
           // Newton loop
           do
           {
-            VectorValue<DualNumber<Real>> x2(0);
+            VectorValue<DualNumber<GeomReal, GeomReal, true>> x2(0);
             for (MooseIndex(primary_elem_candidate->n_nodes()) n = 0;
                  n < primary_elem_candidate->n_nodes();
                  ++n)
@@ -1971,7 +1980,7 @@ AutomaticMortarGeneration::projectSecondaryNodesSinglePair(
 
             if (F.derivatives())
             {
-              Real dxi2 = -F.value() / F.derivatives();
+              auto dxi2 = -F.value() / F.derivatives();
 
               xi2_dn += dxi2;
             }
@@ -1982,7 +1991,7 @@ AutomaticMortarGeneration::projectSecondaryNodesSinglePair(
               current_iterate = max_iterates;
           } while (++current_iterate < max_iterates);
 
-          Real xi2 = xi2_dn.value();
+          auto xi2 = xi2_dn.value();
 
           // Check whether the projection worked. The last condition checks for obliqueness of the
           // projection
@@ -2021,7 +2030,7 @@ AutomaticMortarGeneration::projectSecondaryNodesSinglePair(
               // There can be a max of 2 nodal neighbors, and we want to make sure that the
               // secondary nodal neighbor on the "left" is associated with the primary nodal
               // neighbor on the "left" and similarly for the "right".
-              std::vector<Real> secondary_node_neighbor_cps(2), primary_node_neighbor_cps(2);
+              std::vector<GeomReal> secondary_node_neighbor_cps(2), primary_node_neighbor_cps(2);
 
               // Figure out which secondary side neighbor is on the "left" and which is on the
               // "right".
@@ -2065,7 +2074,8 @@ AutomaticMortarGeneration::projectSecondaryNodesSinglePair(
 
                     // Figure out xi^(2) value by looking at which node primary_node is
                     // of the current primary node neighbor.
-                    Real xi2 = (primary_node == primary_node_neighbors[mnn]->node_ptr(0)) ? -1 : +1;
+                    GeomReal xi2 =
+                        (primary_node == primary_node_neighbors[mnn]->node_ptr(0)) ? -1 : +1;
                     auto secondary_key =
                         std::make_pair(secondary_node, secondary_node_neighbors[snn]);
                     auto primary_val = std::make_pair(xi2, primary_node_neighbors[mnn]);
@@ -2073,7 +2083,7 @@ AutomaticMortarGeneration::projectSecondaryNodesSinglePair(
                                                                          primary_val);
 
                     // Also map in the other direction.
-                    Real xi1 =
+                    GeomReal xi1 =
                         (secondary_node == secondary_node_neighbors[snn]->node_ptr(0)) ? -1 : +1;
 
                     auto primary_key = std::make_tuple(
@@ -2201,7 +2211,9 @@ AutomaticMortarGeneration::projectPrimaryNodesSinglePair(
         continue;
 
       // Data structure for performing Nanoflann searches.
-      Real query_pt[3] = {(*primary_node)(0), (*primary_node)(1), (*primary_node)(2)};
+      Real query_pt[3] = {MetaPhysicL::raw_value((*primary_node)(0)),
+                          MetaPhysicL::raw_value((*primary_node)(1)),
+                          MetaPhysicL::raw_value((*primary_node)(2))};
 
       // The number of results we want to get.  We'll look for a
       // "few" nearest nodes, hopefully that is enough to let us
@@ -2255,11 +2267,11 @@ AutomaticMortarGeneration::projectPrimaryNodesSinglePair(
           // Use equation 2.4.6 from Bin Yang's dissertation to try and solve for
           // the position on the secondary element where this primary came from.  This
           // requires a Newton iteration in general.
-          DualNumber<Real> xi1_dn{0, 1}; // initial guess
+          DualNumber<GeomReal, GeomReal, true> xi1_dn{0, 1}; // initial guess
           auto && order = secondary_elem_candidate->default_order();
           unsigned int current_iterate = 0, max_iterates = 10;
 
-          VectorValue<DualNumber<Real>> normals(0);
+          VectorValue<DualNumber<GeomReal, GeomReal, true>> normals(0);
 
           // Newton iteration loop - this to converge in 1 iteration when it
           // succeeds, and possibly two iterations when it converges to a
@@ -2267,7 +2279,7 @@ AutomaticMortarGeneration::projectPrimaryNodesSinglePair(
           // only take 1 iteration -- the Jacobian is not constant in general...
           do
           {
-            VectorValue<DualNumber<Real>> x1(0);
+            VectorValue<DualNumber<GeomReal, GeomReal, true>> x1(0);
             for (MooseIndex(secondary_elem_candidate->n_nodes()) n = 0;
                  n < secondary_elem_candidate->n_nodes();
                  ++n)
@@ -2287,14 +2299,14 @@ AutomaticMortarGeneration::projectPrimaryNodesSinglePair(
             // Unlike for projection of nodal normals onto primary surfaces, we should never have a
             // case where the nodal normal is completely orthogonal to the secondary surface, so we
             // do not have to guard against F.derivatives() == 0 here
-            Real dxi1 = -F.value() / F.derivatives();
+            auto dxi1 = -F.value() / F.derivatives();
 
             xi1_dn += dxi1;
 
             normals = 0;
           } while (++current_iterate < max_iterates);
 
-          Real xi1 = xi1_dn.value();
+          auto xi1 = xi1_dn.value();
 
           // Check for convergence to a valid solution... The last condition checks for obliqueness
           // of the projection

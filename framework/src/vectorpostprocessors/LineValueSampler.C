@@ -66,12 +66,13 @@ LineValueSampler::generatePointsAndIDs(const Point & start_point,
     Point p = start_point + (i * delta);
 
     points[i] = p;
-    ids[i] = (p - start_point).norm(); // The ID is the distance along the line
+    ids[i] =
+        MetaPhysicL::raw_value((p - start_point).norm()); // The ID is the distance along the line
   }
 
   // Add the end point explicitly
   points[num_points - 1] = end_point;
-  ids[num_points - 1] = (end_point - start_point).norm();
+  ids[num_points - 1] = MetaPhysicL::raw_value((end_point - start_point).norm());
 }
 
 Real

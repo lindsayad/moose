@@ -27,7 +27,7 @@ protected:
   virtual Real computeDistance() override;
 
   /// vector along cylinder axis
-  const Point _cyl_axis;
+  const RawPoint _cyl_axis;
 
   /// axis norm
   const Real _cyl_axis_norm;

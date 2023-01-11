@@ -51,20 +51,27 @@ ArrayDGDiffusion::initQpResidual(Moose::DGResidualType type)
       _current_elem_volume / _current_side_volume * 1.0 / Utility::pow<2>(elem_b_order);
 
   // WARNING: use noalias() syntax with caution. See ArrayDiffusion.C for more details.
-  _res1.noalias() = _diff[_qp].asDiagonal() * _grad_u[_qp] * _array_normals[_qp];
-  _res1.noalias() += _diff_neighbor[_qp].asDiagonal() * _grad_u_neighbor[_qp] * _array_normals[_qp];
+  static_assert(std::is_same<typename MetaPhysicL::RawType<GeomRealEigenVector>::value_type,
+                             RealEigenVector>::value,
+                "This isn't working");
+  _res1.noalias() = _diff[_qp].asDiagonal() * MetaPhysicL::raw_value(_grad_u[_qp]) *
+                    MetaPhysicL::raw_value(_array_normals[_qp]);
+  _res1.noalias() += _diff_neighbor[_qp].asDiagonal() *
+                     MetaPhysicL::raw_value(_grad_u_neighbor[_qp]) *
+                     MetaPhysicL::raw_value(_array_normals[_qp]);
   _res1 *= 0.5;
   _res1 -= (_u[_qp] - _u_neighbor[_qp]) * _sigma / h_elem;
 
   switch (type)
   {
     case Moose::Element:
-      _res2.noalias() = _diff[_qp].asDiagonal() * (_u[_qp] - _u_neighbor[_qp]) * _epsilon * 0.5;
+      _res2.noalias() = _diff[_qp].asDiagonal() *
+                        MetaPhysicL::raw_value((_u[_qp] - _u_neighbor[_qp])) * _epsilon * 0.5;
       break;
 
     case Moose::Neighbor:
-      _res2.noalias() =
-          _diff_neighbor[_qp].asDiagonal() * (_u[_qp] - _u_neighbor[_qp]) * _epsilon * 0.5;
+      _res2.noalias() = _diff_neighbor[_qp].asDiagonal() *
+                        MetaPhysicL::raw_value((_u[_qp] - _u_neighbor[_qp])) * _epsilon * 0.5;
       break;
   }
 }
@@ -75,12 +82,13 @@ ArrayDGDiffusion::computeQpResidual(Moose::DGResidualType type, RealEigenVector 
   switch (type)
   {
     case Moose::Element:
-      residual = -_res1 * _test[_i][_qp] + _res2 * (_grad_test[_i][_qp] * _normals[_qp]);
+      residual = -_res1 * MetaPhysicL::raw_value(_test[_i][_qp]) +
+                 _res2 * MetaPhysicL::raw_value(_grad_test[_i][_qp] * _normals[_qp]);
       break;
 
     case Moose::Neighbor:
-      residual =
-          _res1 * _test_neighbor[_i][_qp] + _res2 * (_grad_test_neighbor[_i][_qp] * _normals[_qp]);
+      residual = _res1 * MetaPhysicL::raw_value(_test_neighbor[_i][_qp]) +
+                 _res2 * MetaPhysicL::raw_value((_grad_test_neighbor[_i][_qp] * _normals[_qp]));
       break;
   }
 }
@@ -91,8 +99,8 @@ ArrayDGDiffusion::computeQpJacobian(Moose::DGJacobianType type)
   RealEigenVector r = RealEigenVector::Zero(_count);
 
   const int elem_b_order = std::max(libMesh::Order(1), _var.order());
-  const Real h_elem =
-      _current_elem_volume / _current_side_volume * 1.0 / Utility::pow<2>(elem_b_order);
+  const Real h_elem = MetaPhysicL::raw_value(_current_elem_volume / _current_side_volume * 1.0 /
+                                             Utility::pow<2>(elem_b_order));
 
   switch (type)
   {

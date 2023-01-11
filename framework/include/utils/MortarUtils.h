@@ -128,7 +128,7 @@ loopOverMortarSegments(
     // need to move into vector for calling
     std::vector<Point> secondary_xi_pts, primary_xi_pts;
 
-    std::vector<Real> JxW;
+    std::vector<GeomReal> JxW;
 
 #ifndef NDEBUG
     unsigned int expected_length = 0;

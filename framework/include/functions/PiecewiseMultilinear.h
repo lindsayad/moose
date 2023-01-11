@@ -28,8 +28,8 @@ public:
 
   PiecewiseMultilinear(const InputParameters & parameters);
 
-  virtual RealGradient gradient(Real t, const Point & p) const override;
-  virtual Real timeDerivative(Real t, const Point & p) const override;
+  virtual GeomRealGradient gradient(Real t, const Point & p) const override;
+  virtual GeomReal timeDerivative(Real t, const Point & p) const override;
 
 protected:
   virtual Real sample(const GridPoint & pt) const override;

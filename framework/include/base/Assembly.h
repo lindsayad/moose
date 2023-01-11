@@ -226,13 +226,13 @@ public:
    * Returns the reference to the transformed jacobian weights
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const MooseArray<Real> & JxW() const { return _current_JxW; }
+  const MooseArray<GeomReal> & JxW() const { return _current_JxW; }
 
-  const MooseArray<ADReal> & adJxW() const { return _ad_JxW; }
+  const MooseArray<GeomReal> & adJxW() const { return _ad_JxW; }
 
-  const MooseArray<ADReal> & adJxWFace() const { return _ad_JxW_face; }
+  const MooseArray<GeomReal> & adJxWFace() const { return _ad_JxW_face; }
 
-  const MooseArray<ADReal> & adCurvatures() const
+  const MooseArray<GeomReal> & adCurvatures() const
   {
     _calculate_curvatures = true;
     return _ad_curvatures;
@@ -242,19 +242,19 @@ public:
    * Returns the reference to the coordinate transformation coefficients
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const MooseArray<Real> & coordTransformation() const { return _coord; }
+  const MooseArray<GeomReal> & coordTransformation() const { return _coord; }
 
   /**
    * Returns the reference to the coordinate transformation coefficients on the mortar segment mesh
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const MooseArray<Real> & mortarCoordTransformation() const { return _coord_msm; }
+  const MooseArray<GeomReal> & mortarCoordTransformation() const { return _coord_msm; }
 
   /**
    * Returns the reference to the AD version of the coordinate transformation coefficients
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const MooseArray<ADReal> & adCoordTransformation() const
+  const MooseArray<GeomReal> & adCoordTransformation() const
   {
     // Coord values for non-cartesian coordinate systems are functions of the locations of the
     // quadrature points in physical space. We also have no way of knowing whether this was called
@@ -294,7 +294,7 @@ public:
    * Returns the reference to the transformed jacobian weights on a current face
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const MooseArray<Real> & JxWFace() const { return _current_JxW_face; }
+  const MooseArray<GeomReal> & JxWFace() const { return _current_JxW_face; }
 
   /**
    * Returns the array of normals for quadrature points on a current side
@@ -311,7 +311,10 @@ public:
   /***
    * Returns the array of normals for quadrature points on a current side
    */
-  const std::vector<Eigen::Map<RealDIMValue>> & mappedNormals() const { return _mapped_normals; }
+  const std::vector<Eigen::Map<GeomRealDIMValue>> & mappedNormals() const
+  {
+    return _mapped_normals;
+  }
 
   /**
    * Returns the array of tangents for quadrature points on a current side
@@ -379,7 +382,7 @@ public:
    * Returns the reference to the current element volume
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const Real & elemVolume() { return _current_elem_volume; }
+  const GeomReal & elemVolume() { return _current_elem_volume; }
 
   /**
    * Returns the current side
@@ -403,7 +406,7 @@ public:
    * Returns the reference to the volume of current side element
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const Real & sideElemVolume() { return _current_side_volume; }
+  const GeomReal & sideElemVolume() { return _current_side_volume; }
 
   /**
    * Return the neighbor element
@@ -426,12 +429,12 @@ public:
   /*
    * @return The current lower-dimensional element volume
    */
-  const Real & lowerDElemVolume() const;
+  const GeomReal & lowerDElemVolume() const;
 
   /*
    * @return The current neighbor lower-dimensional element volume
    */
-  const Real & neighborLowerDElemVolume() const;
+  const GeomReal & neighborLowerDElemVolume() const;
 
   /**
    * Return the current subdomain ID
@@ -447,7 +450,7 @@ public:
    * Returns the reference to the current neighbor volume
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const Real & neighborVolume()
+  const GeomReal & neighborVolume()
   {
     _need_neighbor_elem_volume = true;
     return _current_neighbor_volume;
@@ -469,7 +472,7 @@ public:
    * Returns the reference to the transformed jacobian weights on a current face
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const MooseArray<Real> & JxWNeighbor() const;
+  const MooseArray<GeomReal> & JxWNeighbor() const;
 
   /**
    * Returns the reference to the current quadrature points being used on the neighbor face
@@ -611,7 +614,8 @@ public:
   /**
    * Reintialize dual basis coefficients based on a customized quadrature rule
    */
-  void reinitDual(const Elem * elem, const std::vector<Point> & pts, const std::vector<Real> & JxW);
+  void
+  reinitDual(const Elem * elem, const std::vector<Point> & pts, const std::vector<GeomReal> & JxW);
 
   /**
    * Reinitialize FE data for a lower dimenesional element with a given set of reference points
@@ -633,7 +637,7 @@ public:
   /**
    * Returns a reference to JxW for mortar segment elements
    */
-  const std::vector<Real> & jxWMortar() const { return *_JxW_msm; }
+  const std::vector<GeomReal> & jxWMortar() const { return *_JxW_msm; }
 
   /**
    * Returns a reference to the quadrature rule for the mortar segments
@@ -1083,7 +1087,8 @@ public:
   // Read-only references
   const VariablePhiValue & phi() const { return _phi; }
   template <typename T>
-  const ADTemplateVariablePhiGradient<T> & adGradPhi(const MooseVariableFE<T> & v) const
+  const ADTemplateVariablePhiGradient<typename Moose::ADType<T>::type> &
+  adGradPhi(const MooseVariableFE<T> & v) const
   {
     return _ad_grad_phi_data.at(v.feType());
   }
@@ -1555,7 +1560,7 @@ public:
   void addCachedJacobianContributions();
 
   /// On-demand computation of volume element accounting for RZ/RSpherical
-  Real elementVolume(const Elem * elem) const;
+  GeomReal elementVolume(const Elem * elem) const;
 
   /**
    * Set the pointer to the XFEM controller object
@@ -1938,16 +1943,6 @@ protected:
   void modifyFaceWeightsDueToXFEM(const Elem * elem, unsigned int side = 0);
 
   /**
-   * compute gradient of phi possibly with derivative information with respect to nonlinear
-   * displacement variables
-   */
-  template <typename OutputType>
-  void computeGradPhiAD(const Elem * elem,
-                        unsigned int n_qp,
-                        ADTemplateVariablePhiGradient<OutputType> & grad_phi,
-                        FEGenericBase<OutputType> * fe);
-
-  /**
    * resize any objects that contribute to automatic differentiation-related mapping calculations
    */
   void resizeADMappingObjects(unsigned int n_qp, unsigned int dim);
@@ -1982,6 +1977,16 @@ protected:
   void clearCachedResiduals(const VectorTag & vector_tag);
 
 private:
+  /**
+   * compute gradient of phi possibly with derivative information with respect to nonlinear
+   * displacement variables
+   */
+  template <typename OutputGradient, typename RawOutputType>
+  void computeGradPhiAD(const Elem * elem,
+                        unsigned int n_qp,
+                        MooseArray<std::vector<OutputGradient>> & grad_phi,
+                        FEGenericBase<RawOutputType> * fe);
+
   /**
    * Build FEs with a type
    * @param type The type of FE
@@ -2209,13 +2214,13 @@ private:
   /// The current list of quadrature points
   MooseArray<Point> _current_q_points;
   /// The current list of transformed jacobian weights
-  MooseArray<Real> _current_JxW;
+  MooseArray<GeomReal> _current_JxW;
   /// The coordinate system
   Moose::CoordinateSystemType _coord_type;
   /// The current coordinate transformation coefficients
-  MooseArray<Real> _coord;
+  MooseArray<GeomReal> _coord;
   /// The AD version of the current coordinate transformation coefficients
-  MooseArray<DualReal> _ad_coord;
+  MooseArray<GeomReal> _ad_coord;
 
   /// Data structure for tracking/grouping a set of quadrature rules for a
   /// particular dimensionality of mesh element.
@@ -2325,13 +2330,13 @@ private:
   /// The current quadrature points on a face
   MooseArray<Point> _current_q_points_face;
   /// The current transformed jacobian weights on a face
-  MooseArray<Real> _current_JxW_face;
+  MooseArray<GeomReal> _current_JxW_face;
   /// The current Normal vectors at the quadrature points.
   MooseArray<Point> _current_normals;
   /// The current neighbor Normal vectors at the quadrature points.
   MooseArray<Point> _current_neighbor_normals;
   /// Mapped normals
-  std::vector<Eigen::Map<RealDIMValue>> _mapped_normals;
+  std::vector<Eigen::Map<GeomRealDIMValue>> _mapped_normals;
   /// The current tangent vectors at the quadrature points
   MooseArray<std::vector<Point>> _current_tangents;
 
@@ -2381,17 +2386,17 @@ private:
   /// Flag to indicate that JxW_neighbor is needed
   mutable bool _need_JxW_neighbor;
   /// The current transformed jacobian weights on a neighbor's face
-  MooseArray<Real> _current_JxW_neighbor;
+  MooseArray<GeomReal> _current_JxW_neighbor;
   /// The current coordinate transformation coefficients
-  MooseArray<Real> _coord_neighbor;
+  MooseArray<GeomReal> _coord_neighbor;
   /// The coordinate transformation coefficients evaluated on the quadrature points of the mortar
   /// segment mesh
-  MooseArray<Real> _coord_msm;
+  MooseArray<GeomReal> _coord_msm;
 
   /********** mortar stuff *************/
 
   /// A JxW for working on mortar segement elements
-  const std::vector<Real> * _JxW_msm;
+  const std::vector<GeomReal> * _JxW_msm;
   /// A FE object for working on mortar segement elements
   std::unique_ptr<FEBase> _fe_msm;
   /// A qrule object for working on mortar segement elements. This needs to be a
@@ -2422,13 +2427,13 @@ protected:
   /// The current boundary ID
   BoundaryID _current_boundary_id;
   /// Volume of the current element
-  Real _current_elem_volume;
+  GeomReal _current_elem_volume;
   /// The current side of the selected element (valid only when working with sides)
   unsigned int _current_side;
   /// The current "element" making up the side we are currently on.
   const Elem * _current_side_elem;
   /// Volume of the current side element
-  Real _current_side_volume;
+  GeomReal _current_side_volume;
   /// The current neighbor "element"
   const Elem * _current_neighbor_elem;
   /// The current neighbor subdomain ID
@@ -2440,7 +2445,7 @@ protected:
   /// true is apps need to compute neighbor element volume
   mutable bool _need_neighbor_elem_volume;
   /// Volume of the current neighbor
-  Real _current_neighbor_volume;
+  GeomReal _current_neighbor_volume;
   /// The current node we are working with
   const Node * _current_node;
   /// The current neighboring node we are working with
@@ -2457,11 +2462,11 @@ protected:
   /// Whether we need to compute the lower dimensional element volume
   mutable bool _need_lower_d_elem_volume;
   /// The current lower dimensional element volume
-  Real _current_lower_d_elem_volume;
+  GeomReal _current_lower_d_elem_volume;
   /// Whether we need to compute the neighboring lower dimensional element volume
   mutable bool _need_neighbor_lower_d_elem_volume;
   /// The current neighboring lower dimensional element volume
-  Real _current_neighbor_lower_d_elem_volume;
+  GeomReal _current_neighbor_lower_d_elem_volume;
   /// Whether dual shape functions need to be computed for mortar constraints
   bool _need_dual;
 
@@ -2594,10 +2599,11 @@ protected:
   mutable std::map<FEType, VectorFEShapeData *> _vector_fe_shape_data_lower;
   mutable std::map<FEType, VectorFEShapeData *> _vector_fe_shape_data_dual_lower;
 
-  mutable std::map<FEType, ADTemplateVariablePhiGradient<Real>> _ad_grad_phi_data;
-  mutable std::map<FEType, ADTemplateVariablePhiGradient<RealVectorValue>> _ad_vector_grad_phi_data;
-  mutable std::map<FEType, ADTemplateVariablePhiGradient<Real>> _ad_grad_phi_data_face;
-  mutable std::map<FEType, ADTemplateVariablePhiGradient<RealVectorValue>>
+  mutable std::map<FEType, ADTemplateVariablePhiGradient<ADReal>> _ad_grad_phi_data;
+  mutable std::map<FEType, ADTemplateVariablePhiGradient<ADRealVectorValue>>
+      _ad_vector_grad_phi_data;
+  mutable std::map<FEType, ADTemplateVariablePhiGradient<ADReal>> _ad_grad_phi_data_face;
+  mutable std::map<FEType, ADTemplateVariablePhiGradient<ADRealVectorValue>>
       _ad_vector_grad_phi_data_face;
 
   /**
@@ -2641,30 +2647,30 @@ protected:
   std::vector<Point> _temp_reference_points;
 
   /// AD quantities
-  std::vector<VectorValue<DualReal>> _ad_dxyzdxi_map;
-  std::vector<VectorValue<DualReal>> _ad_dxyzdeta_map;
-  std::vector<VectorValue<DualReal>> _ad_dxyzdzeta_map;
-  std::vector<VectorValue<DualReal>> _ad_d2xyzdxi2_map;
-  std::vector<VectorValue<DualReal>> _ad_d2xyzdxideta_map;
-  std::vector<VectorValue<DualReal>> _ad_d2xyzdeta2_map;
-  std::vector<DualReal> _ad_jac;
-  MooseArray<DualReal> _ad_JxW;
-  MooseArray<VectorValue<DualReal>> _ad_q_points;
-  std::vector<DualReal> _ad_dxidx_map;
-  std::vector<DualReal> _ad_dxidy_map;
-  std::vector<DualReal> _ad_dxidz_map;
-  std::vector<DualReal> _ad_detadx_map;
-  std::vector<DualReal> _ad_detady_map;
-  std::vector<DualReal> _ad_detadz_map;
-  std::vector<DualReal> _ad_dzetadx_map;
-  std::vector<DualReal> _ad_dzetady_map;
-  std::vector<DualReal> _ad_dzetadz_map;
+  std::vector<VectorValue<GeomReal>> _ad_dxyzdxi_map;
+  std::vector<VectorValue<GeomReal>> _ad_dxyzdeta_map;
+  std::vector<VectorValue<GeomReal>> _ad_dxyzdzeta_map;
+  std::vector<VectorValue<GeomReal>> _ad_d2xyzdxi2_map;
+  std::vector<VectorValue<GeomReal>> _ad_d2xyzdxideta_map;
+  std::vector<VectorValue<GeomReal>> _ad_d2xyzdeta2_map;
+  std::vector<GeomReal> _ad_jac;
+  MooseArray<GeomReal> _ad_JxW;
+  MooseArray<VectorValue<GeomReal>> _ad_q_points;
+  std::vector<GeomReal> _ad_dxidx_map;
+  std::vector<GeomReal> _ad_dxidy_map;
+  std::vector<GeomReal> _ad_dxidz_map;
+  std::vector<GeomReal> _ad_detadx_map;
+  std::vector<GeomReal> _ad_detady_map;
+  std::vector<GeomReal> _ad_detadz_map;
+  std::vector<GeomReal> _ad_dzetadx_map;
+  std::vector<GeomReal> _ad_dzetady_map;
+  std::vector<GeomReal> _ad_dzetadz_map;
 
-  MooseArray<DualReal> _ad_JxW_face;
-  MooseArray<VectorValue<DualReal>> _ad_normals;
-  MooseArray<VectorValue<DualReal>> _ad_q_points_face;
-  MooseArray<Real> _curvatures;
-  MooseArray<DualReal> _ad_curvatures;
+  MooseArray<GeomReal> _ad_JxW_face;
+  MooseArray<VectorValue<GeomReal>> _ad_normals;
+  MooseArray<VectorValue<GeomReal>> _ad_q_points_face;
+  MooseArray<GeomReal> _curvatures;
+  MooseArray<GeomReal> _ad_curvatures;
 
   /**
    * Container of displacement numbers and directions
@@ -2729,101 +2735,101 @@ Assembly::feGradDualPhiLower(FEType type) const
 }
 
 template <>
-inline const ADTemplateVariablePhiGradient<RealVectorValue> &
-Assembly::feADGradPhi<RealVectorValue>(FEType type) const
+inline const ADTemplateVariablePhiGradient<ADRealVectorValue> &
+Assembly::feADGradPhi<GeomRealVectorValue>(FEType type) const
 {
   return _ad_vector_grad_phi_data[type];
 }
 
 template <>
-inline const ADTemplateVariablePhiGradient<RealVectorValue> &
-Assembly::feADGradPhiFace<RealVectorValue>(FEType type) const
+inline const ADTemplateVariablePhiGradient<ADRealVectorValue> &
+Assembly::feADGradPhiFace<GeomRealVectorValue>(FEType type) const
 {
   return _ad_vector_grad_phi_data_face[type];
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
-Assembly::fePhi<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiValue &
+Assembly::fePhi<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiGradient &
-Assembly::feGradPhi<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiGradient &
+Assembly::feGradPhi<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiSecond &
-Assembly::feSecondPhi<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiSecond &
+Assembly::feSecondPhi<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
-Assembly::fePhiLower<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiValue &
+Assembly::fePhiLower<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
-Assembly::feDualPhiLower<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiValue &
+Assembly::feDualPhiLower<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiGradient &
-Assembly::feGradPhiLower<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiGradient &
+Assembly::feGradPhiLower<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiGradient &
-Assembly::feGradDualPhiLower<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiGradient &
+Assembly::feGradDualPhiLower<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
-Assembly::fePhiFace<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiValue &
+Assembly::fePhiFace<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiGradient &
-Assembly::feGradPhiFace<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiGradient &
+Assembly::feGradPhiFace<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiSecond &
-Assembly::feSecondPhiFace<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiSecond &
+Assembly::feSecondPhiFace<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
-Assembly::fePhiNeighbor<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiValue &
+Assembly::fePhiNeighbor<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiGradient &
-Assembly::feGradPhiNeighbor<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiGradient &
+Assembly::feGradPhiNeighbor<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiSecond &
-Assembly::feSecondPhiNeighbor<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiSecond &
+Assembly::feSecondPhiNeighbor<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
-Assembly::fePhiFaceNeighbor<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiValue &
+Assembly::fePhiFaceNeighbor<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiGradient &
-Assembly::feGradPhiFaceNeighbor<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiGradient &
+Assembly::feGradPhiFaceNeighbor<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiSecond &
-Assembly::feSecondPhiFaceNeighbor<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiSecond &
+Assembly::feSecondPhiFaceNeighbor<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
-Assembly::feCurlPhi<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiCurl &
+Assembly::feCurlPhi<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
-Assembly::feCurlPhiFace<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiCurl &
+Assembly::feCurlPhiFace<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
-Assembly::feCurlPhiNeighbor<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiCurl &
+Assembly::feCurlPhiNeighbor<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
-Assembly::feCurlPhiFaceNeighbor<VectorValue<Real>>(FEType type) const;
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiCurl &
+Assembly::feCurlPhiFaceNeighbor<VectorValue<GeomReal>>(FEType type) const;
 
 template <>
-inline const ADTemplateVariablePhiGradient<RealVectorValue> &
+inline const ADTemplateVariablePhiGradient<GeomRealVectorValue> &
 Assembly::adGradPhi<RealVectorValue>(const MooseVariableFE<RealVectorValue> & v) const
 {
   return _ad_vector_grad_phi_data.at(v.feType());
@@ -2920,14 +2926,14 @@ Assembly::processResiduals(const std::vector<T> & residuals,
     cacheResidual(row_indices[i], element_vector(i), vector_tags);
 }
 
-inline const Real &
+inline const GeomReal &
 Assembly::lowerDElemVolume() const
 {
   _need_lower_d_elem_volume = true;
   return _current_lower_d_elem_volume;
 }
 
-inline const Real &
+inline const GeomReal &
 Assembly::neighborLowerDElemVolume() const
 {
   _need_neighbor_lower_d_elem_volume = true;

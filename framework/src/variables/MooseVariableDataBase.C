@@ -14,10 +14,9 @@
 #include "SubProblem.h"
 #include "MooseVariableField.h"
 
-template <typename OutputType>
-MooseVariableDataBase<OutputType>::MooseVariableDataBase(const MooseVariableField<OutputType> & var,
-                                                         SystemBase & sys,
-                                                         THREAD_ID tid)
+template <typename RawOutputType>
+MooseVariableDataBase<RawOutputType>::MooseVariableDataBase(
+    const MooseVariableField<RawOutputType> & var, SystemBase & sys, THREAD_ID tid)
   : _var(var),
     _sys(sys),
     _subproblem(_sys.subproblem()),
@@ -88,14 +87,14 @@ MooseVariableDataBase<OutputType>::MooseVariableDataBase(const MooseVariableFiel
   _nodal_value_older_array.resize(1);
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::DoFValue &
-MooseVariableDataBase<OutputType>::nodalVectorTagValue(TagID tag) const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::DoFValue &
+MooseVariableDataBase<RawOutputType>::nodalVectorTagValue(TagID tag) const
 {
   if (isNodal())
   {
     if (tag >= _need_vector_tag_dof_u.size())
-      const_cast<MooseVariableDataBase<OutputType> *>(this)->resizeVectorTagData(tag);
+      const_cast<MooseVariableDataBase<RawOutputType> *>(this)->resizeVectorTagData(tag);
 
     _need_vector_tag_dof_u[tag] = true;
 
@@ -111,16 +110,16 @@ MooseVariableDataBase<OutputType>::nodalVectorTagValue(TagID tag) const
                "' is not nodal.");
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::DoFValue &
-MooseVariableDataBase<OutputType>::nodalMatrixTagValue(TagID tag) const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::DoFValue &
+MooseVariableDataBase<RawOutputType>::nodalMatrixTagValue(TagID tag) const
 {
   if (isNodal())
   {
     if (tag >= _matrix_tags_dof_u.size())
     {
       _need_matrix_tag_dof_u.resize(tag + 1, false);
-      const_cast<MooseVariableDataBase<OutputType> *>(this)->_matrix_tags_dof_u.resize(tag + 1);
+      const_cast<MooseVariableDataBase<RawOutputType> *>(this)->_matrix_tags_dof_u.resize(tag + 1);
     }
 
     _need_matrix_tag_dof_u[tag] = true;
@@ -137,9 +136,9 @@ MooseVariableDataBase<OutputType>::nodalMatrixTagValue(TagID tag) const
                "' is not nodal.");
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableDataBase<OutputType>::resizeVectorTagData(TagID tag)
+MooseVariableDataBase<RawOutputType>::resizeVectorTagData(TagID tag)
 {
   mooseAssert(_need_vector_tag_dof_u.size() == _need_vector_tag_u.size() &&
                   _need_vector_tag_dof_u.size() == _need_vector_tag_grad.size() &&
@@ -169,12 +168,12 @@ MooseVariableDataBase<OutputType>::resizeVectorTagData(TagID tag)
   _vector_tag_grad.resize(tag + 1);
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::FieldVariableValue &
-MooseVariableDataBase<OutputType>::vectorTagValue(TagID tag) const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::FieldVariableValue &
+MooseVariableDataBase<RawOutputType>::vectorTagValue(TagID tag) const
 {
   if (tag >= _need_vector_tag_u.size())
-    const_cast<MooseVariableDataBase<OutputType> *>(this)->resizeVectorTagData(tag);
+    const_cast<MooseVariableDataBase<RawOutputType> *>(this)->resizeVectorTagData(tag);
 
   _need_vector_tag_u[tag] = true;
 
@@ -184,12 +183,12 @@ MooseVariableDataBase<OutputType>::vectorTagValue(TagID tag) const
     mooseError("Tag ", tag, " is not associated with any vector for variable ", _var.name());
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::DoFValue &
-MooseVariableDataBase<OutputType>::vectorTagDofValue(TagID tag) const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::DoFValue &
+MooseVariableDataBase<RawOutputType>::vectorTagDofValue(TagID tag) const
 {
   if (tag >= _need_vector_tag_dof_u.size())
-    const_cast<MooseVariableDataBase<OutputType> *>(this)->resizeVectorTagData(tag);
+    const_cast<MooseVariableDataBase<RawOutputType> *>(this)->resizeVectorTagData(tag);
 
   _need_vector_tag_dof_u[tag] = true;
 
@@ -199,12 +198,12 @@ MooseVariableDataBase<OutputType>::vectorTagDofValue(TagID tag) const
     mooseError("Tag ", tag, " is not associated with any vector for variable ", _var.name());
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::FieldVariableGradient &
-MooseVariableDataBase<OutputType>::vectorTagGradient(TagID tag) const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::FieldVariableGradient &
+MooseVariableDataBase<RawOutputType>::vectorTagGradient(TagID tag) const
 {
   if (tag >= _need_vector_tag_grad.size())
-    const_cast<MooseVariableDataBase<OutputType> *>(this)->resizeVectorTagData(tag);
+    const_cast<MooseVariableDataBase<RawOutputType> *>(this)->resizeVectorTagData(tag);
 
   _need_vector_tag_grad[tag] = true;
 
@@ -214,14 +213,14 @@ MooseVariableDataBase<OutputType>::vectorTagGradient(TagID tag) const
     mooseError("Tag ", tag, " is not associated with any vector for variable ", _var.name());
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::FieldVariableValue &
-MooseVariableDataBase<OutputType>::matrixTagValue(TagID tag) const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::FieldVariableValue &
+MooseVariableDataBase<RawOutputType>::matrixTagValue(TagID tag) const
 {
   if (tag >= _matrix_tag_u.size())
   {
     _need_matrix_tag_u.resize(tag + 1, false);
-    const_cast<MooseVariableDataBase<OutputType> *>(this)->_matrix_tag_u.resize(tag + 1);
+    const_cast<MooseVariableDataBase<RawOutputType> *>(this)->_matrix_tag_u.resize(tag + 1);
   }
 
   _need_matrix_tag_u[tag] = true;
@@ -232,16 +231,16 @@ MooseVariableDataBase<OutputType>::matrixTagValue(TagID tag) const
     mooseError("Tag ", tag, " is not associated with any matrix for variable ", _var.name());
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 unsigned int
-MooseVariableDataBase<OutputType>::oldestSolutionStateRequested() const
+MooseVariableDataBase<RawOutputType>::oldestSolutionStateRequested() const
 {
   return _max_state;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableDataBase<OutputType>::needSolutionState(const unsigned int state)
+MooseVariableDataBase<RawOutputType>::needSolutionState(const unsigned int state)
 {
   if (state > _max_state)
   {
@@ -250,11 +249,11 @@ MooseVariableDataBase<OutputType>::needSolutionState(const unsigned int state)
   }
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 template <typename ReturnType, typename Functor>
 const ReturnType &
-MooseVariableDataBase<OutputType>::stateToTagHelper(const Moose::SolutionState state,
-                                                    Functor functor)
+MooseVariableDataBase<RawOutputType>::stateToTagHelper(const Moose::SolutionState state,
+                                                       Functor functor)
 {
   if (state > 0)
   {
@@ -296,71 +295,71 @@ MooseVariableDataBase<OutputType>::stateToTagHelper(const Moose::SolutionState s
   }
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::FieldVariableValue &
-MooseVariableDataBase<OutputType>::sln(Moose::SolutionState state) const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::FieldVariableValue &
+MooseVariableDataBase<RawOutputType>::sln(Moose::SolutionState state) const
 {
   auto functor = [this](TagID tag_id) -> const FieldVariableValue & {
     return vectorTagValue(tag_id);
   };
 
-  return const_cast<MooseVariableDataBase<OutputType> *>(this)
+  return const_cast<MooseVariableDataBase<RawOutputType> *>(this)
       ->stateToTagHelper<FieldVariableValue>(state, functor);
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::FieldVariableGradient &
-MooseVariableDataBase<OutputType>::gradSln(Moose::SolutionState state) const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::FieldVariableGradient &
+MooseVariableDataBase<RawOutputType>::gradSln(Moose::SolutionState state) const
 {
   auto functor = [this](TagID tag_id) -> const FieldVariableGradient & {
     return vectorTagGradient(tag_id);
   };
 
-  return const_cast<MooseVariableDataBase<OutputType> *>(this)
+  return const_cast<MooseVariableDataBase<RawOutputType> *>(this)
       ->stateToTagHelper<FieldVariableGradient>(state, functor);
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::DoFValue &
-MooseVariableDataBase<OutputType>::vectorTagDofValue(Moose::SolutionState state) const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::DoFValue &
+MooseVariableDataBase<RawOutputType>::vectorTagDofValue(Moose::SolutionState state) const
 {
   auto functor = [this](TagID tag_id) -> const DoFValue & { return vectorTagDofValue(tag_id); };
 
-  return const_cast<MooseVariableDataBase<OutputType> *>(this)->stateToTagHelper<DoFValue>(state,
-                                                                                           functor);
+  return const_cast<MooseVariableDataBase<RawOutputType> *>(this)->stateToTagHelper<DoFValue>(
+      state, functor);
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::DoFValue &
-MooseVariableDataBase<OutputType>::dofValues() const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::DoFValue &
+MooseVariableDataBase<RawOutputType>::dofValues() const
 {
   return vectorTagDofValue(Moose::Current);
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::DoFValue &
-MooseVariableDataBase<OutputType>::dofValuesOld() const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::DoFValue &
+MooseVariableDataBase<RawOutputType>::dofValuesOld() const
 {
   return vectorTagDofValue(Moose::Old);
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::DoFValue &
-MooseVariableDataBase<OutputType>::dofValuesOlder() const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::DoFValue &
+MooseVariableDataBase<RawOutputType>::dofValuesOlder() const
 {
   return vectorTagDofValue(Moose::Older);
 }
 
-template <typename OutputType>
-const typename MooseVariableDataBase<OutputType>::DoFValue &
-MooseVariableDataBase<OutputType>::dofValuesPreviousNL() const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::DoFValue &
+MooseVariableDataBase<RawOutputType>::dofValuesPreviousNL() const
 {
   return vectorTagDofValue(Moose::PreviousNL);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableDataBase<OutputType>::setNodalValue(const OutputType & value, unsigned int idx)
+MooseVariableDataBase<RawOutputType>::setNodalValue(const OutputType & value, unsigned int idx)
 {
   auto & dof_values = _vector_tags_dof_u[_solution_tag];
   mooseAssert(idx < dof_values.size(), "idx is out of the bounds of degree of freedom values");
@@ -376,7 +375,7 @@ MooseVariableDataBase<OutputType>::setNodalValue(const OutputType & value, unsig
 
 template <>
 void
-MooseVariableDataBase<RealVectorValue>::setNodalValue(const RealVectorValue & value,
+MooseVariableDataBase<RealVectorValue>::setNodalValue(const GeomRealVectorValue & value,
                                                       unsigned int idx)
 {
   auto & dof_values = _vector_tags_dof_u[_solution_tag];
@@ -387,9 +386,9 @@ MooseVariableDataBase<RealVectorValue>::setNodalValue(const RealVectorValue & va
   _nodal_value = value;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableDataBase<OutputType>::insert(NumericVector<Number> & residual)
+MooseVariableDataBase<RawOutputType>::insert(NumericVector<Number> & residual)
 {
   if (_has_dof_values)
   {
@@ -411,7 +410,7 @@ MooseVariableDataBase<RealEigenVector>::insert(NumericVector<Number> & residual)
     {
       for (unsigned int i = 0; i < _dof_indices.size(); ++i)
         for (unsigned int j = 0; j < _count; ++j)
-          residual.set(_dof_indices[i] + j, dof_values[i](j));
+          residual.set(_dof_indices[i] + j, MetaPhysicL::raw_value(dof_values[i](j)));
     }
     else
     {
@@ -419,16 +418,16 @@ MooseVariableDataBase<RealEigenVector>::insert(NumericVector<Number> & residual)
       for (unsigned int j = 0; j < _count; ++j)
       {
         for (unsigned int i = 0; i < _dof_indices.size(); ++i)
-          residual.set(_dof_indices[i] + n, dof_values[i](j));
+          residual.set(_dof_indices[i] + n, MetaPhysicL::raw_value(dof_values[i](j)));
         n += _dof_indices.size();
       }
     }
   }
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableDataBase<OutputType>::add(NumericVector<Number> & residual)
+MooseVariableDataBase<RawOutputType>::add(NumericVector<Number> & residual)
 {
   if (_has_dof_values)
   {
@@ -448,7 +447,7 @@ MooseVariableDataBase<RealEigenVector>::add(NumericVector<Number> & residual)
     {
       for (unsigned int i = 0; i < _dof_indices.size(); ++i)
         for (unsigned int j = 0; j < _count; ++j)
-          residual.add(_dof_indices[i] + j, dof_values[i](j));
+          residual.add(_dof_indices[i] + j, MetaPhysicL::raw_value(dof_values[i](j)));
     }
     else
     {
@@ -456,16 +455,16 @@ MooseVariableDataBase<RealEigenVector>::add(NumericVector<Number> & residual)
       for (unsigned int j = 0; j < _count; ++j)
       {
         for (unsigned int i = 0; i < _dof_indices.size(); ++i)
-          residual.add(_dof_indices[i] + n, dof_values[i](j));
+          residual.add(_dof_indices[i] + n, MetaPhysicL::raw_value(dof_values[i](j)));
         n += _dof_indices.size();
       }
     }
   }
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableDataBase<OutputType>::nodalValue(Moose::SolutionState state) const
+template <typename RawOutputType>
+const typename MooseVariableDataBase<RawOutputType>::OutputType &
+MooseVariableDataBase<RawOutputType>::nodalValue(Moose::SolutionState state) const
 {
   if (isNodal())
   {
@@ -497,9 +496,9 @@ MooseVariableDataBase<OutputType>::nodalValue(Moose::SolutionState state) const
                "' is not nodal.");
 }
 
-template <typename OutputType>
-const MooseArray<OutputType> &
-MooseVariableDataBase<OutputType>::nodalValueArray(Moose::SolutionState state) const
+template <typename RawOutputType>
+const MooseArray<typename MooseVariableDataBase<RawOutputType>::OutputType> &
+MooseVariableDataBase<RawOutputType>::nodalValueArray(Moose::SolutionState state) const
 {
   if (isNodal())
   {
@@ -526,9 +525,9 @@ MooseVariableDataBase<OutputType>::nodalValueArray(Moose::SolutionState state) c
                "' is not nodal.");
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableDataBase<OutputType>::fetchDoFValues()
+MooseVariableDataBase<RawOutputType>::fetchDoFValues()
 {
   bool is_transient = _subproblem.isTransient();
 
@@ -612,11 +611,12 @@ MooseVariableDataBase<OutputType>::fetchDoFValues()
   }
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableDataBase<OutputType>::getArrayDoFValues(const NumericVector<Number> & sol,
-                                                     unsigned int n,
-                                                     MooseArray<RealEigenVector> & dof_values) const
+MooseVariableDataBase<RawOutputType>::getArrayDoFValues(
+    const NumericVector<Number> & sol,
+    unsigned int n,
+    MooseArray<GeomRealEigenVector> & dof_values) const
 {
   dof_values.resize(n);
   if (isNodal())
@@ -720,9 +720,9 @@ MooseVariableDataBase<RealEigenVector>::fetchDoFValues()
   }
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableDataBase<OutputType>::zeroSizeDofValues()
+MooseVariableDataBase<RawOutputType>::zeroSizeDofValues()
 {
   if (_subproblem.isTransient())
   {
@@ -740,9 +740,9 @@ MooseVariableDataBase<OutputType>::zeroSizeDofValues()
   _has_dof_values = false;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableDataBase<OutputType>::assignNodalValue()
+MooseVariableDataBase<RawOutputType>::assignNodalValue()
 {
   bool is_transient = _subproblem.isTransient();
 

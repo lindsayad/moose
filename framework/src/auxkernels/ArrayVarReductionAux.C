@@ -38,16 +38,16 @@ ArrayVarReductionAux::computeValue()
   switch (_value_type)
   {
     case 0:
-      return _array_variable[_qp].maxCoeff();
+      return MetaPhysicL::raw_value(_array_variable[_qp].maxCoeff());
 
     case 1:
-      return _array_variable[_qp].minCoeff();
+      return MetaPhysicL::raw_value(_array_variable[_qp].minCoeff());
 
     case 2:
-      return _array_variable[_qp].sum();
+      return MetaPhysicL::raw_value(_array_variable[_qp].sum());
 
     case 3:
-      return _array_variable[_qp].mean();
+      return MetaPhysicL::raw_value(_array_variable[_qp].mean());
   }
 
   return 0.0;

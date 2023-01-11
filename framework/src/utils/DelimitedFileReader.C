@@ -142,14 +142,14 @@ DelimitedFileReader::getData() const
   return _data;
 }
 
-const std::vector<Point>
+const std::vector<RawPoint>
 DelimitedFileReader::getDataAsPoints() const
 {
-  std::vector<Point> point_data;
+  std::vector<RawPoint> point_data;
 
   for (std::size_t i = 0; i < _data.size(); ++i)
   {
-    Point point;
+    RawPoint point;
 
     // Other checks in this class ensure that each data entry has the same number of values;
     // here we just need to check that each data set has LIBMESH_DIM entries (which we could do by

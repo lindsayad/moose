@@ -36,5 +36,5 @@ void
 ArrayBodyForce::computeQpResidual(RealEigenVector & residual)
 {
   for (unsigned int p = 0; p < _count; ++p)
-    residual(p) = -_test[_i][_qp] * _func[p]->value(_t, _q_point[_qp]);
+    residual(p) = MetaPhysicL::raw_value(-_test[_i][_qp] * _func[p]->value(_t, _q_point[_qp]));
 }

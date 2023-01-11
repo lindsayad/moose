@@ -80,9 +80,9 @@ TiledMeshGenerator::generate()
     bbox.union_with(sub_bbox);
   }
 
-  _x_width = bbox.max()(0) - bbox.min()(0);
-  _y_width = bbox.max()(1) - bbox.min()(1);
-  _z_width = bbox.max()(2) - bbox.min()(2);
+  _x_width = MetaPhysicL::raw_value(bbox.max()(0) - bbox.min()(0));
+  _y_width = MetaPhysicL::raw_value(bbox.max()(1) - bbox.min()(1));
+  _z_width = MetaPhysicL::raw_value(bbox.max()(2) - bbox.min()(2));
 
   boundary_id_type left =
       mesh->get_boundary_info().get_id_by_name(getParam<BoundaryName>("left_boundary"));

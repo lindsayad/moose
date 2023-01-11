@@ -59,9 +59,11 @@ ElementValueSampler::execute()
 {
   for (unsigned int i = 0; i < _coupled_moose_vars.size(); i++)
     if (_coupled_moose_vars[i]->isFV())
-      _values[i] = _coupled_standard_fv_moose_vars[i]->getElementalValue(_current_elem);
+      _values[i] = MetaPhysicL::raw_value(
+          _coupled_standard_fv_moose_vars[i]->getElementalValue(_current_elem));
     else
-      _values[i] = _coupled_standard_moose_vars[i]->getElementalValue(_current_elem);
+      _values[i] =
+          MetaPhysicL::raw_value(_coupled_standard_moose_vars[i]->getElementalValue(_current_elem));
 
   SamplerBase::addSample(_current_elem->vertex_average(), _current_elem->id(), _values);
 }

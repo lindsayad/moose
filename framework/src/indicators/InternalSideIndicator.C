@@ -89,13 +89,14 @@ InternalSideIndicator::computeIndicator()
   Real sum = 0;
 
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-    sum += _JxW[_qp] * _coord[_qp] * computeQpIntegral();
+    sum += MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp] * computeQpIntegral());
 
   {
     Threads::spin_mutex::scoped_lock lock(Threads::spin_mtx);
 
-    _solution.add(_field_var.nodalDofIndex(), sum * _current_elem->hmax());
-    _solution.add(_field_var.nodalDofIndexNeighbor(), sum * _neighbor_elem->hmax());
+    _solution.add(_field_var.nodalDofIndex(), sum * MetaPhysicL::raw_value(_current_elem->hmax()));
+    _solution.add(_field_var.nodalDofIndexNeighbor(),
+                  sum * MetaPhysicL::raw_value(_neighbor_elem->hmax()));
   }
 }
 
@@ -116,7 +117,7 @@ InternalSideIndicator::finalize()
     n_flux_faces = 1;
 
   // The 0 is because CONSTANT MONOMIALS only have one coefficient per element...
-  Real value = _field_var.dofValues()[0];
+  Real value = MetaPhysicL::raw_value(_field_var.dofValues()[0]);
 
   {
     Threads::spin_mutex::scoped_lock lock(Threads::spin_mtx);

@@ -151,6 +151,6 @@ DiracKernelInfo::findPoint(const Point & p,
 bool
 DiracKernelInfo::pointsFuzzyEqual(const Point & a, const Point & b)
 {
-  const Real dist_sq = (a - b).norm_sq();
+  const auto dist_sq = (a - b).norm_sq();
   return dist_sq < _point_equal_distance_sq;
 }

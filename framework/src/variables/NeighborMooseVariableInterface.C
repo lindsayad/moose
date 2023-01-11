@@ -33,7 +33,7 @@ NeighborMooseVariableInterface<T>::~NeighborMooseVariableInterface()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableValue &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableValue &
 NeighborMooseVariableInterface<T>::neighborValue()
 {
   if (this->_nodal)
@@ -53,7 +53,7 @@ NeighborMooseVariableInterface<RealVectorValue>::neighborValue()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableValue &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableValue &
 NeighborMooseVariableInterface<T>::neighborValueOld()
 {
   if (this->_nodal)
@@ -73,7 +73,7 @@ NeighborMooseVariableInterface<RealVectorValue>::neighborValueOld()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableValue &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableValue &
 NeighborMooseVariableInterface<T>::neighborValueOlder()
 {
   if (this->_nodal)
@@ -93,7 +93,7 @@ NeighborMooseVariableInterface<RealVectorValue>::neighborValueOlder()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableGradient &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableGradient &
 NeighborMooseVariableInterface<T>::neighborGradient()
 {
   if (this->_nodal)
@@ -103,7 +103,7 @@ NeighborMooseVariableInterface<T>::neighborGradient()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableGradient &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableGradient &
 NeighborMooseVariableInterface<T>::neighborGradientOld()
 {
   if (this->_nodal)
@@ -113,7 +113,7 @@ NeighborMooseVariableInterface<T>::neighborGradientOld()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableGradient &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableGradient &
 NeighborMooseVariableInterface<T>::neighborGradientOlder()
 {
   if (this->_nodal)
@@ -123,7 +123,7 @@ NeighborMooseVariableInterface<T>::neighborGradientOlder()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableSecond &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableSecond &
 NeighborMooseVariableInterface<T>::neighborSecond()
 {
   if (this->_nodal)
@@ -133,7 +133,7 @@ NeighborMooseVariableInterface<T>::neighborSecond()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableSecond &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableSecond &
 NeighborMooseVariableInterface<T>::neighborSecondOld()
 {
   if (this->_nodal)
@@ -143,7 +143,7 @@ NeighborMooseVariableInterface<T>::neighborSecondOld()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableSecond &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableSecond &
 NeighborMooseVariableInterface<T>::neighborSecondOlder()
 {
   if (this->_nodal)
@@ -153,7 +153,7 @@ NeighborMooseVariableInterface<T>::neighborSecondOlder()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableTestSecond &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableTestSecond &
 NeighborMooseVariableInterface<T>::neighborSecondTest()
 {
   if (this->_nodal)
@@ -163,7 +163,7 @@ NeighborMooseVariableInterface<T>::neighborSecondTest()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariablePhiSecond &
+const typename OutputTools<typename MakeOutput<T>::type>::VariablePhiSecond &
 NeighborMooseVariableInterface<T>::neighborSecondPhi()
 {
   if (this->_nodal)

@@ -44,12 +44,12 @@ ActivateElementsByPath::isElementActivated()
 {
   // activate center (assume position of the activate center is only time dependent)
   const static Point dummy;
-  Real x_t = _function_x ? _function_x->value(_t, dummy) : 0.0;
-  Real y_t = _function_y ? _function_y->value(_t, dummy) : 0.0;
-  Real z_t = _function_z ? _function_z->value(_t, dummy) : 0.0;
+  GeomReal x_t = _function_x ? _function_x->value(_t, dummy) : 0.0;
+  GeomReal y_t = _function_y ? _function_y->value(_t, dummy) : 0.0;
+  GeomReal z_t = _function_z ? _function_z->value(_t, dummy) : 0.0;
 
   // activate element when element is close to the point
-  Real distance = (_current_elem->vertex_average() - Point(x_t, y_t, z_t)).norm();
+  GeomReal distance = (_current_elem->vertex_average() - Point(x_t, y_t, z_t)).norm();
   if (distance < _activate_distance)
     return true;
   else

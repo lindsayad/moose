@@ -84,5 +84,7 @@ InterfaceIntegralVariableValuePostprocessor::computeQpIntegral()
     return InterfaceValueTools::getQuantity(_interface_value_type, u, u_neighbor);
   }
   else
-    return InterfaceValueTools::getQuantity(_interface_value_type, _u[_qp], _u_neighbor[_qp]);
+    return InterfaceValueTools::getQuantity(_interface_value_type,
+                                            MetaPhysicL::raw_value(_u[_qp]),
+                                            MetaPhysicL::raw_value(_u_neighbor[_qp]));
 }

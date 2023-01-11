@@ -65,13 +65,13 @@ public:
    * Evaluate the gradient of the function which libMesh provides through
    * automatic differentiation
    */
-  RealGradient evaluateGradient(Real t, const Point & p);
+  GeomRealGradient evaluateGradient(Real t, const Point & p);
 
   /**
    * Evaluate the time derivative of the function which libMesh provides through
    * automatic differentiation
    */
-  Real evaluateDot(Real t, const Point & p);
+  GeomReal evaluateDot(Real t, const Point & p);
 
 private:
   /// Reference to the FEProblemBase object
@@ -87,10 +87,10 @@ private:
   const std::vector<std::string> & _vals_input;
 
   /// Storage for the initial values of _vars variables used by the libMesh::ParsedFunction object
-  std::vector<Real> _initial_vals;
+  std::vector<GeomReal> _initial_vals;
 
   /// Pointer to the libMesh::ParsedFunction object
-  std::unique_ptr<ParsedFunction<Real>> _function_ptr;
+  std::unique_ptr<ParsedFunction<GeomReal, GeomRealGradient>> _function_ptr;
 
   /// Stores indices into _addr variable that are connected to Postprocessors
   std::vector<unsigned int> _pp_index;
@@ -102,7 +102,7 @@ private:
   std::vector<unsigned int> _scalar_index;
 
   /// Vector of pointers to scalar variables values
-  std::vector<const Real *> _scalar_vals;
+  std::vector<const GeomReal *> _scalar_vals;
 
   /// Stores indices into _addr that are connected to Functions this libMesh::ParsedFunction is using
   std::vector<unsigned int> _function_index;
@@ -111,7 +111,7 @@ private:
   std::vector<const Function *> _functions;
 
   /// Pointers to the variables that store the values of _vars inside the libMesh::ParsedFunction object
-  std::vector<Real *> _addr;
+  std::vector<GeomReal *> _addr;
 
   /// The thread id passed from owning Function object
   const THREAD_ID _tid;

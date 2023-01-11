@@ -37,7 +37,7 @@ public:
   /**
    * Given t and p, return the interpolated value.
    */
-  virtual Real value(Real t, const Point & pt) const override;
+  virtual GeomReal value(Real t, const Point & pt) const override;
   virtual ADReal value(const ADReal & t, const ADPoint & p) const override;
 
 protected:

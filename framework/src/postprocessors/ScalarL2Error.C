@@ -47,6 +47,6 @@ Real
 ScalarL2Error::getValue()
 {
   _var.reinit();
-  Real diff = (_var.sln()[0] - _func.value(_t));
+  Real diff = MetaPhysicL::raw_value((_var.sln()[0] - _func.value(_t)));
   return std::sqrt(diff * diff);
 }

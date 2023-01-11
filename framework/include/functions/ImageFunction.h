@@ -43,5 +43,5 @@ public:
    * @param t Time (unused)
    * @param p The point at which to extract pixel data
    */
-  virtual Real value(Real t, const Point & p) const override;
+  virtual GeomReal value(Real t, const Point & p) const override;
 };

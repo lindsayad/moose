@@ -14,7 +14,7 @@
 #include "metaphysicl/dualnumberarray.h"
 #include "Eigen/Dense"
 
-typedef DualNumber<Real, NumberArray<2, Real>> Dual2;
+typedef DualNumber<GeomReal, NumberArray<2, GeomReal>, true> Dual2;
 
 namespace Moose
 {
@@ -100,7 +100,7 @@ projectQPoints3d(const Elem * const msm_elem,
 
   // Transforms quadrature point from first order sub-elements (in case of second-order)
   // to primal element
-  auto transform_qp = [primal_type, sub_elem](const Real nu, const Real xi)
+  auto transform_qp = [primal_type, sub_elem](const GeomReal & nu, const GeomReal & xi)
   {
     switch (primal_type)
     {
@@ -198,9 +198,10 @@ projectQPoints3d(const Elem * const msm_elem,
     // Get physical point on msm_elem to project
     Point x0;
     for (auto n : make_range(msm_elem->n_nodes()))
-      x0 += Moose::fe_lagrange_2D_shape(
-                msm_type, msm_order, n, static_cast<const TypeVector<Real> &>(qrule_msm.qp(qp))) *
-            msm_elem->point(n);
+      x0 +=
+          Moose::fe_lagrange_2D_shape(
+              msm_type, msm_order, n, static_cast<const TypeVector<GeomReal> &>(qrule_msm.qp(qp))) *
+          msm_elem->point(n);
 
     // Use msm_elem quadrature point as initial guess
     // (will be correct for aligned meshes)
@@ -234,17 +235,17 @@ projectQPoints3d(const Elem * const msm_elem,
       // of one. Tightening the tolerance for displacements of smaller orders causes this tolerance
       // to not be reached in a number of tests.
       if (!u.is_zero() && u.norm().value() > 1.0)
-        projection_tolerance *= u.norm().value();
+        projection_tolerance *= MetaPhysicL::raw_value(u.norm().value());
 
       if (MetaPhysicL::raw_value(F).norm() < projection_tolerance)
         break;
 
-      RealEigenMatrix J(3, 2);
+      GeomRealEigenMatrix J(3, 2);
       J << F(0).derivatives()[0], F(0).derivatives()[1], F(1).derivatives()[0],
           F(1).derivatives()[1], F(2).derivatives()[0], F(2).derivatives()[1];
-      RealEigenVector f(3);
+      GeomRealEigenVector f(3);
       f << F(0).value(), F(1).value(), F(2).value();
-      const RealEigenVector dxi = -J.colPivHouseholderQr().solve(f);
+      const GeomRealEigenVector dxi = -J.colPivHouseholderQr().solve(f);
 
       xi(0) += dxi(0);
       xi(1) += dxi(1);

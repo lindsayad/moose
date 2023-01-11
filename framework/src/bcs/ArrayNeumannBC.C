@@ -32,5 +32,5 @@ ArrayNeumannBC::ArrayNeumannBC(const InputParameters & parameters)
 void
 ArrayNeumannBC::computeQpResidual(RealEigenVector & residual)
 {
-  residual -= _test[_i][_qp] * _value;
+  residual -= MetaPhysicL::raw_value(_test[_i][_qp]) * _value;
 }

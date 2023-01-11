@@ -43,7 +43,7 @@ NearestNodeThread::operator()(const NodeIdRange & range)
     const Node & node = _mesh.nodeRef(node_id);
 
     const Node * closest_node = NULL;
-    Real closest_distance = std::numeric_limits<Real>::max();
+    GeomReal closest_distance = std::numeric_limits<Real>::max();
 
     const std::vector<dof_id_type> & neighbor_nodes = _neighbor_nodes[node_id];
 
@@ -52,7 +52,7 @@ NearestNodeThread::operator()(const NodeIdRange & range)
     for (unsigned int k = 0; k < n_neighbor_nodes; k++)
     {
       const Node * cur_node = &_mesh.nodeRef(neighbor_nodes[k]);
-      Real distance = ((*cur_node) - node).norm();
+      auto distance = ((*cur_node) - node).norm();
 
       if (distance < closest_distance)
       {

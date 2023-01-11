@@ -378,7 +378,7 @@ Coupleable::getDefaultNodalValue(const std::string & var_name, unsigned int comp
 }
 
 template <>
-const RealVectorValue &
+const GeomRealVectorValue &
 Coupleable::getDefaultNodalValue<RealVectorValue>(const std::string & var_name, unsigned int) const
 {
   auto && default_variable_value = getDefaultVectorValue(var_name);
@@ -386,7 +386,7 @@ Coupleable::getDefaultNodalValue<RealVectorValue>(const std::string & var_name, 
 }
 
 template <>
-const RealEigenVector &
+const GeomRealEigenVector &
 Coupleable::getDefaultNodalValue<RealEigenVector>(const std::string & var_name, unsigned int) const
 {
   auto && default_variable_value = getDefaultArrayValue(var_name);
@@ -547,7 +547,7 @@ Coupleable::coupledVectorTagValue(const std::string & var_names,
                                   TagID tag,
                                   unsigned int index) const
 {
-  return vectorTagValueHelper<Real>(var_names, tag, index);
+  return vectorTagValueHelper<GeomReal>(var_names, tag, index);
 }
 
 const VariableValue &
@@ -555,7 +555,7 @@ Coupleable::coupledVectorTagValue(const std::string & var_names,
                                   const std::string & tag_name,
                                   unsigned int index) const
 {
-  return vectorTagValueHelper<Real>(var_names, tag_name, index);
+  return vectorTagValueHelper<GeomReal>(var_names, tag_name, index);
 }
 
 const ArrayVariableValue &
@@ -563,7 +563,7 @@ Coupleable::coupledVectorTagArrayValue(const std::string & var_names,
                                        TagID tag,
                                        unsigned int index) const
 {
-  return vectorTagValueHelper<RealEigenVector>(var_names, tag, index);
+  return vectorTagValueHelper<GeomRealEigenVector>(var_names, tag, index);
 }
 
 const ArrayVariableValue &
@@ -571,7 +571,7 @@ Coupleable::coupledVectorTagArrayValue(const std::string & var_names,
                                        const std::string & tag_name,
                                        unsigned int index) const
 {
-  return vectorTagValueHelper<RealEigenVector>(var_names, tag_name, index);
+  return vectorTagValueHelper<GeomRealEigenVector>(var_names, tag_name, index);
 }
 
 const VariableGradient &
@@ -695,7 +695,7 @@ Coupleable::coupledVectorTagDofValue(const std::string & var_name,
                                      TagID tag,
                                      unsigned int comp) const
 {
-  return vectorTagDofValueHelper<Real>(var_name, tag, comp);
+  return vectorTagDofValueHelper<GeomReal>(var_name, tag, comp);
 }
 
 const VariableValue &
@@ -703,14 +703,14 @@ Coupleable::coupledVectorTagDofValue(const std::string & var_name,
                                      const std::string & tag_name,
                                      unsigned int comp) const
 {
-  return vectorTagDofValueHelper<Real>(var_name, tag_name, comp);
+  return vectorTagDofValueHelper<GeomReal>(var_name, tag_name, comp);
 }
 
 const ArrayVariableValue &
 Coupleable::coupledVectorTagArrayDofValue(const std::string & var_name,
                                           const std::string & tag_name) const
 {
-  return vectorTagDofValueHelper<RealEigenVector>(var_name, tag_name);
+  return vectorTagDofValueHelper<GeomRealEigenVector>(var_name, tag_name);
 }
 
 const VariableValue &

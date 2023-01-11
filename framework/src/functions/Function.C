@@ -41,7 +41,7 @@ FunctionTempl<T>::~FunctionTempl()
 }
 
 template <typename T>
-Real
+GeomReal
 FunctionTempl<T>::value(Real /*t*/, const Point & /*p*/) const
 {
   mooseError("value method not implemented");
@@ -76,15 +76,15 @@ FunctionTempl<T>::value(const ChainedReal & t) const
 }
 
 template <typename T>
-RealGradient
+GeomRealGradient
 FunctionTempl<T>::gradient(Real /*t*/, const Point & /*p*/) const
 {
   mooseError("gradient method not implemented");
-  return RealGradient(0, 0, 0);
+  return GeomRealGradient(0, 0, 0);
 }
 
 template <typename T>
-Real
+GeomReal
 FunctionTempl<T>::timeDerivative(Real /*t*/, const Point & /*p*/) const
 {
   mooseError("timeDerivative method not implemented");
@@ -92,23 +92,23 @@ FunctionTempl<T>::timeDerivative(Real /*t*/, const Point & /*p*/) const
 }
 
 template <typename T>
-RealVectorValue
+GeomRealVectorValue
 FunctionTempl<T>::vectorValue(Real /*t*/, const Point & /*p*/) const
 {
   mooseError("vectorValue method not implemented");
-  return RealVectorValue(0, 0, 0);
+  return GeomRealVectorValue(0, 0, 0);
 }
 
 template <typename T>
-RealVectorValue
+GeomRealVectorValue
 FunctionTempl<T>::vectorCurl(Real /*t*/, const Point & /*p*/) const
 {
   mooseError("vectorCurl method not implemented");
-  return RealVectorValue(0, 0, 0);
+  return GeomRealVectorValue(0, 0, 0);
 }
 
 template <typename T>
-Real
+GeomReal
 FunctionTempl<T>::integral() const
 {
   mooseError("Integral method not implemented for function ", name());
@@ -116,7 +116,7 @@ FunctionTempl<T>::integral() const
 }
 
 template <typename T>
-Real
+GeomReal
 FunctionTempl<T>::average() const
 {
   mooseError("Average method not implemented for function ", name());
@@ -402,5 +402,5 @@ FunctionTempl<T>::jacobianSetup()
   FunctorBase<T>::jacobianSetup();
 }
 
-template class FunctionTempl<Real>;
-template class FunctionTempl<ADReal>;
+template class FunctionTempl<GeomReal>;
+// template class FunctionTempl<ADReal>;

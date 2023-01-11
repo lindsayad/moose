@@ -36,7 +36,7 @@ NodalL2Norm::initialize()
 void
 NodalL2Norm::execute()
 {
-  Real val = _u[_qp];
+  Real val = MetaPhysicL::raw_value(_u[_qp]);
   _sum_of_squares += val * val;
 }
 

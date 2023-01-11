@@ -77,5 +77,5 @@ Real
 ReporterPointSource::computeQpResidual()
 {
   //  This is negative because it's a forcing function that has been brought over to the left side
-  return -_test[_i][_qp] * _values[_point_to_index[_current_point]];
+  return MetaPhysicL::raw_value(-_test[_i][_qp] * _values[_point_to_index[_current_point]]);
 }

@@ -37,7 +37,7 @@ ImageFunction::initialSetup()
   setupImageSampler(mesh);
 }
 
-Real
+GeomReal
 ImageFunction::value(Real /*t*/, const Point & p) const
 {
   return sample(p);

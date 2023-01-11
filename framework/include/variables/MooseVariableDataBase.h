@@ -16,6 +16,7 @@
 #include "libmesh/vector_value.h"
 #include "libmesh/tensor_value.h"
 #include "libmesh/type_n_tensor.h"
+#include "libmesh/fe_transformation_base.h"
 
 #include <vector>
 
@@ -28,11 +29,12 @@ namespace libMesh
 class DofMap;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 class MooseVariableDataBase
 {
 public:
   // type for gradient, second and divergence of template class OutputType
+  typedef typename MakeOutput<RawOutputType>::type OutputType;
   typedef typename TensorTools::IncrementRank<OutputType>::type OutputGradient;
   typedef typename TensorTools::IncrementRank<OutputGradient>::type OutputSecond;
   typedef typename TensorTools::DecrementRank<OutputType>::type OutputDivergence;
@@ -45,7 +47,7 @@ public:
   typedef typename Moose::DOFType<OutputType>::type OutputData;
   typedef MooseArray<OutputData> DoFValue;
 
-  MooseVariableDataBase(const MooseVariableField<OutputType> & var,
+  MooseVariableDataBase(const MooseVariableField<RawOutputType> & var,
                         SystemBase & sys,
                         THREAD_ID tid);
 
@@ -151,7 +153,7 @@ protected:
   void zeroSizeDofValues();
   void getArrayDoFValues(const NumericVector<Number> & sol,
                          unsigned int n,
-                         MooseArray<RealEigenVector> & dof_values) const;
+                         MooseArray<GeomRealEigenVector> & dof_values) const;
   void assignNodalValue();
 
   /**
@@ -263,10 +265,10 @@ protected:
   /// the previous time step's solution value second time derivative
   DoFValue _dof_values_dotdot_old;
   /// derivatives of the solution value time derivative with respect to the degrees of freedom
-  MooseArray<Number> _dof_du_dot_du;
+  VariableValue _dof_du_dot_du;
   /// derivatives of the solution value second time derivative with respect to the degrees of
   /// freedom
-  MooseArray<Number> _dof_du_dotdot_du;
+  VariableValue _dof_du_dotdot_du;
 
   /// nodal values of u_dot
   OutputType _nodal_value_dot;
@@ -290,9 +292,9 @@ void MooseVariableDataBase<RealEigenVector>::fetchDoFValues();
 template <>
 void MooseVariableDataBase<RealVectorValue>::assignNodalValue();
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableDataBase<OutputType>::setActiveTags(const std::set<TagID> & vtags)
+MooseVariableDataBase<RawOutputType>::setActiveTags(const std::set<TagID> & vtags)
 {
   _required_vector_tags = _solution_tags;
   for (const auto tag : vtags)
@@ -306,9 +308,9 @@ MooseVariableDataBase<OutputType>::setActiveTags(const std::set<TagID> & vtags)
   }
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableDataBase<OutputType>::insertSolutionTag(const TagID tag_id)
+MooseVariableDataBase<RawOutputType>::insertSolutionTag(const TagID tag_id)
 {
   _solution_tags.insert(tag_id);
   _required_vector_tags.insert(tag_id);

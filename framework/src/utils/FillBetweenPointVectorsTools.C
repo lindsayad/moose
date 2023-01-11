@@ -288,8 +288,8 @@ elementsCreationFromNodesVectors(ReplicatedMesh & mesh,
            nodes_up_it + nodes_down_it < node_number_up + node_number_down - 3)
     {
       // Define the two possible options and chose the one with shorter distance
-      Real dis1 = (*nodes[i + 1][nodes_up_it] - *nodes[i][nodes_down_it + 1]).norm();
-      Real dis2 = (*nodes[i + 1][nodes_up_it + 1] - *nodes[i][nodes_down_it]).norm();
+      auto dis1 = (*nodes[i + 1][nodes_up_it] - *nodes[i][nodes_down_it + 1]).norm();
+      auto dis2 = (*nodes[i + 1][nodes_up_it + 1] - *nodes[i][nodes_down_it]).norm();
       if (MooseUtils::absoluteFuzzyGreaterThan(dis1, dis2))
       {
         Elem * elem = mesh.add_elem(new Tri3);
@@ -373,12 +373,13 @@ weightedInterpolator(const unsigned int vec_node_num,
     // Normalized range 0~1
     vec_index.push_back((Real)i / ((Real)vec_node_num - 1.0));
     // X and Y coordinates cooresponding to the index
-    pos_x.push_back(boundary_points_vec[i](0));
-    pos_y.push_back(boundary_points_vec[i](1));
+    pos_x.push_back(MetaPhysicL::raw_value(boundary_points_vec[i](0)));
+    pos_y.push_back(MetaPhysicL::raw_value(boundary_points_vec[i](1)));
     // Use Point-to-Point distance as unnormalized weight
     if (i > 0)
     {
-      wt.push_back((boundary_points_vec[i] - boundary_points_vec[i - 1]).norm());
+      wt.push_back(
+          MetaPhysicL::raw_value((boundary_points_vec[i] - boundary_points_vec[i - 1]).norm()));
       dist_vec.push_back(wt.back());
     }
     // Accumulated unnormalized weights to get unnormalized weighted index
@@ -459,17 +460,17 @@ surrogateGenerator(std::vector<Real> & weighted_surrogate_index,
 bool
 needFlip(const std::vector<Point> vec_pts_1, const std::vector<Point> vec_pts_2)
 {
-  const Real th1 =
+  const auto th1 =
       acos((vec_pts_1.back() - vec_pts_1.front()) * (vec_pts_2.front() - vec_pts_1.front()) /
            (vec_pts_1.back() - vec_pts_1.front()).norm() /
            (vec_pts_2.front() - vec_pts_1.front()).norm());
-  const Real th2 = acos(
+  const auto th2 = acos(
       (vec_pts_2.back() - vec_pts_1.back()) * (vec_pts_1.front() - vec_pts_1.back()) /
       (vec_pts_2.back() - vec_pts_1.back()).norm() / (vec_pts_1.front() - vec_pts_1.back()).norm());
-  const Real th3 = acos(
+  const auto th3 = acos(
       (vec_pts_2.front() - vec_pts_2.back()) * (vec_pts_1.back() - vec_pts_2.back()) /
       (vec_pts_2.front() - vec_pts_2.back()).norm() / (vec_pts_1.back() - vec_pts_2.back()).norm());
-  const Real th4 =
+  const auto th4 =
       acos((vec_pts_1.front() - vec_pts_2.front()) * (vec_pts_2.back() - vec_pts_2.front()) /
            (vec_pts_1.front() - vec_pts_2.front()).norm() /
            (vec_pts_2.back() - vec_pts_2.front()).norm());
@@ -701,12 +702,12 @@ isClosedLoop(ReplicatedMesh & mesh,
     std::vector<Real> ordered_node_azi_list;
     for (unsigned int i = 0; i < ordered_node_list.size() - 1; i++)
     {
-      ordered_node_azi_list.push_back(
+      ordered_node_azi_list.push_back(MetaPhysicL::raw_value(
           (*mesh.node_ptr(ordered_node_list[i]) - origin_pt)
-              .cross(*mesh.node_ptr(ordered_node_list[i + 1]) - origin_pt)(2));
+              .cross(*mesh.node_ptr(ordered_node_list[i + 1]) - origin_pt)(2)));
       // Use this opportunity to calculate maximum radius
-      max_node_radius =
-          std::max((*mesh.node_ptr(ordered_node_list[i]) - origin_pt).norm(), max_node_radius);
+      max_node_radius = MetaPhysicL::raw_value(
+          std::max((*mesh.node_ptr(ordered_node_list[i]) - origin_pt).norm(), max_node_radius));
     }
     std::sort(ordered_node_azi_list.begin(), ordered_node_azi_list.end());
     if (ordered_node_azi_list.front() * ordered_node_azi_list.back() < 0.0)

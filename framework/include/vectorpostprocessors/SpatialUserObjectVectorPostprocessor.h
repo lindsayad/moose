@@ -51,5 +51,5 @@ protected:
   const UserObject & _uo;
 
   /// Points at which to evaluate the user object
-  std::vector<Point> _points;
+  std::vector<RawPoint> _points;
 };

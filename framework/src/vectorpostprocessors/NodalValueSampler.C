@@ -73,7 +73,7 @@ NodalValueSampler::execute()
 
     if (nodal_solution.size() > 0)
     {
-      _values[i] = nodal_solution[_qp];
+      _values[i] = MetaPhysicL::raw_value(nodal_solution[_qp]);
       _has_values[i] = 1;
     }
     else

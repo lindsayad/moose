@@ -36,6 +36,6 @@ ElementL2Error::getValue()
 Real
 ElementL2Error::computeQpIntegral()
 {
-  Real diff = _u[_qp] - _func.value(_t, _q_point[_qp]);
+  Real diff = MetaPhysicL::raw_value(_u[_qp] - _func.value(_t, _q_point[_qp]));
   return diff * diff;
 }

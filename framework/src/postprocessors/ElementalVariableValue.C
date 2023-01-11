@@ -54,7 +54,7 @@ ElementalVariableValue::execute()
     const VariableValue & u = var.sln();
     unsigned int n = u.size();
     for (unsigned int i = 0; i < n; i++)
-      _value += u[i];
+      _value += MetaPhysicL::raw_value(u[i]);
     _value /= n;
   }
 }

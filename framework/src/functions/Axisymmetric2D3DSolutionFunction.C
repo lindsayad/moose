@@ -86,8 +86,8 @@ Axisymmetric2D3DSolutionFunction::Axisymmetric2D3DSolutionFunction(
     mooseError("If 'from_variables' is specified, it must have either 1 (scalar) or 2 (vector "
                "components) variables");
 
-  Point zero;
-  Point unit_vec_y;
+  RawPoint zero;
+  RawPoint unit_vec_y;
   unit_vec_y(1) = 1;
   if (_2d_axis_point1 == zero && _2d_axis_point2 == unit_vec_y && _3d_axis_point1 == zero &&
       _3d_axis_point2 == unit_vec_y)
@@ -133,7 +133,7 @@ Axisymmetric2D3DSolutionFunction::initialSetup()
     _solution_object_var_indices[i] = _solution_object_ptr->getLocalVarIndex(_var_names[i]);
 }
 
-Real
+GeomReal
 Axisymmetric2D3DSolutionFunction::value(Real t, const Point & p) const
 {
   Point xypoint;
@@ -149,7 +149,7 @@ Axisymmetric2D3DSolutionFunction::value(Real t, const Point & p) const
     z_dir_2d(1) = 1;
     r_dir_3d = p;
     r_dir_3d(1) = 0;
-    Real r = r_dir_3d.norm();
+    auto r = r_dir_3d.norm();
     if (MooseUtils::absoluteFuzzyGreaterThan(r, 0.0))
     {
       r_gt_zero = true;
@@ -165,10 +165,10 @@ Axisymmetric2D3DSolutionFunction::value(Real t, const Point & p) const
     z_dir_3d = _3d_axis_point2 - _3d_axis_point1;
     z_dir_3d /= z_dir_3d.norm();
     Point v3dp1p(p - _3d_axis_point1);
-    Real z = z_dir_3d * v3dp1p;
+    auto z = z_dir_3d * v3dp1p;
     Point axis_proj = _3d_axis_point1 + z * z_dir_3d; // projection of point onto axis
     Point axis_proj_to_p = p - axis_proj;
-    Real r = axis_proj_to_p.norm();
+    auto r = axis_proj_to_p.norm();
     if (MooseUtils::absoluteFuzzyGreaterThan(r, 0.0))
     {
       r_gt_zero = true;
@@ -184,11 +184,11 @@ Axisymmetric2D3DSolutionFunction::value(Real t, const Point & p) const
     xypoint = _2d_axis_point1 + z / _axial_dim_ratio * z_dir_2d + r * r_dir_2d;
   }
 
-  Real val;
+  GeomReal val;
   if (_has_component)
   {
-    Real val_x = _solution_object_ptr->pointValue(t, xypoint, _solution_object_var_indices[0]);
-    Real val_y = _solution_object_ptr->pointValue(t, xypoint, _solution_object_var_indices[1]);
+    auto val_x = _solution_object_ptr->pointValue(t, xypoint, _solution_object_var_indices[0]);
+    auto val_y = _solution_object_ptr->pointValue(t, xypoint, _solution_object_var_indices[1]);
 
     // val_vec_rz contains the value vector converted from x,y to r,z coordinates
     Point val_vec_rz;

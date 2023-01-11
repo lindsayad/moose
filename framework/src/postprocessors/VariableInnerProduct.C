@@ -29,5 +29,5 @@ VariableInnerProduct::VariableInnerProduct(const InputParameters & parameters)
 Real
 VariableInnerProduct::computeQpIntegral()
 {
-  return _u[_qp] * _v[_qp];
+  return MetaPhysicL::raw_value(_u[_qp] * _v[_qp]);
 }

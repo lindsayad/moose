@@ -407,7 +407,7 @@ MultiAppCoordTransform::operator()(const Point & point) const
   if (_our_app_transform._coord_type == Moose::COORD_XYZ &&
       _destination_app_transform->_coord_type == Moose::COORD_RZ)
   {
-    Real r_squared = 0;
+    GeomReal r_squared = 0;
     for (unsigned int i = 0; i < LIBMESH_DIM; ++i)
       if (i != _destination_app_transform->_z_axis)
         r_squared += ret(i) * ret(i);
@@ -421,7 +421,7 @@ MultiAppCoordTransform::operator()(const Point & point) const
   else if (_our_app_transform._coord_type == Moose::COORD_XYZ &&
            _destination_app_transform->_coord_type == Moose::COORD_RSPHERICAL)
   {
-    Real r_squared = 0;
+    GeomReal r_squared = 0;
     for (unsigned int i = 0; i < LIBMESH_DIM; ++i)
       r_squared += ret(i) * ret(i);
 
@@ -432,7 +432,7 @@ MultiAppCoordTransform::operator()(const Point & point) const
   else if (_our_app_transform._coord_type == Moose::COORD_RZ &&
            _destination_app_transform->_coord_type == Moose::COORD_RSPHERICAL)
   {
-    Real r_squared = 0;
+    GeomReal r_squared = 0;
     for (unsigned int i = 0; i < LIBMESH_DIM; ++i)
     {
       mooseAssert(

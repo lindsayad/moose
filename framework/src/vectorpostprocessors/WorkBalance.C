@@ -192,7 +192,7 @@ public:
 
       // NOTE: we do not want to account for different coordinate systems here, so
       // using volume from libmesh elem is fine here
-      auto volume = _elem_side_builder(*elem, side).volume();
+      auto volume = MetaPhysicL::raw_value(_elem_side_builder(*elem, side).volume());
       _local_partition_surface_area += volume;
 
       if (_my_hardware_id != _rank_map.hardwareID(elem->neighbor_ptr(side)->processor_id()))

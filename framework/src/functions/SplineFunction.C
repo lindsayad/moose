@@ -40,22 +40,22 @@ SplineFunction::SplineFunction(const InputParameters & parameters)
 {
 }
 
-Real
+GeomReal
 SplineFunction::value(Real /*t*/, const Point & p) const
 {
-  return _ipol.sample(p(_component));
+  return _ipol.sample(MetaPhysicL::raw_value(p(_component)));
 }
 
 ADReal
 SplineFunction::value(const ADReal & /*t*/, const ADPoint & p) const
 {
-  return _ipol.sample(p(_component));
+  return _ipol.sample(MetaPhysicL::raw_value(p(_component)));
 }
 
-RealGradient
+GeomRealGradient
 SplineFunction::gradient(Real /*t*/, const Point & p) const
 {
-  RealGradient grad(0.0);
+  GeomRealGradient grad(0.0);
   grad(0) = derivative(p);
   return grad;
 }
@@ -63,11 +63,11 @@ SplineFunction::gradient(Real /*t*/, const Point & p) const
 Real
 SplineFunction::derivative(const Point & p) const
 {
-  return _ipol.sampleDerivative(p(_component));
+  return _ipol.sampleDerivative(MetaPhysicL::raw_value(p(_component)));
 }
 
 Real
 SplineFunction::secondDerivative(const Point & p) const
 {
-  return _ipol.sample2ndDerivative(p(_component));
+  return _ipol.sample2ndDerivative(MetaPhysicL::raw_value(p(_component)));
 }

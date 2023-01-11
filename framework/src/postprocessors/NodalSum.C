@@ -39,7 +39,7 @@ NodalSum::initialize()
 void
 NodalSum::execute()
 {
-  _sum += _u[_qp];
+  _sum += MetaPhysicL::raw_value(_u[_qp]);
 }
 
 Real

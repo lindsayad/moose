@@ -62,8 +62,8 @@ GridPartitioner::_do_partition(MeshBase & mesh, const unsigned int /*n*/)
 
   // Figure out the physical bounds of the given mesh
   auto bounding_box = MeshTools::create_bounding_box(mesh);
-  const auto & min = bounding_box.min();
-  const auto & max = bounding_box.max();
+  const auto & min = MetaPhysicL::raw_value(bounding_box.min());
+  const auto & max = MetaPhysicL::raw_value(bounding_box.max());
 
   auto dim = mesh.mesh_dimension();
   //  Need to make sure the number of cells in the grid matches the number of procs to partition for
@@ -121,7 +121,7 @@ GridPartitioner::_do_partition(MeshBase & mesh, const unsigned int /*n*/)
   for (auto & elem_ptr : mesh.active_element_ptr_range())
   {
     // Find the element it lands in in the GeneratedMesh
-    auto centroid = elem_ptr->vertex_average();
+    auto centroid = MetaPhysicL::raw_value(elem_ptr->vertex_average());
 
     coordx = centroid(0);
     mooseAssert(coordx >= min(0) && coordy <= max(0),

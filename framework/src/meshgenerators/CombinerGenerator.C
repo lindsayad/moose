@@ -35,7 +35,7 @@ CombinerGenerator::validParams()
       "The input MeshGenerators.  This can either be N generators or 1 generator.  If only 1 is "
       "given then 'positions' must also be given.");
 
-  params.addParam<std::vector<Point>>(
+  params.addParam<std::vector<RawPoint>>(
       "positions",
       "The (optional) position of each given mesh.  If N 'inputs' were given then this must either "
       "be left blank or N positions must be given.  If 1 input was given then this MUST be "
@@ -72,7 +72,7 @@ CombinerGenerator::fillPositions()
 {
   if (isParamValid("positions"))
   {
-    _positions = getParam<std::vector<Point>>("positions");
+    _positions = getParam<std::vector<RawPoint>>("positions");
 
     // the check in the constructor wont catch error where the user sets positions = ''
     if ((_input_names.size() == 1) && _positions.empty())
@@ -100,7 +100,7 @@ CombinerGenerator::fillPositions()
       file.setFormatFlag(MooseUtils::DelimitedFileReader::FormatFlag::ROWS);
       file.read();
 
-      const std::vector<Point> & data = file.getDataAsPoints();
+      const auto & data = file.getDataAsPoints();
 
       if (_input_names.size() != 1)
         if (data.size() && (_input_names.size() != data.size()))

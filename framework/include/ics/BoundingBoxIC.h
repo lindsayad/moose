@@ -50,10 +50,10 @@ protected:
   const Real _outside;
 
   /// The Point object constructed from the x1, y1, z1 components for the bottom left BB corner
-  const Point _bottom_left;
+  const RawPoint _bottom_left;
 
   /// The Point object constructed from the x2, y2, z2 components for the bottom left BB corner
-  const Point _top_right;
+  const RawPoint _top_right;
 
   /// Interfacial width
   const Real _int_width;

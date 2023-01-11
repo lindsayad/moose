@@ -180,11 +180,11 @@ Point
 meshCentroidCalculator(const MeshBase & mesh)
 {
   Point centroid_pt = Point(0.0, 0.0, 0.0);
-  Real vol_tmp = 0.0;
+  GeomReal vol_tmp = 0.0;
   for (const auto & elem :
        as_range(mesh.active_local_elements_begin(), mesh.active_local_elements_end()))
   {
-    Real elem_vol = elem->volume();
+    auto elem_vol = elem->volume();
     centroid_pt += (elem->true_centroid()) * elem_vol;
     vol_tmp += elem_vol;
   }

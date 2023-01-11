@@ -111,7 +111,7 @@ PiecewiseBilinear::PiecewiseBilinear(const InputParameters & parameters)
 
 PiecewiseBilinear::~PiecewiseBilinear() {}
 
-Real
+GeomReal
 PiecewiseBilinear::value(Real t, const Point & p) const
 {
   return valueInternal(t, p);
@@ -125,9 +125,10 @@ PiecewiseBilinear::value(const ADReal & t, const ADPoint & p) const
 
 template <typename T, typename P>
 T
-PiecewiseBilinear::valueInternal(T t, const P & p) const
+PiecewiseBilinear::valueInternal(T t, const P & p_in) const
 {
   T retVal = 0.0;
+  const auto & p = MetaPhysicL::raw_value(p_in);
   if (_yaxisValid && _xaxisValid && _radial)
   {
     const auto rx = p(_xaxis) * p(_xaxis);

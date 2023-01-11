@@ -49,7 +49,7 @@ PointValue::PointValue(const InputParameters & parameters)
 void
 PointValue::execute()
 {
-  _value = _system.point_value(_var_number, _point, false);
+  _value = MetaPhysicL::raw_value(_system.point_value(_var_number, _point, false));
 
   /**
    * If we get exactly zero, we don't know if the locator couldn't find an element, or

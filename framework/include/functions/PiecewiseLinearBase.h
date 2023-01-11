@@ -26,13 +26,13 @@ public:
   virtual void initialSetup() override;
 
   using BaseClass::value;
-  virtual Real value(Real t, const Point & p) const override;
+  virtual GeomReal value(Real t, const Point & p) const override;
   virtual ADReal value(const ADReal & t, const ADPoint & p) const override;
 
-  virtual Real timeDerivative(Real t, const Point &) const override;
-  virtual RealGradient gradient(Real, const Point & p) const override;
-  virtual Real integral() const override;
-  virtual Real average() const override;
+  virtual GeomReal timeDerivative(Real t, const Point &) const override;
+  virtual GeomRealGradient gradient(Real, const Point & p) const override;
+  virtual GeomReal integral() const override;
+  virtual GeomReal average() const override;
   virtual void setData(const std::vector<Real> & x, const std::vector<Real> & y) override;
 
 protected:

@@ -31,5 +31,5 @@ UserForcingFunctionNodalKernel::UserForcingFunctionNodalKernel(const InputParame
 Real
 UserForcingFunctionNodalKernel::computeQpResidual()
 {
-  return -_func.value(_t, (*_current_node));
+  return MetaPhysicL::raw_value(-_func.value(_t, (*_current_node)));
 }

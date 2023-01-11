@@ -22,15 +22,15 @@ IntersectionPointsAlongLine::validParams()
   InputParameters params = GeneralVectorPostprocessor::validParams();
   params.addClassDescription(
       "Get the intersection points for all of the elements that are intersected by a line.");
-  params.addRequiredParam<Point>("start", "The beginning of the line");
-  params.addRequiredParam<Point>("end", "The end of the line");
+  params.addRequiredParam<RawPoint>("start", "The beginning of the line");
+  params.addRequiredParam<RawPoint>("end", "The end of the line");
   return params;
 }
 
 IntersectionPointsAlongLine::IntersectionPointsAlongLine(const InputParameters & parameters)
   : GeneralVectorPostprocessor(parameters),
-    _start(getParam<Point>("start")),
-    _end(getParam<Point>("end")),
+    _start(getParam<RawPoint>("start")),
+    _end(getParam<RawPoint>("end")),
     _x_intersections(declareVector("x"))
 #if LIBMESH_DIM > 1
     ,
@@ -95,6 +95,6 @@ IntersectionPointsAlongLine::execute()
     const Point & end_point = segment.end();
 
     for (const auto j : make_range(Moose::dim))
-      (*_intersections[j])[i + 1] = end_point(j);
+      (*_intersections[j])[i + 1] = MetaPhysicL::raw_value(end_point(j));
   }
 }

@@ -32,7 +32,7 @@ public:
   ElemInfo() : _elem(nullptr) {}
 
   const Elem * elem() const { return _elem; }
-  Real volume() const { return _volume; }
+  GeomReal volume() const { return _volume; }
   const Point & centroid() const { return _centroid; }
 
   /// We return the subdomain ID of the corresponding libmesh element.
@@ -42,7 +42,7 @@ protected:
   /// Reference to the element in libmesh
   const Elem * const _elem;
   /// Volume of the element
-  Real _volume;
+  GeomReal _volume;
   /// Centroid of the element
   Point _centroid;
 };

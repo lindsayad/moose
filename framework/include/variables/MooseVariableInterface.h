@@ -10,6 +10,7 @@
 #pragma once
 
 #include "MooseVariableBase.h"
+#include "libmesh/fe_transformation_base.h"
 
 // Forward declarations
 class Assembly;
@@ -66,49 +67,49 @@ protected:
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableValue & value();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableValue & value();
 
   /**
    * The old value of the variable this object is operating on.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableValue & valueOld();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableValue & valueOld();
 
   /**
    * The older value of the variable this object is operating on.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableValue & valueOlder();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableValue & valueOlder();
 
   /**
    * The time derivative of the variable this object is operating on.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableValue & dot();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableValue & dot();
 
   /**
    * The second time derivative of the variable this object is operating on.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableValue & dotDot();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableValue & dotDot();
 
   /**
    * The old time derivative of the variable this object is operating on.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableValue & dotOld();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableValue & dotOld();
 
   /**
    * The old second time derivative of the variable this object is operating on.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableValue & dotDotOld();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableValue & dotDotOld();
 
   /**
    * The derivative of the time derivative of the variable this object is operating on
@@ -137,49 +138,52 @@ protected:
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableGradient & gradient();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableGradient & gradient();
 
   /**
    * The old gradient of the variable this object is operating on.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableGradient & gradientOld();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableGradient &
+  gradientOld();
 
   /**
    * The older gradient of the variable this object is operating on.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableGradient & gradientOlder();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableGradient &
+  gradientOlder();
 
   /**
    * The second derivative of the variable this object is operating on.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableSecond & second();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableSecond & second();
 
   /**
    * The old second derivative of the variable this object is operating on.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableSecond & secondOld();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableSecond & secondOld();
 
   /**
    * The older second derivative of the variable this object is operating on.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableSecond & secondOlder();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableSecond & secondOlder();
 
   /**
    * The second derivative of the test function.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableTestSecond & secondTest();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableTestSecond &
+  secondTest();
 
   /**
    * The second derivative of the test function on the current face.
@@ -188,14 +192,15 @@ protected:
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableTestSecond & secondTestFace();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableTestSecond &
+  secondTestFace();
 
   /**
    * The second derivative of the trial function.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariablePhiSecond & secondPhi();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariablePhiSecond & secondPhi();
 
   /**
    * The second derivative of the trial function on the current face.
@@ -204,7 +209,8 @@ protected:
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariablePhiSecond & secondPhiFace();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariablePhiSecond &
+  secondPhiFace();
 
   /// Whether or not this object is acting only at nodes
   bool _nodal;

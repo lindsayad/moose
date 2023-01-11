@@ -69,7 +69,12 @@ PiecewiseMultiInterpolation::pointInGrid(const MooseADWrapper<Real, is_ad> & t,
   for (unsigned int i = 0; i < _dim; ++i)
   {
     if (_axes[i] < 3)
-      point_in_grid[i] = p(_axes[i]);
+    {
+      if constexpr (is_ad)
+        point_in_grid[i] = p(_axes[i]);
+      else
+        point_in_grid[i] = MetaPhysicL::raw_value(p(_axes[i]));
+    }
     else if (_axes[i] == 3) // the time direction
       point_in_grid[i] = t;
   }
@@ -81,7 +86,7 @@ PiecewiseMultiInterpolation::pointInGrid<false>(const Real &, const Point &) con
 template PiecewiseMultiInterpolation::ADGridPoint
 PiecewiseMultiInterpolation::pointInGrid<true>(const ADReal &, const ADPoint &) const;
 
-Real
+GeomReal
 PiecewiseMultiInterpolation::value(Real t, const Point & p) const
 {
   return sample(pointInGrid<false>(t, p));

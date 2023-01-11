@@ -119,7 +119,8 @@ MultiAppVariableValueSamplePostprocessorTransfer::cacheElemToPostprocessorData()
       unsigned int count = 0;
       for (unsigned int j = 0; j < getFromMultiApp()->numGlobalApps(); ++j)
       {
-        Real current_distance = (getFromMultiApp()->position(j) - elem->true_centroid()).norm();
+        Real current_distance =
+            MetaPhysicL::raw_value((getFromMultiApp()->position(j) - elem->true_centroid()).norm());
         if (MooseUtils::absoluteFuzzyLessThan(current_distance, distance))
         {
           distance = current_distance;
@@ -208,7 +209,7 @@ MultiAppVariableValueSamplePostprocessorTransfer::execute()
 
             if (array_var)
             {
-              value = array_var->sln()[0](_comp);
+              value = MetaPhysicL::raw_value(array_var->sln()[0](_comp));
               mooseAssert(
                   _comp < array_var->count(),
                   "Component must be smaller than the number of components of array variable!");
@@ -216,7 +217,7 @@ MultiAppVariableValueSamplePostprocessorTransfer::execute()
             }
             else
             {
-              value = standard_var->sln()[0];
+              value = MetaPhysicL::raw_value(standard_var->sln()[0]);
               mooseAssert(standard_var->sln().size() == 1, "No values in u!");
             }
           }

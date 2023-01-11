@@ -39,9 +39,9 @@ MaxIncrement::MaxIncrement(const InputParameters & parameters)
 Real
 MaxIncrement::computeQpDamping()
 {
-  Real inc = std::abs(_u_increment[_qp]);
+  Real inc = std::abs(MetaPhysicL::raw_value(_u_increment[_qp]));
   if (_increment_type == IncrementTypeEnum::fractional)
-    inc /= std::abs(_u[_qp]);
+    inc /= std::abs(MetaPhysicL::raw_value(_u[_qp]));
 
   if (inc > _max_increment)
     return _max_increment / inc;

@@ -28,7 +28,7 @@ LaplacianJumpIndicator::LaplacianJumpIndicator(const InputParameters & parameter
 Real
 LaplacianJumpIndicator::computeQpIntegral()
 {
-  Real jump = (_second_u[_qp].tr() - _second_u_neighbor[_qp].tr());
+  Real jump = MetaPhysicL::raw_value((_second_u[_qp].tr() - _second_u_neighbor[_qp].tr()));
 
   return jump * jump;
 }

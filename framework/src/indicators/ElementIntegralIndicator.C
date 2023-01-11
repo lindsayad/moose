@@ -31,7 +31,7 @@ ElementIntegralIndicator::computeIndicator()
 {
   Real sum = 0;
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-    sum += _JxW[_qp] * _coord[_qp] * computeQpIntegral();
+    sum += MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp] * computeQpIntegral());
 
   //  sum = std::sqrt(sum);
 
@@ -41,5 +41,5 @@ ElementIntegralIndicator::computeIndicator()
 Real
 ElementIntegralIndicator::computeQpIntegral()
 {
-  return _u[_qp];
+  return MetaPhysicL::raw_value(_u[_qp]);
 }

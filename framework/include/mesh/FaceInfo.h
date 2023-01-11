@@ -53,12 +53,12 @@ public:
   };
 
   /// Returns the face area of face id
-  Real faceArea() const { return _face_area; }
+  GeomReal faceArea() const { return _face_area; }
 
   /// Sets/gets the coordinate transformation factor (for e.g. rz, spherical
   /// coords) to be used for integration over faces.
-  Real & faceCoord() { return _face_coord; }
-  Real faceCoord() const { return _face_coord; }
+  GeomReal & faceCoord() { return _face_coord; }
+  GeomReal faceCoord() const { return _face_coord; }
 
   /// Returns the unit normal vector for the face oriented outward from the face's elem element.
   const Point & normal() const { return _normal; }
@@ -115,13 +115,13 @@ public:
   std::set<BoundaryID> & boundaryIDs() { return _boundary_ids; }
 
   /// Return the element volume
-  Real elemVolume() const { return _elem_info->volume(); }
+  GeomReal elemVolume() const { return _elem_info->volume(); }
 
   /// Return the neighbor volume
-  Real neighborVolume() const;
+  GeomReal neighborVolume() const;
 
   /// Return the geometric weighting factor
-  Real gC() const { return _gc; }
+  GeomReal gC() const { return _gc; }
 
   /**
    * @return the distance vector drawn from centroid C to N, or in terms of MOOSE implementation,
@@ -133,7 +133,7 @@ public:
    * @return the magnitude of the distance vector between centroids C and N, or in terms of MOOSE
    * implementation, the magnitude of the distance vector between neighbor and element centroids
    */
-  Real dCNMag() const { return _d_cn_mag; }
+  GeomReal dCNMag() const { return _d_cn_mag; }
 
   /**
    * @return the normalized (e.g. unit) distance vector drawn from centroid C to N, or in terms of
@@ -170,7 +170,7 @@ private:
   const ElemInfo * const _elem_info;
   const ElemInfo * _neighbor_info;
 
-  Real _face_coord = 0;
+  GeomReal _face_coord = 0;
   Point _normal;
 
   const processor_id_type _processor_id;
@@ -180,7 +180,7 @@ private:
   const unsigned int _elem_side_id;
   unsigned int _neighbor_side_id;
 
-  Real _face_area;
+  GeomReal _face_area;
   Point _face_centroid;
 
   /// the distance vector between neighbor and element centroids
@@ -188,10 +188,10 @@ private:
   Point _e_cn;
 
   /// the distance norm between neighbor and element centroids
-  Real _d_cn_mag;
+  GeomReal _d_cn_mag;
 
   /// Geometric weighting factor for face value interpolation
-  Real _gc;
+  GeomReal _gc;
 
   /// a map that provides the information what face type this is for each variable
   std::map<std::string, VarFaceNeighbors> _face_types_by_var;
@@ -233,7 +233,7 @@ FaceInfo::neighborSubdomainID() const
   return _neighbor_info ? _neighbor_info->subdomain_id() : Moose::INVALID_BLOCK_ID;
 }
 
-inline Real
+inline GeomReal
 FaceInfo::neighborVolume() const
 {
   mooseAssert(_neighbor_info,

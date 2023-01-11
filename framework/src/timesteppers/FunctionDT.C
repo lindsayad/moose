@@ -125,7 +125,7 @@ FunctionDT::computeDT()
   Real local_dt = 0;
 
   if (_use_function)
-    local_dt = _function->value(_time, _point_zero);
+    local_dt = MetaPhysicL::raw_value(_function->value(_time, _point_zero));
   else
   {
     if (_interpolate)

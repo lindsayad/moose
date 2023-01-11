@@ -22,11 +22,11 @@ public:
   ConstantFunction(const InputParameters & parameters);
 
   using Function::value;
-  virtual Real value(Real t, const Point & p) const override;
+  virtual GeomReal value(Real t, const Point & p) const override;
   virtual ADReal value(const ADReal & t, const ADPoint & p) const override;
 
-  virtual Real timeDerivative(Real t, const Point & p) const override;
-  virtual RealVectorValue gradient(Real t, const Point & p) const override;
+  virtual GeomReal timeDerivative(Real t, const Point & p) const override;
+  virtual GeomRealVectorValue gradient(Real t, const Point & p) const override;
 
 protected:
   const Real & _value;

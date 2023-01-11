@@ -74,19 +74,19 @@ protected:
   }
 
   /// The volume of the current neighbor
-  const Real & getNeighborElemVolume();
+  const GeomReal & getNeighborElemVolume();
 
   /// Pointer reference to the current element
   const Elem * const & _current_elem;
 
   /// The volume (or length) of the current element
-  const Real & _current_elem_volume;
+  const GeomReal & _current_elem_volume;
 
   /// The neighboring element
   const Elem * const & _neighbor_elem;
 
   /// The neighboring element volume
-  const Real & _neighbor_elem_volume;
+  const GeomReal & _neighbor_elem_volume;
 
   /// Current side
   const unsigned int & _current_side;
@@ -95,7 +95,7 @@ protected:
   const Elem * const & _current_side_elem;
 
   /// The volume (or length) of the current side
-  const Real & _current_side_volume;
+  const GeomReal & _current_side_volume;
 
   /// Coordinate system
   const Moose::CoordinateSystemType & _coord_sys;
@@ -110,10 +110,10 @@ protected:
   const QBase * const & _qrule;
 
   /// Elemtn Jacobian/quadrature weight
-  const MooseArray<Real> & _JxW;
+  const MooseArray<GeomReal> & _JxW;
 
   /// Coordinate transformation value; relevant in axisymmetric simulations for example
-  const MooseArray<Real> & _coord;
+  const MooseArray<GeomReal> & _coord;
 
   /// Index for test and trial functions
   unsigned int _i, _j;

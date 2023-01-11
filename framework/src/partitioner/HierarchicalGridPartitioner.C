@@ -105,8 +105,8 @@ HierarchicalGridPartitioner::_do_partition(MeshBase & mesh, const unsigned int /
 
   // Figure out the physical bounds of the given mesh
   auto nodes_bounding_box = MeshTools::create_bounding_box(mesh);
-  const auto & nodes_min = nodes_bounding_box.min();
-  const auto & nodes_max = nodes_bounding_box.max();
+  const auto & nodes_min = MetaPhysicL::raw_value(nodes_bounding_box.min());
+  const auto & nodes_max = MetaPhysicL::raw_value(nodes_bounding_box.max());
 
   // Bound the coarse mesh (n_nodes * n_nodes)
   auto nodes_mesh = std::make_unique<ReplicatedMesh>(this->_communicator);
@@ -143,23 +143,23 @@ HierarchicalGridPartitioner::_do_partition(MeshBase & mesh, const unsigned int /
   for (const auto & elem_ptr : nodes_mesh->active_element_ptr_range())
   {
     // Need to find the bounds of the elem
-    Point min(std::numeric_limits<Real>::max(),
-              std::numeric_limits<Real>::max(),
-              std::numeric_limits<Real>::max());
-    Point max(-std::numeric_limits<Real>::max(),
-              -std::numeric_limits<Real>::max(),
-              -std::numeric_limits<Real>::max());
+    RawPoint min(std::numeric_limits<Real>::max(),
+                 std::numeric_limits<Real>::max(),
+                 std::numeric_limits<Real>::max());
+    RawPoint max(-std::numeric_limits<Real>::max(),
+                 -std::numeric_limits<Real>::max(),
+                 -std::numeric_limits<Real>::max());
 
     // Loop over all the nodes
     for (const auto & node : elem_ptr->node_ref_range())
     {
-      min(0) = std::min(min(0), node(0));
-      min(1) = std::min(min(1), node(1));
-      min(2) = std::min(min(2), node(2));
+      min(0) = std::min(min(0), MetaPhysicL::raw_value(node(0)));
+      min(1) = std::min(min(1), MetaPhysicL::raw_value(node(1)));
+      min(2) = std::min(min(2), MetaPhysicL::raw_value(node(2)));
 
-      max(0) = std::max(max(0), node(0));
-      max(1) = std::max(max(1), node(1));
-      max(2) = std::max(max(2), node(2));
+      max(0) = std::max(max(0), MetaPhysicL::raw_value(node(0)));
+      max(1) = std::max(max(1), MetaPhysicL::raw_value(node(1)));
+      max(2) = std::max(max(2), MetaPhysicL::raw_value(node(2)));
     }
 
     auto procs_mesh = std::make_unique<ReplicatedMesh>(this->_communicator);

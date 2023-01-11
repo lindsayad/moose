@@ -32,7 +32,7 @@ public:
   Axisymmetric2D3DSolutionFunction(const InputParameters & parameters);
 
   using Function::value;
-  virtual Real value(Real t, const Point & p) const override;
+  virtual GeomReal value(Real t, const Point & p) const override;
 
   /**
    * Setup the function for use

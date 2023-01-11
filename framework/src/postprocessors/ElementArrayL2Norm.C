@@ -33,6 +33,6 @@ ElementArrayL2Norm::getValue()
 Real
 ElementArrayL2Norm::computeQpIntegral()
 {
-  Real val = _u[_qp](_component);
+  Real val = MetaPhysicL::raw_value(_u[_qp](_component));
   return val * val;
 }

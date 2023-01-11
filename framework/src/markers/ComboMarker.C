@@ -37,7 +37,8 @@ ComboMarker::computeElementMarker()
   MarkerValue marker_value = DONT_MARK;
 
   for (const auto & var : _markers)
-    marker_value = std::max(marker_value, static_cast<MarkerValue>((*var)[0]));
+    marker_value =
+        std::max(marker_value, static_cast<MarkerValue>(MetaPhysicL::raw_value((*var)[0])));
 
   return marker_value;
 }

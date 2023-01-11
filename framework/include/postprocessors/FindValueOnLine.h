@@ -32,11 +32,11 @@ public:
   virtual PostprocessorValue getValue() override;
 
 protected:
-  Real getValueAtPoint(const Point & p);
+  Real getValueAtPoint(const RawPoint & p);
 
   ///@{ line to sample along
-  const Point _start_point;
-  const Point _end_point;
+  const RawPoint _start_point;
+  const RawPoint _end_point;
   const Real _length;
   ///@}
 

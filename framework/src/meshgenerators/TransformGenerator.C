@@ -62,9 +62,9 @@ TransformGenerator::generate()
   {
     const auto bbox = MeshTools::create_bounding_box(*mesh);
     if (_transform == 2)
-      vector_value = -0.5 * (bbox.max() + bbox.min());
+      vector_value = MetaPhysicL::raw_value(-0.5 * (bbox.max() + bbox.min()));
     else
-      vector_value = -bbox.min();
+      vector_value = MetaPhysicL::raw_value(-bbox.min());
   }
   else
     vector_value = getParam<RealVectorValue>("vector_value");

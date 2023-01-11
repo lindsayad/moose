@@ -39,7 +39,7 @@ NodalMaxValueId::initialize()
 Real
 NodalMaxValueId::computeValue()
 {
-  return _u[_qp];
+  return MetaPhysicL::raw_value(_u[_qp]);
 }
 
 void

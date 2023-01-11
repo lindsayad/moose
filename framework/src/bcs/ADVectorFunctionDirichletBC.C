@@ -49,9 +49,9 @@ ADVectorFunctionDirichletBC::computeQpResidual()
   if (_function)
     _values = _function->vectorValue(_t, *_current_node);
   else
-    _values = RealVectorValue(_function_x.value(_t, *_current_node),
-                              _function_y.value(_t, *_current_node),
-                              _function_z.value(_t, *_current_node));
+    _values = GeomRealVectorValue(_function_x.value(_t, *_current_node),
+                                  _function_y.value(_t, *_current_node),
+                                  _function_z.value(_t, *_current_node));
 
   return _u - _values;
 }

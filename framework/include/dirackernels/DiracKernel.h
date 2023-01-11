@@ -149,7 +149,7 @@ protected:
   /// Quadrature rule
   const QBase * const & _qrule;
   /// Transformed Jacobian weights
-  const MooseArray<Real> & _JxW;
+  const MooseArray<GeomReal> & _JxW;
 
   /// i-th, j-th index for enumerating shape and test functions
   unsigned int _i, _j;

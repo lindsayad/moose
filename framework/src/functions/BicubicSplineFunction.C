@@ -118,14 +118,14 @@ BicubicSplineFunction::BicubicSplineFunction(const InputParameters & parameters)
   }
 }
 
-Real
+GeomReal
 BicubicSplineFunction::value(Real /*t*/, const Point & p) const
 {
   // Call yx11/yx1n with the correctly oriented points
-  Real x1_begin = _x1[0];
-  Real x1_end = p(_x2_index);
-  Real xn_begin = _x1.back();
-  Real xn_end = p(_x2_index);
+  auto x1_begin = _x1[0];
+  auto x1_end = p(_x2_index);
+  auto xn_begin = _x1.back();
+  auto xn_end = p(_x2_index);
 
   Point x1(0, 0, 0);
   Point xn(0, 0, 0);
@@ -135,13 +135,14 @@ BicubicSplineFunction::value(Real /*t*/, const Point & p) const
   xn(_x1_index) = xn_begin;
   xn(_x2_index) = xn_end;
 
-  Real yx11 = _yx1.value(0, x1);
-  Real yx1n = _yx1.value(0, xn);
+  auto yx11 = MetaPhysicL::raw_value(_yx1.value(0, x1));
+  auto yx1n = MetaPhysicL::raw_value(_yx1.value(0, xn));
 
-  return _ipol.sample(p(_x1_index), p(_x2_index), yx11, yx1n);
+  return _ipol.sample(
+      MetaPhysicL::raw_value(p(_x1_index)), MetaPhysicL::raw_value(p(_x2_index)), yx11, yx1n);
 }
 
-Real
+GeomReal
 BicubicSplineFunction::derivative(const Point & p, unsigned int deriv_var) const
 {
   Real yp1, ypn;
@@ -150,48 +151,52 @@ BicubicSplineFunction::derivative(const Point & p, unsigned int deriv_var) const
   if (deriv_var == 1)
   {
     // Call yx11/yx1n with the correctly oriented points
-    Real x1_begin = _x1[0];
-    Real x1_end = p(_x2_index);
-    Real xn_begin = _x1.back();
-    Real xn_end = p(_x2_index);
+    auto x1_begin = _x1[0];
+    auto x1_end = p(_x2_index);
+    auto xn_begin = _x1.back();
+    auto xn_end = p(_x2_index);
 
     x1(_x1_index) = x1_begin;
     x1(_x2_index) = x1_end;
     xn(_x1_index) = xn_begin;
     xn(_x2_index) = xn_end;
 
-    yp1 = _yx1.value(0, x1);
-    ypn = _yx1.value(0, xn);
+    yp1 = MetaPhysicL::raw_value(_yx1.value(0, x1));
+    ypn = MetaPhysicL::raw_value(_yx1.value(0, xn));
   }
   else if (deriv_var == 2)
   {
     // Call yx11/yx1n with the correctly oriented points
-    Real x1_begin = p(_x1_index);
-    Real x1_end = _x2[0];
-    Real xn_begin = p(_x1_index);
-    Real xn_end = _x2.back();
+    auto x1_begin = p(_x1_index);
+    auto x1_end = _x2[0];
+    auto xn_begin = p(_x1_index);
+    auto xn_end = _x2.back();
 
     x1(_x1_index) = x1_begin;
     x1(_x2_index) = x1_end;
     xn(_x1_index) = xn_begin;
     xn(_x2_index) = xn_end;
 
-    yp1 = _yx2.value(0, x1);
-    ypn = _yx2.value(0, xn);
+    yp1 = MetaPhysicL::raw_value(_yx2.value(0, x1));
+    ypn = MetaPhysicL::raw_value(_yx2.value(0, xn));
   }
   else
     mooseError("deriv_var must equal 1 or 2");
 
-  return _ipol.sampleDerivative(p(_x1_index), p(_x2_index), deriv_var, yp1, ypn);
+  return _ipol.sampleDerivative(MetaPhysicL::raw_value(p(_x1_index)),
+                                MetaPhysicL::raw_value(p(_x2_index)),
+                                deriv_var,
+                                yp1,
+                                ypn);
 }
 
-RealGradient
+GeomRealGradient
 BicubicSplineFunction::gradient(Real /*t*/, const Point & p) const
 {
-  RealGradient grad = RealGradient(0, 0, 0);
+  GeomRealGradient grad = GeomRealGradient(0, 0, 0);
 
-  Real dF_dx1 = derivative(p, 1);
-  Real dF_dx2 = derivative(p, 2);
+  GeomReal dF_dx1 = derivative(p, 1);
+  GeomReal dF_dx2 = derivative(p, 2);
 
   grad(_x1_index) = dF_dx1;
   grad(_x2_index) = dF_dx2;
@@ -199,7 +204,7 @@ BicubicSplineFunction::gradient(Real /*t*/, const Point & p) const
   return grad;
 }
 
-Real
+GeomReal
 BicubicSplineFunction::secondDerivative(const Point & p, unsigned int deriv_var) const
 {
   Real yp1, ypn;
@@ -208,37 +213,41 @@ BicubicSplineFunction::secondDerivative(const Point & p, unsigned int deriv_var)
   if (deriv_var == 1)
   {
     // Call yx11/yx1n with the correctly oriented points
-    Real x1_begin = _x1[0];
-    Real x1_end = p(_x2_index);
-    Real xn_begin = _x1.back();
-    Real xn_end = p(_x2_index);
+    auto x1_begin = _x1[0];
+    auto x1_end = p(_x2_index);
+    auto xn_begin = _x1.back();
+    auto xn_end = p(_x2_index);
 
     x1(_x1_index) = x1_begin;
     x1(_x2_index) = x1_end;
     xn(_x1_index) = xn_begin;
     xn(_x2_index) = xn_end;
 
-    yp1 = _yx1.value(0, x1);
-    ypn = _yx1.value(0, xn);
+    yp1 = MetaPhysicL::raw_value(_yx1.value(0, x1));
+    ypn = MetaPhysicL::raw_value(_yx1.value(0, xn));
   }
   else if (deriv_var == 2)
   {
     // Call yx11/yx1n with the correctly oriented points
-    Real x1_begin = p(_x1_index);
-    Real x1_end = _x2[0];
-    Real xn_begin = p(_x1_index);
-    Real xn_end = _x2.back();
+    auto x1_begin = p(_x1_index);
+    auto x1_end = _x2[0];
+    auto xn_begin = p(_x1_index);
+    auto xn_end = _x2.back();
 
     x1(_x1_index) = x1_begin;
     x1(_x2_index) = x1_end;
     xn(_x1_index) = xn_begin;
     xn(_x2_index) = xn_end;
 
-    yp1 = _yx2.value(0, x1);
-    ypn = _yx2.value(0, xn);
+    yp1 = MetaPhysicL::raw_value(_yx2.value(0, x1));
+    ypn = MetaPhysicL::raw_value(_yx2.value(0, xn));
   }
   else
     mooseError("deriv_var must equal 1 or 2");
 
-  return _ipol.sample2ndDerivative(p(_x1_index), p(_x2_index), deriv_var, yp1, ypn);
+  return _ipol.sample2ndDerivative(MetaPhysicL::raw_value(p(_x1_index)),
+                                   MetaPhysicL::raw_value(p(_x2_index)),
+                                   deriv_var,
+                                   yp1,
+                                   ypn);
 }

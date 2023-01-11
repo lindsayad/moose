@@ -151,12 +151,12 @@ protected:
 
   void getSmoothingFacesAndWeights(PenetrationInfo * info,
                                    std::vector<PenetrationInfo *> & edge_face_info,
-                                   std::vector<Real> & edge_face_weights,
+                                   std::vector<GeomReal> & edge_face_weights,
                                    std::vector<PenetrationInfo *> & p_info);
   void getSmoothingEdgeNodesAndWeights(const Point & p,
                                        const Elem * side,
                                        std::vector<std::vector<const Node *>> & edge_nodes,
-                                       std::vector<Real> & edge_face_weights);
+                                       std::vector<GeomReal> & edge_face_weights);
 
   void getInfoForFacesWithCommonNodes(const Node * secondary_node,
                                       const std::set<dof_id_type> & elems_to_exclude,
@@ -192,7 +192,7 @@ protected:
 
   struct RidgeSetData
   {
-    Real _distance;
+    GeomReal _distance;
     Point _closest_coor;
     const Node * _closest_node;
     std::vector<RidgeData> _ridge_data_vec;

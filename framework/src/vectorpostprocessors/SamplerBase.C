@@ -60,9 +60,9 @@ SamplerBase::setupVariables(const std::vector<std::string> & variable_names)
 void
 SamplerBase::addSample(const Point & p, const Real & id, const std::vector<Real> & values)
 {
-  _x.push_back(p(0));
-  _y.push_back(p(1));
-  _z.push_back(p(2));
+  _x.push_back(MetaPhysicL::raw_value(p(0)));
+  _y.push_back(MetaPhysicL::raw_value(p(1)));
+  _z.push_back(MetaPhysicL::raw_value(p(2)));
 
   _id.push_back(id);
 

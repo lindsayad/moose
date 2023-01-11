@@ -57,14 +57,14 @@ InternalSideIntegralPostprocessor::computeIntegral()
   Real sum = 0;
   if (_qp_integration)
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-      sum += _JxW[_qp] * _coord[_qp] * computeQpIntegral();
+      sum += MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp]) * computeQpIntegral();
   else
   {
     // Finite volume functors integration is over FaceInfo, not quadrature points
     getFaceInfos();
 
     for (auto & fi : _face_infos)
-      sum += fi->faceArea() * fi->faceCoord() * computeFaceInfoIntegral(fi);
+      sum += MetaPhysicL::raw_value(fi->faceArea() * fi->faceCoord()) * computeFaceInfoIntegral(fi);
   }
   return sum;
 }

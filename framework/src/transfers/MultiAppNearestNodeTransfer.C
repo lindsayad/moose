@@ -395,8 +395,8 @@ MultiAppNearestNodeTransfer::execute()
           {
             // Compute distance between the current incoming_qp to local node i_node. No need to
             // transform the 'to' because we already did it
-            Real current_distance =
-                (qpt - from_transform(local_entities[i_local_from][i_node].first)).norm();
+            Real current_distance = MetaPhysicL::raw_value(
+                (qpt - from_transform(local_entities[i_local_from][i_node].first)).norm());
 
             // If an incoming_qp is equally close to two or more local nodes, then
             // the first one we test will "win", even though any of the others could
@@ -674,7 +674,7 @@ MultiAppNearestNodeTransfer::bboxMaxDistance(const Point & p, const BoundingBox 
 
   for (unsigned int i = 0; i < 8; i++)
   {
-    Real distance = (p - all_points[i]).norm();
+    Real distance = MetaPhysicL::raw_value((p - all_points[i]).norm());
     if (distance > max_distance)
       max_distance = distance;
   }
@@ -698,7 +698,7 @@ MultiAppNearestNodeTransfer::bboxMinDistance(const Point & p, const BoundingBox 
 
   for (unsigned int i = 0; i < 8; i++)
   {
-    Real distance = (p - all_points[i]).norm();
+    Real distance = MetaPhysicL::raw_value((p - all_points[i]).norm());
     if (distance < min_distance)
       min_distance = distance;
   }

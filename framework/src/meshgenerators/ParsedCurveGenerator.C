@@ -237,7 +237,7 @@ ParsedCurveGenerator::pointCalculator(const Real t_param)
 }
 
 Real
-ParsedCurveGenerator::euclideanDistance(const Point p1, const Point p2)
+ParsedCurveGenerator::euclideanDistance(const Point & p1, const Point & p2)
 {
-  return (p1 - p2).norm();
+  return MetaPhysicL::raw_value((p1 - p2).norm());
 }

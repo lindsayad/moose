@@ -37,7 +37,7 @@ NodalL2Error::initialize()
 void
 NodalL2Error::execute()
 {
-  Real diff = _u[0] - _func.value(_t, *_current_node);
+  Real diff = MetaPhysicL::raw_value(_u[0] - _func.value(_t, *_current_node));
   _integral_value += diff * diff;
 }
 

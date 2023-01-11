@@ -41,5 +41,5 @@ protected:
   const std::vector<MeshGeneratorName> & _input_names;
 
   /// The (offsets) positions for each mesh
-  std::vector<Point> _positions;
+  std::vector<RawPoint> _positions;
 };

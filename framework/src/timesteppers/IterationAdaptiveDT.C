@@ -395,8 +395,8 @@ IterationAdaptiveDT::limitDTByFunction(Real & limitedDT)
     // Limit by function change for piecewise linear functions.
     if (_piecewise_linear_timestep_limiting_functions[j] && _max_function_change > 0)
     {
-      const auto current_function_value =
-          _piecewise_linear_timestep_limiting_functions[j]->value(_time, {});
+      const auto current_function_value = MetaPhysicL::raw_value(
+          _piecewise_linear_timestep_limiting_functions[j]->value(_time, {}));
 
       const auto ntimes = _piecewise_linear_timestep_limiting_functions[j]->functionSize();
       for (std::size_t next_time_index = 1; next_time_index < ntimes; ++next_time_index)
@@ -427,15 +427,18 @@ IterationAdaptiveDT::limitDTByFunction(Real & limitedDT)
     }
     else if (_timestep_limiting_functions[j])
     {
-      const Real old_value = _timestep_limiting_functions[j]->value(_time_old);
-      Real new_value = _timestep_limiting_functions[j]->value(_time_old + limitedDT);
+      const Real old_value =
+          MetaPhysicL::raw_value(_timestep_limiting_functions[j]->value(_time_old));
+      Real new_value =
+          MetaPhysicL::raw_value(_timestep_limiting_functions[j]->value(_time_old + limitedDT));
       Real change = std::abs(new_value - old_value);
 
       if (_max_function_change > 0.0 && change > _max_function_change)
         do
         {
           limitedDT /= 2.0;
-          new_value = _timestep_limiting_functions[j]->value(_time_old + limitedDT);
+          new_value =
+              MetaPhysicL::raw_value(_timestep_limiting_functions[j]->value(_time_old + limitedDT));
           change = std::abs(new_value - old_value);
         } while (change > _max_function_change);
     }

@@ -44,19 +44,19 @@ MooseVariableFE<RealEigenVector>::validParams()
   return params;
 }
 
-template <typename OutputType>
-MooseVariableFE<OutputType>::MooseVariableFE(const InputParameters & parameters)
-  : MooseVariableField<OutputType>(parameters)
+template <typename RawOutputType>
+MooseVariableFE<RawOutputType>::MooseVariableFE(const InputParameters & parameters)
+  : MooseVariableField<RawOutputType>(parameters)
 {
-  _element_data = std::make_unique<MooseVariableData<OutputType>>(*this,
-                                                                  _sys,
-                                                                  _tid,
-                                                                  Moose::ElementType::Element,
-                                                                  this->_assembly.qRule(),
-                                                                  this->_assembly.qRuleFace(),
-                                                                  this->_assembly.node(),
-                                                                  this->_assembly.elem());
-  _neighbor_data = std::make_unique<MooseVariableData<OutputType>>(
+  _element_data = std::make_unique<MooseVariableData<RawOutputType>>(*this,
+                                                                     _sys,
+                                                                     _tid,
+                                                                     Moose::ElementType::Element,
+                                                                     this->_assembly.qRule(),
+                                                                     this->_assembly.qRuleFace(),
+                                                                     this->_assembly.node(),
+                                                                     this->_assembly.elem());
+  _neighbor_data = std::make_unique<MooseVariableData<RawOutputType>>(
       *this,
       _sys,
       _tid,
@@ -65,408 +65,408 @@ MooseVariableFE<OutputType>::MooseVariableFE(const InputParameters & parameters)
       this->_assembly.qRuleNeighbor(),
       this->_assembly.nodeNeighbor(),
       this->_assembly.neighbor());
-  _lower_data =
-      std::make_unique<MooseVariableData<OutputType>>(*this,
-                                                      _sys,
-                                                      _tid,
-                                                      Moose::ElementType::Lower,
-                                                      this->_assembly.qRuleFace(),
-                                                      this->_assembly.qRuleFace(), // Place holder
-                                                      this->_assembly.node(),      // Place holder
-                                                      this->_assembly.lowerDElem());
+  _lower_data = std::make_unique<MooseVariableData<RawOutputType>>(
+      *this,
+      _sys,
+      _tid,
+      Moose::ElementType::Lower,
+      this->_assembly.qRuleFace(),
+      this->_assembly.qRuleFace(), // Place holder
+      this->_assembly.node(),      // Place holder
+      this->_assembly.lowerDElem());
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 const std::set<SubdomainID> &
-MooseVariableFE<OutputType>::activeSubdomains() const
+MooseVariableFE<RawOutputType>::activeSubdomains() const
 {
   return this->_sys.system().variable(_var_num).active_subdomains();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 Moose::VarFieldType
-MooseVariableFE<OutputType>::fieldType() const
+MooseVariableFE<RawOutputType>::fieldType() const
 {
-  if (std::is_same<OutputType, Real>::value)
+  if (std::is_same<RawOutputType, Real>::value)
     return Moose::VarFieldType::VAR_FIELD_STANDARD;
-  else if (std::is_same<OutputType, RealVectorValue>::value)
+  else if (std::is_same<RawOutputType, RealVectorValue>::value)
     return Moose::VarFieldType::VAR_FIELD_VECTOR;
-  else if (std::is_same<OutputType, RealEigenVector>::value)
+  else if (std::is_same<RawOutputType, RealEigenVector>::value)
     return Moose::VarFieldType::VAR_FIELD_ARRAY;
   else
     mooseError("Unknown variable field type");
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFE<OutputType>::activeOnSubdomain(SubdomainID subdomain) const
+MooseVariableFE<RawOutputType>::activeOnSubdomain(SubdomainID subdomain) const
 {
   return this->_sys.system().variable(_var_num).active_on_subdomain(subdomain);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::clearDofIndices()
+MooseVariableFE<RawOutputType>::clearDofIndices()
 {
   _element_data->clearDofIndices();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::prepare()
+MooseVariableFE<RawOutputType>::prepare()
 {
   _element_data->prepare();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::prepareNeighbor()
+MooseVariableFE<RawOutputType>::prepareNeighbor()
 {
   _neighbor_data->prepare();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::prepareLowerD()
+MooseVariableFE<RawOutputType>::prepareLowerD()
 {
   _lower_data->prepare();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::prepareAux()
+MooseVariableFE<RawOutputType>::prepareAux()
 {
   _element_data->prepareAux();
   _neighbor_data->prepareAux();
   _lower_data->prepareAux();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::reinitNode()
+MooseVariableFE<RawOutputType>::reinitNode()
 {
   _element_data->reinitNode();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::reinitAux()
+MooseVariableFE<RawOutputType>::reinitAux()
 {
   _element_data->reinitAux();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::reinitAuxNeighbor()
+MooseVariableFE<RawOutputType>::reinitAuxNeighbor()
 {
   _neighbor_data->reinitAux();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::reinitNodes(const std::vector<dof_id_type> & nodes)
+MooseVariableFE<RawOutputType>::reinitNodes(const std::vector<dof_id_type> & nodes)
 {
   _element_data->reinitNodes(nodes);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::reinitNodesNeighbor(const std::vector<dof_id_type> & nodes)
+MooseVariableFE<RawOutputType>::reinitNodesNeighbor(const std::vector<dof_id_type> & nodes)
 {
   _neighbor_data->reinitNodes(nodes);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::getDofIndices(const Elem * elem,
-                                           std::vector<dof_id_type> & dof_indices) const
+MooseVariableFE<RawOutputType>::getDofIndices(const Elem * elem,
+                                              std::vector<dof_id_type> & dof_indices) const
 {
   _element_data->getDofIndices(elem, dof_indices);
 }
 
-template <typename OutputType>
-typename MooseVariableFE<OutputType>::OutputData
-MooseVariableFE<OutputType>::getNodalValue(const Node & node) const
+template <typename RawOutputType>
+typename MooseVariableFE<RawOutputType>::OutputData
+MooseVariableFE<RawOutputType>::getNodalValue(const Node & node) const
 {
   return _element_data->getNodalValue(node, Moose::Current);
 }
 
-template <typename OutputType>
-typename MooseVariableFE<OutputType>::OutputData
-MooseVariableFE<OutputType>::getNodalValueOld(const Node & node) const
+template <typename RawOutputType>
+typename MooseVariableFE<RawOutputType>::OutputData
+MooseVariableFE<RawOutputType>::getNodalValueOld(const Node & node) const
 {
   return _element_data->getNodalValue(node, Moose::Old);
 }
 
-template <typename OutputType>
-typename MooseVariableFE<OutputType>::OutputData
-MooseVariableFE<OutputType>::getNodalValueOlder(const Node & node) const
+template <typename RawOutputType>
+typename MooseVariableFE<RawOutputType>::OutputData
+MooseVariableFE<RawOutputType>::getNodalValueOlder(const Node & node) const
 {
   return _element_data->getNodalValue(node, Moose::Older);
 }
 
-template <typename OutputType>
-typename MooseVariableFE<OutputType>::OutputData
-MooseVariableFE<OutputType>::getElementalValue(const Elem * elem, unsigned int idx) const
+template <typename RawOutputType>
+typename MooseVariableFE<RawOutputType>::OutputData
+MooseVariableFE<RawOutputType>::getElementalValue(const Elem * elem, unsigned int idx) const
 {
   return _element_data->getElementalValue(elem, Moose::Current, idx);
 }
 
-template <typename OutputType>
-typename MooseVariableFE<OutputType>::OutputData
-MooseVariableFE<OutputType>::getElementalValueOld(const Elem * elem, unsigned int idx) const
+template <typename RawOutputType>
+typename MooseVariableFE<RawOutputType>::OutputData
+MooseVariableFE<RawOutputType>::getElementalValueOld(const Elem * elem, unsigned int idx) const
 {
   return _element_data->getElementalValue(elem, Moose::Old, idx);
 }
 
-template <typename OutputType>
-typename MooseVariableFE<OutputType>::OutputData
-MooseVariableFE<OutputType>::getElementalValueOlder(const Elem * elem, unsigned int idx) const
+template <typename RawOutputType>
+typename MooseVariableFE<RawOutputType>::OutputData
+MooseVariableFE<RawOutputType>::getElementalValueOlder(const Elem * elem, unsigned int idx) const
 {
   return _element_data->getElementalValue(elem, Moose::Older, idx);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::insert(NumericVector<Number> & residual)
+MooseVariableFE<RawOutputType>::insert(NumericVector<Number> & residual)
 {
   _element_data->insert(residual);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::add(NumericVector<Number> & residual)
+MooseVariableFE<RawOutputType>::add(NumericVector<Number> & residual)
 {
   _element_data->add(residual);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::addSolution(const DenseVector<Number> & v)
+MooseVariableFE<RawOutputType>::addSolution(const DenseVector<Number> & v)
 {
   _element_data->addSolution(this->_sys.solution(), v);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::addSolutionNeighbor(const DenseVector<Number> & v)
+MooseVariableFE<RawOutputType>::addSolutionNeighbor(const DenseVector<Number> & v)
 {
   _neighbor_data->addSolution(this->_sys.solution(), v);
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValue() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValue() const
 {
   mooseDeprecated("Use dofValues instead of dofValue");
   return dofValues();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValues() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValues() const
 {
   return _element_data->dofValues();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesOld() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesOld() const
 {
   return _element_data->dofValuesOld();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesOlder() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesOlder() const
 {
   return _element_data->dofValuesOlder();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesPreviousNL() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesPreviousNL() const
 {
   return _element_data->dofValuesPreviousNL();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesNeighbor() const
 {
   return _neighbor_data->dofValues();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesOldNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesOldNeighbor() const
 {
   return _neighbor_data->dofValuesOld();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesOlderNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesOlderNeighbor() const
 {
   return _neighbor_data->dofValuesOlder();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesPreviousNLNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesPreviousNLNeighbor() const
 {
   return _neighbor_data->dofValuesPreviousNL();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesDot() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesDot() const
 {
   return _element_data->dofValuesDot();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesDotDot() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesDotDot() const
 {
   return _element_data->dofValuesDotDot();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesDotOld() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesDotOld() const
 {
   return _element_data->dofValuesDotOld();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesDotDotOld() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesDotDotOld() const
 {
   return _element_data->dofValuesDotDotOld();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesDotNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesDotNeighbor() const
 {
   return _neighbor_data->dofValuesDot();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesDotDotNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesDotDotNeighbor() const
 {
   return _neighbor_data->dofValuesDotDot();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesDotOldNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesDotOldNeighbor() const
 {
   return _neighbor_data->dofValuesDotOld();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::dofValuesDotDotOldNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::dofValuesDotDotOldNeighbor() const
 {
   return _neighbor_data->dofValuesDotDotOld();
 }
 
-template <typename OutputType>
-const MooseArray<Number> &
-MooseVariableFE<OutputType>::dofValuesDuDotDu() const
+template <typename RawOutputType>
+const VariableValue &
+MooseVariableFE<RawOutputType>::dofValuesDuDotDu() const
 {
   return _element_data->dofValuesDuDotDu();
 }
 
-template <typename OutputType>
-const MooseArray<Number> &
-MooseVariableFE<OutputType>::dofValuesDuDotDotDu() const
+template <typename RawOutputType>
+const VariableValue &
+MooseVariableFE<RawOutputType>::dofValuesDuDotDotDu() const
 {
   return _element_data->dofValuesDuDotDotDu();
 }
 
-template <typename OutputType>
-const MooseArray<Number> &
-MooseVariableFE<OutputType>::dofValuesDuDotDuNeighbor() const
+template <typename RawOutputType>
+const VariableValue &
+MooseVariableFE<RawOutputType>::dofValuesDuDotDuNeighbor() const
 {
   return _neighbor_data->dofValuesDuDotDu();
 }
 
-template <typename OutputType>
-const MooseArray<Number> &
-MooseVariableFE<OutputType>::dofValuesDuDotDotDuNeighbor() const
+template <typename RawOutputType>
+const VariableValue &
+MooseVariableFE<RawOutputType>::dofValuesDuDotDotDuNeighbor() const
 {
   return _neighbor_data->dofValuesDuDotDotDu();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::prepareIC()
+MooseVariableFE<RawOutputType>::prepareIC()
 {
   _element_data->prepareIC();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::computeElemValues()
+MooseVariableFE<RawOutputType>::computeElemValues()
 {
   _element_data->setGeometry(Moose::Volume);
   _element_data->computeValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::computeElemValuesFace()
+MooseVariableFE<RawOutputType>::computeElemValuesFace()
 {
   _element_data->setGeometry(Moose::Face);
   _element_data->computeValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::computeNeighborValuesFace()
+MooseVariableFE<RawOutputType>::computeNeighborValuesFace()
 {
   _neighbor_data->setGeometry(Moose::Face);
   _neighbor_data->computeValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::computeNeighborValues()
+MooseVariableFE<RawOutputType>::computeNeighborValues()
 {
   _neighbor_data->setGeometry(Moose::Volume);
   _neighbor_data->computeValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::computeLowerDValues()
+MooseVariableFE<RawOutputType>::computeLowerDValues()
 {
   _lower_data->setGeometry(Moose::Volume);
   _lower_data->computeValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::computeIncrementAtQps(const NumericVector<Number> & increment_vec)
+MooseVariableFE<RawOutputType>::computeIncrementAtQps(const NumericVector<Number> & increment_vec)
 {
   _element_data->computeIncrementAtQps(increment_vec);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::computeIncrementAtNode(const NumericVector<Number> & increment_vec)
+MooseVariableFE<RawOutputType>::computeIncrementAtNode(const NumericVector<Number> & increment_vec)
 {
   _element_data->computeIncrementAtNode(increment_vec);
 }
 
-template <typename OutputType>
-OutputType
-MooseVariableFE<OutputType>::getValue(const Elem * elem,
-                                      const std::vector<std::vector<OutputShape>> & phi) const
+template <typename RawOutputType>
+RawOutputType
+MooseVariableFE<RawOutputType>::getValue(const Elem * elem,
+                                         const std::vector<std::vector<OutputShape>> & phi) const
 {
   std::vector<dof_id_type> dof_indices;
   this->_dof_map.dof_indices(elem, dof_indices, _var_num);
@@ -524,17 +524,15 @@ MooseVariableFE<RealEigenVector>::getValue(const Elem * elem,
   return value;
 }
 
-template <typename OutputType>
-typename OutputTools<OutputType>::OutputGradient
-MooseVariableFE<OutputType>::getGradient(
-    const Elem * elem,
-    const std::vector<std::vector<typename OutputTools<OutputType>::OutputShapeGradient>> &
-        grad_phi) const
+template <typename RawOutputType>
+typename OutputTools<RawOutputType>::OutputGradient
+MooseVariableFE<RawOutputType>::getGradient(
+    const Elem * elem, const std::vector<std::vector<OutputShapeGradient>> & grad_phi) const
 {
   std::vector<dof_id_type> dof_indices;
   this->_dof_map.dof_indices(elem, dof_indices, _var_num);
 
-  typename OutputTools<OutputType>::OutputGradient value;
+  OutputGradient value;
   if (isNodal())
   {
     for (unsigned int i = 0; i < dof_indices.size(); ++i)
@@ -579,255 +577,255 @@ MooseVariableFE<RealEigenVector>::getGradient(
   return value;
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableFE<OutputType>::nodalValue() const
+template <typename RawOutputType>
+const RawOutputType &
+MooseVariableFE<RawOutputType>::nodalValue() const
 {
   return _element_data->nodalValue(Moose::Current);
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableFE<OutputType>::nodalValueNeighbor() const
+template <typename RawOutputType>
+const RawOutputType &
+MooseVariableFE<RawOutputType>::nodalValueNeighbor() const
 {
   return _neighbor_data->nodalValue(Moose::Current);
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::nodalVectorTagValue(TagID tag) const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::nodalVectorTagValue(TagID tag) const
 {
   return _element_data->nodalVectorTagValue(tag);
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::DoFValue &
-MooseVariableFE<OutputType>::nodalMatrixTagValue(TagID tag) const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::DoFValue &
+MooseVariableFE<RawOutputType>::nodalMatrixTagValue(TagID tag) const
 {
   return _element_data->nodalMatrixTagValue(tag);
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableFE<OutputType>::nodalValueOld() const
+template <typename RawOutputType>
+const RawOutputType &
+MooseVariableFE<RawOutputType>::nodalValueOld() const
 {
   return _element_data->nodalValue(Moose::Old);
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableFE<OutputType>::nodalValueOldNeighbor() const
+template <typename RawOutputType>
+const RawOutputType &
+MooseVariableFE<RawOutputType>::nodalValueOldNeighbor() const
 {
   return _neighbor_data->nodalValue(Moose::Old);
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableFE<OutputType>::nodalValueOlder() const
+template <typename RawOutputType>
+const RawOutputType &
+MooseVariableFE<RawOutputType>::nodalValueOlder() const
 {
   return _element_data->nodalValue(Moose::Older);
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableFE<OutputType>::nodalValueOlderNeighbor() const
+template <typename RawOutputType>
+const RawOutputType &
+MooseVariableFE<RawOutputType>::nodalValueOlderNeighbor() const
 {
   return _neighbor_data->nodalValue(Moose::Older);
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableFE<OutputType>::nodalValuePreviousNL() const
+template <typename RawOutputType>
+const RawOutputType &
+MooseVariableFE<RawOutputType>::nodalValuePreviousNL() const
 {
   return _element_data->nodalValue(Moose::PreviousNL);
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableFE<OutputType>::nodalValuePreviousNLNeighbor() const
+template <typename RawOutputType>
+const RawOutputType &
+MooseVariableFE<RawOutputType>::nodalValuePreviousNLNeighbor() const
 {
   return _neighbor_data->nodalValue(Moose::PreviousNL);
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableFE<OutputType>::nodalValueDot() const
+template <typename RawOutputType>
+const RawOutputType &
+MooseVariableFE<RawOutputType>::nodalValueDot() const
 {
   return _element_data->nodalValueDot();
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableFE<OutputType>::nodalValueDotDot() const
+template <typename RawOutputType>
+const RawOutputType &
+MooseVariableFE<RawOutputType>::nodalValueDotDot() const
 {
   return _element_data->nodalValueDotDot();
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableFE<OutputType>::nodalValueDotOld() const
+template <typename RawOutputType>
+const RawOutputType &
+MooseVariableFE<RawOutputType>::nodalValueDotOld() const
 {
   return _element_data->nodalValueDotOld();
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableFE<OutputType>::nodalValueDotDotOld() const
+template <typename RawOutputType>
+const RawOutputType &
+MooseVariableFE<RawOutputType>::nodalValueDotDotOld() const
 {
   return _element_data->nodalValueDotDotOld();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::computeNodalValues()
+MooseVariableFE<RawOutputType>::computeNodalValues()
 {
   _element_data->computeNodalValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::computeNodalNeighborValues()
+MooseVariableFE<RawOutputType>::computeNodalNeighborValues()
 {
   _neighbor_data->computeNodalValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::setNodalValue(const OutputType & value, unsigned int idx)
+MooseVariableFE<RawOutputType>::setNodalValue(const OutputType & value, unsigned int idx)
 {
   _element_data->setNodalValue(value, idx);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::setDofValue(const OutputData & value, unsigned int index)
+MooseVariableFE<RawOutputType>::setDofValue(const OutputData & value, unsigned int index)
 {
   _element_data->setDofValue(value, index);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::setDofValues(const DenseVector<OutputData> & values)
+MooseVariableFE<RawOutputType>::setDofValues(const DenseVector<OutputData> & values)
 {
   _element_data->setDofValues(values);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::insertNodalValue(NumericVector<Number> & residual,
-                                              const OutputData & v)
+MooseVariableFE<RawOutputType>::insertNodalValue(NumericVector<Number> & residual,
+                                                 const OutputData & v)
 {
   _element_data->insertNodalValue(residual, v);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFE<OutputType>::isArray() const
+MooseVariableFE<RawOutputType>::isArray() const
 {
-  return std::is_same<OutputType, RealEigenVector>::value;
+  return std::is_same<RawOutputType, RealEigenVector>::value;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFE<OutputType>::isVector() const
+MooseVariableFE<RawOutputType>::isVector() const
 {
-  return std::is_same<OutputType, RealVectorValue>::value;
+  return std::is_same<RawOutputType, RealVectorValue>::value;
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::FieldVariablePhiSecond &
-MooseVariableFE<OutputType>::secondPhi() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::FieldVariablePhiSecond &
+MooseVariableFE<RawOutputType>::secondPhi() const
 {
   return _element_data->secondPhi();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::FieldVariablePhiCurl &
-MooseVariableFE<OutputType>::curlPhi() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::FieldVariablePhiCurl &
+MooseVariableFE<RawOutputType>::curlPhi() const
 {
   return _element_data->curlPhi();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::FieldVariablePhiSecond &
-MooseVariableFE<OutputType>::secondPhiFace() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::FieldVariablePhiSecond &
+MooseVariableFE<RawOutputType>::secondPhiFace() const
 {
   return _element_data->secondPhiFace();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::FieldVariablePhiCurl &
-MooseVariableFE<OutputType>::curlPhiFace() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::FieldVariablePhiCurl &
+MooseVariableFE<RawOutputType>::curlPhiFace() const
 {
   return _element_data->curlPhiFace();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::FieldVariablePhiSecond &
-MooseVariableFE<OutputType>::secondPhiNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::FieldVariablePhiSecond &
+MooseVariableFE<RawOutputType>::secondPhiNeighbor() const
 {
   return _neighbor_data->secondPhi();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::FieldVariablePhiCurl &
-MooseVariableFE<OutputType>::curlPhiNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::FieldVariablePhiCurl &
+MooseVariableFE<RawOutputType>::curlPhiNeighbor() const
 {
   return _neighbor_data->curlPhi();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::FieldVariablePhiSecond &
-MooseVariableFE<OutputType>::secondPhiFaceNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::FieldVariablePhiSecond &
+MooseVariableFE<RawOutputType>::secondPhiFaceNeighbor() const
 {
   return _neighbor_data->secondPhiFace();
 }
 
-template <typename OutputType>
-const typename MooseVariableFE<OutputType>::FieldVariablePhiCurl &
-MooseVariableFE<OutputType>::curlPhiFaceNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFE<RawOutputType>::FieldVariablePhiCurl &
+MooseVariableFE<RawOutputType>::curlPhiFaceNeighbor() const
 {
   return _neighbor_data->curlPhiFace();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFE<OutputType>::usesSecondPhi() const
+MooseVariableFE<RawOutputType>::usesSecondPhi() const
 {
   return _element_data->usesSecondPhi();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFE<OutputType>::usesSecondPhiNeighbor() const
+MooseVariableFE<RawOutputType>::usesSecondPhiNeighbor() const
 {
   return _neighbor_data->usesSecondPhi();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFE<OutputType>::computingCurl() const
+MooseVariableFE<RawOutputType>::computingCurl() const
 {
   return _element_data->computingCurl();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFE<OutputType>::isNodalDefined() const
+MooseVariableFE<RawOutputType>::isNodalDefined() const
 {
   return _element_data->isNodalDefined();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFE<OutputType>::isNodalNeighborDefined() const
+MooseVariableFE<RawOutputType>::isNodalNeighborDefined() const
 {
   return _neighbor_data->isNodalDefined();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 unsigned int
-MooseVariableFE<OutputType>::oldestSolutionStateRequested() const
+MooseVariableFE<RawOutputType>::oldestSolutionStateRequested() const
 {
   unsigned int state = 0;
   state = std::max(state, _element_data->oldestSolutionStateRequested());
@@ -836,9 +834,9 @@ MooseVariableFE<OutputType>::oldestSolutionStateRequested() const
   return state;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFE<OutputType>::clearAllDofIndices()
+MooseVariableFE<RawOutputType>::clearAllDofIndices()
 {
   _element_data->clearDofIndices();
   _neighbor_data->clearDofIndices();

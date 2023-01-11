@@ -60,7 +60,7 @@ public:
   /**
    * This function will return a value based on the first input argument only.
    */
-  virtual Real value(Real t, const Point & pt) const override;
+  virtual GeomReal value(Real t, const Point & pt) const override;
   virtual ADReal value(const ADReal & t, const ADPoint & pt) const override;
 
 private:

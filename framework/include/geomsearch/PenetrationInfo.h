@@ -33,18 +33,18 @@ public:
                   const Elem * elem,
                   const Elem * side,
                   unsigned int side_num,
-                  RealVectorValue norm,
-                  Real norm_distance,
-                  Real tangential_distance,
+                  GeomRealVectorValue norm,
+                  GeomReal norm_distance,
+                  GeomReal tangential_distance,
                   const Point & closest_point,
                   const Point & closest_point_ref,
                   const Point & closest_point_on_face_ref,
                   std::vector<const Node *> off_edge_nodes,
-                  const std::vector<std::vector<Real>> & side_phi,
-                  const std::vector<std::vector<RealGradient>> & side_grad_phi,
-                  const std::vector<RealGradient> & dxyzdxi,
-                  const std::vector<RealGradient> & dxyzdeta,
-                  const std::vector<RealGradient> & d2xyzdxideta);
+                  const std::vector<std::vector<GeomReal>> & side_phi,
+                  const std::vector<std::vector<GeomRealGradient>> & side_grad_phi,
+                  const std::vector<GeomRealGradient> & dxyzdxi,
+                  const std::vector<GeomRealGradient> & dxyzdeta,
+                  const std::vector<GeomRealGradient> & d2xyzdxideta);
 
   // Not currently supported due to double-delete memory corruption bug
   //  PenetrationInfo(const PenetrationInfo & p);
@@ -74,27 +74,27 @@ public:
   const Elem * _elem;
   const Elem * _side;
   unsigned int _side_num;
-  RealVectorValue _normal;
-  Real _distance; // Positive distance means the node has penetrated
-  Real _tangential_distance;
+  GeomRealVectorValue _normal;
+  GeomReal _distance; // Positive distance means the node has penetrated
+  GeomReal _tangential_distance;
   Point _closest_point;
   Point _closest_point_ref;
   Point _closest_point_on_face_ref;
   std::vector<const Node *> _off_edge_nodes;
-  std::vector<std::vector<Real>> _side_phi;
-  std::vector<std::vector<RealGradient>> _side_grad_phi;
-  std::vector<RealGradient> _dxyzdxi;
-  std::vector<RealGradient> _dxyzdeta;
-  std::vector<RealGradient> _d2xyzdxideta;
+  std::vector<std::vector<GeomReal>> _side_phi;
+  std::vector<std::vector<GeomRealGradient>> _side_grad_phi;
+  std::vector<GeomRealGradient> _dxyzdxi;
+  std::vector<GeomRealGradient> _dxyzdeta;
+  std::vector<GeomRealGradient> _d2xyzdxideta;
   const Elem * _starting_elem;
   unsigned int _starting_side_num;
   Point _starting_closest_point_ref;
   Point _incremental_slip;
-  Real _accumulated_slip;
+  GeomReal _accumulated_slip;
   Real _accumulated_slip_old;
-  Real _frictional_energy;
+  GeomReal _frictional_energy;
   Real _frictional_energy_old;
-  RealVectorValue _contact_force;
+  GeomRealVectorValue _contact_force;
   RealVectorValue _contact_force_old;
 
   Real _lagrange_multiplier;

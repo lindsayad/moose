@@ -48,8 +48,8 @@ ElementVectorL2Error::getValue()
 Real
 ElementVectorL2Error::computeQpIntegral()
 {
-  RealVectorValue sol_val(0.0, 0.0, 0.0);
-  RealVectorValue func_val(0.0, 0.0, 0.0);
+  GeomRealVectorValue sol_val(0.0, 0.0, 0.0);
+  GeomRealVectorValue func_val(0.0, 0.0, 0.0);
 
   sol_val(0) = _u[_qp];                          // required variable
   func_val(0) = _funcx.value(_t, _q_point[_qp]); // required function
@@ -60,5 +60,5 @@ ElementVectorL2Error::computeQpIntegral()
   func_val(1) = _funcy.value(_t, _q_point[_qp]);
   func_val(2) = _funcz.value(_t, _q_point[_qp]);
 
-  return (sol_val - func_val).norm_sq(); // dot product of difference vector
+  return MetaPhysicL::raw_value((sol_val - func_val).norm_sq()); // dot product of difference vector
 }

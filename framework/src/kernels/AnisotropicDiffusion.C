@@ -30,11 +30,11 @@ AnisotropicDiffusion::AnisotropicDiffusion(const InputParameters & parameters)
 Real
 AnisotropicDiffusion::computeQpResidual()
 {
-  return (_k * _grad_u[_qp]) * _grad_test[_i][_qp];
+  return MetaPhysicL::raw_value((_k * _grad_u[_qp]) * _grad_test[_i][_qp]);
 }
 
 Real
 AnisotropicDiffusion::computeQpJacobian()
 {
-  return (_k * _grad_phi[_j][_qp]) * _grad_test[_i][_qp];
+  return MetaPhysicL::raw_value((_k * _grad_phi[_j][_qp]) * _grad_test[_i][_qp]);
 }

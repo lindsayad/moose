@@ -35,13 +35,13 @@ FunctionIC::FunctionIC(const InputParameters & parameters)
 Real
 FunctionIC::value(const Point & p)
 {
-  return _scaling * _func.value(_t, p);
+  return _scaling * MetaPhysicL::raw_value(_func.value(_t, p));
 }
 
 RealGradient
 FunctionIC::gradient(const Point & p)
 {
-  return _scaling * _func.gradient(_t, p);
+  return _scaling * MetaPhysicL::raw_value(_func.gradient(_t, p));
 }
 
 const FunctionName

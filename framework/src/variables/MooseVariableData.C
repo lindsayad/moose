@@ -22,17 +22,17 @@
 #include "libmesh/system.h"
 #include "libmesh/type_n_tensor.h"
 
-template <typename OutputType>
-MooseVariableData<OutputType>::MooseVariableData(const MooseVariableField<OutputType> & var,
-                                                 SystemBase & sys,
-                                                 THREAD_ID tid,
-                                                 Moose::ElementType element_type,
-                                                 const QBase * const & qrule_in,
-                                                 const QBase * const & qrule_face_in,
-                                                 const Node * const & node,
-                                                 const Elem * const & elem)
+template <typename RawOutputType>
+MooseVariableData<RawOutputType>::MooseVariableData(const MooseVariableField<RawOutputType> & var,
+                                                    SystemBase & sys,
+                                                    THREAD_ID tid,
+                                                    Moose::ElementType element_type,
+                                                    const QBase * const & qrule_in,
+                                                    const QBase * const & qrule_face_in,
+                                                    const Node * const & node,
+                                                    const Elem * const & elem)
 
-  : MooseVariableDataBase<OutputType>(var, sys, tid),
+  : MooseVariableDataBase<RawOutputType>(var, sys, tid),
     _fe_type(_var.feType()),
     _var_num(_var.number()),
     _assembly(_subproblem.assembly(_tid, var.kind() == Moose::VAR_NONLINEAR ? sys.number() : 0)),
@@ -142,9 +142,9 @@ MooseVariableData<OutputType>::MooseVariableData(const MooseVariableField<Output
   _grad_phi_face = &_grad_phi_face_assembly_method(_assembly, _fe_type);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::setGeometry(Moose::GeometryType gm_type)
+MooseVariableData<RawOutputType>::setGeometry(Moose::GeometryType gm_type)
 {
   switch (gm_type)
   {
@@ -171,9 +171,9 @@ MooseVariableData<OutputType>::setGeometry(Moose::GeometryType gm_type)
   }
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::FieldVariableValue &
-MooseVariableData<OutputType>::uDot() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::FieldVariableValue &
+MooseVariableData<RawOutputType>::uDot() const
 {
   if (_sys.solutionUDot())
   {
@@ -185,9 +185,9 @@ MooseVariableData<OutputType>::uDot() const
                "uDotRequested() to true in FEProblemBase before requesting `u_dot`.");
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::FieldVariableValue &
-MooseVariableData<OutputType>::uDotDot() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::FieldVariableValue &
+MooseVariableData<RawOutputType>::uDotDot() const
 {
   if (_sys.solutionUDotDot())
   {
@@ -200,9 +200,9 @@ MooseVariableData<OutputType>::uDotDot() const
                "`u_dotdot`.");
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::FieldVariableValue &
-MooseVariableData<OutputType>::uDotOld() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::FieldVariableValue &
+MooseVariableData<RawOutputType>::uDotOld() const
 {
   if (_sys.solutionUDotOld())
   {
@@ -215,9 +215,9 @@ MooseVariableData<OutputType>::uDotOld() const
                "`u_dot_old`.");
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::FieldVariableValue &
-MooseVariableData<OutputType>::uDotDotOld() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::FieldVariableValue &
+MooseVariableData<RawOutputType>::uDotDotOld() const
 {
   if (_sys.solutionUDotDotOld())
   {
@@ -230,9 +230,9 @@ MooseVariableData<OutputType>::uDotDotOld() const
                "requesting `u_dotdot_old`");
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::FieldVariableGradient &
-MooseVariableData<OutputType>::gradSlnDot() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::FieldVariableGradient &
+MooseVariableData<RawOutputType>::gradSlnDot() const
 {
   if (_sys.solutionUDot())
   {
@@ -244,9 +244,9 @@ MooseVariableData<OutputType>::gradSlnDot() const
                "uDotRequested() to true in FEProblemBase before requesting `u_dot`.");
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::FieldVariableGradient &
-MooseVariableData<OutputType>::gradSlnDotDot() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::FieldVariableGradient &
+MooseVariableData<RawOutputType>::gradSlnDotDot() const
 {
   if (_sys.solutionUDotDot())
   {
@@ -259,9 +259,9 @@ MooseVariableData<OutputType>::gradSlnDotDot() const
                "`u_dotdot`.");
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::FieldVariableSecond &
-MooseVariableData<OutputType>::secondSln(Moose::SolutionState state) const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::FieldVariableSecond &
+MooseVariableData<RawOutputType>::secondSln(Moose::SolutionState state) const
 {
   secondPhi();
   secondPhiFace();
@@ -298,9 +298,9 @@ MooseVariableData<OutputType>::secondSln(Moose::SolutionState state) const
   }
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::FieldVariableCurl &
-MooseVariableData<OutputType>::curlSln(Moose::SolutionState state) const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::FieldVariableCurl &
+MooseVariableData<RawOutputType>::curlSln(Moose::SolutionState state) const
 {
   curlPhi();
   curlPhiFace();
@@ -329,41 +329,41 @@ MooseVariableData<OutputType>::curlSln(Moose::SolutionState state) const
   }
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::FieldVariablePhiSecond &
-MooseVariableData<OutputType>::secondPhi() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::FieldVariablePhiSecond &
+MooseVariableData<RawOutputType>::secondPhi() const
 {
   _second_phi = &_second_phi_assembly_method(_assembly, _fe_type);
   return *_second_phi;
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::FieldVariablePhiSecond &
-MooseVariableData<OutputType>::secondPhiFace() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::FieldVariablePhiSecond &
+MooseVariableData<RawOutputType>::secondPhiFace() const
 {
   _second_phi_face = &_second_phi_face_assembly_method(_assembly, _fe_type);
   return *_second_phi_face;
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::FieldVariablePhiCurl &
-MooseVariableData<OutputType>::curlPhi() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::FieldVariablePhiCurl &
+MooseVariableData<RawOutputType>::curlPhi() const
 {
   _curl_phi = &_curl_phi_assembly_method(_assembly, _fe_type);
   return *_curl_phi;
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::FieldVariablePhiCurl &
-MooseVariableData<OutputType>::curlPhiFace() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::FieldVariablePhiCurl &
+MooseVariableData<RawOutputType>::curlPhiFace() const
 {
   _curl_phi_face = &_curl_phi_face_assembly_method(_assembly, _fe_type);
   return *_curl_phi_face;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::computeValues()
+MooseVariableData<RawOutputType>::computeValues()
 {
   unsigned int num_dofs = _dof_indices.size();
 
@@ -499,8 +499,8 @@ MooseVariableData<OutputType>::computeValues()
   {
     for (unsigned int qp = 0; qp < nqp; qp++)
     {
-      const OutputType phi_local = (*_current_phi)[i][qp];
-      const typename OutputTools<OutputType>::OutputGradient dphi_qp = (*_current_grad_phi)[i][qp];
+      const auto phi_local = (*_current_phi)[i][qp];
+      const auto dphi_qp = (*_current_grad_phi)[i][qp];
 
       if (is_transient)
       {
@@ -534,8 +534,7 @@ MooseVariableData<OutputType>::computeValues()
         mooseAssert(
             _current_second_phi,
             "We're requiring a second calculation but have not set a second shape function!");
-        const typename OutputTools<OutputType>::OutputSecond d2phi_local =
-            (*_current_second_phi)[i][qp];
+        const auto d2phi_local = (*_current_second_phi)[i][qp];
 
         if (_need_second)
           _second_u[qp].add_scaled(d2phi_local, _vector_tags_dof_u[_solution_tag][i]);
@@ -558,7 +557,7 @@ MooseVariableData<OutputType>::computeValues()
       {
         mooseAssert(_current_curl_phi,
                     "We're requiring a curl calculation but have not set a curl shape function!");
-        const OutputType curl_phi_local = (*_current_curl_phi)[i][qp];
+        const auto curl_phi_local = (*_current_curl_phi)[i][qp];
 
         if (_need_curl)
           _curl_u[qp] += curl_phi_local * _vector_tags_dof_u[_solution_tag][i];
@@ -608,11 +607,11 @@ MooseVariableData<RealEigenVector>::computeValues()
     _mapped_grad_phi.resize(num_dofs);
     for (unsigned int i = 0; i < num_dofs; i++)
     {
-      _mapped_grad_phi[i].resize(nqp, Eigen::Map<RealDIMValue>(nullptr));
+      _mapped_grad_phi[i].resize(nqp, Eigen::Map<GeomRealDIMValue>(nullptr));
       for (unsigned int qp = 0; qp < nqp; qp++)
         // Note: this does NOT do any allocation.  It is "reconstructing" the object in place
         new (&_mapped_grad_phi[i][qp])
-            Eigen::Map<RealDIMValue>(const_cast<Real *>(&(*_current_grad_phi)[i][qp](0)));
+            Eigen::Map<GeomRealDIMValue>(const_cast<GeomReal *>(&(*_current_grad_phi)[i][qp](0)));
     }
   }
   else
@@ -620,11 +619,11 @@ MooseVariableData<RealEigenVector>::computeValues()
     _mapped_grad_phi_face.resize(num_dofs);
     for (unsigned int i = 0; i < num_dofs; i++)
     {
-      _mapped_grad_phi_face[i].resize(nqp, Eigen::Map<RealDIMValue>(nullptr));
+      _mapped_grad_phi_face[i].resize(nqp, Eigen::Map<GeomRealDIMValue>(nullptr));
       for (unsigned int qp = 0; qp < nqp; qp++)
         // Note: this does NOT do any allocation.  It is "reconstructing" the object in place
         new (&_mapped_grad_phi_face[i][qp])
-            Eigen::Map<RealDIMValue>(const_cast<Real *>(&(*_current_grad_phi)[i][qp](0)));
+            Eigen::Map<GeomRealDIMValue>(const_cast<GeomReal *>(&(*_current_grad_phi)[i][qp](0)));
     }
   }
 
@@ -790,7 +789,7 @@ MooseVariableData<RealEigenVector>::computeValues()
         mooseAssert(
             _current_second_phi,
             "We're requiring a second calculation but have not set a second shape function!");
-        const RealTensorValue d2phi_local = (*_current_second_phi)[i][qp];
+        const auto d2phi_local = (*_current_second_phi)[i][qp];
 
         if (_need_second)
           for (unsigned int d = 0, d1 = 0; d1 < LIBMESH_DIM; ++d1)
@@ -849,9 +848,9 @@ MooseVariableData<RealEigenVector>::computeValues()
   // No AD support for array variable yet.
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::computeMonomialValues()
+MooseVariableData<RawOutputType>::computeMonomialValues()
 {
   if (_dof_indices.size() == 0)
     return;
@@ -1040,9 +1039,9 @@ MooseVariableData<RealEigenVector>::computeMonomialValues()
   computeValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::computeAD(const unsigned int num_dofs, const unsigned int nqp)
+MooseVariableData<RawOutputType>::computeAD(const unsigned int num_dofs, const unsigned int nqp)
 {
   // Have to do this because upon construction this won't initialize any of the derivatives
   // (because DualNumber::do_derivatives is false at that time).
@@ -1200,9 +1199,9 @@ MooseVariableData<RealEigenVector>::computeAD(const unsigned int /*num_dofs*/,
   mooseError("AD for array variable has not been implemented");
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::setDofValue(const OutputData & value, unsigned int index)
+MooseVariableData<RawOutputType>::setDofValue(const OutputData & value, unsigned int index)
 {
   auto & dof_values = _vector_tags_dof_u[_solution_tag];
   dof_values[index] = value;
@@ -1217,9 +1216,9 @@ MooseVariableData<OutputType>::setDofValue(const OutputData & value, unsigned in
   }
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::setDofValues(const DenseVector<OutputData> & values)
+MooseVariableData<RawOutputType>::setDofValues(const DenseVector<OutputData> & values)
 {
   auto & dof_values = _vector_tags_dof_u[_solution_tag];
   for (unsigned int i = 0; i < values.size(); i++)
@@ -1236,10 +1235,10 @@ MooseVariableData<OutputType>::setDofValues(const DenseVector<OutputData> & valu
   }
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::insertNodalValue(NumericVector<Number> & residual,
-                                                const OutputData & v)
+MooseVariableData<RawOutputType>::insertNodalValue(NumericVector<Number> & residual,
+                                                   const OutputData & v)
 {
   residual.set(_nodal_dof_index, v);
 }
@@ -1247,15 +1246,15 @@ MooseVariableData<OutputType>::insertNodalValue(NumericVector<Number> & residual
 template <>
 void
 MooseVariableData<RealEigenVector>::insertNodalValue(NumericVector<Number> & residual,
-                                                     const RealEigenVector & v)
+                                                     const GeomRealEigenVector & v)
 {
   for (unsigned int j = 0; j < _count; ++j)
-    residual.set(_nodal_dof_index + j, v(j));
+    residual.set(_nodal_dof_index + j, MetaPhysicL::raw_value(v(j)));
 }
 
-template <typename OutputType>
-typename MooseVariableData<OutputType>::OutputData
-MooseVariableData<OutputType>::getNodalValue(const Node & node, Moose::SolutionState state) const
+template <typename RawOutputType>
+typename MooseVariableData<RawOutputType>::OutputData
+MooseVariableData<RawOutputType>::getNodalValue(const Node & node, Moose::SolutionState state) const
 {
   mooseAssert(_subproblem.mesh().isSemiLocal(const_cast<Node *>(&node)), "Node is not Semilocal");
 
@@ -1285,7 +1284,7 @@ MooseVariableData<OutputType>::getNodalValue(const Node & node, Moose::SolutionS
 }
 
 template <>
-RealEigenVector
+GeomRealEigenVector
 MooseVariableData<RealEigenVector>::getNodalValue(const Node & node,
                                                   Moose::SolutionState state) const
 {
@@ -1324,11 +1323,11 @@ MooseVariableData<RealEigenVector>::getNodalValue(const Node & node,
   return v;
 }
 
-template <typename OutputType>
-typename MooseVariableData<OutputType>::OutputData
-MooseVariableData<OutputType>::getElementalValue(const Elem * elem,
-                                                 Moose::SolutionState state,
-                                                 unsigned int idx) const
+template <typename RawOutputType>
+typename MooseVariableData<RawOutputType>::OutputData
+MooseVariableData<RawOutputType>::getElementalValue(const Elem * elem,
+                                                    Moose::SolutionState state,
+                                                    unsigned int idx) const
 {
   std::vector<dof_id_type> dof_indices;
   _dof_map.dof_indices(elem, dof_indices, _var_num);
@@ -1350,7 +1349,7 @@ MooseVariableData<OutputType>::getElementalValue(const Elem * elem,
 }
 
 template <>
-RealEigenVector
+GeomRealEigenVector
 MooseVariableData<RealEigenVector>::getElementalValue(const Elem * elem,
                                                       Moose::SolutionState state,
                                                       unsigned int idx) const
@@ -1360,7 +1359,7 @@ MooseVariableData<RealEigenVector>::getElementalValue(const Elem * elem,
 
   dof_id_type dof = dof_indices[idx];
 
-  RealEigenVector v(_count);
+  GeomRealEigenVector v(_count);
 
   switch (state)
   {
@@ -1385,18 +1384,18 @@ MooseVariableData<RealEigenVector>::getElementalValue(const Elem * elem,
   return v;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::getDofIndices(const Elem * elem,
-                                             std::vector<dof_id_type> & dof_indices) const
+MooseVariableData<RawOutputType>::getDofIndices(const Elem * elem,
+                                                std::vector<dof_id_type> & dof_indices) const
 {
   _dof_map.dof_indices(elem, dof_indices, _var_num);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::addSolution(NumericVector<Number> & sol,
-                                           const DenseVector<Number> & v) const
+MooseVariableData<RawOutputType>::addSolution(NumericVector<Number> & sol,
+                                              const DenseVector<Number> & v) const
 {
   sol.add_vector(v, _dof_indices);
 }
@@ -1415,9 +1414,9 @@ MooseVariableData<RealEigenVector>::addSolution(NumericVector<Number> & sol,
   }
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::DoFValue &
-MooseVariableData<OutputType>::dofValuesDot() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::DoFValue &
+MooseVariableData<RawOutputType>::dofValuesDot() const
 {
   if (_sys.solutionUDot())
   {
@@ -1429,9 +1428,9 @@ MooseVariableData<OutputType>::dofValuesDot() const
                "uDotRequested() to true in FEProblemBase before requesting `u_dot`.");
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::DoFValue &
-MooseVariableData<OutputType>::dofValuesDotDot() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::DoFValue &
+MooseVariableData<RawOutputType>::dofValuesDotDot() const
 {
   if (_sys.solutionUDotDot())
   {
@@ -1444,9 +1443,9 @@ MooseVariableData<OutputType>::dofValuesDotDot() const
                "`u_dotdot`.");
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::DoFValue &
-MooseVariableData<OutputType>::dofValuesDotOld() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::DoFValue &
+MooseVariableData<RawOutputType>::dofValuesDotOld() const
 {
   if (_sys.solutionUDotOld())
   {
@@ -1459,9 +1458,9 @@ MooseVariableData<OutputType>::dofValuesDotOld() const
                "`u_dot_old`.");
 }
 
-template <typename OutputType>
-const typename MooseVariableData<OutputType>::DoFValue &
-MooseVariableData<OutputType>::dofValuesDotDotOld() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::DoFValue &
+MooseVariableData<RawOutputType>::dofValuesDotDotOld() const
 {
   if (_sys.solutionUDotDotOld())
   {
@@ -1474,25 +1473,25 @@ MooseVariableData<OutputType>::dofValuesDotDotOld() const
                "requesting `u_dotdot_old`.");
 }
 
-template <typename OutputType>
-const MooseArray<Number> &
-MooseVariableData<OutputType>::dofValuesDuDotDu() const
+template <typename RawOutputType>
+const VariableValue &
+MooseVariableData<RawOutputType>::dofValuesDuDotDu() const
 {
   _need_dof_du_dot_du = true;
   return _dof_du_dot_du;
 }
 
-template <typename OutputType>
-const MooseArray<Number> &
-MooseVariableData<OutputType>::dofValuesDuDotDotDu() const
+template <typename RawOutputType>
+const VariableValue &
+MooseVariableData<RawOutputType>::dofValuesDuDotDotDu() const
 {
   _need_dof_du_dotdot_du = true;
   return _dof_du_dotdot_du;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::computeIncrementAtQps(const NumericVector<Number> & increment_vec)
+MooseVariableData<RawOutputType>::computeIncrementAtQps(const NumericVector<Number> & increment_vec)
 {
   unsigned int nqp = _qrule->n_points();
 
@@ -1541,9 +1540,10 @@ MooseVariableData<RealEigenVector>::computeIncrementAtQps(
   }
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::computeIncrementAtNode(const NumericVector<Number> & increment_vec)
+MooseVariableData<RawOutputType>::computeIncrementAtNode(
+    const NumericVector<Number> & increment_vec)
 {
   if (!isNodal())
     mooseError("computeIncrementAtNode can only be called for nodal variables");
@@ -1579,9 +1579,9 @@ MooseVariableData<RealEigenVector>::computeIncrementAtNode(
   }
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableData<OutputType>::nodalValueDot() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::OutputType &
+MooseVariableData<RawOutputType>::nodalValueDot() const
 {
   if (isNodal())
   {
@@ -1601,9 +1601,9 @@ MooseVariableData<OutputType>::nodalValueDot() const
                "' is not nodal.");
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableData<OutputType>::nodalValueDotDot() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::OutputType &
+MooseVariableData<RawOutputType>::nodalValueDotDot() const
 {
   if (isNodal())
   {
@@ -1624,9 +1624,9 @@ MooseVariableData<OutputType>::nodalValueDotDot() const
                "' is not nodal.");
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableData<OutputType>::nodalValueDotOld() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::OutputType &
+MooseVariableData<RawOutputType>::nodalValueDotOld() const
 {
   if (isNodal())
   {
@@ -1646,9 +1646,9 @@ MooseVariableData<OutputType>::nodalValueDotOld() const
                "' is not nodal.");
 }
 
-template <typename OutputType>
-const OutputType &
-MooseVariableData<OutputType>::nodalValueDotDotOld() const
+template <typename RawOutputType>
+const typename MooseVariableData<RawOutputType>::OutputType &
+MooseVariableData<RawOutputType>::nodalValueDotDotOld() const
 {
   if (isNodal())
   {
@@ -1669,9 +1669,9 @@ MooseVariableData<OutputType>::nodalValueDotDotOld() const
                "' is not nodal.");
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::computeNodalValues()
+MooseVariableData<RawOutputType>::computeNodalValues()
 {
   if (_has_dof_indices)
   {
@@ -1685,9 +1685,9 @@ MooseVariableData<OutputType>::computeNodalValues()
     zeroSizeDofValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::fetchADDoFValues()
+MooseVariableData<RawOutputType>::fetchADDoFValues()
 {
   auto n = _dof_indices.size();
   libmesh_assert(n);
@@ -1734,9 +1734,9 @@ MooseVariableData<RealVectorValue>::assignADNodalValue(const DualReal & value,
   _ad_nodal_value(component) = value;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::prepareIC()
+MooseVariableData<RawOutputType>::prepareIC()
 {
   _dof_map.dof_indices(_elem, _dof_indices, _var_num);
   _vector_tags_dof_u[_solution_tag].resize(_dof_indices.size());
@@ -1745,9 +1745,9 @@ MooseVariableData<OutputType>::prepareIC()
   _vector_tag_u[_solution_tag].resize(nqp);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::prepare()
+MooseVariableData<RawOutputType>::prepare()
 {
   _dof_map.dof_indices(_elem, _dof_indices, _var_num);
   _has_dof_values = false;
@@ -1760,9 +1760,9 @@ MooseVariableData<OutputType>::prepare()
     _has_dof_indices = false;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::reinitNode()
+MooseVariableData<RawOutputType>::reinitNode()
 {
   if (std::size_t n_dofs = _node->n_dofs(_sys.number(), _var_num))
   {
@@ -1781,9 +1781,9 @@ MooseVariableData<OutputType>::reinitNode()
   }
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::reinitAux()
+MooseVariableData<RawOutputType>::reinitAux()
 {
   /* FIXME: this method is only for elemental auxiliary variables, so
    * we may want to rename it */
@@ -1812,9 +1812,9 @@ MooseVariableData<OutputType>::reinitAux()
     _has_dof_indices = false;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableData<OutputType>::reinitNodes(const std::vector<dof_id_type> & nodes)
+MooseVariableData<RawOutputType>::reinitNodes(const std::vector<dof_id_type> & nodes)
 {
   _dof_indices.clear();
   for (const auto & node_id : nodes)

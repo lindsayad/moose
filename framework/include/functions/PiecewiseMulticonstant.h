@@ -31,8 +31,8 @@ public:
   using PiecewiseMultiInterpolation::value;
   virtual ADReal value(const ADReal & t, const ADPoint & p) const override;
 
-  virtual RealGradient gradient(Real t, const Point & p) const override;
-  virtual Real timeDerivative(Real t, const Point & p) const override;
+  virtual GeomRealGradient gradient(Real t, const Point & p) const override;
+  virtual GeomReal timeDerivative(Real t, const Point & p) const override;
 
 protected:
   using PiecewiseMultiInterpolation::sample;

@@ -17,7 +17,7 @@ InputParameters
 CylindricalAverage::validParams()
 {
   InputParameters params = SpatialAverageBase::validParams();
-  params.addRequiredParam<Point>("cylinder_axis", "Vector along cylinder coordinate axis");
+  params.addRequiredParam<RawPoint>("cylinder_axis", "Vector along cylinder coordinate axis");
   params.addClassDescription("Compute a cylindrical average of a variableas a function of radius "
                              "throughout the simulation domain.");
   return params;
@@ -25,8 +25,8 @@ CylindricalAverage::validParams()
 
 CylindricalAverage::CylindricalAverage(const InputParameters & parameters)
   : SpatialAverageBase(parameters),
-    _cyl_axis(getParam<Point>("cylinder_axis")),
-    _cyl_axis_norm(_cyl_axis.norm())
+    _cyl_axis(getParam<RawPoint>("cylinder_axis")),
+    _cyl_axis_norm(MetaPhysicL::raw_value(_cyl_axis.norm()))
 {
 }
 
@@ -34,7 +34,7 @@ Real
 CylindricalAverage::computeDistance()
 {
   // angle between cyl_axis and origin-to-q_point
-  Point oqp = _q_point[_qp] - _origin;
+  const auto & oqp = MetaPhysicL::raw_value(_q_point[_qp] - _origin);
   Real norm_oqp = oqp.norm();
   Real cos_theta = oqp * _cyl_axis / norm_oqp / _cyl_axis_norm;
 

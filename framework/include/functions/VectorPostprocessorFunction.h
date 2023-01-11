@@ -25,7 +25,7 @@ public:
   VectorPostprocessorFunction(const InputParameters & parameters);
 
   using Function::value;
-  virtual Real value(Real t, const Point & p) const override;
+  virtual GeomReal value(Real t, const Point & p) const override;
   virtual ADReal value(const ADReal & t, const ADPoint & p) const override;
 
 protected:

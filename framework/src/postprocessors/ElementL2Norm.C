@@ -32,6 +32,6 @@ ElementL2Norm::getValue()
 Real
 ElementL2Norm::computeQpIntegral()
 {
-  Real val = _u[_qp];
+  Real val = MetaPhysicL::raw_value(_u[_qp]);
   return val * val;
 }

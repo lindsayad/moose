@@ -30,5 +30,5 @@ ElementL1Error::ElementL1Error(const InputParameters & parameters)
 Real
 ElementL1Error::computeQpIntegral()
 {
-  return std::abs(_u[_qp] - _func.value(_t, _q_point[_qp]));
+  return MetaPhysicL::raw_value(std::abs(_u[_qp] - _func.value(_t, _q_point[_qp])));
 }

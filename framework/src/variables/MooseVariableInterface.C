@@ -70,7 +70,7 @@ MooseVariableInterface<T>::mooseVariable() const
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableValue &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableValue &
 MooseVariableInterface<T>::value()
 {
   if (_nodal)
@@ -90,7 +90,7 @@ MooseVariableInterface<RealVectorValue>::value()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableValue &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableValue &
 MooseVariableInterface<T>::valueOld()
 {
   if (_nodal)
@@ -110,7 +110,7 @@ MooseVariableInterface<RealVectorValue>::valueOld()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableValue &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableValue &
 MooseVariableInterface<T>::valueOlder()
 {
   if (_nodal)
@@ -130,7 +130,7 @@ MooseVariableInterface<RealVectorValue>::valueOlder()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableValue &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableValue &
 MooseVariableInterface<T>::dot()
 {
   if (_nodal)
@@ -140,7 +140,7 @@ MooseVariableInterface<T>::dot()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableValue &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableValue &
 MooseVariableInterface<T>::dotDot()
 {
   if (_nodal)
@@ -150,7 +150,7 @@ MooseVariableInterface<T>::dotDot()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableValue &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableValue &
 MooseVariableInterface<T>::dotOld()
 {
   if (_nodal)
@@ -160,7 +160,7 @@ MooseVariableInterface<T>::dotOld()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableValue &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableValue &
 MooseVariableInterface<T>::dotDotOld()
 {
   if (_nodal)
@@ -230,7 +230,7 @@ MooseVariableInterface<T>::dotDotDu()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableGradient &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableGradient &
 MooseVariableInterface<T>::gradient()
 {
   if (_nodal)
@@ -240,7 +240,7 @@ MooseVariableInterface<T>::gradient()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableGradient &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableGradient &
 MooseVariableInterface<T>::gradientOld()
 {
   if (_nodal)
@@ -250,7 +250,7 @@ MooseVariableInterface<T>::gradientOld()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableGradient &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableGradient &
 MooseVariableInterface<T>::gradientOlder()
 {
   if (_nodal)
@@ -260,7 +260,7 @@ MooseVariableInterface<T>::gradientOlder()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableSecond &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableSecond &
 MooseVariableInterface<T>::second()
 {
   if (_nodal)
@@ -270,7 +270,7 @@ MooseVariableInterface<T>::second()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableSecond &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableSecond &
 MooseVariableInterface<T>::secondOld()
 {
   if (_nodal)
@@ -280,7 +280,7 @@ MooseVariableInterface<T>::secondOld()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableSecond &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableSecond &
 MooseVariableInterface<T>::secondOlder()
 {
   if (_nodal)
@@ -290,7 +290,7 @@ MooseVariableInterface<T>::secondOlder()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableTestSecond &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableTestSecond &
 MooseVariableInterface<T>::secondTest()
 {
   if (_nodal)
@@ -300,7 +300,7 @@ MooseVariableInterface<T>::secondTest()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariableTestSecond &
+const typename OutputTools<typename MakeOutput<T>::type>::VariableTestSecond &
 MooseVariableInterface<T>::secondTestFace()
 {
   if (_nodal)
@@ -310,7 +310,7 @@ MooseVariableInterface<T>::secondTestFace()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariablePhiSecond &
+const typename OutputTools<typename MakeOutput<T>::type>::VariablePhiSecond &
 MooseVariableInterface<T>::secondPhi()
 {
   if (_nodal)
@@ -320,7 +320,7 @@ MooseVariableInterface<T>::secondPhi()
 }
 
 template <typename T>
-const typename OutputTools<T>::VariablePhiSecond &
+const typename OutputTools<typename MakeOutput<T>::type>::VariablePhiSecond &
 MooseVariableInterface<T>::secondPhiFace()
 {
   if (_nodal)

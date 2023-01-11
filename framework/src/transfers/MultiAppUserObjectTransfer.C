@@ -613,7 +613,7 @@ MultiAppUserObjectTransfer::findSubAppToTransferFrom(const Point & p)
       // Obtain the possibly transformed app position by querying the transform with the origin
       const auto app_position = (*_from_transforms[i])(Point(0));
 
-      auto distance = (p - app_position).norm();
+      auto distance = MetaPhysicL::raw_value((p - app_position).norm());
 
       if (distance < closest_distance)
       {

@@ -35,5 +35,5 @@ ArrayDirichletBC::ArrayDirichletBC(const InputParameters & parameters)
 void
 ArrayDirichletBC::computeQpResidual(RealEigenVector & residual)
 {
-  residual = _u - _values;
+  residual = MetaPhysicL::raw_value(_u) - _values;
 }

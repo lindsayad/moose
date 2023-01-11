@@ -85,7 +85,7 @@ MultiAppScalarToAuxScalarTransfer::execute()
                        "MultiAppScalarToAuxScalarTransfer!");
 
           for (MooseIndex(from_values) j = 0; j < from_values.size(); ++j)
-            to_variable->sys().solution().set(to_dof[j], from_values[j]);
+            to_variable->sys().solution().set(to_dof[j], MetaPhysicL::raw_value(from_values[j]));
 
           to_variable->sys().solution().close();
         }
@@ -125,7 +125,7 @@ MultiAppScalarToAuxScalarTransfer::execute()
                        "MultiAppScalarToAuxScalarTransfer!");
 
           for (MooseIndex(from_values) j = 0; j < from_values.size(); ++j)
-            to_variable->sys().solution().set(to_dof[j], from_values[j]);
+            to_variable->sys().solution().set(to_dof[j], MetaPhysicL::raw_value(from_values[j]));
         }
       }
       to_variable->sys().solution().close();
@@ -166,7 +166,7 @@ MultiAppScalarToAuxScalarTransfer::execute()
                          "MultiAppScalarToAuxScalarTransfer!");
 
             for (MooseIndex(from_values) k = 0; k < from_values.size(); ++k)
-              to_variable->sys().solution().set(to_dof[k], from_values[k]);
+              to_variable->sys().solution().set(to_dof[k], MetaPhysicL::raw_value(from_values[k]));
 
             to_variable->sys().solution().close();
           }

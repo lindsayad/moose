@@ -30,10 +30,10 @@ public:
 
 protected:
   /// The beginning of the line
-  Point _start;
+  RawPoint _start;
 
   /// The end of the line
-  Point _end;
+  RawPoint _end;
 
   /// The elements that intersect the line
   VectorPostprocessorValue & _x_intersections;

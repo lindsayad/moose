@@ -283,7 +283,7 @@ Assembly::~Assembly()
   delete _qrule_msm;
 }
 
-const MooseArray<Real> &
+const MooseArray<GeomReal> &
 Assembly::JxWNeighbor() const
 {
   _need_JxW_neighbor = true;
@@ -748,12 +748,12 @@ Assembly::reinitFE(const Elem * elem)
 
     fe->reinit(elem);
 
-    fesd->_phi.shallowCopy(const_cast<std::vector<std::vector<Real>> &>(fe->get_phi()));
+    fesd->_phi.shallowCopy(const_cast<std::vector<std::vector<GeomReal>> &>(fe->get_phi()));
     fesd->_grad_phi.shallowCopy(
-        const_cast<std::vector<std::vector<VectorValue<Real>>> &>(fe->get_dphi()));
+        const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(fe->get_dphi()));
     if (_need_second_derivative.find(fe_type) != _need_second_derivative.end())
       fesd->_second_phi.shallowCopy(
-          const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe->get_d2phi()));
+          const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(fe->get_d2phi()));
   }
   for (const auto & it : _vector_fe[dim])
   {
@@ -767,22 +767,23 @@ Assembly::reinitFE(const Elem * elem)
     fe->reinit(elem);
 
     fesd->_phi.shallowCopy(
-        const_cast<std::vector<std::vector<VectorValue<Real>>> &>(fe->get_phi()));
+        const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(fe->get_phi()));
     fesd->_grad_phi.shallowCopy(
-        const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe->get_dphi()));
+        const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(fe->get_dphi()));
     if (_need_second_derivative.find(fe_type) != _need_second_derivative.end())
       fesd->_second_phi.shallowCopy(
-          const_cast<std::vector<std::vector<TypeNTensor<3, Real>>> &>(fe->get_d2phi()));
+          const_cast<std::vector<std::vector<TypeNTensor<3, GeomReal>>> &>(fe->get_d2phi()));
     if (_need_curl.find(fe_type) != _need_curl.end())
       fesd->_curl_phi.shallowCopy(
-          const_cast<std::vector<std::vector<VectorValue<Real>>> &>(fe->get_curl_phi()));
+          const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(fe->get_curl_phi()));
   }
 
   // During that last loop the helper objects will have been reinitialized as well
   // We need to dig out the q_points and JxW from it.
   _current_q_points.shallowCopy(
       const_cast<std::vector<Point> &>((*_holder_fe_helper[dim])->get_xyz()));
-  _current_JxW.shallowCopy(const_cast<std::vector<Real> &>((*_holder_fe_helper[dim])->get_JxW()));
+  _current_JxW.shallowCopy(
+      const_cast<std::vector<GeomReal> &>((*_holder_fe_helper[dim])->get_JxW()));
 
   if (_subproblem.haveADObjects())
   {
@@ -855,12 +856,12 @@ Assembly::reinitFE(const Elem * elem)
     modifyWeightsDueToXFEM(elem);
 }
 
-template <typename OutputType>
+template <typename OutputGradient, typename RawOutputType>
 void
 Assembly::computeGradPhiAD(const Elem * elem,
                            unsigned int n_qp,
-                           ADTemplateVariablePhiGradient<OutputType> & grad_phi,
-                           FEGenericBase<OutputType> * fe)
+                           MooseArray<std::vector<OutputGradient>> & grad_phi,
+                           FEGenericBase<RawOutputType> * fe)
 {
   // This function relies on the fact that FE::reinit has already been called. FE::reinit will
   // importantly have already called FEMap::init_shape_functions which will have computed
@@ -1261,12 +1262,12 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
     fe_face->reinit(elem, side);
     _current_fe_face[fe_type] = fe_face;
 
-    fesd->_phi.shallowCopy(const_cast<std::vector<std::vector<Real>> &>(fe_face->get_phi()));
+    fesd->_phi.shallowCopy(const_cast<std::vector<std::vector<GeomReal>> &>(fe_face->get_phi()));
     fesd->_grad_phi.shallowCopy(
-        const_cast<std::vector<std::vector<VectorValue<Real>>> &>(fe_face->get_dphi()));
+        const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(fe_face->get_dphi()));
     if (_need_second_derivative.find(fe_type) != _need_second_derivative.end())
       fesd->_second_phi.shallowCopy(
-          const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe_face->get_d2phi()));
+          const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(fe_face->get_d2phi()));
   }
   for (const auto & it : _vector_fe_face[dim])
   {
@@ -1280,15 +1281,15 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
     fe_face->reinit(elem, side);
 
     fesd->_phi.shallowCopy(
-        const_cast<std::vector<std::vector<VectorValue<Real>>> &>(fe_face->get_phi()));
+        const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(fe_face->get_phi()));
     fesd->_grad_phi.shallowCopy(
-        const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe_face->get_dphi()));
+        const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(fe_face->get_dphi()));
     if (_need_second_derivative.find(fe_type) != _need_second_derivative.end())
       fesd->_second_phi.shallowCopy(
-          const_cast<std::vector<std::vector<TypeNTensor<3, Real>>> &>(fe_face->get_d2phi()));
+          const_cast<std::vector<std::vector<TypeNTensor<3, GeomReal>>> &>(fe_face->get_d2phi()));
     if (_need_curl.find(fe_type) != _need_curl.end())
       fesd->_curl_phi.shallowCopy(
-          const_cast<std::vector<std::vector<VectorValue<Real>>> &>(fe_face->get_curl_phi()));
+          const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(fe_face->get_curl_phi()));
   }
 
   // During that last loop the helper objects will have been reinitialized as well
@@ -1296,18 +1297,19 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
   _current_q_points_face.shallowCopy(
       const_cast<std::vector<Point> &>((*_holder_fe_face_helper[dim])->get_xyz()));
   _current_JxW_face.shallowCopy(
-      const_cast<std::vector<Real> &>((*_holder_fe_face_helper[dim])->get_JxW()));
+      const_cast<std::vector<GeomReal> &>((*_holder_fe_face_helper[dim])->get_JxW()));
   _current_normals.shallowCopy(
       const_cast<std::vector<Point> &>((*_holder_fe_face_helper[dim])->get_normals()));
 
-  _mapped_normals.resize(_current_normals.size(), Eigen::Map<RealDIMValue>(nullptr));
+  _mapped_normals.resize(_current_normals.size(), Eigen::Map<GeomRealDIMValue>(nullptr));
   for (unsigned int i = 0; i < _current_normals.size(); i++)
     // Note: this does NOT do any allocation.  It is "reconstructing" the object in place
-    new (&_mapped_normals[i]) Eigen::Map<RealDIMValue>(const_cast<Real *>(&_current_normals[i](0)));
+    new (&_mapped_normals[i])
+        Eigen::Map<GeomRealDIMValue>(const_cast<GeomReal *>(&_current_normals[i](0)));
 
   if (_calculate_curvatures)
     _curvatures.shallowCopy(
-        const_cast<std::vector<Real> &>((*_holder_fe_face_helper[dim])->get_curvatures()));
+        const_cast<std::vector<GeomReal> &>((*_holder_fe_face_helper[dim])->get_curvatures()));
 
   computeADFace(*elem, side);
 
@@ -1335,9 +1337,9 @@ Assembly::computeFaceMap(const Elem & elem, const unsigned int side, const std::
   const auto & dpsidxi_map = (*_holder_fe_face_helper[dim])->get_fe_map().get_dpsidxi();
   const auto & dpsideta_map = (*_holder_fe_face_helper[dim])->get_fe_map().get_dpsideta();
   const auto & psi_map = (*_holder_fe_face_helper[dim])->get_fe_map().get_psi();
-  std::vector<std::vector<Real>> const * d2psidxi2_map = nullptr;
-  std::vector<std::vector<Real>> const * d2psidxideta_map = nullptr;
-  std::vector<std::vector<Real>> const * d2psideta2_map = nullptr;
+  std::vector<std::vector<GeomReal>> const * d2psidxi2_map = nullptr;
+  std::vector<std::vector<GeomReal>> const * d2psidxideta_map = nullptr;
+  std::vector<std::vector<GeomReal>> const * d2psideta2_map = nullptr;
   const auto sys_num = _sys.number();
   const bool do_derivatives = ADReal::do_derivatives && sys_num == _subproblem.currentNlSysNum();
 
@@ -1584,12 +1586,12 @@ Assembly::reinitFEFaceNeighbor(const Elem * neighbor, const std::vector<Point> &
     _current_fe_face_neighbor[fe_type] = fe_face_neighbor;
 
     fesd->_phi.shallowCopy(
-        const_cast<std::vector<std::vector<Real>> &>(fe_face_neighbor->get_phi()));
+        const_cast<std::vector<std::vector<GeomReal>> &>(fe_face_neighbor->get_phi()));
     fesd->_grad_phi.shallowCopy(
-        const_cast<std::vector<std::vector<RealGradient>> &>(fe_face_neighbor->get_dphi()));
+        const_cast<std::vector<std::vector<GeomRealGradient>> &>(fe_face_neighbor->get_dphi()));
     if (_need_second_derivative_neighbor.find(fe_type) != _need_second_derivative_neighbor.end())
-      fesd->_second_phi.shallowCopy(
-          const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe_face_neighbor->get_d2phi()));
+      fesd->_second_phi.shallowCopy(const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(
+          fe_face_neighbor->get_d2phi()));
   }
   for (const auto & it : _vector_fe_face_neighbor[neighbor_dim])
   {
@@ -1603,14 +1605,15 @@ Assembly::reinitFEFaceNeighbor(const Elem * neighbor, const std::vector<Point> &
     fe_face_neighbor->reinit(neighbor, &reference_points);
 
     fesd->_phi.shallowCopy(
-        const_cast<std::vector<std::vector<VectorValue<Real>>> &>(fe_face_neighbor->get_phi()));
-    fesd->_grad_phi.shallowCopy(
-        const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe_face_neighbor->get_dphi()));
+        const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(fe_face_neighbor->get_phi()));
+    fesd->_grad_phi.shallowCopy(const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(
+        fe_face_neighbor->get_dphi()));
     if (_need_second_derivative.find(fe_type) != _need_second_derivative.end())
-      fesd->_second_phi.shallowCopy(const_cast<std::vector<std::vector<TypeNTensor<3, Real>>> &>(
-          fe_face_neighbor->get_d2phi()));
+      fesd->_second_phi.shallowCopy(
+          const_cast<std::vector<std::vector<TypeNTensor<3, GeomReal>>> &>(
+              fe_face_neighbor->get_d2phi()));
     if (_need_curl.find(fe_type) != _need_curl.end())
-      fesd->_curl_phi.shallowCopy(const_cast<std::vector<std::vector<VectorValue<Real>>> &>(
+      fesd->_curl_phi.shallowCopy(const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(
           fe_face_neighbor->get_curl_phi()));
   }
 }
@@ -1631,12 +1634,13 @@ Assembly::reinitFENeighbor(const Elem * neighbor, const std::vector<Point> & ref
 
     _current_fe_neighbor[fe_type] = fe_neighbor;
 
-    fesd->_phi.shallowCopy(const_cast<std::vector<std::vector<Real>> &>(fe_neighbor->get_phi()));
+    fesd->_phi.shallowCopy(
+        const_cast<std::vector<std::vector<GeomReal>> &>(fe_neighbor->get_phi()));
     fesd->_grad_phi.shallowCopy(
-        const_cast<std::vector<std::vector<RealGradient>> &>(fe_neighbor->get_dphi()));
+        const_cast<std::vector<std::vector<GeomRealGradient>> &>(fe_neighbor->get_dphi()));
     if (_need_second_derivative_neighbor.find(fe_type) != _need_second_derivative_neighbor.end())
       fesd->_second_phi.shallowCopy(
-          const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe_neighbor->get_d2phi()));
+          const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(fe_neighbor->get_d2phi()));
   }
   for (const auto & it : _vector_fe_neighbor[neighbor_dim])
   {
@@ -1650,15 +1654,16 @@ Assembly::reinitFENeighbor(const Elem * neighbor, const std::vector<Point> & ref
     fe_neighbor->reinit(neighbor, &reference_points);
 
     fesd->_phi.shallowCopy(
-        const_cast<std::vector<std::vector<VectorValue<Real>>> &>(fe_neighbor->get_phi()));
+        const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(fe_neighbor->get_phi()));
     fesd->_grad_phi.shallowCopy(
-        const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe_neighbor->get_dphi()));
+        const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(fe_neighbor->get_dphi()));
     if (_need_second_derivative.find(fe_type) != _need_second_derivative.end())
       fesd->_second_phi.shallowCopy(
-          const_cast<std::vector<std::vector<TypeNTensor<3, Real>>> &>(fe_neighbor->get_d2phi()));
+          const_cast<std::vector<std::vector<TypeNTensor<3, GeomReal>>> &>(
+              fe_neighbor->get_d2phi()));
     if (_need_curl.find(fe_type) != _need_curl.end())
-      fesd->_curl_phi.shallowCopy(
-          const_cast<std::vector<std::vector<VectorValue<Real>>> &>(fe_neighbor->get_curl_phi()));
+      fesd->_curl_phi.shallowCopy(const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(
+          fe_neighbor->get_curl_phi()));
   }
 }
 
@@ -1685,7 +1690,7 @@ Assembly::reinitNeighbor(const Elem * neighbor, const std::vector<Point> & refer
     fe->attach_quadrature_rule(qrule);
     fe->reinit(neighbor);
 
-    const std::vector<Real> & JxW = fe->get_JxW();
+    const std::vector<GeomReal> & JxW = fe->get_JxW();
     MooseArray<Point> q_points;
     q_points.shallowCopy(const_cast<std::vector<Point> &>(fe->get_xyz()));
 
@@ -1981,7 +1986,7 @@ Assembly::reinitElemAndNeighbor(const Elem * elem,
     reinitFEFaceNeighbor(_current_neighbor_side_elem, *reference_points_ptr);
 
     // compute JxW on the neighbor's face
-    _current_JxW_neighbor.shallowCopy(const_cast<std::vector<Real> &>(
+    _current_JxW_neighbor.shallowCopy(const_cast<std::vector<GeomReal> &>(
         (*_holder_fe_face_neighbor_helper[_current_neighbor_side_elem->dim()])->get_JxW()));
   }
 
@@ -2025,12 +2030,12 @@ Assembly::reinitElemFaceRef(const Elem * elem,
 
     _current_fe_face[fe_type] = fe_face;
 
-    fesd->_phi.shallowCopy(const_cast<std::vector<std::vector<Real>> &>(fe_face->get_phi()));
+    fesd->_phi.shallowCopy(const_cast<std::vector<std::vector<GeomReal>> &>(fe_face->get_phi()));
     fesd->_grad_phi.shallowCopy(
-        const_cast<std::vector<std::vector<RealGradient>> &>(fe_face->get_dphi()));
+        const_cast<std::vector<std::vector<GeomRealGradient>> &>(fe_face->get_dphi()));
     if (_need_second_derivative_neighbor.find(fe_type) != _need_second_derivative_neighbor.end())
       fesd->_second_phi.shallowCopy(
-          const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe_face->get_d2phi()));
+          const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(fe_face->get_d2phi()));
   }
   for (const auto & it : _vector_fe_face[elem_dim])
   {
@@ -2044,15 +2049,15 @@ Assembly::reinitElemFaceRef(const Elem * elem,
     fe_face->reinit(elem, elem_side, tolerance, pts, weights);
 
     fesd->_phi.shallowCopy(
-        const_cast<std::vector<std::vector<VectorValue<Real>>> &>(fe_face->get_phi()));
+        const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(fe_face->get_phi()));
     fesd->_grad_phi.shallowCopy(
-        const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe_face->get_dphi()));
+        const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(fe_face->get_dphi()));
     if (_need_second_derivative.find(fe_type) != _need_second_derivative.end())
       fesd->_second_phi.shallowCopy(
-          const_cast<std::vector<std::vector<TypeNTensor<3, Real>>> &>(fe_face->get_d2phi()));
+          const_cast<std::vector<std::vector<TypeNTensor<3, GeomReal>>> &>(fe_face->get_d2phi()));
     if (_need_curl.find(fe_type) != _need_curl.end())
       fesd->_curl_phi.shallowCopy(
-          const_cast<std::vector<std::vector<VectorValue<Real>>> &>(fe_face->get_curl_phi()));
+          const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(fe_face->get_curl_phi()));
   }
   // During that last loop the helper objects will have been reinitialized
   _current_q_points_face.shallowCopy(
@@ -2064,10 +2069,10 @@ Assembly::reinitElemFaceRef(const Elem * elem,
   // Note that if the user did pass in points and not weights to this method, JxW will be garbage
   // and should not be used
   _current_JxW_face.shallowCopy(
-      const_cast<std::vector<Real> &>((*_holder_fe_face_helper[elem_dim])->get_JxW()));
+      const_cast<std::vector<GeomReal> &>((*_holder_fe_face_helper[elem_dim])->get_JxW()));
   if (_calculate_curvatures)
     _curvatures.shallowCopy(
-        const_cast<std::vector<Real> &>((*_holder_fe_face_helper[elem_dim])->get_curvatures()));
+        const_cast<std::vector<GeomReal> &>((*_holder_fe_face_helper[elem_dim])->get_curvatures()));
 
   computeADFace(*elem, elem_side);
 }
@@ -2184,12 +2189,12 @@ Assembly::reinitNeighborFaceRef(const Elem * neighbor,
     _current_fe_face_neighbor[fe_type] = fe_face_neighbor;
 
     fesd->_phi.shallowCopy(
-        const_cast<std::vector<std::vector<Real>> &>(fe_face_neighbor->get_phi()));
+        const_cast<std::vector<std::vector<GeomReal>> &>(fe_face_neighbor->get_phi()));
     fesd->_grad_phi.shallowCopy(
-        const_cast<std::vector<std::vector<RealGradient>> &>(fe_face_neighbor->get_dphi()));
+        const_cast<std::vector<std::vector<GeomRealGradient>> &>(fe_face_neighbor->get_dphi()));
     if (_need_second_derivative_neighbor.find(fe_type) != _need_second_derivative_neighbor.end())
-      fesd->_second_phi.shallowCopy(
-          const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe_face_neighbor->get_d2phi()));
+      fesd->_second_phi.shallowCopy(const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(
+          fe_face_neighbor->get_d2phi()));
   }
   for (const auto & it : _vector_fe_face_neighbor[neighbor_dim])
   {
@@ -2203,14 +2208,15 @@ Assembly::reinitNeighborFaceRef(const Elem * neighbor,
     fe_face_neighbor->reinit(neighbor, neighbor_side, tolerance, pts, weights);
 
     fesd->_phi.shallowCopy(
-        const_cast<std::vector<std::vector<VectorValue<Real>>> &>(fe_face_neighbor->get_phi()));
-    fesd->_grad_phi.shallowCopy(
-        const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe_face_neighbor->get_dphi()));
+        const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(fe_face_neighbor->get_phi()));
+    fesd->_grad_phi.shallowCopy(const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(
+        fe_face_neighbor->get_dphi()));
     if (_need_second_derivative.find(fe_type) != _need_second_derivative.end())
-      fesd->_second_phi.shallowCopy(const_cast<std::vector<std::vector<TypeNTensor<3, Real>>> &>(
-          fe_face_neighbor->get_d2phi()));
+      fesd->_second_phi.shallowCopy(
+          const_cast<std::vector<std::vector<TypeNTensor<3, GeomReal>>> &>(
+              fe_face_neighbor->get_d2phi()));
     if (_need_curl.find(fe_type) != _need_curl.end())
-      fesd->_curl_phi.shallowCopy(const_cast<std::vector<std::vector<VectorValue<Real>>> &>(
+      fesd->_curl_phi.shallowCopy(const_cast<std::vector<std::vector<VectorValue<GeomReal>>> &>(
           fe_face_neighbor->get_curl_phi()));
   }
   // During that last loop the helper objects will have been reinitialized as well
@@ -2224,7 +2230,7 @@ Assembly::reinitNeighborFaceRef(const Elem * neighbor,
 void
 Assembly::reinitDual(const Elem * elem,
                      const std::vector<Point> & pts,
-                     const std::vector<Real> & JxW)
+                     const std::vector<GeomReal> & JxW)
 {
   const unsigned int elem_dim = elem->dim();
   mooseAssert(elem_dim == _mesh_dimension - 1,
@@ -2275,24 +2281,24 @@ Assembly::reinitLowerDElem(const Elem * elem,
 
     if (FEShapeData * fesd = _fe_shape_data_lower[fe_type])
     {
-      fesd->_phi.shallowCopy(const_cast<std::vector<std::vector<Real>> &>(fe_lower->get_phi()));
+      fesd->_phi.shallowCopy(const_cast<std::vector<std::vector<GeomReal>> &>(fe_lower->get_phi()));
       fesd->_grad_phi.shallowCopy(
-          const_cast<std::vector<std::vector<RealGradient>> &>(fe_lower->get_dphi()));
+          const_cast<std::vector<std::vector<GeomRealGradient>> &>(fe_lower->get_dphi()));
       if (_need_second_derivative_neighbor.find(fe_type) != _need_second_derivative_neighbor.end())
         fesd->_second_phi.shallowCopy(
-            const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe_lower->get_d2phi()));
+            const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(fe_lower->get_d2phi()));
     }
 
     // Dual shape functions need to be computed after primal basis being initialized
     if (FEShapeData * fesd = _fe_shape_data_dual_lower[fe_type])
     {
       fesd->_phi.shallowCopy(
-          const_cast<std::vector<std::vector<Real>> &>(fe_lower->get_dual_phi()));
+          const_cast<std::vector<std::vector<GeomReal>> &>(fe_lower->get_dual_phi()));
       fesd->_grad_phi.shallowCopy(
-          const_cast<std::vector<std::vector<RealGradient>> &>(fe_lower->get_dual_dphi()));
+          const_cast<std::vector<std::vector<GeomRealGradient>> &>(fe_lower->get_dual_dphi()));
       if (_need_second_derivative_neighbor.find(fe_type) != _need_second_derivative_neighbor.end())
-        fesd->_second_phi.shallowCopy(
-            const_cast<std::vector<std::vector<TensorValue<Real>>> &>(fe_lower->get_dual_d2phi()));
+        fesd->_second_phi.shallowCopy(const_cast<std::vector<std::vector<TensorValue<GeomReal>>> &>(
+            fe_lower->get_dual_d2phi()));
     }
   }
 
@@ -2319,7 +2325,7 @@ Assembly::reinitLowerDElem(const Elem * elem,
     auto * helper_fe = *_holder_fe_lower_helper[elem_dim];
     const auto & physical_q_points = helper_fe->get_xyz();
     const auto & JxW = helper_fe->get_JxW();
-    MooseArray<Real> coord;
+    MooseArray<GeomReal> coord;
     setCoordinateTransformation(
         _current_qrule_lower, physical_q_points, coord, elem->subdomain_id());
     _current_lower_d_elem_volume = 0;
@@ -2379,7 +2385,7 @@ Assembly::reinitNeighborAtPhysical(const Elem * neighbor,
   reinitNeighbor(_current_neighbor_side_elem, reference_points);
   // compute JxW on the neighbor's face
   unsigned int neighbor_side_dim = _current_neighbor_side_elem->dim();
-  _current_JxW_neighbor.shallowCopy(const_cast<std::vector<Real> &>(
+  _current_JxW_neighbor.shallowCopy(const_cast<std::vector<GeomReal> &>(
       (*_holder_fe_face_neighbor_helper[neighbor_side_dim])->get_JxW()));
 
   reinitFEFaceNeighbor(neighbor, reference_points);
@@ -3758,14 +3764,14 @@ Assembly::addCachedJacobian(SparseMatrix<Number> & /*jacobian*/)
   addCachedJacobian();
 }
 
-Real
+GeomReal
 Assembly::elementVolume(const Elem * elem) const
 {
   FEType fe_type(elem->default_order(), LAGRANGE);
   std::unique_ptr<FEBase> fe(FEBase::build(elem->dim(), fe_type));
 
   // references to the quadrature points and weights
-  const std::vector<Real> & JxW = fe->get_JxW();
+  const std::vector<GeomReal> & JxW = fe->get_JxW();
   const std::vector<Point> & q_points = fe->get_xyz();
 
   // The default quadrature rule should integrate the mass matrix,
@@ -3781,10 +3787,10 @@ Assembly::elementVolume(const Elem * elem) const
               "points in Assembly::setCoordinateTransformation");
 
   // compute the coordinate transformation
-  Real vol = 0;
+  GeomReal vol = 0;
   for (unsigned int qp = 0; qp < qrule.n_points(); ++qp)
   {
-    Real coord;
+    GeomReal coord;
     coordTransformFactor(_subproblem, elem->subdomain_id(), q_points[qp], coord);
     vol += JxW[qp] * coord;
   }
@@ -4602,24 +4608,24 @@ Assembly::processUnconstrainedResidualsAndJacobian(const std::vector<ADReal> & r
 #endif
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
-Assembly::fePhi<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiValue &
+Assembly::fePhi<VectorValue<GeomReal>>(FEType type) const
 {
   buildVectorFE(type);
   return _vector_fe_shape_data[type]->_phi;
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiGradient &
-Assembly::feGradPhi<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiGradient &
+Assembly::feGradPhi<VectorValue<GeomReal>>(FEType type) const
 {
   buildVectorFE(type);
   return _vector_fe_shape_data[type]->_grad_phi;
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiSecond &
-Assembly::feSecondPhi<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiSecond &
+Assembly::feSecondPhi<VectorValue<GeomReal>>(FEType type) const
 {
   _need_second_derivative[type] = true;
   buildVectorFE(type);
@@ -4627,56 +4633,56 @@ Assembly::feSecondPhi<VectorValue<Real>>(FEType type) const
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
-Assembly::fePhiLower<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiValue &
+Assembly::fePhiLower<VectorValue<GeomReal>>(FEType type) const
 {
   buildVectorFE(type);
   return _vector_fe_shape_data_lower[type]->_phi;
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
-Assembly::feDualPhiLower<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiValue &
+Assembly::feDualPhiLower<VectorValue<GeomReal>>(FEType type) const
 {
   buildVectorFE(type);
   return _vector_fe_shape_data_dual_lower[type]->_phi;
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiGradient &
-Assembly::feGradPhiLower<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiGradient &
+Assembly::feGradPhiLower<VectorValue<GeomReal>>(FEType type) const
 {
   buildVectorFE(type);
   return _vector_fe_shape_data_lower[type]->_grad_phi;
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiGradient &
-Assembly::feGradDualPhiLower<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiGradient &
+Assembly::feGradDualPhiLower<VectorValue<GeomReal>>(FEType type) const
 {
   buildVectorFE(type);
   return _vector_fe_shape_data_dual_lower[type]->_grad_phi;
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
-Assembly::fePhiFace<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiValue &
+Assembly::fePhiFace<VectorValue<GeomReal>>(FEType type) const
 {
   buildVectorFaceFE(type);
   return _vector_fe_shape_data_face[type]->_phi;
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiGradient &
-Assembly::feGradPhiFace<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiGradient &
+Assembly::feGradPhiFace<VectorValue<GeomReal>>(FEType type) const
 {
   buildVectorFaceFE(type);
   return _vector_fe_shape_data_face[type]->_grad_phi;
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiSecond &
-Assembly::feSecondPhiFace<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiSecond &
+Assembly::feSecondPhiFace<VectorValue<GeomReal>>(FEType type) const
 {
   _need_second_derivative[type] = true;
   buildVectorFaceFE(type);
@@ -4684,24 +4690,24 @@ Assembly::feSecondPhiFace<VectorValue<Real>>(FEType type) const
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
-Assembly::fePhiNeighbor<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiValue &
+Assembly::fePhiNeighbor<VectorValue<GeomReal>>(FEType type) const
 {
   buildVectorNeighborFE(type);
   return _vector_fe_shape_data_neighbor[type]->_phi;
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiGradient &
-Assembly::feGradPhiNeighbor<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiGradient &
+Assembly::feGradPhiNeighbor<VectorValue<GeomReal>>(FEType type) const
 {
   buildVectorNeighborFE(type);
   return _vector_fe_shape_data_neighbor[type]->_grad_phi;
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiSecond &
-Assembly::feSecondPhiNeighbor<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiSecond &
+Assembly::feSecondPhiNeighbor<VectorValue<GeomReal>>(FEType type) const
 {
   _need_second_derivative_neighbor[type] = true;
   buildVectorNeighborFE(type);
@@ -4709,24 +4715,24 @@ Assembly::feSecondPhiNeighbor<VectorValue<Real>>(FEType type) const
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
-Assembly::fePhiFaceNeighbor<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiValue &
+Assembly::fePhiFaceNeighbor<VectorValue<GeomReal>>(FEType type) const
 {
   buildVectorFaceNeighborFE(type);
   return _vector_fe_shape_data_face_neighbor[type]->_phi;
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiGradient &
-Assembly::feGradPhiFaceNeighbor<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiGradient &
+Assembly::feGradPhiFaceNeighbor<VectorValue<GeomReal>>(FEType type) const
 {
   buildVectorFaceNeighborFE(type);
   return _vector_fe_shape_data_face_neighbor[type]->_grad_phi;
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiSecond &
-Assembly::feSecondPhiFaceNeighbor<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiSecond &
+Assembly::feSecondPhiFaceNeighbor<VectorValue<GeomReal>>(FEType type) const
 {
   _need_second_derivative_neighbor[type] = true;
   buildVectorFaceNeighborFE(type);
@@ -4734,8 +4740,8 @@ Assembly::feSecondPhiFaceNeighbor<VectorValue<Real>>(FEType type) const
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
-Assembly::feCurlPhi<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiCurl &
+Assembly::feCurlPhi<VectorValue<GeomReal>>(FEType type) const
 {
   _need_curl[type] = true;
   buildVectorFE(type);
@@ -4743,8 +4749,8 @@ Assembly::feCurlPhi<VectorValue<Real>>(FEType type) const
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
-Assembly::feCurlPhiFace<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiCurl &
+Assembly::feCurlPhiFace<VectorValue<GeomReal>>(FEType type) const
 {
   _need_curl[type] = true;
   buildVectorFaceFE(type);
@@ -4752,8 +4758,8 @@ Assembly::feCurlPhiFace<VectorValue<Real>>(FEType type) const
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
-Assembly::feCurlPhiNeighbor<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiCurl &
+Assembly::feCurlPhiNeighbor<VectorValue<GeomReal>>(FEType type) const
 {
   _need_curl[type] = true;
   buildVectorNeighborFE(type);
@@ -4761,8 +4767,8 @@ Assembly::feCurlPhiNeighbor<VectorValue<Real>>(FEType type) const
 }
 
 template <>
-const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
-Assembly::feCurlPhiFaceNeighbor<VectorValue<Real>>(FEType type) const
+const typename OutputTools<VectorValue<GeomReal>>::VariablePhiCurl &
+Assembly::feCurlPhiFaceNeighbor<VectorValue<GeomReal>>(FEType type) const
 {
   _need_curl[type] = true;
   buildVectorFaceNeighborFE(type);
@@ -4829,26 +4835,26 @@ Assembly::processResidualsAndJacobian(const std::vector<ADReal> & residuals,
 }
 #endif
 
-template void coordTransformFactor<Point, Real>(const SubProblem & s,
-                                                SubdomainID sub_id,
-                                                const Point & point,
-                                                Real & factor,
-                                                SubdomainID neighbor_sub_id);
-template void coordTransformFactor<ADPoint, ADReal>(const SubProblem & s,
-                                                    SubdomainID sub_id,
-                                                    const ADPoint & point,
-                                                    ADReal & factor,
-                                                    SubdomainID neighbor_sub_id);
-template void coordTransformFactor<Point, Real>(const MooseMesh & mesh,
-                                                SubdomainID sub_id,
-                                                const Point & point,
-                                                Real & factor,
-                                                SubdomainID neighbor_sub_id);
-template void coordTransformFactor<ADPoint, ADReal>(const MooseMesh & mesh,
-                                                    SubdomainID sub_id,
-                                                    const ADPoint & point,
-                                                    ADReal & factor,
-                                                    SubdomainID neighbor_sub_id);
+template void coordTransformFactor(const SubProblem & s,
+                                   SubdomainID sub_id,
+                                   const Point & point,
+                                   GeomReal & factor,
+                                   SubdomainID neighbor_sub_id);
+// template void coordTransformFactor(const SubProblem & s,
+//                                    SubdomainID sub_id,
+//                                    const ADPoint & point,
+//                                    ADReal & factor,
+//                                    SubdomainID neighbor_sub_id);
+template void coordTransformFactor(const MooseMesh & mesh,
+                                   SubdomainID sub_id,
+                                   const Point & point,
+                                   GeomReal & factor,
+                                   SubdomainID neighbor_sub_id);
+// template void coordTransformFactor(const MooseMesh & mesh,
+//                                    SubdomainID sub_id,
+//                                    const ADPoint & point,
+//                                    ADReal & factor,
+//                                    SubdomainID neighbor_sub_id);
 
 template <>
 const MooseArray<MooseADWrapper<Point, false>> &

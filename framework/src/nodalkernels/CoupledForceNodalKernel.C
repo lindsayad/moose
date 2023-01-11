@@ -38,7 +38,7 @@ CoupledForceNodalKernel::CoupledForceNodalKernel(const InputParameters & paramet
 Real
 CoupledForceNodalKernel::computeQpResidual()
 {
-  return -_coef * _v[_qp];
+  return MetaPhysicL::raw_value(-_coef * _v[_qp]);
 }
 
 Real

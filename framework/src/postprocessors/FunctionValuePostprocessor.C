@@ -81,6 +81,6 @@ FunctionValuePostprocessor::getValue()
     for (unsigned int j = 0; j < 3; ++j)
       p(j) = *_point[j];
   if (_time_pp)
-    return _scale_factor * _function.value(*_time_pp, p);
-  return _scale_factor * _function.value(_t, p);
+    return _scale_factor * MetaPhysicL::raw_value(_function.value(*_time_pp, p));
+  return _scale_factor * MetaPhysicL::raw_value(_function.value(_t, p));
 }

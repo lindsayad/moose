@@ -29,11 +29,11 @@ using namespace Moose;
 
 registerMooseObject("MooseApp", MooseVariableFVReal);
 
-template <typename OutputType>
+template <typename RawOutputType>
 InputParameters
-MooseVariableFV<OutputType>::validParams()
+MooseVariableFV<RawOutputType>::validParams()
 {
-  InputParameters params = MooseVariableField<OutputType>::validParams();
+  InputParameters params = MooseVariableField<RawOutputType>::validParams();
   params.set<bool>("fv") = true;
   params.set<MooseEnum>("family") = "MONOMIAL";
   params.set<MooseEnum>("order") = "CONSTANT";
@@ -60,9 +60,9 @@ MooseVariableFV<OutputType>::validParams()
   return params;
 }
 
-template <typename OutputType>
-MooseVariableFV<OutputType>::MooseVariableFV(const InputParameters & parameters)
-  : MooseVariableField<OutputType>(parameters),
+template <typename RawOutputType>
+MooseVariableFV<RawOutputType>::MooseVariableFV(const InputParameters & parameters)
+  : MooseVariableField<RawOutputType>(parameters),
     _solution(this->_sys.currentSolution()),
     _phi(this->_assembly.template fePhi<OutputShape>(FEType(CONSTANT, MONOMIAL))),
     _grad_phi(this->_assembly.template feGradPhi<OutputShape>(FEType(CONSTANT, MONOMIAL))),
@@ -93,9 +93,9 @@ MooseVariableFV<OutputType>::MooseVariableFV(const InputParameters & parameters)
         "two_term_boundary_expansion",
         "Two term boundary expansion only works for global AD indexing configurations.");
 #endif
-  _element_data = std::make_unique<MooseVariableDataFV<OutputType>>(
+  _element_data = std::make_unique<MooseVariableDataFV<RawOutputType>>(
       *this, _sys, _tid, Moose::ElementType::Element, this->_assembly.elem());
-  _neighbor_data = std::make_unique<MooseVariableDataFV<OutputType>>(
+  _neighbor_data = std::make_unique<MooseVariableDataFV<RawOutputType>>(
       *this, _sys, _tid, Moose::ElementType::Neighbor, this->_assembly.neighbor());
 
   if (this->isParamValid("face_interp_method"))
@@ -110,258 +110,258 @@ MooseVariableFV<OutputType>::MooseVariableFV(const InputParameters & parameters)
     _face_interp_method = Moose::FV::InterpMethod::Average;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 const std::set<SubdomainID> &
-MooseVariableFV<OutputType>::activeSubdomains() const
+MooseVariableFV<RawOutputType>::activeSubdomains() const
 {
   return this->_sys.system().variable(_var_num).active_subdomains();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 Moose::VarFieldType
-MooseVariableFV<OutputType>::fieldType() const
+MooseVariableFV<RawOutputType>::fieldType() const
 {
-  if (std::is_same<OutputType, Real>::value)
+  if (std::is_same<RawOutputType, Real>::value)
     return Moose::VarFieldType::VAR_FIELD_STANDARD;
-  else if (std::is_same<OutputType, RealVectorValue>::value)
+  else if (std::is_same<RawOutputType, RealVectorValue>::value)
     return Moose::VarFieldType::VAR_FIELD_VECTOR;
-  else if (std::is_same<OutputType, RealEigenVector>::value)
+  else if (std::is_same<RawOutputType, RealEigenVector>::value)
     return Moose::VarFieldType::VAR_FIELD_ARRAY;
   else
     mooseError("Unknown variable field type");
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFV<OutputType>::activeOnSubdomain(SubdomainID subdomain) const
+MooseVariableFV<RawOutputType>::activeOnSubdomain(SubdomainID subdomain) const
 {
   return this->_sys.system().variable(_var_num).active_on_subdomain(subdomain);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::clearDofIndices()
+MooseVariableFV<RawOutputType>::clearDofIndices()
 {
   _element_data->clearDofIndices();
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::OutputData
-MooseVariableFV<OutputType>::getElementalValue(const Elem * elem, unsigned int idx) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::OutputData
+MooseVariableFV<RawOutputType>::getElementalValue(const Elem * elem, unsigned int idx) const
 {
   return _element_data->getElementalValue(elem, Moose::Current, idx);
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::OutputData
-MooseVariableFV<OutputType>::getElementalValueOld(const Elem * elem, unsigned int idx) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::OutputData
+MooseVariableFV<RawOutputType>::getElementalValueOld(const Elem * elem, unsigned int idx) const
 {
   return _element_data->getElementalValue(elem, Moose::Old, idx);
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::OutputData
-MooseVariableFV<OutputType>::getElementalValueOlder(const Elem * elem, unsigned int idx) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::OutputData
+MooseVariableFV<RawOutputType>::getElementalValueOlder(const Elem * elem, unsigned int idx) const
 {
   return _element_data->getElementalValue(elem, Moose::Older, idx);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::insert(NumericVector<Number> & residual)
+MooseVariableFV<RawOutputType>::insert(NumericVector<Number> & residual)
 {
   _element_data->insert(residual);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::add(NumericVector<Number> & residual)
+MooseVariableFV<RawOutputType>::add(NumericVector<Number> & residual)
 {
   _element_data->add(residual);
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValues() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValues() const
 {
   return _element_data->dofValues();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesOld() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesOld() const
 {
   return _element_data->dofValuesOld();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesOlder() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesOlder() const
 {
   return _element_data->dofValuesOlder();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesPreviousNL() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesPreviousNL() const
 {
   return _element_data->dofValuesPreviousNL();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesNeighbor() const
 {
   return _neighbor_data->dofValues();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesOldNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesOldNeighbor() const
 {
   return _neighbor_data->dofValuesOld();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesOlderNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesOlderNeighbor() const
 {
   return _neighbor_data->dofValuesOlder();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesPreviousNLNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesPreviousNLNeighbor() const
 {
   return _neighbor_data->dofValuesPreviousNL();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesDot() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesDot() const
 {
   return _element_data->dofValuesDot();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesDotDot() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesDotDot() const
 {
   return _element_data->dofValuesDotDot();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesDotOld() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesDotOld() const
 {
   return _element_data->dofValuesDotOld();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesDotDotOld() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesDotDotOld() const
 {
   return _element_data->dofValuesDotDotOld();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesDotNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesDotNeighbor() const
 {
   return _neighbor_data->dofValuesDot();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesDotDotNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesDotDotNeighbor() const
 {
   return _neighbor_data->dofValuesDotDot();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesDotOldNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesDotOldNeighbor() const
 {
   return _neighbor_data->dofValuesDotOld();
 }
 
-template <typename OutputType>
-const typename MooseVariableFV<OutputType>::DoFValue &
-MooseVariableFV<OutputType>::dofValuesDotDotOldNeighbor() const
+template <typename RawOutputType>
+const typename MooseVariableFV<RawOutputType>::DoFValue &
+MooseVariableFV<RawOutputType>::dofValuesDotDotOldNeighbor() const
 {
   return _neighbor_data->dofValuesDotDotOld();
 }
 
-template <typename OutputType>
-const MooseArray<Number> &
-MooseVariableFV<OutputType>::dofValuesDuDotDu() const
+template <typename RawOutputType>
+const VariableValue &
+MooseVariableFV<RawOutputType>::dofValuesDuDotDu() const
 {
   return _element_data->dofValuesDuDotDu();
 }
 
-template <typename OutputType>
-const MooseArray<Number> &
-MooseVariableFV<OutputType>::dofValuesDuDotDotDu() const
+template <typename RawOutputType>
+const VariableValue &
+MooseVariableFV<RawOutputType>::dofValuesDuDotDotDu() const
 {
   return _element_data->dofValuesDuDotDotDu();
 }
 
-template <typename OutputType>
-const MooseArray<Number> &
-MooseVariableFV<OutputType>::dofValuesDuDotDuNeighbor() const
+template <typename RawOutputType>
+const VariableValue &
+MooseVariableFV<RawOutputType>::dofValuesDuDotDuNeighbor() const
 {
   return _neighbor_data->dofValuesDuDotDu();
 }
 
-template <typename OutputType>
-const MooseArray<Number> &
-MooseVariableFV<OutputType>::dofValuesDuDotDotDuNeighbor() const
+template <typename RawOutputType>
+const VariableValue &
+MooseVariableFV<RawOutputType>::dofValuesDuDotDotDuNeighbor() const
 {
   return _neighbor_data->dofValuesDuDotDotDu();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::prepareIC()
+MooseVariableFV<RawOutputType>::prepareIC()
 {
   _element_data->prepareIC();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::computeElemValues()
+MooseVariableFV<RawOutputType>::computeElemValues()
 {
   _element_data->setGeometry(Moose::Volume);
   _element_data->computeValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::computeElemValuesFace()
+MooseVariableFV<RawOutputType>::computeElemValuesFace()
 {
   _element_data->setGeometry(Moose::Face);
   _element_data->computeValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::computeNeighborValuesFace()
+MooseVariableFV<RawOutputType>::computeNeighborValuesFace()
 {
   _neighbor_data->setGeometry(Moose::Face);
   _neighbor_data->computeValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::computeNeighborValues()
+MooseVariableFV<RawOutputType>::computeNeighborValues()
 {
   _neighbor_data->setGeometry(Moose::Volume);
   _neighbor_data->computeValues();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::computeFaceValues(const FaceInfo & fi)
+MooseVariableFV<RawOutputType>::computeFaceValues(const FaceInfo & fi)
 {
   _element_data->setGeometry(Moose::Face);
   _neighbor_data->setGeometry(Moose::Face);
@@ -382,62 +382,62 @@ MooseVariableFV<OutputType>::computeFaceValues(const FaceInfo & fi)
     mooseError("robert wrote broken MooseVariableFV code");
 }
 
-template <typename OutputType>
-OutputType
-MooseVariableFV<OutputType>::getValue(const Elem * elem) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::OutputType
+MooseVariableFV<RawOutputType>::getValue(const Elem * elem) const
 {
   std::vector<dof_id_type> dof_indices;
   this->_dof_map.dof_indices(elem, dof_indices, _var_num);
   mooseAssert(dof_indices.size() == 1, "Wrong size for dof indices");
-  OutputType value = (*this->_sys.currentSolution())(dof_indices[0]);
+  auto value = (*this->_sys.currentSolution())(dof_indices[0]);
   return value;
 }
 
-template <typename OutputType>
-typename OutputTools<OutputType>::OutputGradient
-MooseVariableFV<OutputType>::getGradient(const Elem * /*elem*/) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::OutputGradient
+MooseVariableFV<RawOutputType>::getGradient(const Elem * /*elem*/) const
 {
   return {};
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::setNodalValue(const OutputType & /*value*/, unsigned int /*idx*/)
+MooseVariableFV<RawOutputType>::setNodalValue(const OutputType & /*value*/, unsigned int /*idx*/)
 {
   mooseError("FV variables do not support setNodalValue");
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::setDofValue(const OutputData & value, unsigned int index)
+MooseVariableFV<RawOutputType>::setDofValue(const OutputData & value, unsigned int index)
 {
   _element_data->setDofValue(value, index);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::setDofValues(const DenseVector<OutputData> & values)
+MooseVariableFV<RawOutputType>::setDofValues(const DenseVector<OutputData> & values)
 {
   _element_data->setDofValues(values);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFV<OutputType>::isArray() const
+MooseVariableFV<RawOutputType>::isArray() const
 {
-  return std::is_same<OutputType, RealEigenVector>::value;
+  return std::is_same<RawOutputType, RealEigenVector>::value;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFV<OutputType>::isVector() const
+MooseVariableFV<RawOutputType>::isVector() const
 {
-  return std::is_same<OutputType, RealVectorValue>::value;
+  return std::is_same<RawOutputType, RealVectorValue>::value;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 std::pair<bool, const FVDirichletBCBase *>
-MooseVariableFV<OutputType>::getDirichletBC(const FaceInfo & fi) const
+MooseVariableFV<RawOutputType>::getDirichletBC(const FaceInfo & fi) const
 {
   std::vector<FVDirichletBCBase *> bcs;
 
@@ -464,9 +464,9 @@ MooseVariableFV<OutputType>::getDirichletBC(const FaceInfo & fi) const
     return std::make_pair(false, nullptr);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 std::pair<bool, std::vector<const FVFluxBC *>>
-MooseVariableFV<OutputType>::getFluxBCs(const FaceInfo & fi) const
+MooseVariableFV<RawOutputType>::getFluxBCs(const FaceInfo & fi) const
 {
   std::vector<const FVFluxBC *> bcs;
 
@@ -488,9 +488,9 @@ MooseVariableFV<OutputType>::getFluxBCs(const FaceInfo & fi) const
     return std::make_pair(false, std::vector<const FVFluxBC *>());
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 ADReal
-MooseVariableFV<OutputType>::getElemValue(const Elem * const elem) const
+MooseVariableFV<RawOutputType>::getElemValue(const Elem * const elem) const
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError("MooseVariableFV::getElemValue only supported for global AD indexing");
@@ -523,9 +523,9 @@ MooseVariableFV<OutputType>::getElemValue(const Elem * const elem) const
   return value;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFV<OutputType>::isInternalFace(const FaceInfo & fi) const
+MooseVariableFV<RawOutputType>::isInternalFace(const FaceInfo & fi) const
 {
   const bool is_internal_face = fi.faceType(this->name()) == FaceInfo::VarFaceNeighbors::BOTH;
   mooseAssert(is_internal_face == (this->hasBlocks(fi.elem().subdomain_id()) && fi.neighborPtr() &&
@@ -534,10 +534,10 @@ MooseVariableFV<OutputType>::isInternalFace(const FaceInfo & fi) const
   return is_internal_face;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 ADReal
-MooseVariableFV<OutputType>::getInternalFaceValue(const FaceInfo & fi,
-                                                  const bool correct_skewness) const
+MooseVariableFV<RawOutputType>::getInternalFaceValue(const FaceInfo & fi,
+                                                     const bool correct_skewness) const
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError("MooseVariableFV::getInternalFaceValue only supported for global AD indexing");
@@ -548,9 +548,9 @@ MooseVariableFV<OutputType>::getInternalFaceValue(const FaceInfo & fi,
   return Moose::FV::linearInterpolation(*this, Moose::FV::makeCDFace(fi, correct_skewness));
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 bool
-MooseVariableFV<OutputType>::isDirichletBoundaryFace(const FaceInfo & fi) const
+MooseVariableFV<RawOutputType>::isDirichletBoundaryFace(const FaceInfo & fi) const
 {
   const auto & pr = getDirichletBC(fi);
 
@@ -558,9 +558,9 @@ MooseVariableFV<OutputType>::isDirichletBoundaryFace(const FaceInfo & fi) const
   return pr.first;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 ADReal
-MooseVariableFV<OutputType>::getDirichletBoundaryFaceValue(const FaceInfo & fi) const
+MooseVariableFV<RawOutputType>::getDirichletBoundaryFaceValue(const FaceInfo & fi) const
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError(
@@ -580,9 +580,9 @@ MooseVariableFV<OutputType>::getDirichletBoundaryFaceValue(const FaceInfo & fi) 
   return ADReal(bc.boundaryValue(fi));
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 std::pair<bool, const Elem *>
-MooseVariableFV<OutputType>::isExtrapolatedBoundaryFace(const FaceInfo & fi) const
+MooseVariableFV<RawOutputType>::isExtrapolatedBoundaryFace(const FaceInfo & fi) const
 {
   const bool extrapolated = !isDirichletBoundaryFace(fi) && !isInternalFace(fi);
 
@@ -600,10 +600,10 @@ MooseVariableFV<OutputType>::isExtrapolatedBoundaryFace(const FaceInfo & fi) con
   return std::make_pair(extrapolated, ret_elem);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 ADReal
-MooseVariableFV<OutputType>::getExtrapolatedBoundaryFaceValue(const FaceInfo & fi,
-                                                              bool two_term_expansion) const
+MooseVariableFV<RawOutputType>::getExtrapolatedBoundaryFaceValue(const FaceInfo & fi,
+                                                                 bool two_term_expansion) const
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError(
@@ -629,9 +629,9 @@ MooseVariableFV<OutputType>::getExtrapolatedBoundaryFaceValue(const FaceInfo & f
   return boundary_value;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 ADReal
-MooseVariableFV<OutputType>::getBoundaryFaceValue(const FaceInfo & fi) const
+MooseVariableFV<RawOutputType>::getBoundaryFaceValue(const FaceInfo & fi) const
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError("MooseVariableFV::getBoundaryFaceValue only supported for global AD indexing");
@@ -647,9 +647,10 @@ MooseVariableFV<OutputType>::getBoundaryFaceValue(const FaceInfo & fi) const
   mooseError("Unknown boundary face type!");
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 const VectorValue<ADReal> &
-MooseVariableFV<OutputType>::adGradSln(const Elem * const elem, const bool correct_skewness) const
+MooseVariableFV<RawOutputType>::adGradSln(const Elem * const elem,
+                                          const bool correct_skewness) const
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError("MooseVariableFV::adGradSln only supported for global AD indexing");
@@ -681,10 +682,10 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem, const bool corre
   }
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 VectorValue<ADReal>
-MooseVariableFV<OutputType>::uncorrectedAdGradSln(const FaceInfo & fi,
-                                                  const bool correct_skewness) const
+MooseVariableFV<RawOutputType>::uncorrectedAdGradSln(const FaceInfo & fi,
+                                                     const bool correct_skewness) const
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError("MooseVariableFV::uncorrectedAdGradSln only supported for global AD indexing");
@@ -710,9 +711,9 @@ MooseVariableFV<OutputType>::uncorrectedAdGradSln(const FaceInfo & fi,
     return elem_one_grad;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 VectorValue<ADReal>
-MooseVariableFV<OutputType>::adGradSln(const FaceInfo & fi, const bool correct_skewness) const
+MooseVariableFV<RawOutputType>::adGradSln(const FaceInfo & fi, const bool correct_skewness) const
 {
 #ifndef MOOSE_GLOBAL_AD_INDEXING
   mooseError("MooseVariableFV::adGradSln only supported for global AD indexing");
@@ -750,30 +751,30 @@ MooseVariableFV<OutputType>::adGradSln(const FaceInfo & fi, const bool correct_s
   return face_grad;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::residualSetup()
+MooseVariableFV<RawOutputType>::residualSetup()
 {
   clearCaches();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::jacobianSetup()
+MooseVariableFV<RawOutputType>::jacobianSetup()
 {
   clearCaches();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::clearCaches()
+MooseVariableFV<RawOutputType>::clearCaches()
 {
   _elem_to_grad.clear();
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 unsigned int
-MooseVariableFV<OutputType>::oldestSolutionStateRequested() const
+MooseVariableFV<RawOutputType>::oldestSolutionStateRequested() const
 {
   unsigned int state = 0;
   state = std::max(state, _element_data->oldestSolutionStateRequested());
@@ -781,18 +782,18 @@ MooseVariableFV<OutputType>::oldestSolutionStateRequested() const
   return state;
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::clearAllDofIndices()
+MooseVariableFV<RawOutputType>::clearAllDofIndices()
 {
   _element_data->clearDofIndices();
   _neighbor_data->clearDofIndices();
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::ValueType
-MooseVariableFV<OutputType>::evaluate(const FaceArg & face,
-                                      const unsigned int libmesh_dbg_var(state)) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::ValueType
+MooseVariableFV<RawOutputType>::evaluate(const FaceArg & face,
+                                         const unsigned int libmesh_dbg_var(state)) const
 {
   mooseAssert(state == 0, "Only current time state supported.");
   const FaceInfo * const fi = face.fi;
@@ -812,10 +813,10 @@ MooseVariableFV<OutputType>::evaluate(const FaceArg & face,
   }
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::ValueType
-MooseVariableFV<OutputType>::evaluate(const SingleSidedFaceArg & face,
-                                      const unsigned int libmesh_dbg_var(state)) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::ValueType
+MooseVariableFV<RawOutputType>::evaluate(const SingleSidedFaceArg & face,
+                                         const unsigned int libmesh_dbg_var(state)) const
 {
   mooseAssert(state == 0, "Only current time state supported.");
   const FaceInfo * const fi = face.fi;
@@ -839,9 +840,9 @@ MooseVariableFV<OutputType>::evaluate(const SingleSidedFaceArg & face,
   }
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::ValueType
-MooseVariableFV<OutputType>::evaluate(const ElemFromFaceArg & elem_from_face, unsigned int) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::ValueType
+MooseVariableFV<RawOutputType>::evaluate(const ElemFromFaceArg & elem_from_face, unsigned int) const
 {
   const Elem * const requested_elem = elem_from_face.elem;
   mooseAssert(requested_elem != remote_elem,
@@ -850,10 +851,10 @@ MooseVariableFV<OutputType>::evaluate(const ElemFromFaceArg & elem_from_face, un
   return getElemValue(requested_elem);
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::GradientType
-MooseVariableFV<OutputType>::evaluateGradient(const ElemFromFaceArg & elem_from_face,
-                                              unsigned int) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::GradientType
+MooseVariableFV<RawOutputType>::evaluateGradient(const ElemFromFaceArg & elem_from_face,
+                                                 unsigned int) const
 {
   const Elem * const requested_elem = elem_from_face.elem;
   mooseAssert(requested_elem != remote_elem,
@@ -865,9 +866,9 @@ MooseVariableFV<OutputType>::evaluateGradient(const ElemFromFaceArg & elem_from_
     mooseError("We do not currently support ghosting of gradients");
 }
 
-template <typename OutputType>
-typename MooseVariableFV<OutputType>::DotType
-MooseVariableFV<OutputType>::evaluateDot(const ElemArg &, unsigned int) const
+template <typename RawOutputType>
+typename MooseVariableFV<RawOutputType>::DotType
+MooseVariableFV<RawOutputType>::evaluateDot(const ElemArg &, unsigned int) const
 {
   mooseError("evaluateDot not implemented for this class of finite volume variables");
 }
@@ -906,9 +907,9 @@ MooseVariableFV<Real>::evaluateDot(const ElemArg & elem_arg,
     return (*_sys.solutionUDot())(dof_index);
 }
 
-template <typename OutputType>
+template <typename RawOutputType>
 void
-MooseVariableFV<OutputType>::prepareAux()
+MooseVariableFV<RawOutputType>::prepareAux()
 {
   _element_data->prepareAux();
   _neighbor_data->prepareAux();

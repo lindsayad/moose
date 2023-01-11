@@ -29,10 +29,10 @@ PiecewiseConstant::PiecewiseConstant(const InputParameters & parameters)
 {
 }
 
-Real
+GeomReal
 PiecewiseConstant::value(Real t, const Point & p) const
 {
-  const Real x = _has_axis ? p(_axis) : t;
+  const GeomReal x = _has_axis ? p(_axis) : t;
 
   unsigned i = 1;
   const unsigned len = functionSize();
@@ -84,17 +84,17 @@ PiecewiseConstant::value(const ADReal & t, const ADPoint & p) const
   return value(MetaPhysicL::raw_value(t), MetaPhysicL::raw_value(p));
 }
 
-Real
+GeomReal
 PiecewiseConstant::timeDerivative(Real /*t*/, const Point & /*p*/) const
 {
   return 0;
 }
 
-Real
+GeomReal
 PiecewiseConstant::integral() const
 {
   const unsigned len = functionSize();
-  Real sum = 0;
+  GeomReal sum = 0;
   unsigned offset = 0;
 
   if (_direction == Direction::RIGHT || _direction == Direction::RIGHT_INCLUSIVE)
@@ -106,7 +106,7 @@ PiecewiseConstant::integral() const
   return _scale_factor * sum;
 }
 
-Real
+GeomReal
 PiecewiseConstant::average() const
 {
   return integral() / (domain(functionSize() - 1) - domain(0));

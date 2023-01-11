@@ -48,11 +48,11 @@ PiecewiseLinearBaseTempl<BaseClass>::buildInterpolation(const bool extrap)
 }
 
 template <typename BaseClass>
-Real
+GeomReal
 PiecewiseLinearBaseTempl<BaseClass>::value(Real t, const Point & p) const
 {
   const auto x = _has_axis ? p(_axis) : t;
-  return _scale_factor * _linear_interp->sample(x);
+  return _scale_factor * MetaPhysicL::raw_value(_linear_interp->sample(x));
 }
 
 template <typename BaseClass>
@@ -60,35 +60,36 @@ ADReal
 PiecewiseLinearBaseTempl<BaseClass>::value(const ADReal & t, const ADPoint & p) const
 {
   const auto x = _has_axis ? p(_axis) : t;
-  return _scale_factor * _linear_interp->sample(x);
+  return _scale_factor * MetaPhysicL::raw_value(_linear_interp->sample(x));
 }
 
 template <typename BaseClass>
-Real
+GeomReal
 PiecewiseLinearBaseTempl<BaseClass>::timeDerivative(Real t, const Point &) const
 {
-  return _has_axis ? 0.0 : _scale_factor * _linear_interp->sampleDerivative(t);
+  return _has_axis ? 0.0
+                   : _scale_factor * MetaPhysicL::raw_value(_linear_interp->sampleDerivative(t));
 }
 
 template <typename BaseClass>
-RealGradient
+GeomRealGradient
 PiecewiseLinearBaseTempl<BaseClass>::gradient(Real, const Point & p) const
 {
-  RealGradient ret;
+  GeomRealGradient ret;
   if (_has_axis)
-    ret(_axis) = _scale_factor * _linear_interp->sampleDerivative(p(_axis));
+    ret(_axis) = _scale_factor * MetaPhysicL::raw_value(_linear_interp->sampleDerivative(p(_axis)));
   return ret;
 }
 
 template <typename BaseClass>
-Real
+GeomReal
 PiecewiseLinearBaseTempl<BaseClass>::integral() const
 {
   return _scale_factor * _linear_interp->integrate();
 }
 
 template <typename BaseClass>
-Real
+GeomReal
 PiecewiseLinearBaseTempl<BaseClass>::average() const
 {
   return integral() /

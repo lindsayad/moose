@@ -39,14 +39,15 @@ protected:
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableValue & neighborValue();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableValue & neighborValue();
 
   /**
    * The old value of the variable this object is operating on evaluated on the "neighbor" element.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableValue & neighborValueOld();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableValue &
+  neighborValueOld();
 
   /**
    * The older value of the variable this object is operating on evaluated on the "neighbor"
@@ -54,14 +55,16 @@ protected:
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableValue & neighborValueOlder();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableValue &
+  neighborValueOlder();
 
   /**
    * The gradient of the variable this object is operating on evaluated on the "neighbor" element.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableGradient & neighborGradient();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableGradient &
+  neighborGradient();
 
   /**
    * The old gradient of the variable this object is operating on evaluated on the "neighbor"
@@ -69,7 +72,8 @@ protected:
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableGradient & neighborGradientOld();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableGradient &
+  neighborGradientOld();
 
   /**
    * The older gradient of the variable this object is operating on evaluated on the "neighbor"
@@ -77,7 +81,8 @@ protected:
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableGradient & neighborGradientOlder();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableGradient &
+  neighborGradientOlder();
 
   /**
    * The second derivative of the variable this object is operating on evaluated on the "neighbor"
@@ -85,7 +90,8 @@ protected:
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableSecond & neighborSecond();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableSecond &
+  neighborSecond();
 
   /**
    * The old second derivative of the variable this object is operating on evaluated on the
@@ -93,7 +99,8 @@ protected:
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableSecond & neighborSecondOld();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableSecond &
+  neighborSecondOld();
 
   /**
    * The older second derivative of the variable this object is operating on evaluated on the
@@ -101,19 +108,22 @@ protected:
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableSecond & neighborSecondOlder();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableSecond &
+  neighborSecondOlder();
 
   /**
    * The second derivative of the neighbor's test function.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariableTestSecond & neighborSecondTest();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariableTestSecond &
+  neighborSecondTest();
 
   /**
    * The second derivative of the neighbor's shape function.
    *
    * @return The reference to be stored off and used later.
    */
-  virtual const typename OutputTools<T>::VariablePhiSecond & neighborSecondPhi();
+  virtual const typename OutputTools<typename MakeOutput<T>::type>::VariablePhiSecond &
+  neighborSecondPhi();
 };

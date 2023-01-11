@@ -32,5 +32,5 @@ FunctionElementIntegral::FunctionElementIntegral(const InputParameters & paramet
 Real
 FunctionElementIntegral::computeQpIntegral()
 {
-  return _function.value(_t, _q_point[_qp]);
+  return MetaPhysicL::raw_value(_function.value(_t, _q_point[_qp]));
 }

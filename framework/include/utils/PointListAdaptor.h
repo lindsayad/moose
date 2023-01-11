@@ -12,6 +12,7 @@
 #include "libmesh/nanoflann.hpp"
 #include "libmesh/utility.h"
 #include "libmesh/point.h"
+#include "metaphysicl/raw_type.h"
 
 #include <iterator>
 
@@ -45,7 +46,7 @@ public:
   /**
    * Must return the number of data points
    */
-  inline size_t kdtree_get_point_count() const { return _size; }
+  inline std::size_t kdtree_get_point_count() const { return _size; }
 
   /**
    * get a Point reference from the PointData object at index idx in the list
@@ -65,7 +66,7 @@ public:
 
     auto it = _begin;
     std::advance(it, idx_p2);
-    const Point & p2 = getPoint(*it);
+    const auto & p2 = MetaPhysicL::raw_value(getPoint(*it));
 
     coord_t dist = 0.0;
 
@@ -89,7 +90,7 @@ public:
 
     auto it = _begin;
     std::advance(it, idx);
-    const Point & p = getPoint(*it);
+    const auto & p = MetaPhysicL::raw_value(getPoint(*it));
 
     return p(dim);
   }

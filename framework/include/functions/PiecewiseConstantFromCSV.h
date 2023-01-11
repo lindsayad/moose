@@ -28,10 +28,10 @@ public:
    * \param pt The point in space (x,y,z)
    * \return The value of the function
    */
-  virtual Real value(Real t, const Point & pt) const override;
+  virtual GeomReal value(Real t, const Point & pt) const override;
   using Function::value;
 
-  virtual Real timeDerivative(Real, const Point &) const override { return 0; };
+  virtual GeomReal timeDerivative(Real, const Point &) const override { return 0; };
 
 protected:
   void initialSetup() override;

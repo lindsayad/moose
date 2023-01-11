@@ -35,6 +35,6 @@ BoolFunctionControl::BoolFunctionControl(const InputParameters & parameters)
 void
 BoolFunctionControl::execute()
 {
-  Real value = _function.value(_t);
+  auto value = _function.value(_t);
   setControllableValue<bool>("parameter", value != 0.);
 }

@@ -87,7 +87,8 @@ ExtraIDIntegralVectorPostprocessor::execute()
     for (unsigned int ivar = 0; ivar < _nvar; ++ivar)
       if (_vars[ivar]->hasBlocks(_current_elem->subdomain_id()))
         for (unsigned int qp = 0; qp < _qrule->n_points(); qp++)
-          (*_var_integrals[ivar])[ipos] += _JxW[qp] * _coord[qp] * (*_var_values[ivar])[qp];
+          (*_var_integrals[ivar])[ipos] +=
+              MetaPhysicL::raw_value(_JxW[qp] * _coord[qp] * (*_var_values[ivar])[qp]);
   }
 }
 

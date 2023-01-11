@@ -54,8 +54,10 @@ BoundingBoxIC::BoundingBoxIC(const InputParameters & parameters)
 }
 
 Real
-BoundingBoxIC::value(const Point & p)
+BoundingBoxIC::value(const Point & p_in)
 {
+  const auto & p = MetaPhysicL::raw_value(p_in);
+
   if (_int_width < 0.0)
     mooseError("'int_width' should be non-negative");
 

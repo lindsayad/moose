@@ -37,5 +37,5 @@ ElementIntegralArrayVariablePostprocessor::ElementIntegralArrayVariablePostproce
 Real
 ElementIntegralArrayVariablePostprocessor::computeQpIntegral()
 {
-  return _u[_qp](_component);
+  return MetaPhysicL::raw_value(_u[_qp](_component));
 }

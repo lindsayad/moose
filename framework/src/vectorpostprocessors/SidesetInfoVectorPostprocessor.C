@@ -171,23 +171,23 @@ SidesetInfoVectorPostprocessor::dataHelper(BoundaryID bid, std::string mdat_tpe)
   auto & bd = _boundary_data.find(bid)->second;
 
   if (mdat_tpe == "centroid_x")
-    return bd.centroid(0);
+    return MetaPhysicL::raw_value(bd.centroid(0));
   else if (mdat_tpe == "centroid_y")
-    return bd.centroid(1);
+    return MetaPhysicL::raw_value(bd.centroid(1));
   else if (mdat_tpe == "centroid_z")
-    return bd.centroid(2);
+    return MetaPhysicL::raw_value(bd.centroid(2));
   else if (mdat_tpe == "min_x")
-    return bd.min(0);
+    return MetaPhysicL::raw_value(bd.min(0));
   else if (mdat_tpe == "min_y")
-    return bd.min(1);
+    return MetaPhysicL::raw_value(bd.min(1));
   else if (mdat_tpe == "min_z")
-    return bd.min(2);
+    return MetaPhysicL::raw_value(bd.min(2));
   else if (mdat_tpe == "max_x")
-    return bd.max(0);
+    return MetaPhysicL::raw_value(bd.max(0));
   else if (mdat_tpe == "max_y")
-    return bd.max(1);
+    return MetaPhysicL::raw_value(bd.max(1));
   else if (mdat_tpe == "max_z")
-    return bd.max(2);
+    return MetaPhysicL::raw_value(bd.max(2));
   else if (mdat_tpe == "area")
     return bd.area;
   else

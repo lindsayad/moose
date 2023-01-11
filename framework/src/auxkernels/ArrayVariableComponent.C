@@ -31,5 +31,5 @@ ArrayVariableComponent::ArrayVariableComponent(const InputParameters & parameter
 Real
 ArrayVariableComponent::computeValue()
 {
-  return _u[_qp](_component);
+  return MetaPhysicL::raw_value(_u[_qp](_component));
 }

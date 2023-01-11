@@ -48,5 +48,5 @@ IntegralPreservingFunctionIC::value(const Point & p)
   if (std::abs(_integral) < libMesh::TOLERANCE)
     mooseError("The integral of '" + _pp_name + "' cannot be zero!");
 
-  return magnitude() * _func.value(_t, p) / _integral;
+  return magnitude() * MetaPhysicL::raw_value(_func.value(_t, p)) / _integral;
 }

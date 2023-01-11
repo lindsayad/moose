@@ -37,21 +37,21 @@ MooseParsedGradFunction::MooseParsedGradFunction(const InputParameters & paramet
 
 MooseParsedGradFunction::~MooseParsedGradFunction() {}
 
-Real
+GeomReal
 MooseParsedGradFunction::value(Real t, const Point & p) const
 {
   // Return a scalar value
-  return _function_ptr->evaluate<Real>(t, p);
+  return _function_ptr->evaluate<GeomReal>(t, p);
 }
 
-RealGradient
+GeomRealGradient
 MooseParsedGradFunction::gradient(Real t, const Point & p) const
 {
-  // Return gradient (RealGradient = RealVectorValue)
-  return _grad_function_ptr->evaluate<RealVectorValue>(t, p);
+  // Return gradient (GeomRealGradient = GeomRealVectorValue)
+  return _grad_function_ptr->evaluate<GeomRealVectorValue>(t, p);
 }
 
-RealVectorValue
+GeomRealVectorValue
 MooseParsedGradFunction::vectorValue(Real /*t*/, const Point & /*p*/) const
 {
   mooseError("The vectorValue method is not defined in ParsedGradFunction");

@@ -52,16 +52,17 @@ ArrayHFEMDirichletBC::ArrayHFEMDirichletBC(const InputParameters & parameters)
 void
 ArrayHFEMDirichletBC::computeQpResidual(RealEigenVector & residual)
 {
-  residual += _lambda[_qp] * _test[_i][_qp];
+  residual += MetaPhysicL::raw_value(_lambda[_qp] * _test[_i][_qp]);
 }
 
 void
 ArrayHFEMDirichletBC::computeLowerDQpResidual(RealEigenVector & r)
 {
   if (_uhat)
-    r += (_u[_qp] - (*_uhat)[_qp]) * _test_lambda[_i][_qp];
+    r += MetaPhysicL::raw_value(_u[_qp] - (*_uhat)[_qp]) *
+         MetaPhysicL::raw_value(_test_lambda[_i][_qp]);
   else
-    r += (_u[_qp] - _value) * _test_lambda[_i][_qp];
+    r += (MetaPhysicL::raw_value(_u[_qp]) - _value) * MetaPhysicL::raw_value(_test_lambda[_i][_qp]);
 }
 
 RealEigenVector
@@ -71,10 +72,12 @@ ArrayHFEMDirichletBC::computeLowerDQpJacobian(Moose::ConstraintJacobianType type
   switch (type)
   {
     case Moose::LowerPrimary:
-      return RealEigenVector::Constant(_count, _test_lambda[_i][_qp] * _phi[_j][_qp]);
+      return RealEigenVector::Constant(
+          _count, MetaPhysicL::raw_value(_test_lambda[_i][_qp] * _phi[_j][_qp]));
 
     case Moose::PrimaryLower:
-      return RealEigenVector::Constant(_count, _phi_lambda[_j][_qp] * _test[_i][_qp]);
+      return RealEigenVector::Constant(
+          _count, MetaPhysicL::raw_value(_phi_lambda[_j][_qp] * _test[_i][_qp]));
 
     default:
       break;
@@ -89,7 +92,8 @@ ArrayHFEMDirichletBC::computeLowerDQpOffDiagJacobian(Moose::ConstraintJacobianTy
 {
   if (_uhat_var && jvar.number() == _uhat_var->number() && type == Moose::LowerLower)
   {
-    RealEigenVector v = RealEigenVector::Constant(_count, -_test_lambda[_i][_qp] * _phi[_j][_qp]);
+    RealEigenVector v = RealEigenVector::Constant(
+        _count, MetaPhysicL::raw_value(-_test_lambda[_i][_qp] * _phi[_j][_qp]));
     RealEigenMatrix t = RealEigenMatrix::Zero(_var.count(), _var.count());
     t.diagonal() = v;
     return t;

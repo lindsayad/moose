@@ -19,6 +19,7 @@
 #include "ADSymmetricRankTwoTensorForward.h"
 #include "ADSymmetricRankFourTensorForward.h"
 
+#include "libmesh/fe_transformation_base.h"
 #include "libmesh/libmesh.h"
 #include "libmesh/id_types.h"
 #include "libmesh/stored_range.h"
@@ -140,16 +141,21 @@ namespace libMesh
 template <typename>
 class VectorValue;
 typedef VectorValue<Real> RealVectorValue;
+typedef VectorValue<GeomReal> GeomRealVectorValue;
 typedef Eigen::Matrix<Real, Moose::dim, 1> RealDIMValue;
+typedef Eigen::Matrix<GeomReal, Moose::dim, 1> GeomRealDIMValue;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, 1> RealEigenVector;
+typedef Eigen::Matrix<GeomReal, Eigen::Dynamic, 1> GeomRealEigenVector;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, Moose::dim> RealVectorArrayValue;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, Moose::dim * Moose::dim> RealTensorArrayValue;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> RealEigenMatrix;
+typedef Eigen::Matrix<GeomReal, Eigen::Dynamic, Eigen::Dynamic> GeomRealEigenMatrix;
 template <typename>
 class TypeVector;
 template <typename>
 class TensorValue;
 typedef TensorValue<Real> RealTensorValue;
+typedef TensorValue<GeomReal> GeomRealTensorValue;
 template <typename>
 class TypeTensor;
 template <unsigned int, typename>
@@ -159,6 +165,12 @@ template <typename>
 class DenseMatrix;
 template <typename>
 class DenseVector;
+
+template <>
+struct MakeOutput<RealEigenVector>
+{
+  typedef GeomRealEigenVector type;
+};
 
 namespace TensorTools
 {
@@ -179,6 +191,24 @@ struct DecrementRank<Eigen::Matrix<Real, Eigen::Dynamic, Moose::dim>>
 {
   typedef Eigen::Matrix<Real, Eigen::Dynamic, 1> type;
 };
+
+template <>
+struct IncrementRank<Eigen::Matrix<GeomReal, Eigen::Dynamic, 1>>
+{
+  typedef Eigen::Matrix<GeomReal, Eigen::Dynamic, Moose::dim> type;
+};
+
+template <>
+struct IncrementRank<Eigen::Matrix<GeomReal, Eigen::Dynamic, Moose::dim>>
+{
+  typedef Eigen::Matrix<GeomReal, Eigen::Dynamic, Moose::dim * Moose::dim> type;
+};
+
+template <>
+struct DecrementRank<Eigen::Matrix<GeomReal, Eigen::Dynamic, Moose::dim>>
+{
+  typedef Eigen::Matrix<GeomReal, Eigen::Dynamic, 1> type;
+};
 }
 }
 
@@ -189,6 +219,38 @@ struct ReplaceAlgebraicType<libMesh::RealEigenVector, U>
 {
   typedef U type;
 };
+
+template <>
+struct RawType<libMesh::GeomRealEigenVector>
+{
+  typedef libMesh::RealEigenVector value_type;
+
+  static value_type value(const libMesh::GeomRealEigenVector & in)
+  {
+    value_type ret(in.size());
+    for (const auto i : index_range(in))
+      ret(i) = raw_value(in(i));
+
+    return ret;
+  }
+};
+
+template <>
+struct RawType<Eigen::Matrix<GeomReal, Eigen::Dynamic, Moose::dim>>
+{
+  typedef Eigen::Matrix<Real, Eigen::Dynamic, Moose::dim> value_type;
+
+  static value_type value(const Eigen::Matrix<GeomReal, Eigen::Dynamic, Moose::dim> & in)
+  {
+    value_type ret(in.rows(), in.cols());
+    for (const auto i : make_range(in.rows()))
+      for (const auto j : make_range(in.cols()))
+        ret(i, j) = raw_value(in(i, j));
+
+    return ret;
+  }
+};
+
 }
 
 /**
@@ -241,6 +303,11 @@ template <typename OutputType>
 struct ShapeType
 {
   typedef OutputType type;
+};
+template <>
+struct ShapeType<Eigen::Matrix<GeomReal, Eigen::Dynamic, 1>>
+{
+  typedef GeomReal type;
 };
 template <>
 struct ShapeType<Eigen::Matrix<Real, Eigen::Dynamic, 1>>
@@ -297,47 +364,47 @@ struct OutputTools
 };
 
 // types for standard variable
-typedef typename OutputTools<Real>::VariableValue VariableValue;
-typedef typename OutputTools<Real>::VariableGradient VariableGradient;
-typedef typename OutputTools<Real>::VariableSecond VariableSecond;
-typedef typename OutputTools<Real>::VariableCurl VariableCurl;
-typedef typename OutputTools<Real>::VariablePhiValue VariablePhiValue;
-typedef typename OutputTools<Real>::VariablePhiGradient VariablePhiGradient;
-typedef typename OutputTools<Real>::VariablePhiSecond VariablePhiSecond;
-typedef typename OutputTools<Real>::VariablePhiCurl VariablePhiCurl;
-typedef typename OutputTools<Real>::VariableTestValue VariableTestValue;
-typedef typename OutputTools<Real>::VariableTestGradient VariableTestGradient;
-typedef typename OutputTools<Real>::VariableTestSecond VariableTestSecond;
-typedef typename OutputTools<Real>::VariableTestCurl VariableTestCurl;
+typedef typename OutputTools<GeomReal>::VariableValue VariableValue;
+typedef typename OutputTools<GeomReal>::VariableGradient VariableGradient;
+typedef typename OutputTools<GeomReal>::VariableSecond VariableSecond;
+typedef typename OutputTools<GeomReal>::VariableCurl VariableCurl;
+typedef typename OutputTools<GeomReal>::VariablePhiValue VariablePhiValue;
+typedef typename OutputTools<GeomReal>::VariablePhiGradient VariablePhiGradient;
+typedef typename OutputTools<GeomReal>::VariablePhiSecond VariablePhiSecond;
+typedef typename OutputTools<GeomReal>::VariablePhiCurl VariablePhiCurl;
+typedef typename OutputTools<GeomReal>::VariableTestValue VariableTestValue;
+typedef typename OutputTools<GeomReal>::VariableTestGradient VariableTestGradient;
+typedef typename OutputTools<GeomReal>::VariableTestSecond VariableTestSecond;
+typedef typename OutputTools<GeomReal>::VariableTestCurl VariableTestCurl;
 
 // types for vector variable
-typedef typename OutputTools<RealVectorValue>::VariableValue VectorVariableValue;
-typedef typename OutputTools<RealVectorValue>::VariableGradient VectorVariableGradient;
-typedef typename OutputTools<RealVectorValue>::VariableSecond VectorVariableSecond;
-typedef typename OutputTools<RealVectorValue>::VariableCurl VectorVariableCurl;
-typedef typename OutputTools<RealVectorValue>::VariablePhiValue VectorVariablePhiValue;
-typedef typename OutputTools<RealVectorValue>::VariablePhiGradient VectorVariablePhiGradient;
-typedef typename OutputTools<RealVectorValue>::VariablePhiSecond VectorVariablePhiSecond;
-typedef typename OutputTools<RealVectorValue>::VariablePhiCurl VectorVariablePhiCurl;
-typedef typename OutputTools<RealVectorValue>::VariableTestValue VectorVariableTestValue;
-typedef typename OutputTools<RealVectorValue>::VariableTestGradient VectorVariableTestGradient;
-typedef typename OutputTools<RealVectorValue>::VariableTestSecond VectorVariableTestSecond;
-typedef typename OutputTools<RealVectorValue>::VariableTestCurl VectorVariableTestCurl;
+typedef typename OutputTools<GeomRealVectorValue>::VariableValue VectorVariableValue;
+typedef typename OutputTools<GeomRealVectorValue>::VariableGradient VectorVariableGradient;
+typedef typename OutputTools<GeomRealVectorValue>::VariableSecond VectorVariableSecond;
+typedef typename OutputTools<GeomRealVectorValue>::VariableCurl VectorVariableCurl;
+typedef typename OutputTools<GeomRealVectorValue>::VariablePhiValue VectorVariablePhiValue;
+typedef typename OutputTools<GeomRealVectorValue>::VariablePhiGradient VectorVariablePhiGradient;
+typedef typename OutputTools<GeomRealVectorValue>::VariablePhiSecond VectorVariablePhiSecond;
+typedef typename OutputTools<GeomRealVectorValue>::VariablePhiCurl VectorVariablePhiCurl;
+typedef typename OutputTools<GeomRealVectorValue>::VariableTestValue VectorVariableTestValue;
+typedef typename OutputTools<GeomRealVectorValue>::VariableTestGradient VectorVariableTestGradient;
+typedef typename OutputTools<GeomRealVectorValue>::VariableTestSecond VectorVariableTestSecond;
+typedef typename OutputTools<GeomRealVectorValue>::VariableTestCurl VectorVariableTestCurl;
 
 // types for array variable
-typedef typename OutputTools<RealEigenVector>::VariableValue ArrayVariableValue;
-typedef typename OutputTools<RealEigenVector>::VariableGradient ArrayVariableGradient;
-typedef typename OutputTools<RealEigenVector>::VariableSecond ArrayVariableSecond;
-typedef typename OutputTools<RealEigenVector>::VariableCurl ArrayVariableCurl;
-typedef typename OutputTools<RealEigenVector>::VariablePhiValue ArrayVariablePhiValue;
-typedef typename OutputTools<RealEigenVector>::VariablePhiGradient ArrayVariablePhiGradient;
-typedef std::vector<std::vector<Eigen::Map<RealDIMValue>>> MappedArrayVariablePhiGradient;
-typedef typename OutputTools<RealEigenVector>::VariablePhiSecond ArrayVariablePhiSecond;
-typedef typename OutputTools<RealEigenVector>::VariablePhiCurl ArrayVariablePhiCurl;
-typedef typename OutputTools<RealEigenVector>::VariableTestValue ArrayVariableTestValue;
-typedef typename OutputTools<RealEigenVector>::VariableTestGradient ArrayVariableTestGradient;
-typedef typename OutputTools<RealEigenVector>::VariableTestSecond ArrayVariableTestSecond;
-typedef typename OutputTools<RealEigenVector>::VariableTestCurl ArrayVariableTestCurl;
+typedef typename OutputTools<GeomRealEigenVector>::VariableValue ArrayVariableValue;
+typedef typename OutputTools<GeomRealEigenVector>::VariableGradient ArrayVariableGradient;
+typedef typename OutputTools<GeomRealEigenVector>::VariableSecond ArrayVariableSecond;
+typedef typename OutputTools<GeomRealEigenVector>::VariableCurl ArrayVariableCurl;
+typedef typename OutputTools<GeomRealEigenVector>::VariablePhiValue ArrayVariablePhiValue;
+typedef typename OutputTools<GeomRealEigenVector>::VariablePhiGradient ArrayVariablePhiGradient;
+typedef std::vector<std::vector<Eigen::Map<GeomRealDIMValue>>> MappedArrayVariablePhiGradient;
+typedef typename OutputTools<GeomRealEigenVector>::VariablePhiSecond ArrayVariablePhiSecond;
+typedef typename OutputTools<GeomRealEigenVector>::VariablePhiCurl ArrayVariablePhiCurl;
+typedef typename OutputTools<GeomRealEigenVector>::VariableTestValue ArrayVariableTestValue;
+typedef typename OutputTools<GeomRealEigenVector>::VariableTestGradient ArrayVariableTestGradient;
+typedef typename OutputTools<GeomRealEigenVector>::VariableTestSecond ArrayVariableTestSecond;
+typedef typename OutputTools<GeomRealEigenVector>::VariableTestCurl ArrayVariableTestCurl;
 
 /**
  * AD typedefs
@@ -468,14 +535,11 @@ using ADTemplateVariablePhiValue = typename OutputTools<T>::VariablePhiValue;
 // We need to use the AD version for test gradients and seconds because these *do* depend on the
 // mesh displacements
 template <typename T>
-using ADTemplateVariableTestGradient =
-    typename OutputTools<typename Moose::ADType<T>::type>::VariableTestGradient;
+using ADTemplateVariableTestGradient = typename OutputTools<T>::VariableTestGradient;
 template <typename T>
-using ADTemplateVariableTestSecond =
-    typename OutputTools<typename Moose::ADType<T>::type>::VariableTestSecond;
+using ADTemplateVariableTestSecond = typename OutputTools<T>::VariableTestSecond;
 template <typename T>
-using ADTemplateVariablePhiGradient =
-    typename OutputTools<typename Moose::ADType<T>::type>::VariablePhiGradient;
+using ADTemplateVariablePhiGradient = typename OutputTools<T>::VariablePhiGradient;
 using ADVariablePhiGradient = ADTemplateVariablePhiGradient<Real>;
 
 // Templated typed to support is_ad templated classes

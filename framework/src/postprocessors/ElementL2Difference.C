@@ -37,6 +37,6 @@ ElementL2Difference::getValue()
 Real
 ElementL2Difference::computeQpIntegral()
 {
-  Real diff = _u[_qp] - _other_var[_qp];
+  Real diff = MetaPhysicL::raw_value(_u[_qp] - _other_var[_qp]);
   return diff * diff;
 }

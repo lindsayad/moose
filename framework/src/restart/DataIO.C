@@ -268,7 +268,7 @@ dataStore(std::ostream & stream, Point & p, void * context)
 {
   for (const auto i : make_range(Moose::dim))
   {
-    Real r = p(i);
+    auto r = p(i);
     dataStore(stream, r, context);
   }
 }

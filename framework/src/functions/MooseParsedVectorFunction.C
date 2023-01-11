@@ -39,19 +39,19 @@ MooseParsedVectorFunction::MooseParsedVectorFunction(const InputParameters & par
 {
 }
 
-RealVectorValue
+GeomRealVectorValue
 MooseParsedVectorFunction::vectorValue(Real t, const Point & p) const
 {
-  return _function_ptr->evaluate<RealVectorValue>(t, p);
+  return _function_ptr->evaluate<GeomRealVectorValue>(t, p);
 }
 
-RealVectorValue
+GeomRealVectorValue
 MooseParsedVectorFunction::vectorCurl(Real t, const Point & p) const
 {
-  return _curl_function_ptr->evaluate<RealVectorValue>(t, p);
+  return _curl_function_ptr->evaluate<GeomRealVectorValue>(t, p);
 }
 
-RealGradient
+GeomRealGradient
 MooseParsedVectorFunction::gradient(Real /*t*/, const Point & /*p*/) const
 {
   mooseError("The gradient method is not defined in MooseParsedVectorFunction");

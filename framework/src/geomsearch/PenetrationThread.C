@@ -159,7 +159,7 @@ PenetrationThread::operator()(const NodeIdRange & range)
       }
       else
       {
-        Real old_tangential_distance(info->_tangential_distance);
+        auto old_tangential_distance = info->_tangential_distance;
         bool contact_point_on_side(false);
 
         Moose::findContactPoint(*info,
@@ -314,7 +314,7 @@ PenetrationThread::operator()(const NodeIdRange & range)
           }
           // Find the set of ridges closest to us.
           unsigned int closest_ridge_set_index(0);
-          Real closest_distance(ridgeSetDataVec[0]._distance);
+          GeomReal closest_distance(ridgeSetDataVec[0]._distance);
           Point closest_point(ridgeSetDataVec[0]._closest_coor);
           for (unsigned int i = 1; i < ridgeSetDataVec.size(); ++i)
           {
@@ -352,12 +352,12 @@ PenetrationThread::operator()(const NodeIdRange & range)
             if (!_do_normal_smoothing)
             {
               Point normal(closest_point - node);
-              const Real len(normal.norm());
+              const auto len = normal.norm();
               if (len > 0)
               {
                 normal /= len;
               }
-              const Real dot(normal * p_info[face_index]->_normal);
+              const auto dot = normal * p_info[face_index]->_normal;
               if (dot < 0)
               {
                 normal *= -1;
@@ -805,8 +805,8 @@ PenetrationThread::restrictPointToSpecifiedEdgeOfFace(Point & p,
                                                       const std::vector<const Node *> & edge_nodes)
 {
   const ElemType t = side->type();
-  Real & xi = p(0);
-  Real & eta = p(1);
+  auto & xi = p(0);
+  auto & eta = p(1);
   closest_node = NULL;
 
   std::vector<unsigned int> local_node_indices;
@@ -873,7 +873,7 @@ PenetrationThread::restrictPointToSpecifiedEdgeOfFace(Point & p,
       {
         if ((xi + eta) > 1.0)
         {
-          Real delta = (xi + eta - 1.0) / 2.0;
+          auto delta = (xi + eta - 1.0) / 2.0;
           xi -= delta;
           eta -= delta;
           off_of_this_edge = true;
@@ -975,8 +975,8 @@ bool
 PenetrationThread::restrictPointToFace(Point & p, const Node *& closest_node, const Elem * side)
 {
   const ElemType t(side->type());
-  Real & xi = p(0);
-  Real & eta = p(1);
+  auto & xi = p(0);
+  auto & eta = p(1);
   closest_node = NULL;
 
   bool off_of_this_face(false);
@@ -1024,7 +1024,7 @@ PenetrationThread::restrictPointToFace(Point & p, const Node *& closest_node, co
       }
       else if ((xi + eta) > 1.0)
       {
-        Real delta = (xi + eta - 1.0) / 2.0;
+        auto delta = (xi + eta - 1.0) / 2.0;
         xi -= delta;
         eta -= delta;
         off_of_this_face = true;
@@ -1162,8 +1162,8 @@ PenetrationThread::isFaceReasonableCandidate(const Elem * primary_elem,
 
   const std::vector<Point> & phys_point = fe->get_xyz();
 
-  const std::vector<RealGradient> & dxyz_dxi = fe->get_dxyzdxi();
-  const std::vector<RealGradient> & dxyz_deta = fe->get_dxyzdeta();
+  const auto & dxyz_dxi = fe->get_dxyzdxi();
+  const auto & dxyz_deta = fe->get_dxyzdeta();
 
   Point ref_point;
 
@@ -1171,12 +1171,12 @@ PenetrationThread::isFaceReasonableCandidate(const Elem * primary_elem,
 
   fe->reinit(side, &points);
 
-  RealGradient d = *secondary_point - phys_point[0];
+  auto d = *secondary_point - phys_point[0];
 
   const Real twosqrt2 = 2.8284; // way more precision than we actually need here
-  Real max_face_length = side->hmax() + twosqrt2 * tangential_tolerance;
+  auto max_face_length = side->hmax() + twosqrt2 * tangential_tolerance;
 
-  RealVectorValue normal;
+  GeomRealVectorValue normal;
   if (dim - 1 == 2)
   {
     normal = dxyz_dxi[0].cross(dxyz_deta[0]);
@@ -1184,10 +1184,10 @@ PenetrationThread::isFaceReasonableCandidate(const Elem * primary_elem,
   else if (dim - 1 == 1)
   {
     const Node * const * elem_nodes = primary_elem->get_nodes();
-    const Point in_plane_vector1 = *elem_nodes[1] - *elem_nodes[0];
-    const Point in_plane_vector2 = *elem_nodes[2] - *elem_nodes[0];
+    const auto in_plane_vector1 = *elem_nodes[1] - *elem_nodes[0];
+    const auto in_plane_vector2 = *elem_nodes[2] - *elem_nodes[0];
 
-    Point out_of_plane_normal = in_plane_vector1.cross(in_plane_vector2);
+    auto out_of_plane_normal = in_plane_vector1.cross(in_plane_vector2);
     out_of_plane_normal /= out_of_plane_normal.norm();
 
     normal = dxyz_dxi[0].cross(out_of_plane_normal);
@@ -1198,16 +1198,16 @@ PenetrationThread::isFaceReasonableCandidate(const Elem * primary_elem,
   }
   normal /= normal.norm();
 
-  const Real dot(d * normal);
+  const auto dot = d * normal;
 
-  const RealGradient normcomp = dot * normal;
-  const RealGradient tangcomp = d - normcomp;
+  const auto normcomp = dot * normal;
+  const auto tangcomp = d - normcomp;
 
-  const Real tangdist = tangcomp.norm();
+  const auto tangdist = tangcomp.norm();
 
   // Increase the size of the zone that we consider if the vector from the face
   // to the node has a larger normal component
-  const Real faceExpansionFactor = 2.0 * (1.0 + normcomp.norm() / d.norm());
+  const auto faceExpansionFactor = 2.0 * (1.0 + normcomp.norm() / d.norm());
 
   bool isReasonableCandidate = true;
   if (tangdist > faceExpansionFactor * max_face_length)
@@ -1245,7 +1245,7 @@ PenetrationThread::smoothNormal(PenetrationInfo * info, std::vector<PenetrationI
     {
       // If we are within the smoothing distance of any edges or corners, find the
       // corner nodes for those edges/corners, and weights from distance to edge/corner
-      std::vector<Real> edge_face_weights;
+      std::vector<GeomReal> edge_face_weights;
       std::vector<PenetrationInfo *> edge_face_info;
 
       getSmoothingFacesAndWeights(info, edge_face_info, edge_face_weights, p_info);
@@ -1256,8 +1256,8 @@ PenetrationThread::smoothNormal(PenetrationInfo * info, std::vector<PenetrationI
       if (edge_face_info.size() > 0)
       {
         // Smooth the normal using the weighting functions for all participating faces.
-        RealVectorValue new_normal;
-        Real this_face_weight = 1.0;
+        GeomRealVectorValue new_normal;
+        GeomReal this_face_weight = 1.0;
 
         for (unsigned int efwi = 0; efwi < edge_face_weights.size(); ++efwi)
         {
@@ -1271,7 +1271,7 @@ PenetrationThread::smoothNormal(PenetrationInfo * info, std::vector<PenetrationI
                     "Sum of weights of other faces shouldn't exceed 0.75");
         new_normal += info->_normal * this_face_weight;
 
-        const Real len = new_normal.norm();
+        const GeomReal len = new_normal.norm();
         if (len > 0)
           new_normal /= len;
 
@@ -1285,7 +1285,7 @@ PenetrationThread::smoothNormal(PenetrationInfo * info, std::vector<PenetrationI
       info->_normal(0) = _nodal_normal_x->getValue(info->_side, info->_side_phi);
       info->_normal(1) = _nodal_normal_y->getValue(info->_side, info->_side_phi);
       info->_normal(2) = _nodal_normal_z->getValue(info->_side, info->_side_phi);
-      const Real len(info->_normal.norm());
+      const auto len = info->_normal.norm();
       if (len > 0)
         info->_normal /= len;
     }
@@ -1295,7 +1295,7 @@ PenetrationThread::smoothNormal(PenetrationInfo * info, std::vector<PenetrationI
 void
 PenetrationThread::getSmoothingFacesAndWeights(PenetrationInfo * info,
                                                std::vector<PenetrationInfo *> & edge_face_info,
-                                               std::vector<Real> & edge_face_weights,
+                                               std::vector<GeomReal> & edge_face_weights,
                                                std::vector<PenetrationInfo *> & p_info)
 {
   const Elem * side = info->_side;
@@ -1368,11 +1368,11 @@ PenetrationThread::getSmoothingFacesAndWeights(PenetrationInfo * info,
 
     if (num_corner_neighbors > 0)
     {
-      Real fw0 = edge_face_weights[0];
-      Real fw1 = edge_face_weights[1];
+      auto fw0 = edge_face_weights[0];
+      auto fw1 = edge_face_weights[1];
 
       // Corner weight is product of edge weights.  Spread out over multiple neighbors.
-      Real fw_corner = (fw0 * fw1) / static_cast<Real>(num_corner_neighbors);
+      auto fw_corner = (fw0 * fw1) / static_cast<Real>(num_corner_neighbors);
 
       // Adjust original edge weights
       edge_face_weights[0] *= (1.0 - fw1);
@@ -1392,13 +1392,13 @@ PenetrationThread::getSmoothingEdgeNodesAndWeights(
     const Point & p,
     const Elem * side,
     std::vector<std::vector<const Node *>> & edge_nodes,
-    std::vector<Real> & edge_face_weights)
+    std::vector<GeomReal> & edge_face_weights)
 {
   const ElemType t(side->type());
-  const Real & xi = p(0);
-  const Real & eta = p(1);
+  const auto & xi = p(0);
+  const auto & eta = p(1);
 
-  Real smooth_limit = 1.0 - _normal_smoothing_distance;
+  auto smooth_limit = 1.0 - _normal_smoothing_distance;
 
   switch (t)
   {
@@ -1411,7 +1411,7 @@ PenetrationThread::getSmoothingEdgeNodesAndWeights(
         std::vector<const Node *> en;
         en.push_back(side->node_ptr(0));
         edge_nodes.push_back(en);
-        Real fw = 0.5 - (1.0 + xi) / (2.0 * _normal_smoothing_distance);
+        auto fw = 0.5 - (1.0 + xi) / (2.0 * _normal_smoothing_distance);
         if (fw > 0.5)
           fw = 0.5;
         edge_face_weights.push_back(fw);
@@ -1421,7 +1421,7 @@ PenetrationThread::getSmoothingEdgeNodesAndWeights(
         std::vector<const Node *> en;
         en.push_back(side->node_ptr(1));
         edge_nodes.push_back(en);
-        Real fw = 0.5 - (1.0 - xi) / (2.0 * _normal_smoothing_distance);
+        auto fw = 0.5 - (1.0 - xi) / (2.0 * _normal_smoothing_distance);
         if (fw > 0.5)
           fw = 0.5;
         edge_face_weights.push_back(fw);
@@ -1438,7 +1438,7 @@ PenetrationThread::getSmoothingEdgeNodesAndWeights(
         en.push_back(side->node_ptr(0));
         en.push_back(side->node_ptr(1));
         edge_nodes.push_back(en);
-        Real fw = 0.5 - (1.0 + eta) / (2.0 * _normal_smoothing_distance);
+        auto fw = 0.5 - (1.0 + eta) / (2.0 * _normal_smoothing_distance);
         if (fw > 0.5)
           fw = 0.5;
         edge_face_weights.push_back(fw);
@@ -1449,7 +1449,7 @@ PenetrationThread::getSmoothingEdgeNodesAndWeights(
         en.push_back(side->node_ptr(1));
         en.push_back(side->node_ptr(2));
         edge_nodes.push_back(en);
-        Real fw = 0.5 - (1.0 - xi - eta) / (2.0 * _normal_smoothing_distance);
+        auto fw = 0.5 - (1.0 - xi - eta) / (2.0 * _normal_smoothing_distance);
         if (fw > 0.5)
           fw = 0.5;
         edge_face_weights.push_back(fw);
@@ -1460,7 +1460,7 @@ PenetrationThread::getSmoothingEdgeNodesAndWeights(
         en.push_back(side->node_ptr(2));
         en.push_back(side->node_ptr(0));
         edge_nodes.push_back(en);
-        Real fw = 0.5 - (1.0 + xi) / (2.0 * _normal_smoothing_distance);
+        auto fw = 0.5 - (1.0 + xi) / (2.0 * _normal_smoothing_distance);
         if (fw > 0.5)
           fw = 0.5;
         edge_face_weights.push_back(fw);
@@ -1478,7 +1478,7 @@ PenetrationThread::getSmoothingEdgeNodesAndWeights(
         en.push_back(side->node_ptr(0));
         en.push_back(side->node_ptr(1));
         edge_nodes.push_back(en);
-        Real fw = 0.5 - (1.0 + eta) / (2.0 * _normal_smoothing_distance);
+        auto fw = 0.5 - (1.0 + eta) / (2.0 * _normal_smoothing_distance);
         if (fw > 0.5)
           fw = 0.5;
         edge_face_weights.push_back(fw);
@@ -1489,7 +1489,7 @@ PenetrationThread::getSmoothingEdgeNodesAndWeights(
         en.push_back(side->node_ptr(1));
         en.push_back(side->node_ptr(2));
         edge_nodes.push_back(en);
-        Real fw = 0.5 - (1.0 - xi) / (2.0 * _normal_smoothing_distance);
+        auto fw = 0.5 - (1.0 - xi) / (2.0 * _normal_smoothing_distance);
         if (fw > 0.5)
           fw = 0.5;
         edge_face_weights.push_back(fw);
@@ -1500,7 +1500,7 @@ PenetrationThread::getSmoothingEdgeNodesAndWeights(
         en.push_back(side->node_ptr(2));
         en.push_back(side->node_ptr(3));
         edge_nodes.push_back(en);
-        Real fw = 0.5 - (1.0 - eta) / (2.0 * _normal_smoothing_distance);
+        auto fw = 0.5 - (1.0 - eta) / (2.0 * _normal_smoothing_distance);
         if (fw > 0.5)
           fw = 0.5;
         edge_face_weights.push_back(fw);
@@ -1511,7 +1511,7 @@ PenetrationThread::getSmoothingEdgeNodesAndWeights(
         en.push_back(side->node_ptr(3));
         en.push_back(side->node_ptr(0));
         edge_nodes.push_back(en);
-        Real fw = 0.5 - (1.0 + xi) / (2.0 * _normal_smoothing_distance);
+        auto fw = 0.5 - (1.0 + xi) / (2.0 * _normal_smoothing_distance);
         if (fw > 0.5)
           fw = 0.5;
         edge_face_weights.push_back(fw);
@@ -1712,16 +1712,16 @@ PenetrationThread::createInfoForElem(std::vector<PenetrationInfo *> & thisElemIn
     Point contact_phys;
     Point contact_ref;
     Point contact_on_face_ref;
-    Real distance = 0.;
-    Real tangential_distance = 0.;
-    RealGradient normal;
+    GeomReal distance = 0.;
+    GeomReal tangential_distance = 0.;
+    GeomRealGradient normal;
     bool contact_point_on_side;
     std::vector<const Node *> off_edge_nodes;
-    std::vector<std::vector<Real>> side_phi;
-    std::vector<std::vector<RealGradient>> side_grad_phi;
-    std::vector<RealGradient> dxyzdxi;
-    std::vector<RealGradient> dxyzdeta;
-    std::vector<RealGradient> d2xyzdxideta;
+    std::vector<std::vector<GeomReal>> side_phi;
+    std::vector<std::vector<GeomRealGradient>> side_grad_phi;
+    std::vector<GeomRealGradient> dxyzdxi;
+    std::vector<GeomRealGradient> dxyzdeta;
+    std::vector<GeomRealGradient> d2xyzdxideta;
 
     PenetrationInfo * pen_info = new PenetrationInfo(secondary_node,
                                                      elem,

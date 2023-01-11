@@ -37,10 +37,10 @@ LinearCombinationFunction::LinearCombinationFunction(const InputParameters & par
   }
 }
 
-Real
+GeomReal
 LinearCombinationFunction::value(Real t, const Point & p) const
 {
-  Real val = 0;
+  GeomReal val = 0;
   for (const auto & fw : _fw)
     val += fw.first->value(t, p) * fw.second;
   return val;
@@ -55,19 +55,19 @@ LinearCombinationFunction::value(const ADReal & t, const ADPoint & p) const
   return val;
 }
 
-RealGradient
+GeomRealGradient
 LinearCombinationFunction::gradient(Real t, const Point & p) const
 {
-  RealGradient g;
+  GeomRealGradient g;
   for (const auto & fw : _fw)
     g += fw.first->gradient(t, p) * fw.second;
   return g;
 }
 
-RealVectorValue
+GeomRealVectorValue
 LinearCombinationFunction::vectorValue(Real t, const Point & p) const
 {
-  RealVectorValue v;
+  GeomRealVectorValue v;
   for (const auto & fw : _fw)
     v += fw.first->vectorValue(t, p) * fw.second;
   return v;

@@ -35,7 +35,7 @@ AxisymmetricCenterlineAverageValue::AxisymmetricCenterlineAverageValue(
 Real
 AxisymmetricCenterlineAverageValue::volume()
 {
-  return _current_side_elem->volume();
+  return MetaPhysicL::raw_value(_current_side_elem->volume());
 }
 
 Real

@@ -23,10 +23,10 @@ FillBetweenCurvesGenerator::validParams()
                                              "The input mesh that contains curve 1");
   params.addRequiredParam<MeshGeneratorName>("input_mesh_2",
                                              "The input mesh that contains curve 1");
-  params.addParam<Point>(
-      "mesh_1_shift", Point(0.0, 0.0, 0.0), "Translation vector to be applied to input_mesh_1");
-  params.addParam<Point>(
-      "mesh_2_shift", Point(0.0, 0.0, 0.0), "Translation vector to be applied to input_mesh_2");
+  params.addParam<RawPoint>(
+      "mesh_1_shift", RawPoint(0.0, 0.0, 0.0), "Translation vector to be applied to input_mesh_1");
+  params.addParam<RawPoint>(
+      "mesh_2_shift", RawPoint(0.0, 0.0, 0.0), "Translation vector to be applied to input_mesh_2");
   params.addRequiredRangeCheckedParam<unsigned int>(
       "num_layers", "num_layers>0", "Number of layers of elements created between the boundaries.");
   params.addParam<subdomain_id_type>("block_id", 1, "ID to be assigned to the transition layer.");
@@ -72,8 +72,8 @@ FillBetweenCurvesGenerator::FillBetweenCurvesGenerator(const InputParameters & p
   : MeshGenerator(parameters),
     _input_name_1(getParam<MeshGeneratorName>("input_mesh_1")),
     _input_name_2(getParam<MeshGeneratorName>("input_mesh_2")),
-    _mesh_1_shift(getParam<Point>("mesh_1_shift")),
-    _mesh_2_shift(getParam<Point>("mesh_2_shift")),
+    _mesh_1_shift(getParam<RawPoint>("mesh_1_shift")),
+    _mesh_2_shift(getParam<RawPoint>("mesh_2_shift")),
     _num_layers(getParam<unsigned int>("num_layers")),
     _block_id(getParam<subdomain_id_type>("block_id")),
     _input_boundary_1_id(getParam<boundary_id_type>("input_boundary_1_id")),
@@ -167,10 +167,10 @@ Point
 FillBetweenCurvesGenerator::curveCentroidPoint(const ReplicatedMesh & curve)
 {
   Point pt_tmp = Point(0.0, 0.0, 0.0);
-  Real length_tmp = 0.0;
+  GeomReal length_tmp = 0.0;
   for (const auto elem : curve.element_ptr_range())
   {
-    Real elem_length = elem->hmax();
+    auto elem_length = elem->hmax();
     pt_tmp += (elem->vertex_average()) * elem_length;
     length_tmp += elem_length;
   }

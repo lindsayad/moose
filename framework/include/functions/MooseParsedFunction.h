@@ -41,14 +41,14 @@ public:
    * @param pt The current point (x,y,z)
    * @return The result of evaluating the function
    */
-  virtual Real value(Real t, const Point & pt) const override;
+  virtual GeomReal value(Real t, const Point & pt) const override;
 
   using T::gradient;
   /**
    * Evaluate the gradient of the function. This is computed in libMesh
    * through automatic symbolic differentiation.
    */
-  virtual RealGradient gradient(Real t, const Point & p) const override;
+  virtual GeomRealGradient gradient(Real t, const Point & p) const override;
 
   /**
    * Evaluate the time derivative of the function. This is computed in libMesh
@@ -57,13 +57,13 @@ public:
    * \param p The point in space (x,y,z)
    * \return The time derivative of the function at the specified time and location
    */
-  virtual Real timeDerivative(Real t, const Point & p) const override;
+  virtual GeomReal timeDerivative(Real t, const Point & p) const override;
 
   /**
    * Method invalid for ParsedGradFunction
    * @see ParsedVectorFunction
    */
-  virtual RealVectorValue vectorValue(Real t, const Point & p) const override;
+  virtual GeomRealVectorValue vectorValue(Real t, const Point & p) const override;
 
   /**
    * Creates the parsed function.

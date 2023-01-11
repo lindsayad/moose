@@ -251,7 +251,8 @@ InterfaceKernelTempl<T>::computeElemNeighJacobian(Moose::DGJacobianType type)
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < test_space.size(); _i++)
       for (_j = 0; _j < loc_phi.size(); _j++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpJacobian(type);
+        _local_ke(_i, _j) +=
+            MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp]) * computeQpJacobian(type);
 
   accumulateTaggedLocalMatrix();
 
@@ -327,7 +328,8 @@ InterfaceKernelTempl<T>::computeOffDiagElemNeighJacobian(Moose::DGJacobianType t
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
       for (_i = 0; _i < test_space.size(); _i++)
         for (_j = 0; _j < loc_phi.size(); _j++)
-          _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(type, jvar);
+          _local_ke(_i, _j) += MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp]) *
+                               computeQpOffDiagJacobian(type, jvar);
 
   accumulateTaggedLocalMatrix();
 }

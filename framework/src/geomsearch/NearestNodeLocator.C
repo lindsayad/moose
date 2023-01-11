@@ -223,7 +223,7 @@ NearestNodeLocator::reinit()
   findNodes();
 }
 
-Real
+GeomReal
 NearestNodeLocator::distance(dof_id_type node_id)
 {
   return _nearest_node_info[node_id]._distance;

@@ -41,7 +41,7 @@ AverageNodalVariableValue::initialize()
 void
 AverageNodalVariableValue::execute()
 {
-  _sum += _u[_qp];
+  _sum += MetaPhysicL::raw_value(_u[_qp]);
   _n++;
 }
 

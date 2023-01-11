@@ -37,5 +37,5 @@ ElementIntegralVariablePostprocessor::ElementIntegralVariablePostprocessor(
 Real
 ElementIntegralVariablePostprocessor::computeQpIntegral()
 {
-  return _u[_qp];
+  return MetaPhysicL::raw_value(_u[_qp]);
 }
