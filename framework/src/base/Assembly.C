@@ -4840,6 +4840,16 @@ Assembly::processResidualsAndJacobian(const std::vector<ADReal> & residuals,
     for (const auto j : index_range(column_indices))
       cacheJacobian(row_indices[i], column_indices[j], element_matrix(i, j), matrix_tags);
 }
+#else
+void
+Assembly::processResidualsAndJacobian(const std::vector<ADReal> &,
+                                      const std::vector<dof_id_type> &,
+                                      const std::set<TagID> &,
+                                      const std::set<TagID> &,
+                                      const Real)
+{
+  mooseError("Assembly::processResidualsAndJacobian is only supported for global AD indexing");
+}
 #endif
 
 template void coordTransformFactor<Point, Real>(const SubProblem & s,
