@@ -31,5 +31,5 @@ FunctionDirichletBC::FunctionDirichletBC(const InputParameters & parameters)
 Real
 FunctionDirichletBC::computeQpValue()
 {
-  return _func.value(_t, *_current_node);
+  return MetaPhysicL::raw_value(_func.value(_t, *_current_node));
 }

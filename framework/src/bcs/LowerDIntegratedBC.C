@@ -59,7 +59,7 @@ LowerDIntegratedBC::computeResidual()
   {
     initLowerDQpResidual();
     for (_i = 0; _i < _test_lambda.size(); _i++)
-      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeLowerDQpResidual();
+      _local_re(_i) += MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp] * computeLowerDQpResidual());
   }
 
   accumulateTaggedLocalResidual();
@@ -108,7 +108,8 @@ LowerDIntegratedBC::computeLowerDJacobian(Moose::ConstraintJacobianType type)
     initLowerDQpJacobian(type);
     for (_i = 0; _i < test_space.size(); _i++)
       for (_j = 0; _j < loc_phi.size(); _j++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeLowerDQpJacobian(type);
+        _local_ke(_i, _j) +=
+            MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp] * computeLowerDQpJacobian(type));
   }
 
   accumulateTaggedLocalMatrix();
@@ -167,7 +168,8 @@ LowerDIntegratedBC::computeLowerDOffDiagJacobian(Moose::ConstraintJacobianType t
       initLowerDQpOffDiagJacobian(type, jvar);
       for (_i = 0; _i < test_space.size(); _i++)
         for (_j = 0; _j < loc_phi.size(); _j++)
-          _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeLowerDQpOffDiagJacobian(type, jvar);
+          _local_ke(_i, _j) += MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp] *
+                                                      computeLowerDQpOffDiagJacobian(type, jvar));
     }
   }
   else if (jvar.fieldType() == Moose::VarFieldType::VAR_FIELD_ARRAY)

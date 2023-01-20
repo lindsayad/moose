@@ -37,5 +37,5 @@ FunctionScalarAux::FunctionScalarAux(const InputParameters & parameters)
 Real
 FunctionScalarAux::computeValue()
 {
-  return _functions[_i]->value(_t, _point_zero);
+  return MetaPhysicL::raw_value(_functions[_i]->value(_t, _point_zero));
 }

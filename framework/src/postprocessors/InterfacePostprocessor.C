@@ -36,7 +36,7 @@ void
 InterfacePostprocessor::execute()
 {
   InterfaceUserObject::execute();
-  _interface_primary_area += _current_side_volume;
+  _interface_primary_area += MetaPhysicL::raw_value(_current_side_volume);
 }
 
 void

@@ -137,14 +137,16 @@ protected:
    *
    * Store this as a _reference_ in the constructor.
    */
-  const typename OutputTools<ComputeValueType>::VariableValue & uOld() const;
+  const typename OutputTools<typename MakeOutput<ComputeValueType>::type>::VariableValue &
+  uOld() const;
 
   /**
    * Retrieves the older value of the variable that this AuxKernel operates on.
    *
    * Store this as a _reference_ in the constructor.
    */
-  const typename OutputTools<ComputeValueType>::VariableValue & uOlder() const;
+  const typename OutputTools<typename MakeOutput<ComputeValueType>::type>::VariableValue &
+  uOlder() const;
 
   /**
    * Whether or not to check for repeated element sides on the sideset to which

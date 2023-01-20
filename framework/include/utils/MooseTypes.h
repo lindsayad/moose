@@ -147,6 +147,7 @@ typedef Eigen::Matrix<GeomReal, Moose::dim, 1> GeomRealDIMValue;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, 1> RealEigenVector;
 typedef Eigen::Matrix<GeomReal, Eigen::Dynamic, 1> GeomRealEigenVector;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, Moose::dim> RealVectorArrayValue;
+typedef Eigen::Matrix<GeomReal, Eigen::Dynamic, Moose::dim> GeomRealVectorArrayValue;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, Moose::dim * Moose::dim> RealTensorArrayValue;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> RealEigenMatrix;
 typedef Eigen::Matrix<GeomReal, Eigen::Dynamic, Eigen::Dynamic> GeomRealEigenMatrix;
@@ -251,6 +252,19 @@ struct RawType<Eigen::Matrix<GeomReal, Eigen::Dynamic, Moose::dim>>
   }
 };
 
+template <>
+struct RawType<Eigen::Map<GeomRealDIMValue>>
+{
+  typedef Eigen::Matrix<Real, Moose::dim, 1> value_type;
+  static value_type value(const Eigen::Map<GeomRealDIMValue> & in)
+  {
+    value_type ret;
+    for (const auto i : make_range(Moose::dim))
+      ret(i) = raw_value(in.coeff(i));
+
+    return ret;
+  }
+};
 }
 
 /**
@@ -489,6 +503,11 @@ template <>
 struct ADType<VariableSecond>
 {
   typedef ADVariableSecond type;
+};
+template <>
+struct ADType<GeomReal>
+{
+  typedef ADReal type;
 };
 
 /**

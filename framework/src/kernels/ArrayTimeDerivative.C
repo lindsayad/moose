@@ -49,16 +49,18 @@ void
 ArrayTimeDerivative::computeQpResidual(RealEigenVector & residual)
 {
   if (!_has_coefficient)
-    residual = _u_dot[_qp] * _test[_i][_qp];
+    residual = MetaPhysicL::raw_value(_u_dot[_qp]) * MetaPhysicL::raw_value(_test[_i][_qp]);
   else if (_coeff)
-    residual = (*_coeff)[_qp] * _u_dot[_qp] * _test[_i][_qp];
+    residual = (*_coeff)[_qp] * MetaPhysicL::raw_value(_u_dot[_qp]) *
+               MetaPhysicL::raw_value(_test[_i][_qp]);
   else if (_coeff_array)
   {
     mooseAssert((*_coeff_array)[_qp].size() == _var.count(),
                 "time_derivative_coefficient size is inconsistent with the number of components "
                 "in array variable");
     // WARNING: use noalias() syntax with caution. See ArrayDiffusion.C for more details.
-    residual.noalias() = (*_coeff_array)[_qp].asDiagonal() * _u_dot[_qp] * _test[_i][_qp];
+    residual.noalias() = (*_coeff_array)[_qp].asDiagonal() * MetaPhysicL::raw_value(_u_dot[_qp]) *
+                         MetaPhysicL::raw_value(_test[_i][_qp]);
   }
   else
   {
@@ -69,14 +71,16 @@ ArrayTimeDerivative::computeQpResidual(RealEigenVector & residual)
                 "time_derivative_coefficient size is inconsistent with the number of components "
                 "in array variable");
     // WARNING: use noalias() syntax with caution. See ArrayDiffusion.C for more details.
-    residual.noalias() = (*_coeff_2d_array)[_qp] * _u_dot[_qp] * _test[_i][_qp];
+    residual.noalias() = (*_coeff_2d_array)[_qp] * MetaPhysicL::raw_value(_u_dot[_qp]) *
+                         MetaPhysicL::raw_value(_test[_i][_qp]);
   }
 }
 
 RealEigenVector
 ArrayTimeDerivative::computeQpJacobian()
 {
-  Real tmp = _test[_i][_qp] * _phi[_j][_qp] * _du_dot_du[_qp];
+  Real tmp = MetaPhysicL::raw_value(_test[_i][_qp]) * MetaPhysicL::raw_value(_phi[_j][_qp]) *
+             MetaPhysicL::raw_value(_du_dot_du[_qp]);
   if (!_has_coefficient)
     return RealEigenVector::Constant(_var.count(), tmp);
   else if (_coeff)
@@ -91,7 +95,8 @@ RealEigenMatrix
 ArrayTimeDerivative::computeQpOffDiagJacobian(const MooseVariableFEBase & jvar)
 {
   if (jvar.number() == _var.number() && _coeff_2d_array)
-    return _phi[_j][_qp] * _test[_i][_qp] * _du_dot_du[_qp] * (*_coeff_2d_array)[_qp];
+    return MetaPhysicL::raw_value(_phi[_j][_qp] * _test[_i][_qp]) *
+           MetaPhysicL::raw_value(_du_dot_du[_qp]) * (*_coeff_2d_array)[_qp];
   else
     return ArrayKernel::computeQpOffDiagJacobian(jvar);
 }

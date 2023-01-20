@@ -379,7 +379,8 @@ Coupleable::getDefaultNodalValue(const std::string & var_name, unsigned int comp
 
 template <>
 const GeomRealVectorValue &
-Coupleable::getDefaultNodalValue<RealVectorValue>(const std::string & var_name, unsigned int) const
+Coupleable::getDefaultNodalValue<GeomRealVectorValue>(const std::string & var_name,
+                                                      unsigned int) const
 {
   auto && default_variable_value = getDefaultVectorValue(var_name);
   return *default_variable_value->data();
@@ -387,7 +388,8 @@ Coupleable::getDefaultNodalValue<RealVectorValue>(const std::string & var_name, 
 
 template <>
 const GeomRealEigenVector &
-Coupleable::getDefaultNodalValue<RealEigenVector>(const std::string & var_name, unsigned int) const
+Coupleable::getDefaultNodalValue<GeomRealEigenVector>(const std::string & var_name,
+                                                      unsigned int) const
 {
   auto && default_variable_value = getDefaultArrayValue(var_name);
   return *default_variable_value->data();

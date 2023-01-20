@@ -201,9 +201,9 @@ EqualValueBoundaryConstraint::computeQpResidual(Moose::ConstraintType type)
   switch (type)
   {
     case Moose::Secondary:
-      return (_u_secondary[_i] - _u_primary[_j]) * _penalty;
+      return MetaPhysicL::raw_value((_u_secondary[_i] - _u_primary[_j]) * _penalty);
     case Moose::Primary:
-      return (_u_primary[_j] - _u_secondary[_i]) * _penalty;
+      return MetaPhysicL::raw_value((_u_primary[_j] - _u_secondary[_i]) * _penalty);
   }
   return 0.;
 }

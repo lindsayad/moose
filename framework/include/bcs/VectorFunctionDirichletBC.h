@@ -37,5 +37,5 @@ protected:
   const Function & _function_z;
 
   /// The value for this BC
-  RealVectorValue _values;
+  GeomRealVectorValue _values;
 };

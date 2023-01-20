@@ -15,6 +15,7 @@
 #include "libmesh/point.h"
 #include "libmesh/vector_value.h"
 #include "libmesh/elem.h"
+#include "libmesh/fe_transformation_base.h"
 
 // forward declarations
 class FEProblemBase;
@@ -32,7 +33,8 @@ class InitialConditionTempl : public InitialConditionBase
 public:
   typedef typename OutputTools<T>::OutputShape ValueType;
   typedef typename OutputTools<T>::OutputGradient GradientType;
-  typedef typename OutputTools<T>::OutputShapeGradient GradientShapeType;
+  typedef typename OutputTools<typename MakeOutput<T>::type>::OutputShape ShapeType;
+  typedef typename OutputTools<typename MakeOutput<T>::type>::OutputShapeGradient GradientShapeType;
   typedef typename OutputTools<T>::OutputData DataType;
   typedef FEGenericBase<ValueType> FEBaseType;
 
@@ -129,7 +131,7 @@ protected:
   const Elem * const & _current_elem;
 
   /// the volume of the current element
-  const Real & _current_elem_volume;
+  const GeomReal & _current_elem_volume;
 
   /// The current node if the point we are evaluating at also happens to be a node.
   /// Otherwise the pointer will be NULL.
@@ -173,11 +175,11 @@ protected:
   dof_id_type _nc;
 
   /// pointers to shape functions
-  const std::vector<std::vector<ValueType>> * _phi;
+  const std::vector<std::vector<ShapeType>> * _phi;
   /// pointers to shape function gradients
   const std::vector<std::vector<GradientShapeType>> * _dphi;
   /// pointers to the Jacobian * quadrature weights for current element
-  const std::vector<Real> * _JxW;
+  const std::vector<GeomReal> * _JxW;
   /// pointers to the xyz coordinates of the quadrature points for the current element
   const std::vector<Point> * _xyz_values;
 

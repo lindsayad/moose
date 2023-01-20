@@ -39,30 +39,30 @@ protected:
 
   const MooseArray<Point> & _q_point;
   const QBase * const & _qrule;
-  const MooseArray<Real> & _JxW;
-  const MooseArray<Real> & _coord;
+  const MooseArray<GeomReal> & _JxW;
+  const MooseArray<GeomReal> & _coord;
   const MooseArray<Point> & _normals;
 
   /// pointer to the current element object
   const Elem * const & _current_elem;
 
   /// the volume of the current element
-  const Real & _current_elem_volume;
+  const GeomReal & _current_elem_volume;
 
   /// current side of the current element
   const unsigned int & _current_side;
 
   const Elem * const & _current_side_elem;
-  const Real & _current_side_volume;
+  const GeomReal & _current_side_volume;
 
   /// The neighboring element
   const Elem * const & _neighbor_elem;
 
   /// the neighboring element's volume
-  const Real & _current_neighbor_volume;
+  const GeomReal & _current_neighbor_volume;
 
   /// The volume (or length) of the current neighbor
-  const Real & getNeighborElemVolume();
+  const GeomReal & getNeighborElemVolume();
 
   /// Holds the FaceInfos to loop on to consider all active neighbors of an element on a given side
   std::vector<const FaceInfo *> _face_infos;

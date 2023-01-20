@@ -26,10 +26,10 @@ protected:
   ADReal computeQpResidual(Moose::MortarType mortar_type) final;
 
   /// The secondary face lower dimensional element (not the mortar element!) volume
-  const Real & _lower_secondary_volume;
+  const GeomReal & _lower_secondary_volume;
 
   /// The primary face lower dimensional element volume (not the mortar element!)
-  const Real & _lower_primary_volume;
+  const GeomReal & _lower_primary_volume;
 
   /// The stabilization parameter
   const Real _delta;

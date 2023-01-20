@@ -37,14 +37,14 @@ CoupledVarNeumannBC::CoupledVarNeumannBC(const InputParameters & parameters)
 Real
 CoupledVarNeumannBC::computeQpResidual()
 {
-  return -_scale_factor[_qp] * _coef * _test[_i][_qp] * _coupled_var[_qp];
+  return MetaPhysicL::raw_value(-_scale_factor[_qp] * _coef * _test[_i][_qp] * _coupled_var[_qp]);
 }
 
 Real
 CoupledVarNeumannBC::computeQpOffDiagJacobian(const unsigned int jvar)
 {
   if (jvar == _coupled_num)
-    return -_scale_factor[_qp] * _coef * _test[_i][_qp] * _phi[_j][_qp];
+    return MetaPhysicL::raw_value(-_scale_factor[_qp] * _coef * _test[_i][_qp] * _phi[_j][_qp]);
   else
     return 0;
 }

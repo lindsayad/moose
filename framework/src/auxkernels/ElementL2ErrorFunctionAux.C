@@ -31,5 +31,5 @@ ElementL2ErrorFunctionAux::ElementL2ErrorFunctionAux(const InputParameters & par
 Real
 ElementL2ErrorFunctionAux::computeValue()
 {
-  return _func.value(_t, _q_point[_qp]) - _coupled_var[_qp];
+  return MetaPhysicL::raw_value(_func.value(_t, _q_point[_qp]) - _coupled_var[_qp]);
 }

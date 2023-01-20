@@ -42,7 +42,7 @@ ActivateElementsCoupled::isElementActivated()
   Real avg_val = 0.0;
 
   for (unsigned int qp = 0; qp < _qrule->n_points(); ++qp)
-    avg_val += _coupled_var[qp];
+    avg_val += MetaPhysicL::raw_value(_coupled_var[qp]);
   avg_val /= _qrule->n_points();
 
   switch (_activate_type)

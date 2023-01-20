@@ -36,6 +36,6 @@ RealFunctionControl::RealFunctionControl(const InputParameters & parameters)
 void
 RealFunctionControl::execute()
 {
-  Real value = _function.value(_t);
+  Real value = MetaPhysicL::raw_value(_function.value(_t));
   setControllableValue<Real>("parameter", value);
 }

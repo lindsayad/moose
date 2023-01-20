@@ -41,6 +41,6 @@ FunctionArrayAux::computeValue()
   RealEigenVector v(_var.count());
   const Point & p = isNodal() ? *_current_node : _q_point[_qp];
   for (unsigned int i = 0; i < _var.count(); ++i)
-    v(i) = _funcs[i]->value(_t, p);
+    v(i) = MetaPhysicL::raw_value(_funcs[i]->value(_t, p));
   return v;
 }

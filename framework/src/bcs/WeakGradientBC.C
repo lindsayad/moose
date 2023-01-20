@@ -28,11 +28,11 @@ WeakGradientBC::WeakGradientBC(const InputParameters & parameters) : IntegratedB
 Real
 WeakGradientBC::computeQpResidual()
 {
-  return (_grad_u[_qp] * _normals[_qp]) * _test[_i][_qp];
+  return MetaPhysicL::raw_value((_grad_u[_qp] * _normals[_qp]) * _test[_i][_qp]);
 }
 
 Real
 WeakGradientBC::computeQpJacobian()
 {
-  return (_grad_phi[_j][_qp] * _normals[_qp]) * _test[_i][_qp];
+  return MetaPhysicL::raw_value((_grad_phi[_j][_qp] * _normals[_qp]) * _test[_i][_qp]);
 }

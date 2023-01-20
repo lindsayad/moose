@@ -34,5 +34,6 @@ FunctionGradientNeumannBC::FunctionGradientNeumannBC(const InputParameters & par
 Real
 FunctionGradientNeumannBC::computeQpResidual()
 {
-  return -_test[_i][_qp] * _normals[_qp] * _coeff * _exact_solution.gradient(_t, _q_point[_qp]);
+  return MetaPhysicL::raw_value(-_test[_i][_qp] * _normals[_qp] * _coeff *
+                                _exact_solution.gradient(_t, _q_point[_qp]));
 }

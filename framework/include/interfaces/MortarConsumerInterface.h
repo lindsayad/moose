@@ -129,7 +129,7 @@ protected:
   Elem const * const & _lower_secondary_elem;
 
   /// The element Jacobian times weights
-  const std::vector<Real> & _JxW_msm;
+  const std::vector<GeomReal> & _JxW_msm;
 
   /// the normals
   std::vector<Point> _normals;

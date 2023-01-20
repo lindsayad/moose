@@ -120,7 +120,7 @@ PIDTransientControl::execute()
     }
 
     // Compute the delta between the current value of the postprocessor and the desired value
-    Real delta = _current - _target.value(_t);
+    Real delta = _current - MetaPhysicL::raw_value(_target.value(_t));
 
     // If desired, reset integral of the error if the error crosses zero
     if (_reset_integral_windup && delta * _old_delta < 0)

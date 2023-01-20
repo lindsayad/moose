@@ -46,10 +46,10 @@ protected:
   const Elem * const & _current_elem;
 
   /// The current element volume (available during execute())
-  const Real & _current_elem_volume;
+  const GeomReal & _current_elem_volume;
 
   const MooseArray<Point> & _q_point;
   const QBase * const & _qrule;
-  const MooseArray<Real> & _JxW;
-  const MooseArray<Real> & _coord;
+  const MooseArray<GeomReal> & _JxW;
+  const MooseArray<GeomReal> & _coord;
 };

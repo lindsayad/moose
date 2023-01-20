@@ -31,5 +31,5 @@ VectorNeumannBC::VectorNeumannBC(const InputParameters & parameters)
 Real
 VectorNeumannBC::computeQpResidual()
 {
-  return -_test[_i][_qp] * (_value * _normals[_qp]);
+  return MetaPhysicL::raw_value(-_test[_i][_qp] * (_value * _normals[_qp]));
 }

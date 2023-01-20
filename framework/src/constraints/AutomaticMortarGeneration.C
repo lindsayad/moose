@@ -210,6 +210,18 @@ private:
   ///@}
 };
 
+namespace MooseUtils
+{
+VectorValue<DualNumber<GeomReal, GeomReal, true>>
+chainedType(const Point & point)
+{
+  VectorValue<DualNumber<GeomReal, GeomReal, true>> ret{};
+  for (const auto i : make_range(Moose::dim))
+    ret(i).value() = point(i);
+  return ret;
+}
+}
+
 AutomaticMortarGeneration::AutomaticMortarGeneration(
     MooseApp & app,
     MeshBase & mesh_in,
@@ -727,10 +739,10 @@ AutomaticMortarGeneration::buildMortarSegmentMesh()
     {
       // left
       Point left_interior_point(0);
-      Real left_interior_xi = (xi1 + info->xi1_a) / 2;
+      auto left_interior_xi = (xi1 + info->xi1_a) / 2;
 
       // This is eta for the current mortar segment that we're splitting
-      Real current_left_interior_eta =
+      auto current_left_interior_eta =
           (2. * left_interior_xi - info->xi1_a - info->xi1_b) / (info->xi1_b - info->xi1_a);
 
       for (MooseIndex(current_mortar_segment->n_nodes()) n = 0;
@@ -749,9 +761,9 @@ AutomaticMortarGeneration::buildMortarSegmentMesh()
 
       // right
       Point right_interior_point(0);
-      Real right_interior_xi = (xi1 + info->xi1_b) / 2;
+      auto right_interior_xi = (xi1 + info->xi1_b) / 2;
       // This is eta for the current mortar segment that we're splitting
-      Real current_right_interior_eta =
+      auto current_right_interior_eta =
           (2. * right_interior_xi - info->xi1_a - info->xi1_b) / (info->xi1_b - info->xi1_a);
 
       for (MooseIndex(current_mortar_segment->n_nodes()) n = 0;
@@ -1665,7 +1677,7 @@ AutomaticMortarGeneration::computeInactiveLMElems()
   // linearized element does not have the same volume as the warped element
   const Real tol = (dim() == 3) ? 0.1 : TOLERANCE;
 
-  std::unordered_map<const Elem *, Real> active_volume;
+  std::unordered_map<const Elem *, GeomReal> active_volume;
 
   // Compute fraction of elements with corresponding primary elements
   if (!_correct_edge_dropping)
@@ -1960,20 +1972,30 @@ AutomaticMortarGeneration::projectSecondaryNodesSinglePair(
 
           // Now generically solve for xi2
           auto && order = primary_elem_candidate->default_order();
-          DualNumber<GeomReal, GeomReal, true> xi2_dn{0, 1};
+          typedef DualNumber<GeomReal, GeomReal, true> CompoundADType;
+          CompoundADType xi2_dn{0, 1};
           unsigned int current_iterate = 0, max_iterates = 10;
 
           // Newton loop
           do
           {
-            VectorValue<DualNumber<GeomReal, GeomReal, true>> x2(0);
+            VectorValue<CompoundADType> x2(0);
             for (MooseIndex(primary_elem_candidate->n_nodes()) n = 0;
                  n < primary_elem_candidate->n_nodes();
                  ++n)
-              x2 +=
-                  Moose::fe_lagrange_1D_shape(order, n, xi2_dn) * primary_elem_candidate->point(n);
-            const auto u = x2 - (*secondary_node);
-            const auto F = u(0) * nodal_normal(1) - u(1) * nodal_normal(0);
+            {
+              const auto & point = primary_elem_candidate->point(n);
+              VectorValue<CompoundADType> compound_point{};
+              for (const auto i : make_range(Moose::dim))
+                compound_point(i).value() = point(i);
+              x2 += Moose::fe_lagrange_1D_shape(order, n, xi2_dn) * compound_point;
+            }
+            VectorValue<CompoundADType> compound_secondary_node{};
+            for (const auto i : make_range(Moose::dim))
+              compound_secondary_node(i).value() = (*secondary_node)(i);
+            const auto u = x2 - compound_secondary_node;
+            const auto F = u(0) * MooseUtils::chainedType<CompoundADType>(nodal_normal(1)) -
+                           u(1) * MooseUtils::chainedType<CompoundADType>(nodal_normal(0));
 
             if (std::abs(F) < _newton_tolerance)
               break;
@@ -2285,11 +2307,11 @@ AutomaticMortarGeneration::projectPrimaryNodesSinglePair(
                  ++n)
             {
               const auto phi = Moose::fe_lagrange_1D_shape(order, n, xi1_dn);
-              x1 += phi * secondary_elem_candidate->point(n);
-              normals += phi * nodal_normals[n];
+              x1 += phi * MooseUtils::chainedType(secondary_elem_candidate->point(n));
+              normals += phi * MooseUtils::chainedType(nodal_normals[n]);
             }
 
-            const auto u = x1 - (*primary_node);
+            const auto u = x1 - MooseUtils::chainedType((*primary_node));
 
             const auto F = u(0) * normals(1) - u(1) * normals(0);
 

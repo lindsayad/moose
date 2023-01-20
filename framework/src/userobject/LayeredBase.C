@@ -237,8 +237,8 @@ LayeredBase::integralValue(Point p) const
       Real higher_value = _layer_values[higher_layer];
 
       // Linear interpolation
-      return lower_value +
-             (higher_value - lower_value) * (p(_direction) - lower_coor) / layer_length;
+      return lower_value + (higher_value - lower_value) *
+                               (MetaPhysicL::raw_value(p(_direction)) - lower_coor) / layer_length;
     }
     case 2: // average
     {
@@ -413,8 +413,8 @@ LayeredBase::getBounds()
   if (_layer_bounding_blocks.size() == 0)
   {
     BoundingBox bounding_box = MeshTools::create_bounding_box(_layered_base_subproblem.mesh());
-    _direction_min = bounding_box.min()(_direction);
-    _direction_max = bounding_box.max()(_direction);
+    _direction_min = MetaPhysicL::raw_value(bounding_box.min()(_direction));
+    _direction_max = MetaPhysicL::raw_value(bounding_box.max()(_direction));
   }
   else
   {
@@ -433,8 +433,8 @@ LayeredBase::getBounds()
 
       for (auto & node : elem_ptr->node_ref_range())
       {
-        _direction_min = std::min(_direction_min, node(_direction));
-        _direction_max = std::max(_direction_max, node(_direction));
+        _direction_min = std::min(_direction_min, MetaPhysicL::raw_value(node(_direction)));
+        _direction_max = std::max(_direction_max, MetaPhysicL::raw_value(node(_direction)));
       }
     }
 

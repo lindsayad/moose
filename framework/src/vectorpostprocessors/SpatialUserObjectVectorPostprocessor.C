@@ -20,8 +20,8 @@ SpatialUserObjectVectorPostprocessor::validParams()
 
   params.addRequiredParam<UserObjectName>("userobject",
                                           "The userobject whose values are to be reported");
-  params.addParam<std::vector<Point>>("points",
-                                      "Computations will be lumped into values at these points.");
+  params.addParam<std::vector<RawPoint>>(
+      "points", "Computations will be lumped into values at these points.");
   params.addParam<FileName>("points_file",
                             "A filename that should be looked in for points. Each "
                             "set of 3 values in that file will represent a Point.  "
@@ -47,7 +47,7 @@ SpatialUserObjectVectorPostprocessor::fillPoints()
 {
   if (!isParamValid("points") && !isParamValid("points_file"))
   {
-    _points = _uo.spatialPoints();
+    _points = MetaPhysicL::raw_value(_uo.spatialPoints());
   }
   else
   {
@@ -56,7 +56,7 @@ SpatialUserObjectVectorPostprocessor::fillPoints()
 
     if (isParamValid("points"))
     {
-      _points = getParam<std::vector<Point>>("points");
+      _points = getParam<std::vector<RawPoint>>("points");
     }
     else if (isParamValid("points_file"))
     {

@@ -78,7 +78,7 @@ ADInterfaceKernelTempl<T>::computeElemNeighResidual(Moose::DGResidualType type)
   else
     is_elem = false;
 
-  const ADTemplateVariableTestValue<T> & test_space = is_elem ? _test : _test_neighbor;
+  const auto & test_space = is_elem ? _test : _test_neighbor;
 
   if (is_elem)
     prepareVectorTag(_assembly, _var.number());
@@ -123,7 +123,7 @@ ADInterfaceKernelTempl<T>::computeElemNeighJacobian(Moose::DGJacobianType type)
   mooseAssert(type == Moose::ElementElement || type == Moose::NeighborNeighbor,
               "With AD you should need one call per side");
 
-  const ADTemplateVariableTestValue<T> & test_space =
+  const auto & test_space =
       (type == Moose::ElementElement || type == Moose::ElementNeighbor) ? _test : _test_neighbor;
 
   std::vector<ADReal> residuals(test_space.size(), 0);
@@ -162,7 +162,7 @@ ADInterfaceKernelTempl<T>::computeElemNeighJacobian(Moose::DGJacobianType type)
   {
     auto compute_jacobian_type = [&](const Moose::DGJacobianType nested_type)
     {
-      const ADTemplateVariableTestValue<T> & loc_phi =
+      const auto & loc_phi =
           (nested_type == Moose::ElementElement || nested_type == Moose::NeighborElement)
               ? _phi
               : _phi_neighbor;
@@ -232,8 +232,7 @@ ADInterfaceKernelTempl<T>::computeOffDiagElemNeighJacobian(Moose::DGJacobianType
   mooseAssert(type == Moose::ElementElement || type == Moose::NeighborNeighbor,
               "With AD you should need one call per side");
 
-  const ADTemplateVariableTestValue<T> & test_space =
-      type == Moose::ElementElement ? _test : _test_neighbor;
+  const auto & test_space = type == Moose::ElementElement ? _test : _test_neighbor;
 
   unsigned int current_ivar;
 
@@ -272,7 +271,7 @@ ADInterfaceKernelTempl<T>::computeOffDiagElemNeighJacobian(Moose::DGJacobianType
 
       auto compute_jacobian_type = [&](const Moose::DGJacobianType nested_type)
       {
-        const ADTemplateVariableTestValue<T> & loc_phi =
+        const auto & loc_phi =
             (nested_type == Moose::ElementElement || nested_type == Moose::NeighborElement)
                 ? _phi
                 : _phi_neighbor;

@@ -41,15 +41,15 @@ VectorPenaltyDirichletBC::VectorPenaltyDirichletBC(const InputParameters & param
 Real
 VectorPenaltyDirichletBC::computeQpResidual()
 {
-  RealVectorValue u_exact = {_exact_x.value(_t, _q_point[_qp]),
-                             _exact_y.value(_t, _q_point[_qp]),
-                             _exact_z.value(_t, _q_point[_qp])};
+  GeomRealVectorValue u_exact = {_exact_x.value(_t, _q_point[_qp]),
+                                 _exact_y.value(_t, _q_point[_qp]),
+                                 _exact_z.value(_t, _q_point[_qp])};
 
-  return _penalty * _test[_i][_qp] * ((_linear ? 0. : _u[_qp]) - u_exact);
+  return MetaPhysicL::raw_value(_penalty * _test[_i][_qp] * ((_linear ? 0. : _u[_qp]) - u_exact));
 }
 
 Real
 VectorPenaltyDirichletBC::computeQpJacobian()
 {
-  return _penalty * _test[_i][_qp] * _phi[_j][_qp];
+  return MetaPhysicL::raw_value(_penalty * _test[_i][_qp] * _phi[_j][_qp]);
 }

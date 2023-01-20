@@ -91,7 +91,7 @@ IntegratedBC::computeResidual()
   {
     precalculateQpResidual();
     for (_i = 0; _i < _test.size(); _i++)
-      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual();
+      _local_re(_i) += MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp] * computeQpResidual());
   }
 
   accumulateTaggedLocalResidual();
@@ -116,7 +116,7 @@ IntegratedBC::computeJacobian()
     precalculateQpJacobian();
     for (_i = 0; _i < _test.size(); _i++)
       for (_j = 0; _j < _phi.size(); _j++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpJacobian();
+        _local_ke(_i, _j) += MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp] * computeQpJacobian());
   }
 
   accumulateTaggedLocalMatrix();
@@ -160,7 +160,8 @@ IntegratedBC::computeOffDiagJacobian(const unsigned int jvar_num)
     precalculateQpOffDiagJacobian(jvar);
     for (_i = 0; _i < _test.size(); _i++)
       for (_j = 0; _j < phi_size; _j++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
+        _local_ke(_i, _j) +=
+            MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar_num));
   }
 
   accumulateTaggedLocalMatrix();
@@ -175,7 +176,8 @@ IntegratedBC::computeOffDiagJacobianScalar(const unsigned int jvar)
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < _test.size(); _i++)
       for (_j = 0; _j < jv.order(); _j++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobianScalar(jvar);
+        _local_ke(_i, _j) +=
+            MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobianScalar(jvar));
 
   accumulateTaggedLocalMatrix();
 }

@@ -44,7 +44,7 @@ public:
   void reinit();
 
   GeomReal penetrationDistance(dof_id_type node_id);
-  RealVectorValue penetrationNormal(dof_id_type node_id);
+  GeomRealVectorValue penetrationNormal(dof_id_type node_id);
 
   enum NORMAL_SMOOTHING_METHOD
   {

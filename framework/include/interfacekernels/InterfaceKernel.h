@@ -12,12 +12,19 @@
 // local includes
 #include "InterfaceKernelBase.h"
 
-#define TemplateVariableValue typename OutputTools<T>::VariableValue
-#define TemplateVariableGradient typename OutputTools<T>::VariableGradient
-#define TemplateVariablePhiValue typename OutputTools<T>::VariablePhiValue
-#define TemplateVariablePhiGradient typename OutputTools<T>::VariablePhiGradient
-#define TemplateVariableTestValue typename OutputTools<T>::VariableTestValue
-#define TemplateVariableTestGradient typename OutputTools<T>::VariableTestGradient
+#include "libmesh/fe_transformation_base.h"
+
+#define TemplateVariableValue typename OutputTools<typename MakeOutput<T>::type>::VariableValue
+#define TemplateVariableGradient                                                                   \
+  typename OutputTools<typename MakeOutput<T>::type>::VariableGradient
+#define TemplateVariablePhiValue                                                                   \
+  typename OutputTools<typename MakeOutput<T>::type>::VariablePhiValue
+#define TemplateVariablePhiGradient                                                                \
+  typename OutputTools<typename MakeOutput<T>::type>::VariablePhiGradient
+#define TemplateVariableTestValue                                                                  \
+  typename OutputTools<typename MakeOutput<T>::type>::VariableTestValue
+#define TemplateVariableTestGradient                                                               \
+  typename OutputTools<typename MakeOutput<T>::type>::VariableTestGradient
 
 // Forward Declarations
 template <typename T>

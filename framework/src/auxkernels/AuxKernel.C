@@ -388,7 +388,7 @@ AuxKernelTempl<RealEigenVector>::compute()
       for (unsigned int i = 0; i < _var.count(); ++i)
       {
         for (unsigned int j = 0; j < _n_local_dofs; ++j)
-          re(j) = _local_re(j)(i);
+          re(j) = MetaPhysicL::raw_value(_local_re(j)(i));
 
         if (_bnd)
           _local_ke.svd_solve(re, sol);
@@ -405,7 +405,7 @@ AuxKernelTempl<RealEigenVector>::compute()
 }
 
 template <typename ComputeValueType>
-const typename OutputTools<ComputeValueType>::VariableValue &
+const typename OutputTools<typename MakeOutput<ComputeValueType>::type>::VariableValue &
 AuxKernelTempl<ComputeValueType>::uOld() const
 {
   if (_sys.solutionStatesInitialized())
@@ -418,7 +418,7 @@ AuxKernelTempl<ComputeValueType>::uOld() const
 }
 
 template <typename ComputeValueType>
-const typename OutputTools<ComputeValueType>::VariableValue &
+const typename OutputTools<typename MakeOutput<ComputeValueType>::type>::VariableValue &
 AuxKernelTempl<ComputeValueType>::uOlder() const
 {
   if (_sys.solutionStatesInitialized())

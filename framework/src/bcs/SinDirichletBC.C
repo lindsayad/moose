@@ -43,5 +43,5 @@ SinDirichletBC::computeQpResidual()
   else
     value = _final;
 
-  return _u[_qp] - value;
+  return MetaPhysicL::raw_value(_u[_qp] - value);
 }

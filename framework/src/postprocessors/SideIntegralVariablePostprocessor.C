@@ -51,5 +51,5 @@ SideIntegralVariablePostprocessor::computeFaceInfoIntegral(const FaceInfo * cons
 Real
 SideIntegralVariablePostprocessor::computeQpIntegral()
 {
-  return _u[_qp];
+  return MetaPhysicL::raw_value(_u[_qp]);
 }

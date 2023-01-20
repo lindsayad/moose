@@ -30,5 +30,5 @@ PostprocessorNeumannBC::PostprocessorNeumannBC(const InputParameters & parameter
 Real
 PostprocessorNeumannBC::computeQpResidual()
 {
-  return -_test[_i][_qp] * _value;
+  return MetaPhysicL::raw_value(-_test[_i][_qp] * _value);
 }

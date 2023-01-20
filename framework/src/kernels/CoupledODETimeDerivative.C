@@ -29,14 +29,14 @@ CoupledODETimeDerivative::CoupledODETimeDerivative(const InputParameters & param
 Real
 CoupledODETimeDerivative::computeQpResidual()
 {
-  return _v_dot[_i];
+  return MetaPhysicL::raw_value(_v_dot[_i]);
 }
 
 Real
 CoupledODETimeDerivative::computeQpJacobian()
 {
   if (_i == _j)
-    return _dv_dot_dv[_i];
+    return MetaPhysicL::raw_value(_dv_dot_dv[_i]);
   else
     return 0;
 }

@@ -25,7 +25,7 @@
 #include "libmesh/tensor_tools.h"
 #include "metaphysicl/raw_type.h"
 #include "metaphysicl/metaphysicl_version.h"
-#include "metaphysicl/dualnumber_decl.h"
+#include "metaphysicl/dualnumber.h"
 #include "metaphysicl/dynamic_std_array_wrapper.h"
 #include "timpi/standard_type.h"
 
@@ -1128,6 +1128,14 @@ get(const std::shared_ptr<T> & s)
   return s.get();
 }
 
+template <typename ChainedType, typename ValueType>
+ChainedType
+chainedType(const ValueType & value_type)
+{
+  ChainedType ret{};
+  ret.value() = value_type;
+  return ret;
+}
 } // MooseUtils namespace
 
 /**

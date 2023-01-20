@@ -25,11 +25,11 @@ Diffusion::Diffusion(const InputParameters & parameters) : Kernel(parameters) {}
 Real
 Diffusion::computeQpResidual()
 {
-  return _grad_u[_qp] * _grad_test[_i][_qp];
+  return MetaPhysicL::raw_value(_grad_u[_qp] * _grad_test[_i][_qp]);
 }
 
 Real
 Diffusion::computeQpJacobian()
 {
-  return _grad_phi[_j][_qp] * _grad_test[_i][_qp];
+  return MetaPhysicL::raw_value(_grad_phi[_j][_qp] * _grad_test[_i][_qp]);
 }

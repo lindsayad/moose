@@ -88,7 +88,7 @@ NearestPointAverage::nearestPointIndex(const Point & p) const
   {
     const auto & current_point = it.value();
 
-    Real current_distance = (p - current_point).norm();
+    Real current_distance = MetaPhysicL::raw_value((p - current_point).norm());
 
     if (current_distance < closest_distance)
     {

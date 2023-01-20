@@ -79,7 +79,7 @@ SpatialAverageBase::execute()
     if (bin >= 0 && bin < static_cast<int>(_nbins))
     {
       for (MooseIndex(_nvals) j = 0; j < _nvals; ++j)
-        (*_average[j])[bin] += (*_values[j])[_qp];
+        (*_average[j])[bin] += MetaPhysicL::raw_value((*_values[j])[_qp]);
 
       _counts[bin]++;
     }

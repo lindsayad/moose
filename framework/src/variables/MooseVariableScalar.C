@@ -155,18 +155,18 @@ MooseVariableScalar::reinit(bool reinit_for_derivative_reordering /* = false*/)
   // we won't need the indices we lack.
   if (_dof_map.all_semilocal_indices(_dof_indices))
   {
-    current_solution.get(_dof_indices, &_u[0]);
+    MooseUtils::fillSolution(current_solution, _dof_indices, _u);
     if (_need_u_old)
-      sys.solutionOld().get(_dof_indices, &_u_old[0]);
+      MooseUtils::fillSolution(sys.solutionOld(), _dof_indices, _u_old);
     if (_need_u_older)
-      sys.solutionOlder().get(_dof_indices, &_u_older[0]);
+      MooseUtils::fillSolution(sys.solutionOlder(), _dof_indices, _u_older);
 
     for (auto tag : _required_vector_tags)
       if ((sys.subproblem().vectorTagType(tag) == Moose::VECTOR_TAG_RESIDUAL &&
            safe_access_tagged_vectors) ||
           sys.subproblem().vectorTagType(tag) == Moose::VECTOR_TAG_SOLUTION)
         if (sys.hasVector(tag) && _need_vector_tag_u[tag])
-          sys.getVector(tag).get(_dof_indices, &_vector_tag_u[tag][0]);
+          MooseUtils::fillSolution(sys.getVector(tag), _dof_indices, _vector_tag_u[tag]);
 
     if (safe_access_tagged_matrices)
     {
@@ -180,16 +180,16 @@ MooseVariableScalar::reinit(bool reinit_for_derivative_reordering /* = false*/)
     }
 
     if (_need_u_dot)
-      (*u_dot).get(_dof_indices, &_u_dot[0]);
+      MooseUtils::fillSolution((*u_dot), _dof_indices, _u_dot);
 
     if (_need_u_dotdot)
-      (*u_dotdot).get(_dof_indices, &_u_dotdot[0]);
+      MooseUtils::fillSolution((*u_dotdot), _dof_indices, _u_dotdot);
 
     if (_need_u_dot_old)
-      (*u_dot_old).get(_dof_indices, &_u_dot_old[0]);
+      MooseUtils::fillSolution((*u_dot_old), _dof_indices, _u_dot_old);
 
     if (_need_u_dotdot_old)
-      (*u_dotdot_old).get(_dof_indices, &_u_dotdot_old[0]);
+      MooseUtils::fillSolution((*u_dotdot_old), _dof_indices, _u_dotdot_old);
   }
   else
   {
@@ -201,17 +201,17 @@ MooseVariableScalar::reinit(bool reinit_for_derivative_reordering /* = false*/)
       {
         libmesh_assert_less(i, _u.size());
 
-        current_solution.get(one_dof_index, &_u[i]);
+        MooseUtils::fillSolution(current_solution, one_dof_index, _u, i);
         if (_need_u_old)
-          sys.solutionOld().get(one_dof_index, &_u_old[i]);
+          MooseUtils::fillSolution(sys.solutionOld(), one_dof_index, _u_old, i);
         if (_need_u_older)
-          sys.solutionOlder().get(one_dof_index, &_u_older[i]);
+          MooseUtils::fillSolution(sys.solutionOlder(), one_dof_index, _u_older, i);
 
         if (safe_access_tagged_vectors)
         {
           for (auto tag : _required_vector_tags)
             if (sys.hasVector(tag) && _need_vector_tag_u[tag])
-              sys.getVector(tag).get(one_dof_index, &_vector_tag_u[tag][i]);
+              MooseUtils::fillSolution(sys.getVector(tag), one_dof_index, _vector_tag_u[tag], i);
         }
 
         if (safe_access_tagged_matrices)
@@ -225,16 +225,16 @@ MooseVariableScalar::reinit(bool reinit_for_derivative_reordering /* = false*/)
         }
 
         if (_need_u_dot)
-          (*u_dot).get(one_dof_index, &_u_dot[i]);
+          MooseUtils::fillSolution((*u_dot), one_dof_index, _u_dot, i);
 
         if (_need_u_dotdot)
-          (*u_dotdot).get(one_dof_index, &_u_dotdot[i]);
+          MooseUtils::fillSolution((*u_dotdot), one_dof_index, _u_dotdot, i);
 
         if (_need_u_dot_old)
-          (*u_dot_old).get(one_dof_index, &_u_dot_old[i]);
+          MooseUtils::fillSolution((*u_dot_old), one_dof_index, _u_dot_old, i);
 
         if (_need_u_dotdot_old)
-          (*u_dotdot_old).get(one_dof_index, &_u_dotdot_old[i]);
+          MooseUtils::fillSolution((*u_dotdot_old), one_dof_index, _u_dotdot_old, i);
       }
       else
       {

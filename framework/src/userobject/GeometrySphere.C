@@ -30,6 +30,6 @@ void
 GeometrySphere::snapNode(Node & node)
 {
   const Point o = node - _center;
-  const Real r = o.norm();
+  const GeomReal r = o.norm();
   node = o * _radius / r + _center;
 }

@@ -35,7 +35,7 @@ void
 ElementAverageValue::execute()
 {
   ElementIntegralVariablePostprocessor::execute();
-  _volume += _current_elem_volume;
+  _volume += MetaPhysicL::raw_value(_current_elem_volume);
 }
 
 Real

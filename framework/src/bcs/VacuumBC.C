@@ -28,11 +28,11 @@ VacuumBC::VacuumBC(const InputParameters & parameters)
 Real
 VacuumBC::computeQpResidual()
 {
-  return _test[_i][_qp] * _alpha * _u[_qp] / 2.;
+  return MetaPhysicL::raw_value(_test[_i][_qp] * _alpha * _u[_qp] / 2.);
 }
 
 Real
 VacuumBC::computeQpJacobian()
 {
-  return _test[_i][_qp] * _alpha * _phi[_j][_qp] / 2.;
+  return MetaPhysicL::raw_value(_test[_i][_qp] * _alpha * _phi[_j][_qp] / 2.);
 }

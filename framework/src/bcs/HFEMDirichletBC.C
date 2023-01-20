@@ -42,16 +42,16 @@ HFEMDirichletBC::HFEMDirichletBC(const InputParameters & parameters)
 Real
 HFEMDirichletBC::computeQpResidual()
 {
-  return _lambda[_qp] * _test[_i][_qp];
+  return MetaPhysicL::raw_value(_lambda[_qp] * _test[_i][_qp]);
 }
 
 Real
 HFEMDirichletBC::computeLowerDQpResidual()
 {
   if (_uhat)
-    return (_u[_qp] - (*_uhat)[_qp]) * _test_lambda[_i][_qp];
+    return MetaPhysicL::raw_value((_u[_qp] - (*_uhat)[_qp]) * _test_lambda[_i][_qp]);
   else
-    return (_u[_qp] - _value) * _test_lambda[_i][_qp];
+    return MetaPhysicL::raw_value((_u[_qp] - _value) * _test_lambda[_i][_qp]);
 }
 
 Real
@@ -66,10 +66,10 @@ HFEMDirichletBC::computeLowerDQpJacobian(Moose::ConstraintJacobianType type)
   switch (type)
   {
     case Moose::LowerPrimary:
-      return _test_lambda[_i][_qp] * _phi[_j][_qp];
+      return MetaPhysicL::raw_value(_test_lambda[_i][_qp] * _phi[_j][_qp]);
 
     case Moose::PrimaryLower:
-      return _phi_lambda[_j][_qp] * _test[_i][_qp];
+      return MetaPhysicL::raw_value(_phi_lambda[_j][_qp] * _test[_i][_qp]);
 
     default:
       break;
@@ -83,7 +83,7 @@ HFEMDirichletBC::computeLowerDQpOffDiagJacobian(Moose::ConstraintJacobianType ty
                                                 const MooseVariableFEBase & jvar)
 {
   if (_uhat_var && jvar.number() == _uhat_var->number() && type == Moose::LowerLower)
-    return -_test_lambda[_i][_qp] * _phi[_j][_qp];
+    return MetaPhysicL::raw_value(-_test_lambda[_i][_qp] * _phi[_j][_qp]);
   else
     return 0;
 }

@@ -49,23 +49,23 @@ protected:
 
   const MooseArray<Point> & _q_point;
   const QBase * const & _qrule;
-  const MooseArray<Real> & _JxW;
-  const MooseArray<Real> & _coord;
+  const MooseArray<GeomReal> & _JxW;
+  const MooseArray<GeomReal> & _coord;
   const MooseArray<Point> & _normals;
 
   /// current element
   const Elem * const & _current_elem;
   /// the volume of the current element
-  const Real & _current_elem_volume;
+  const GeomReal & _current_elem_volume;
   /// current side of the current element
   const unsigned int & _current_side;
   /// the side element
   const Elem * const & _current_side_elem;
   /// current side volume
-  const Real & _current_side_volume;
+  const GeomReal & _current_side_volume;
 
   /// The neighboring element
   const Elem * const & _neighbor_elem;
   /// current neighbor volume
-  const Real & _current_neighbor_volume;
+  const GeomReal & _current_neighbor_volume;
 };

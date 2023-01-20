@@ -43,11 +43,14 @@ InterfaceQpValueUserObject::computeRealValue(const unsigned int qp)
   switch (_value_type)
   {
     case 0: /*value*/
-      return computeInterfaceValueType(_u[qp], _u_neighbor[qp]);
+      return computeInterfaceValueType(MetaPhysicL::raw_value(_u[qp]),
+                                       MetaPhysicL::raw_value(_u_neighbor[qp]));
     case 1: /*rate*/
-      return computeInterfaceValueType(_u[qp], _u_neighbor[qp]);
+      return computeInterfaceValueType(MetaPhysicL::raw_value(_u[qp]),
+                                       MetaPhysicL::raw_value(_u_neighbor[qp]));
     case 2: /*increment*/
-      return computeInterfaceValueType(_u[qp] * _dt, _u_neighbor[qp] * _dt);
+      return computeInterfaceValueType(MetaPhysicL::raw_value(_u[qp]) * _dt,
+                                       MetaPhysicL::raw_value(_u_neighbor[qp]) * _dt);
     default:
       mooseError("InterfaceQpValueUserObject::computeRealValue the supplied "
                  "value type has not been implemented");

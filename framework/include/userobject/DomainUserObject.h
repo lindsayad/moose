@@ -106,8 +106,8 @@ public:
 protected:
   const MooseArray<Point> & qPoints() const { return *_current_q_point; }
   const QBase & qRule() const { return *_current_q_rule; }
-  const MooseArray<Real> & JxW() const { return *_current_JxW; }
-  const MooseArray<Real> & coord() const { return _coord; }
+  const MooseArray<GeomReal> & JxW() const { return *_current_JxW; }
+  const MooseArray<GeomReal> & coord() const { return _coord; }
   const MooseArray<Point> & normals() const { return _normals; }
 
   /**
@@ -133,7 +133,7 @@ protected:
   const Elem * const & _current_elem;
 
   /// The current element volume (available during all execute functions)
-  const Real & _current_elem_volume;
+  const GeomReal & _current_elem_volume;
 
   /// Current side of the current element (available during executeOnInternalSide() and
   /// executeOnBoundary() and executeOnInterface())
@@ -145,14 +145,14 @@ protected:
 
   /// Current side volume (available during executeOnInternalSide() and executeOnBoundary() and
   /// executeOnInterface())
-  const Real & _current_side_volume;
+  const GeomReal & _current_side_volume;
 
   /// The neighboring element (available during executeOnInternalSide() and executeOnInterface())
   const Elem * const & _neighbor_elem;
 
   /// the neighboring element's volume (available during executeOnInternalSide() and
   /// executeOnInterface())
-  const Real & _current_neighbor_volume;
+  const GeomReal & _current_neighbor_volume;
 
   /// The boundary ID (available during executeOnBoundary() and executeOnInterface())
   const BoundaryID & _current_boundary_id;
@@ -177,25 +177,25 @@ private:
   /// A pointer to the current volume/face quadrature rule
   const QBase * _current_q_rule;
   /// A pointer to the current JxW
-  const MooseArray<Real> * _current_JxW;
+  const MooseArray<GeomReal> * _current_JxW;
 
   /// The quadrature points in physical space used in the element interior
   const MooseArray<Point> & _q_point;
   /// The quadrature rule used in the element interior
   const QBase * const & _qrule;
   /// The elemental Jacobian times quadrature weights in the element interior
-  const MooseArray<Real> & _JxW;
+  const MooseArray<GeomReal> & _JxW;
 
   /// The quadrature points in physical space used on the element side/face
   const MooseArray<Point> & _q_point_face;
   /// The quadrature rule used on the element side/face
   const QBase * const & _qrule_face;
   /// The side element Jacobian times quadrature weights on the element side/face
-  const MooseArray<Real> & _JxW_face;
+  const MooseArray<GeomReal> & _JxW_face;
 
   /// An array representing coordinate system volume modifications. Unity for Cartesian, 2piR for
   /// RZ, 4piR^2 for spherical
-  const MooseArray<Real> & _coord;
+  const MooseArray<GeomReal> & _coord;
 
   /// A map storing the set of boundaries where variables we wish to evaluate
   std::map<VariableName, std::set<BoundaryID>> _var_interfaces;

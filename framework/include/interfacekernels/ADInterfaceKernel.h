@@ -90,13 +90,13 @@ protected:
   const MooseArray<ADPoint> & _ad_q_point;
 
   /// shape function
-  const ADTemplateVariablePhiValue<T> & _phi;
+  const ADTemplateVariablePhiValue<typename MakeOutput<T>::type> & _phi;
 
   /// Side shape function.
-  const ADTemplateVariableTestValue<T> & _test;
+  const ADTemplateVariableTestValue<typename MakeOutput<T>::type> & _test;
 
   /// Gradient of side shape function
-  const ADTemplateVariableTestGradient<T> & _grad_test;
+  const ADTemplateVariableTestGradient<typename MakeOutput<T>::type> & _grad_test;
 
   /// Coupled neighbor variable
   const MooseVariableFE<T> & _neighbor_var;
@@ -108,13 +108,13 @@ protected:
   const ADTemplateVariableGradient<T> & _grad_neighbor_value;
 
   /// Side neighbor shape function.
-  const ADTemplateVariablePhiValue<T> & _phi_neighbor;
+  const ADTemplateVariablePhiValue<typename MakeOutput<T>::type> & _phi_neighbor;
 
   /// Side neighbor test function
-  const ADTemplateVariableTestValue<T> & _test_neighbor;
+  const ADTemplateVariableTestValue<typename MakeOutput<T>::type> & _test_neighbor;
 
   /// Gradient of side neighbor shape function
-  const ADTemplateVariableTestGradient<T> & _grad_test_neighbor;
+  const ADTemplateVariableTestGradient<typename MakeOutput<T>::type> & _grad_test_neighbor;
 
   /// Holds residual entries as they are accumulated by this InterfaceKernel
   /// This variable is temporarily reserved for RattleSnake

@@ -45,7 +45,8 @@ DiffusionFluxAux::DiffusionFluxAux(const InputParameters & parameters)
 Real
 DiffusionFluxAux::computeValue()
 {
-  const Real gradient = _use_normal ? _grad_u[_qp] * _normals[_qp] : _grad_u[_qp](_component);
+  const auto gradient =
+      MetaPhysicL::raw_value(_use_normal ? _grad_u[_qp] * _normals[_qp] : _grad_u[_qp](_component));
   const Real diffusion_coef = _diffusion_coef ? (*_diffusion_coef)[_qp]
                                               : MetaPhysicL::raw_value((*_ad_diffusion_coef)[_qp]);
   return -diffusion_coef * gradient;

@@ -464,7 +464,7 @@ MooseVariableFE<RawOutputType>::computeIncrementAtNode(const NumericVector<Numbe
 }
 
 template <typename RawOutputType>
-RawOutputType
+typename MooseVariableFE<RawOutputType>::OutputType
 MooseVariableFE<RawOutputType>::getValue(const Elem * elem,
                                          const std::vector<std::vector<OutputShape>> & phi) const
 {
@@ -493,14 +493,14 @@ MooseVariableFE<RawOutputType>::getValue(const Elem * elem,
 }
 
 template <>
-RealEigenVector
+GeomRealEigenVector
 MooseVariableFE<RealEigenVector>::getValue(const Elem * elem,
-                                           const std::vector<std::vector<Real>> & phi) const
+                                           const std::vector<std::vector<GeomReal>> & phi) const
 {
   std::vector<dof_id_type> dof_indices;
   this->_dof_map.dof_indices(elem, dof_indices, _var_num);
 
-  RealEigenVector value(_count);
+  GeomRealEigenVector value(_count);
   if (isNodal())
   {
     for (unsigned int i = 0; i < dof_indices.size(); ++i)
@@ -525,7 +525,7 @@ MooseVariableFE<RealEigenVector>::getValue(const Elem * elem,
 }
 
 template <typename RawOutputType>
-typename OutputTools<RawOutputType>::OutputGradient
+typename MooseVariableFE<RawOutputType>::OutputGradient
 MooseVariableFE<RawOutputType>::getGradient(
     const Elem * elem, const std::vector<std::vector<OutputShapeGradient>> & grad_phi) const
 {
@@ -551,9 +551,9 @@ MooseVariableFE<RawOutputType>::getGradient(
 }
 
 template <>
-RealVectorArrayValue
+GeomRealVectorArrayValue
 MooseVariableFE<RealEigenVector>::getGradient(
-    const Elem * elem, const std::vector<std::vector<RealVectorValue>> & grad_phi) const
+    const Elem * elem, const std::vector<std::vector<GeomRealVectorValue>> & grad_phi) const
 {
   std::vector<dof_id_type> dof_indices;
   this->_dof_map.dof_indices(elem, dof_indices, _var_num);
@@ -578,14 +578,14 @@ MooseVariableFE<RealEigenVector>::getGradient(
 }
 
 template <typename RawOutputType>
-const RawOutputType &
+const typename MooseVariableFE<RawOutputType>::OutputType &
 MooseVariableFE<RawOutputType>::nodalValue() const
 {
   return _element_data->nodalValue(Moose::Current);
 }
 
 template <typename RawOutputType>
-const RawOutputType &
+const typename MooseVariableFE<RawOutputType>::OutputType &
 MooseVariableFE<RawOutputType>::nodalValueNeighbor() const
 {
   return _neighbor_data->nodalValue(Moose::Current);
@@ -606,70 +606,70 @@ MooseVariableFE<RawOutputType>::nodalMatrixTagValue(TagID tag) const
 }
 
 template <typename RawOutputType>
-const RawOutputType &
+const typename MooseVariableFE<RawOutputType>::OutputType &
 MooseVariableFE<RawOutputType>::nodalValueOld() const
 {
   return _element_data->nodalValue(Moose::Old);
 }
 
 template <typename RawOutputType>
-const RawOutputType &
+const typename MooseVariableFE<RawOutputType>::OutputType &
 MooseVariableFE<RawOutputType>::nodalValueOldNeighbor() const
 {
   return _neighbor_data->nodalValue(Moose::Old);
 }
 
 template <typename RawOutputType>
-const RawOutputType &
+const typename MooseVariableFE<RawOutputType>::OutputType &
 MooseVariableFE<RawOutputType>::nodalValueOlder() const
 {
   return _element_data->nodalValue(Moose::Older);
 }
 
 template <typename RawOutputType>
-const RawOutputType &
+const typename MooseVariableFE<RawOutputType>::OutputType &
 MooseVariableFE<RawOutputType>::nodalValueOlderNeighbor() const
 {
   return _neighbor_data->nodalValue(Moose::Older);
 }
 
 template <typename RawOutputType>
-const RawOutputType &
+const typename MooseVariableFE<RawOutputType>::OutputType &
 MooseVariableFE<RawOutputType>::nodalValuePreviousNL() const
 {
   return _element_data->nodalValue(Moose::PreviousNL);
 }
 
 template <typename RawOutputType>
-const RawOutputType &
+const typename MooseVariableFE<RawOutputType>::OutputType &
 MooseVariableFE<RawOutputType>::nodalValuePreviousNLNeighbor() const
 {
   return _neighbor_data->nodalValue(Moose::PreviousNL);
 }
 
 template <typename RawOutputType>
-const RawOutputType &
+const typename MooseVariableFE<RawOutputType>::OutputType &
 MooseVariableFE<RawOutputType>::nodalValueDot() const
 {
   return _element_data->nodalValueDot();
 }
 
 template <typename RawOutputType>
-const RawOutputType &
+const typename MooseVariableFE<RawOutputType>::OutputType &
 MooseVariableFE<RawOutputType>::nodalValueDotDot() const
 {
   return _element_data->nodalValueDotDot();
 }
 
 template <typename RawOutputType>
-const RawOutputType &
+const typename MooseVariableFE<RawOutputType>::OutputType &
 MooseVariableFE<RawOutputType>::nodalValueDotOld() const
 {
   return _element_data->nodalValueDotOld();
 }
 
 template <typename RawOutputType>
-const RawOutputType &
+const typename MooseVariableFE<RawOutputType>::OutputType &
 MooseVariableFE<RawOutputType>::nodalValueDotDotOld() const
 {
   return _element_data->nodalValueDotDotOld();

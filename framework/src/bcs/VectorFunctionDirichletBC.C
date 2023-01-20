@@ -72,5 +72,5 @@ VectorFunctionDirichletBC::computeQpResidual()
                _function_y.value(_t, *_current_node),
                _function_z.value(_t, *_current_node)};
 
-  return _u - _values;
+  return MetaPhysicL::raw_value(_u - _values);
 }

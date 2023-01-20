@@ -31,5 +31,5 @@ PostprocessorDirichletBC::PostprocessorDirichletBC(const InputParameters & param
 Real
 PostprocessorDirichletBC::computeQpResidual()
 {
-  return _u[_qp] - _postprocessor_value;
+  return MetaPhysicL::raw_value(_u[_qp] - _postprocessor_value);
 }

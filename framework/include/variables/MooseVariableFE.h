@@ -595,10 +595,8 @@ public:
    * @param phi Evaluated shape functions at a point
    * @return The variable gradient value
    */
-  typename OutputTools<OutputType>::OutputGradient getGradient(
-      const Elem * elem,
-      const std::vector<std::vector<typename OutputTools<OutputType>::OutputShapeGradient>> &
-          grad_phi) const;
+  OutputGradient getGradient(const Elem * elem,
+                             const std::vector<std::vector<OutputShapeGradient>> & grad_phi) const;
 
   /**
    * Return phi size

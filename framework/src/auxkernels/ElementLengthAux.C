@@ -35,6 +35,6 @@ Real
 ElementLengthAux::computeValue()
 {
   if (_use_min)
-    return _current_elem->hmin();
-  return _current_elem->hmax();
+    return MetaPhysicL::raw_value(_current_elem->hmin());
+  return MetaPhysicL::raw_value(_current_elem->hmax());
 }

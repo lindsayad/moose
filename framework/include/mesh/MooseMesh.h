@@ -69,7 +69,7 @@ public:
   unsigned int _to;
 
   /// The distance between them
-  Real _distance;
+  GeomReal _distance;
 };
 
 /**

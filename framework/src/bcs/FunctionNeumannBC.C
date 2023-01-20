@@ -31,5 +31,5 @@ FunctionNeumannBC::FunctionNeumannBC(const InputParameters & parameters)
 Real
 FunctionNeumannBC::computeQpResidual()
 {
-  return -_test[_i][_qp] * _func.value(_t, _q_point[_qp]);
+  return MetaPhysicL::raw_value(-_test[_i][_qp] * _func.value(_t, _q_point[_qp]));
 }

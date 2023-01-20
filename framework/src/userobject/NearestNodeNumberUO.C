@@ -56,7 +56,7 @@ NearestNodeNumberUO::execute()
 {
   if (_node_found)
     return;
-  const Real dist = ((*_current_node) - _point).norm();
+  const Real dist = MetaPhysicL::raw_value(((*_current_node) - _point).norm());
   if (dist < _min_distance || (dist == _min_distance && _current_node->id() < _closest_node->id()))
   {
     _min_distance = dist;

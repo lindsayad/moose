@@ -50,5 +50,5 @@ LayeredSideDiffusiveFluxAverage::computeQpIntegral()
     return -MetaPhysicL::raw_value(_diffusion_coef[_qp] * grad_u * _normals[_qp]);
   }
   else
-    return -_diffusion_coef[_qp] * _grad_u[_qp] * _normals[_qp];
+    return -_diffusion_coef[_qp] * MetaPhysicL::raw_value(_grad_u[_qp] * _normals[_qp]);
 }

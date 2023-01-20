@@ -31,7 +31,7 @@ Real
 FunctionAux::computeValue()
 {
   if (isNodal())
-    return _func.value(_t, *_current_node);
+    return MetaPhysicL::raw_value(_func.value(_t, *_current_node));
   else
-    return _func.value(_t, _q_point[_qp]);
+    return MetaPhysicL::raw_value(_func.value(_t, _q_point[_qp]));
 }

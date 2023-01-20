@@ -54,7 +54,7 @@ InternalSideUserObject::InternalSideUserObject(const InputParameters & parameter
     addMooseVariableDependency(var);
 }
 
-const Real &
+const GeomReal &
 InternalSideUserObject::getNeighborElemVolume()
 {
   return _assembly.neighborVolume();

@@ -39,19 +39,20 @@ VectorCurlPenaltyDirichletBC::VectorCurlPenaltyDirichletBC(const InputParameters
 Real
 VectorCurlPenaltyDirichletBC::computeQpResidual()
 {
-  RealVectorValue u_exact;
+  GeomRealVectorValue u_exact;
   if (_function)
     u_exact = _function->vectorValue(_t, _q_point[_qp]);
   else
     u_exact = {_function_x.value(_t, _q_point[_qp]),
                _function_y.value(_t, _q_point[_qp]),
                _function_z.value(_t, _q_point[_qp])};
-  RealVectorValue Ncu = (_u[_qp] - u_exact).cross(_normals[_qp]);
-  return _penalty * Ncu * ((_test[_i][_qp]).cross(_normals[_qp]));
+  GeomRealVectorValue Ncu = (_u[_qp] - u_exact).cross(_normals[_qp]);
+  return MetaPhysicL::raw_value(_penalty * Ncu * ((_test[_i][_qp]).cross(_normals[_qp])));
 }
 
 Real
 VectorCurlPenaltyDirichletBC::computeQpJacobian()
 {
-  return _penalty * (_phi[_j][_qp]).cross(_normals[_qp]) * (_test[_i][_qp]).cross(_normals[_qp]);
+  return MetaPhysicL::raw_value(_penalty * (_phi[_j][_qp]).cross(_normals[_qp]) *
+                                (_test[_i][_qp]).cross(_normals[_qp]));
 }

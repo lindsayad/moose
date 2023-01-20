@@ -94,11 +94,11 @@ GapValueAux::computeValue()
 
   PenetrationInfo * pinfo = _penetration_locator._penetration_info[current_node->id()];
 
-  Real gap_value = 0.0;
+  GeomReal gap_value = 0.0;
 
   if (pinfo)
   {
-    std::vector<std::vector<Real>> & side_phi = pinfo->_side_phi;
+    auto & side_phi = pinfo->_side_phi;
     if (_moose_var.feType().order != CONSTANT)
       gap_value = _moose_var.getValue(pinfo->_side, side_phi);
     else
@@ -116,5 +116,5 @@ GapValueAux::computeValue()
       mooseWarning(msg.str());
     }
   }
-  return gap_value;
+  return MetaPhysicL::raw_value(gap_value);
 }

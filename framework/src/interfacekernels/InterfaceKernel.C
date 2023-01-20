@@ -170,7 +170,7 @@ InterfaceKernelTempl<T>::computeElemNeighResidual(Moose::DGResidualType type)
 
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < test_space.size(); _i++)
-      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual(type);
+      _local_re(_i) += MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp]) * computeQpResidual(type);
 
   accumulateTaggedLocalResidual();
 

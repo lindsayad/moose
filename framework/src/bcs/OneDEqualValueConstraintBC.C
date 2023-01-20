@@ -37,7 +37,7 @@ OneDEqualValueConstraintBC::OneDEqualValueConstraintBC(const InputParameters & p
 Real
 OneDEqualValueConstraintBC::computeQpResidual()
 {
-  return _lambda[_component] * _vg * _test[_i][_qp];
+  return MetaPhysicL::raw_value(_lambda[_component] * _vg * _test[_i][_qp]);
 }
 
 Real
@@ -52,7 +52,7 @@ OneDEqualValueConstraintBC::computeQpOffDiagJacobianScalar(unsigned int jvar)
   if (jvar == _lambda_var_number)
   {
     if (_j == _component)
-      return _vg * _test[_i][_qp];
+      return MetaPhysicL::raw_value(_vg * _test[_i][_qp]);
     else
       return 0.;
   }

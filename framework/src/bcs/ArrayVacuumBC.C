@@ -36,11 +36,12 @@ ArrayVacuumBC::ArrayVacuumBC(const InputParameters & parameters)
 void
 ArrayVacuumBC::computeQpResidual(RealEigenVector & residual)
 {
-  residual = _alpha.cwiseProduct(_u[_qp]) * _test[_i][_qp];
+  residual =
+      _alpha.cwiseProduct(MetaPhysicL::raw_value(_u[_qp])) * MetaPhysicL::raw_value(_test[_i][_qp]);
 }
 
 RealEigenVector
 ArrayVacuumBC::computeQpJacobian()
 {
-  return _test[_i][_qp] * _phi[_j][_qp] * _alpha;
+  return MetaPhysicL::raw_value(_test[_i][_qp]) * MetaPhysicL::raw_value(_phi[_j][_qp]) * _alpha;
 }

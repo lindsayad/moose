@@ -38,5 +38,5 @@ DirichletBCBase::computeValue(NumericVector<Number> & current_solution)
 Real
 DirichletBCBase::computeQpResidual()
 {
-  return _u[_qp] - computeQpValue();
+  return MetaPhysicL::raw_value(_u[_qp] - computeQpValue());
 }

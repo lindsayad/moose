@@ -449,22 +449,30 @@ InitialConditionTempl<T>::choleskyAssembly(bool is_volume)
       {
         auto j = is_volume ? geomj : _side_dofs[geomj];
         if (_dof_is_fixed[j])
-          _Fe(freei) -= (*_phi)[i][_qp] * (*_phi)[j][_qp] * (*_JxW)[_qp] * _Ue(j);
+          _Fe(freei) -=
+              MetaPhysicL::raw_value((*_phi)[i][_qp] * (*_phi)[j][_qp] * (*_JxW)[_qp]) * _Ue(j);
         else
-          _Ke(freei, freej) += (*_phi)[i][_qp] * (*_phi)[j][_qp] * (*_JxW)[_qp];
+          _Ke(freei, freej) +=
+              MetaPhysicL::raw_value((*_phi)[i][_qp] * (*_phi)[j][_qp] * (*_JxW)[_qp]);
         if (_cont == C_ONE)
         {
           if (_dof_is_fixed[j])
-            _Fe(freei) -= dotHelper((*_dphi)[i][_qp], (*_dphi)[j][_qp]) * (*_JxW)[_qp] * _Ue(j);
+            _Fe(freei) -= dotHelper(MetaPhysicL::raw_value((*_dphi)[i][_qp]),
+                                    MetaPhysicL::raw_value((*_dphi)[j][_qp])) *
+                          MetaPhysicL::raw_value((*_JxW)[_qp]) * _Ue(j);
           else
-            _Ke(freei, freej) += dotHelper((*_dphi)[i][_qp], (*_dphi)[j][_qp]) * (*_JxW)[_qp];
+            _Ke(freei, freej) += dotHelper(MetaPhysicL::raw_value((*_dphi)[i][_qp]),
+                                           MetaPhysicL::raw_value((*_dphi)[j][_qp])) *
+                                 MetaPhysicL::raw_value((*_JxW)[_qp]);
         }
         if (!_dof_is_fixed[j])
           freej++;
       }
-      _Fe(freei) += (*_phi)[i][_qp] * fineval * (*_JxW)[_qp];
+      _Fe(freei) +=
+          MetaPhysicL::raw_value((*_phi)[i][_qp]) * fineval * MetaPhysicL::raw_value((*_JxW)[_qp]);
       if (_cont == C_ONE)
-        _Fe(freei) += dotHelper(finegrad, (*_dphi)[i][_qp]) * (*_JxW)[_qp];
+        _Fe(freei) += dotHelper(finegrad, MetaPhysicL::raw_value((*_dphi)[i][_qp])) *
+                      MetaPhysicL::raw_value((*_JxW)[_qp]);
       freei++;
     }
   }

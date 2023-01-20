@@ -45,7 +45,7 @@ BoxMarker::BoxMarker(const InputParameters & parameters)
 Marker::MarkerValue
 BoxMarker::computeElementMarker()
 {
-  RealVectorValue centroid = _current_elem->vertex_average();
+  auto centroid = _current_elem->vertex_average();
 
   if (_bounding_box.contains_point(centroid))
     return _inside;

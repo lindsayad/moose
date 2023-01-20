@@ -31,6 +31,21 @@ class SubProblem;
 class SystemBase;
 class MooseMesh;
 
+namespace MooseUtils
+{
+inline void
+fillSolution(const NumericVector<Number> & soln_vector,
+             const std::vector<dof_id_type> & dof_indices,
+             MooseArray<GeomReal> & soln,
+             const dof_id_type local_dof_index = 0)
+{
+  MooseArray<Real> raw_soln(soln.size());
+  soln_vector.get(dof_indices, &raw_soln[local_dof_index]);
+  for (const auto i : index_range(soln))
+    soln[i] = raw_soln[i];
+}
+}
+
 class MooseVariableBase : public MooseObject,
                           public BlockRestrictable,
                           public OutputInterface,

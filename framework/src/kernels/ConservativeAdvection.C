@@ -41,7 +41,7 @@ ConservativeAdvection::ConservativeAdvection(const InputParameters & parameters)
 Real
 ConservativeAdvection::negSpeedQp() const
 {
-  return -_grad_test[_i][_qp] * _velocity[_qp];
+  return MetaPhysicL::raw_value(-_grad_test[_i][_qp] * _velocity[_qp]);
 }
 
 Real
@@ -49,7 +49,7 @@ ConservativeAdvection::computeQpResidual()
 {
   // This is the no-upwinded version
   // It gets called via Kernel::computeResidual()
-  return negSpeedQp() * _u[_qp];
+  return MetaPhysicL::raw_value(negSpeedQp() * _u[_qp]);
 }
 
 Real
@@ -57,7 +57,7 @@ ConservativeAdvection::computeQpJacobian()
 {
   // This is the no-upwinded version
   // It gets called via Kernel::computeJacobian()
-  return negSpeedQp() * _phi[_j][_qp];
+  return MetaPhysicL::raw_value(negSpeedQp() * _phi[_j][_qp]);
 }
 
 void
@@ -135,7 +135,7 @@ ConservativeAdvection::fullUpwind(JacRes res_or_jac)
 
         _dtotal_mass_out[n] += _local_ke(n, n);
       }
-      _local_re(n) *= _u_nodal[n];
+      _local_re(n) *= MetaPhysicL::raw_value(_u_nodal[n]);
       total_mass_out += _local_re(n);
     }
     else                        // downwind node

@@ -254,7 +254,9 @@ SpiralAnnularMesh::buildMesh()
       libmesh_assert(elem->n_vertices() == 3);
 
       // Compute vertex radii
-      Real radii[3] = {elem->point(0).norm(), elem->point(1).norm(), elem->point(2).norm()};
+      Real radii[3] = {MetaPhysicL::raw_value(elem->point(0).norm()),
+                       MetaPhysicL::raw_value(elem->point(1).norm()),
+                       MetaPhysicL::raw_value(elem->point(2).norm())};
 
       // Compute absolute differences between radii so we can determine which two are on the same
       // circular arc.
@@ -275,8 +277,10 @@ SpiralAnnularMesh::buildMesh()
       nos = elem->nodes_on_side(index);
 
       // Compute the angles associated with nodes nos[0] and nos[1].
-      Real theta0 = std::atan2(elem->point(nos[0])(1), elem->point(nos[0])(0)),
-           theta1 = std::atan2(elem->point(nos[1])(1), elem->point(nos[1])(0));
+      Real theta0 =
+               MetaPhysicL::raw_value(std::atan2(elem->point(nos[0])(1), elem->point(nos[0])(0))),
+           theta1 =
+               MetaPhysicL::raw_value(std::atan2(elem->point(nos[1])(1), elem->point(nos[1])(0)));
 
       // atan2 returns values in the range (-pi, pi).  If theta0
       // and theta1 have the same sign, we can simply average them
@@ -297,7 +301,7 @@ SpiralAnnularMesh::buildMesh()
         new_theta = 0.5 * (theta0 + theta1 + 2 * libMesh::pi);
 
       // The new radius will be the radius of point nos[0] or nos[1] (they are the same!).
-      Real new_r = elem->point(nos[0]).norm();
+      Real new_r = MetaPhysicL::raw_value(elem->point(nos[0]).norm());
 
       // Finally, move the point to its new location.
       elem->point(nos[2]) = Point(new_r * std::cos(new_theta), new_r * std::sin(new_theta), 0.);

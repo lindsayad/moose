@@ -92,7 +92,7 @@ ArrayIntegratedBC::computeResidual()
       computeQpResidual(_work_vector);
       mooseAssert(_work_vector.size() == _count,
                   "Size of local residual is not equal to the number of array variable compoments");
-      _work_vector *= _JxW[_qp] * _coord[_qp];
+      _work_vector *= MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp]);
       _assembly.saveLocalArrayResidual(_local_re, _i, _test.size(), _work_vector);
     }
   }
@@ -124,7 +124,7 @@ ArrayIntegratedBC::computeJacobian()
     for (_i = 0; _i < _test.size(); _i++)
       for (_j = 0; _j < _phi.size(); _j++)
       {
-        RealEigenVector v = _JxW[_qp] * _coord[_qp] * computeQpJacobian();
+        RealEigenVector v = MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp]) * computeQpJacobian();
         _assembly.saveDiagLocalArrayJacobian(
             _local_ke, _i, _test.size(), _j, _phi.size(), _var.number(), v);
       }
@@ -172,7 +172,8 @@ ArrayIntegratedBC::computeOffDiagJacobian(const unsigned int jvar_num)
     for (_i = 0; _i < _test.size(); _i++)
       for (_j = 0; _j < phi_size; _j++)
       {
-        RealEigenMatrix v = _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar);
+        RealEigenMatrix v =
+            MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp]) * computeQpOffDiagJacobian(jvar);
         _assembly.saveFullLocalArrayJacobian(
             _local_ke, _i, _test.size(), _j, jvar.phiSize(), _var.number(), jvar_num, v);
       }
@@ -213,7 +214,8 @@ ArrayIntegratedBC::computeOffDiagJacobianScalar(unsigned int jvar)
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < _test.size(); _i++)
     {
-      RealEigenMatrix v = _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobianScalar(jv);
+      RealEigenMatrix v =
+          MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp]) * computeQpOffDiagJacobianScalar(jv);
       _assembly.saveFullLocalArrayJacobian(
           _local_ke, _i, _test.size(), 0, 1, _var.number(), jvar, v);
     }

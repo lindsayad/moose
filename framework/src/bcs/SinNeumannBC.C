@@ -43,5 +43,5 @@ SinNeumannBC::computeQpResidual()
   else
     value = _final;
 
-  return -_test[_i][_qp] * value;
+  return MetaPhysicL::raw_value(-_test[_i][_qp] * value);
 }

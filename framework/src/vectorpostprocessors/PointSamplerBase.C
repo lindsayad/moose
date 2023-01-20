@@ -117,8 +117,9 @@ PointSamplerBase::execute()
         _subproblem.reinitElemPhys(elem, point_vec, 0); // Zero is for tid
 
         for (MooseIndex(_coupled_moose_vars) j = 0; j < _coupled_moose_vars.size(); ++j)
-          values[j] = (dynamic_cast<MooseVariableField<Real> *>(_coupled_moose_vars[j]))->sln()[0] *
-                      _pp_value; // The zero is for the "qp"
+          values[j] = MetaPhysicL::raw_value(
+              (dynamic_cast<MooseVariableField<GeomReal> *>(_coupled_moose_vars[j]))->sln()[0] *
+              _pp_value); // The zero is for the "qp"
 
         _found_points[i] = true;
       }

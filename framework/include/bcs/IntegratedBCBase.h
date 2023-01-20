@@ -31,13 +31,13 @@ protected:
   /// current element
   const Elem * const & _current_elem;
   /// Volume of the current element
-  const Real & _current_elem_volume;
+  const GeomReal & _current_elem_volume;
   /// current side of the current element
   const unsigned int & _current_side;
   /// current side element
   const Elem * const & _current_side_elem;
   /// Volume of the current side
-  const Real & _current_side_volume;
+  const GeomReal & _current_side_volume;
   /// The currenty boundary id
   const BoundaryID & _current_boundary_id;
 
@@ -48,9 +48,9 @@ protected:
   /// active quadrature points
   const MooseArray<Point> & _q_point;
   /// transformed Jacobian weights
-  const MooseArray<Real> & _JxW;
+  const MooseArray<GeomReal> & _JxW;
   /// coordinate transformation
-  const MooseArray<Real> & _coord;
+  const MooseArray<GeomReal> & _coord;
   /// i-th, j-th index for enumerating test and shape functions
   unsigned int _i, _j;
 

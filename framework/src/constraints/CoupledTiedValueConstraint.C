@@ -38,15 +38,15 @@ CoupledTiedValueConstraint::CoupledTiedValueConstraint(const InputParameters & p
 Real
 CoupledTiedValueConstraint::computeQpSecondaryValue()
 {
-  return _u_primary[_qp];
+  return MetaPhysicL::raw_value(_u_primary[_qp]);
 }
 
 Real
 CoupledTiedValueConstraint::computeQpResidual(Moose::ConstraintType type)
 {
   Real scaling_factor = _var.scalingFactor();
-  Real secondary_resid = 0;
-  Real retVal = 0;
+  GeomReal secondary_resid = 0;
+  GeomReal retVal = 0;
   switch (type)
   {
     case Moose::Secondary:
@@ -60,15 +60,15 @@ CoupledTiedValueConstraint::computeQpResidual(Moose::ConstraintType type)
     default:
       break;
   }
-  return retVal;
+  return MetaPhysicL::raw_value(retVal);
 }
 
 Real
 CoupledTiedValueConstraint::computeQpJacobian(Moose::ConstraintJacobianType type)
 {
   Real scaling_factor = _var.scalingFactor();
-  Real secondary_jac = 0;
-  Real retVal = 0;
+  GeomReal secondary_jac = 0;
+  GeomReal retVal = 0;
   switch (type)
   {
     case Moose::SecondarySecondary:
@@ -89,14 +89,14 @@ CoupledTiedValueConstraint::computeQpJacobian(Moose::ConstraintJacobianType type
       mooseError("Unsupported type");
       break;
   }
-  return retVal;
+  return MetaPhysicL::raw_value(retVal);
 }
 
 Real
 CoupledTiedValueConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType type,
                                                      unsigned int jvar)
 {
-  Real retVal = 0;
+  GeomReal retVal = 0;
 
   if (jvar == _primary_var_num)
   {
@@ -120,5 +120,5 @@ CoupledTiedValueConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianTy
     }
   }
 
-  return retVal;
+  return MetaPhysicL::raw_value(retVal);
 }

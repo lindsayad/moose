@@ -13,6 +13,8 @@
 #include <memory>
 #include "MooseError.h"
 
+#include "metaphysicl/raw_type.h"
+
 template <typename T>
 class MooseArray
 {
@@ -351,4 +353,22 @@ freeDoubleMooseArray(MooseArray<MooseArray<T>> & a)
   for (unsigned int i = 0; i < a.size(); i++)
     a[i].release();
   a.release();
+}
+
+namespace MetaPhysicL
+{
+template <typename T>
+struct RawType<MooseArray<T>>
+{
+  typedef MooseArray<typename RawType<T>::value_type> value_type;
+
+  static value_type value(const MooseArray<T> & in)
+  {
+    value_type ret(in.size());
+    for (const auto i : index_range(in))
+      ret[i] = raw_value(in[i]);
+
+    return ret;
+  }
+};
 }

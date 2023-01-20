@@ -90,8 +90,8 @@ LineValueSampler::getValue(const Point & p) const
   Real value = std::numeric_limits<Real>::infinity();
 
   // Project point onto the line segment and normalize by length of line segment
-  Real position =
-      (p - _points[0]) * (_points.back() - _points[0]) / Utility::pow<2>(_line_vector_norm);
+  Real position = MetaPhysicL::raw_value((p - _points[0]) * (_points.back() - _points[0]) /
+                                         Utility::pow<2>(_line_vector_norm));
 
   if (position >= 0.0 and position <= 1.0)
   {

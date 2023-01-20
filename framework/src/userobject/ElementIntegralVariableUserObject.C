@@ -37,5 +37,5 @@ ElementIntegralVariableUserObject::ElementIntegralVariableUserObject(
 Real
 ElementIntegralVariableUserObject::computeQpIntegral()
 {
-  return _u[_qp];
+  return MetaPhysicL::raw_value(_u[_qp]);
 }

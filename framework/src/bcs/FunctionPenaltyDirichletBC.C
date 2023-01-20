@@ -34,11 +34,11 @@ FunctionPenaltyDirichletBC::FunctionPenaltyDirichletBC(const InputParameters & p
 Real
 FunctionPenaltyDirichletBC::computeQpResidual()
 {
-  return _p * _test[_i][_qp] * (-_func.value(_t, _q_point[_qp]) + _u[_qp]);
+  return MetaPhysicL::raw_value(_p * _test[_i][_qp] * (-_func.value(_t, _q_point[_qp]) + _u[_qp]));
 }
 
 Real
 FunctionPenaltyDirichletBC::computeQpJacobian()
 {
-  return _p * _phi[_j][_qp] * _test[_i][_qp];
+  return MetaPhysicL::raw_value(_p * _phi[_j][_qp] * _test[_i][_qp]);
 }

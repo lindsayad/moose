@@ -1563,7 +1563,8 @@ MooseMesh::buildPeriodicNodeMap(std::multimap<dof_id_type, dof_id_type> & period
     const auto id = pair.first->id();
 
     // position where we expect a periodic partner for the current node and boundary
-    Point search_point = periodic->get_corresponding_pos(*pair.first);
+    const auto & search_point =
+        MetaPhysicL::raw_value(periodic->get_corresponding_pos(*pair.first));
 
     // search at the expected point
     kd_tree->radiusSearch(&(search_point)(0), libMesh::TOLERANCE, ret_matches, search_params);
@@ -1623,9 +1624,9 @@ MooseMesh::detectOrthogonalDimRanges(Real tol)
     for (const auto i : make_range(Moose::dim))
     {
       if ((*node)(i) < min[i])
-        min[i] = (*node)(i);
+        min[i] = MetaPhysicL::raw_value((*node)(i));
       if ((*node)(i) > max[i])
-        max[i] = (*node)(i);
+        max[i] = MetaPhysicL::raw_value((*node)(i));
     }
 
   this->comm().max(max);
@@ -2155,7 +2156,7 @@ MooseMesh::mapPoints(const std::vector<Point> & from,
     for (unsigned int j = 0; j < n_to; ++j)
     {
       const Point & to_point = to[j];
-      Real distance = (from_point - to_point).norm();
+      auto distance = (from_point - to_point).norm();
 
       if (distance < current_map._distance)
       {
@@ -2954,7 +2955,7 @@ MooseMesh::getInflatedProcessorBoundingBox(Real inflation_multiplier) const
 
   // Inflate the bbox just a bit to deal with roundoff
   // Adding 1% of the diagonal size in each direction on each end
-  Real inflation_amount = inflation_multiplier * (bbox.max() - bbox.min()).norm();
+  auto inflation_amount = inflation_multiplier * (bbox.max() - bbox.min()).norm();
   Point inflation(inflation_amount, inflation_amount, inflation_amount);
 
   bbox.first -= inflation;  // min

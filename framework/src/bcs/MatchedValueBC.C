@@ -46,7 +46,7 @@ template <>
 GenericReal<false>
 MatchedValueBCTempl<false>::computeQpResidual()
 {
-  return _u_coeff * _u[_qp] - _v_coeff * _v[_qp];
+  return MetaPhysicL::raw_value(_u_coeff * _u[_qp] - _v_coeff * _v[_qp]);
 }
 
 template <bool is_ad>

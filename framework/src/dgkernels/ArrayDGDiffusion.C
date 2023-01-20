@@ -65,13 +65,17 @@ ArrayDGDiffusion::initQpResidual(Moose::DGResidualType type)
   switch (type)
   {
     case Moose::Element:
-      _res2.noalias() = _diff[_qp].asDiagonal() *
-                        MetaPhysicL::raw_value((_u[_qp] - _u_neighbor[_qp])) * _epsilon * 0.5;
+      _res2.noalias() =
+          _diff[_qp].asDiagonal() *
+          (MetaPhysicL::raw_value(_u[_qp]) - MetaPhysicL::raw_value(_u_neighbor[_qp])) * _epsilon *
+          0.5;
       break;
 
     case Moose::Neighbor:
-      _res2.noalias() = _diff_neighbor[_qp].asDiagonal() *
-                        MetaPhysicL::raw_value((_u[_qp] - _u_neighbor[_qp])) * _epsilon * 0.5;
+      _res2.noalias() =
+          _diff_neighbor[_qp].asDiagonal() *
+          (MetaPhysicL::raw_value(_u[_qp]) - MetaPhysicL::raw_value(_u_neighbor[_qp])) * _epsilon *
+          0.5;
       break;
   }
 }

@@ -62,7 +62,7 @@ InterfaceIntegralPostprocessor::computeIntegral()
 {
   Real sum = 0;
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-    sum += _JxW[_qp] * _coord[_qp] * computeQpIntegral();
+    sum += MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp] * computeQpIntegral());
   return sum;
 }
 

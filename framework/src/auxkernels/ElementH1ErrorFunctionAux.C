@@ -52,7 +52,7 @@ Real
 ElementH1ErrorFunctionAux::computeValue()
 {
   RealGradient graddiff = _func.gradient(_t, _q_point[_qp]) - _grad_coupled_var[_qp];
-  Real funcdiff = _func.value(_t, _q_point[_qp]) - _coupled_var[_qp];
+  Real funcdiff = MetaPhysicL::raw_value(_func.value(_t, _q_point[_qp]) - _coupled_var[_qp]);
 
   // Raise the absolute function value difference to the pth power
   Real val = std::pow(std::abs(funcdiff), _p);

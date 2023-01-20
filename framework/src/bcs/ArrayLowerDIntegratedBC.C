@@ -67,7 +67,7 @@ ArrayLowerDIntegratedBC::computeResidual()
       computeLowerDQpResidual(_work_vector);
       mooseAssert(_work_vector.size() == _count,
                   "Size of local residual is not equal to the number of array variable compoments");
-      _work_vector *= _JxW[_qp] * _coord[_qp];
+      _work_vector *= MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp]);
       _assembly.saveLocalArrayResidual(_local_re, _i, _test_lambda.size(), _work_vector);
     }
   }
@@ -119,7 +119,8 @@ ArrayLowerDIntegratedBC::computeLowerDJacobian(Moose::ConstraintJacobianType typ
     for (_i = 0; _i < test_space.size(); _i++)
       for (_j = 0; _j < loc_phi.size(); _j++)
       {
-        RealEigenVector v = _JxW[_qp] * _coord[_qp] * computeLowerDQpJacobian(type);
+        RealEigenVector v =
+            MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp]) * computeLowerDQpJacobian(type);
         _assembly.saveDiagLocalArrayJacobian(
             _local_ke, _i, test_space.size(), _j, loc_phi.size(), ivar, v);
       }
@@ -176,7 +177,8 @@ ArrayLowerDIntegratedBC::computeLowerDOffDiagJacobian(Moose::ConstraintJacobianT
       for (_i = 0; _i < test_space.size(); _i++)
         for (_j = 0; _j < loc_phi.size(); _j++)
         {
-          RealEigenMatrix v = _JxW[_qp] * _coord[_qp] * computeLowerDQpOffDiagJacobian(type, jvar);
+          RealEigenMatrix v = MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp]) *
+                              computeLowerDQpOffDiagJacobian(type, jvar);
           _assembly.saveFullLocalArrayJacobian(
               _local_ke, _i, test_space.size(), _j, loc_phi.size(), ivar, jvar_num, v);
         }
@@ -194,7 +196,8 @@ ArrayLowerDIntegratedBC::computeLowerDOffDiagJacobian(Moose::ConstraintJacobianT
       for (_i = 0; _i < test_space.size(); _i++)
         for (_j = 0; _j < loc_phi.size(); _j++)
         {
-          RealEigenMatrix v = _JxW[_qp] * _coord[_qp] * computeLowerDQpOffDiagJacobian(type, jvar);
+          RealEigenMatrix v = MetaPhysicL::raw_value(_JxW[_qp] * _coord[_qp]) *
+                              computeLowerDQpOffDiagJacobian(type, jvar);
           _assembly.saveFullLocalArrayJacobian(
               _local_ke, _i, test_space.size(), _j, loc_phi.size(), ivar, jvar_num, v);
         }

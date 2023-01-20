@@ -42,9 +42,9 @@ template <bool is_ad>
 GenericReal<is_ad>
 PenaltyInterfaceDiffusionTempl<is_ad>::computeQpResidual(Moose::DGResidualType type)
 {
-  GenericReal<is_ad> r = 0;
+  GeomReal r = 0;
 
-  GenericReal<is_ad> jump_value = 0;
+  GeomReal jump_value = 0;
 
   if (_jump != nullptr)
     jump_value = (*_jump)[_qp];
@@ -62,14 +62,17 @@ PenaltyInterfaceDiffusionTempl<is_ad>::computeQpResidual(Moose::DGResidualType t
       break;
   }
 
-  return r;
+  if constexpr (is_ad)
+    return r;
+  else
+    return MetaPhysicL::raw_value(r);
 }
 
 template <bool is_ad>
 Real
 PenaltyInterfaceDiffusionTempl<is_ad>::computeQpJacobian(Moose::DGJacobianType type)
 {
-  Real jac = 0;
+  GeomReal jac = 0;
 
   switch (type)
   {
@@ -90,7 +93,7 @@ PenaltyInterfaceDiffusionTempl<is_ad>::computeQpJacobian(Moose::DGJacobianType t
       break;
   }
 
-  return jac;
+  return MetaPhysicL::raw_value(jac);
 }
 
 template class PenaltyInterfaceDiffusionTempl<false>;

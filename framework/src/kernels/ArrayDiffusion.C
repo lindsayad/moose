@@ -77,11 +77,11 @@ ArrayDiffusion::computeQpResidual(RealEigenVector & residual)
     residual.noalias() =
         (*_d)[_qp] * MetaPhysicL::raw_value(_grad_u[_qp] * _array_grad_test[_i][_qp]);
   else if (_d_array)
-    residual.noalias() = (*_d_array)[_qp].asDiagonal() *
-                         MetaPhysicL::raw_value(_grad_u[_qp] * _array_grad_test[_i][_qp]);
+    residual.noalias() = (*_d_array)[_qp].asDiagonal() * MetaPhysicL::raw_value(_grad_u[_qp]) *
+                         MetaPhysicL::raw_value(_array_grad_test[_i][_qp]);
   else
-    residual.noalias() =
-        (*_d_2d_array)[_qp] * MetaPhysicL::raw_value(_grad_u[_qp] * _array_grad_test[_i][_qp]);
+    residual.noalias() = (*_d_2d_array)[_qp] * MetaPhysicL::raw_value(_grad_u[_qp]) *
+                         MetaPhysicL::raw_value(_array_grad_test[_i][_qp]);
 }
 
 RealEigenVector
@@ -89,18 +89,22 @@ ArrayDiffusion::computeQpJacobian()
 {
   if (_d)
     return RealEigenVector::Constant(_var.count(),
-                                     _grad_phi[_j][_qp] * _grad_test[_i][_qp] * (*_d)[_qp]);
+                                     MetaPhysicL::raw_value(_grad_phi[_j][_qp]) *
+                                         MetaPhysicL::raw_value(_grad_test[_i][_qp]) * (*_d)[_qp]);
   else if (_d_array)
-    return _grad_phi[_j][_qp] * _grad_test[_i][_qp] * (*_d_array)[_qp];
+    return MetaPhysicL::raw_value(_grad_phi[_j][_qp]) *
+           MetaPhysicL::raw_value(_grad_test[_i][_qp]) * (*_d_array)[_qp];
   else
-    return _grad_phi[_j][_qp] * _grad_test[_i][_qp] * (*_d_2d_array)[_qp].diagonal();
+    return MetaPhysicL::raw_value(_grad_phi[_j][_qp]) *
+           MetaPhysicL::raw_value(_grad_test[_i][_qp]) * (*_d_2d_array)[_qp].diagonal();
 }
 
 RealEigenMatrix
 ArrayDiffusion::computeQpOffDiagJacobian(const MooseVariableFEBase & jvar)
 {
   if (jvar.number() == _var.number() && _d_2d_array)
-    return _grad_phi[_j][_qp] * _grad_test[_i][_qp] * (*_d_2d_array)[_qp];
+    return MetaPhysicL::raw_value(_grad_phi[_j][_qp]) *
+           MetaPhysicL::raw_value(_grad_test[_i][_qp]) * (*_d_2d_array)[_qp];
   else
     return ArrayKernel::computeQpOffDiagJacobian(jvar);
 }
