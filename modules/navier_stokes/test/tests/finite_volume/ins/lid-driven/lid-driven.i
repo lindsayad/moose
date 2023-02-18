@@ -59,6 +59,10 @@ rho = 1
     u = vel_x
     v = vel_y
     pressure = pressure
+    rho = ${rho}
+    mu = ${mu}
+    characteristic_length = 0.1
+    characteristic_speed = 1
   []
 []
 

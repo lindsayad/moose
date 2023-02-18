@@ -13,6 +13,10 @@ rho=1.1
     u = u
     v = v
     pressure = pressure
+    rho = ${rho}
+    mu = ${mu}
+    characteristic_length = 2
+    characteristic_speed = 1
   []
 []
 
@@ -187,13 +191,16 @@ rho=1.1
 [Executioner]
   type = Steady
   solve_type = 'NEWTON'
-  petsc_options_iname = '-pc_type -ksp_gmres_restart -sub_pc_type -sub_pc_factor_shift_type'
-  petsc_options_value = 'asm      30                lu           NONZERO'
+  petsc_options_iname = '-pc_type -pc_factor_shift_type'
+  petsc_options_value = 'lu       NONZERO'
+  # petsc_options_iname = '-pc_type -ksp_gmres_restart -sub_pc_type -sub_pc_factor_shift_type'
+  # petsc_options_value = 'asm      30                lu           NONZERO'
   nl_rel_tol = 1e-12
 []
 
 [Outputs]
   csv = true
+  exodus = true
 []
 
 [Postprocessors]
