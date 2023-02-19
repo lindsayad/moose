@@ -15,6 +15,10 @@ velocity_interp_method = 'rc'
     u = vel_x
     v = vel_y
     pressure = pressure
+    characteristic_length = 2
+    characteristic_speed = 1
+    rho = ${rho}
+    mu = ${mu}
   []
 []
 

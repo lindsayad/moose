@@ -4,8 +4,8 @@ k = 1
 cp = 1
 alpha = 1
 velocity_interp_method = 'rc'
-advected_interp_method = 'upwind'
-rayleigh = 1e3
+advected_interp_method = 'min_mod'
+rayleigh = 1e6
 hot_temp = ${rayleigh}
 temp_ref = '${fparse hot_temp / 2.}'
 
@@ -19,6 +19,10 @@ temp_ref = '${fparse hot_temp / 2.}'
     u = vel_x
     v = vel_y
     pressure = pressure
+    rho = ${rho}
+    mu = ${mu}
+    characteristic_speed = 220
+    characteristic_length = 1
   []
 []
 
