@@ -1,10 +1,11 @@
-mu=1.1
+mu=1.6e-2
 rho=1.1
 
 [GlobalParams]
   two_term_boundary_expansion = false
   rhie_chow_user_object = 'rc'
   velocity_interp_method = 'rc'
+  advected_interp_method = 'min_mod'
 []
 
 [UserObjects]
@@ -56,11 +57,26 @@ rho=1.1
   []
 []
 
+[AuxVariables]
+  [Reynolds]
+    type = MooseVariableFVReal
+  []
+[]
+
+[AuxKernels]
+  [Reynolds]
+    type = ReynoldsNumberFunctorAux
+    variable = Reynolds
+    speed = speed
+    rho = ${rho}
+    mu = ${mu}
+  []
+[]
+
 [FVKernels]
   [mass]
     type = INSFVMassAdvection
     variable = pressure
-    advected_interp_method = 'average'
     rho = ${rho}
   []
   [mass_forcing]
@@ -77,7 +93,6 @@ rho=1.1
   [u_advection]
     type = INSFVMomentumAdvection
     variable = u
-    advected_interp_method = 'average'
     rho = ${rho}
     momentum_component = 'x'
   []
@@ -103,7 +118,6 @@ rho=1.1
   [v_advection]
     type = INSFVMomentumAdvection
     variable = v
-    advected_interp_method = 'average'
     rho = ${rho}
     momentum_component = 'y'
   []
@@ -188,6 +202,15 @@ rho=1.1
   []
 []
 
+[Materials]
+  [speed]
+    type = ADVectorMagnitudeFunctorMaterial
+    x_functor = u
+    y_functor = v
+    vector_magnitude_name = speed
+  []
+[]
+
 [Executioner]
   type = Steady
   solve_type = 'NEWTON'
@@ -230,4 +253,18 @@ rho=1.1
     outputs = 'console csv'
     execute_on = 'timestep_end'
   [../]
+  [max_re]
+    type = ADElementExtremeFunctorValue
+    functor = Reynolds
+    value_type = 'max'
+    execute_on = 'timestep_end'
+  []
+  [global_re]
+    type = ParsedPostprocessor
+    function = 'L / h * max_re'
+    pp_names = 'h max_re'
+    constant_names = 'L'
+    constant_expressions = '2'
+    execute_on = 'timestep_end'
+  []
 []
