@@ -1,5 +1,6 @@
 mu = .01
 rho = 1
+l = 0.1
 
 [GlobalParams]
   velocity_interp_method = 'rc'
@@ -12,9 +13,9 @@ rho = 1
     type = GeneratedMeshGenerator
     dim = 2
     xmin = 0
-    xmax = .1
+    xmax = ${l}
     ymin = 0
-    ymax = .1
+    ymax = ${l}
     nx = 20
     ny = 20
   []
