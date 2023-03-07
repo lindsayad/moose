@@ -261,8 +261,13 @@ void
 ComputeWeightedGapCartesianLMMechanicalContact::post()
 {
 #ifdef MOOSE_SPARSE_AD
-  Moose::Mortar::Contact::communicateGaps(
-      _dof_to_weighted_gap, this->processor_id(), _mesh, _nodal, _normalize_c, _communicator);
+  Moose::Mortar::Contact::communicateGaps(_dof_to_weighted_gap,
+                                          this->processor_id(),
+                                          _mesh,
+                                          _nodal,
+                                          _normalize_c,
+                                          _communicator,
+                                          false);
 #endif
 
   for (const auto & pr : _dof_to_weighted_gap)
@@ -282,8 +287,13 @@ ComputeWeightedGapCartesianLMMechanicalContact::incorrectEdgeDroppingPost(
     const std::unordered_set<const Node *> & inactive_lm_nodes)
 {
 #ifdef MOOSE_SPARSE_AD
-  Moose::Mortar::Contact::communicateGaps(
-      _dof_to_weighted_gap, this->processor_id(), _mesh, _nodal, _normalize_c, _communicator);
+  Moose::Mortar::Contact::communicateGaps(_dof_to_weighted_gap,
+                                          this->processor_id(),
+                                          _mesh,
+                                          _nodal,
+                                          _normalize_c,
+                                          _communicator,
+                                          false);
 #endif
 
   for (const auto & pr : _dof_to_weighted_gap)

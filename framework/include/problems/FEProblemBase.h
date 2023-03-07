@@ -81,6 +81,7 @@ class AutomaticMortarGeneration;
 class VectorPostprocessor;
 class Function;
 class MooseAppCoordTransform;
+class MortarUserObject;
 
 // libMesh forward declarations
 namespace libMesh
@@ -2016,6 +2017,14 @@ public:
    */
   bool failNextNonlinearConvergenceCheck() const { return _fail_next_nonlinear_convergence_check; }
 
+  /**
+   * Call \p reinit on mortar user objects with matching primary boundary ID, secondary boundary ID,
+   * and displacement characteristics
+   */
+  void reinitMortarUserObjects(BoundaryID primary_boundary_id,
+                               BoundaryID secondary_boundary_id,
+                               bool displaced);
+
 protected:
   /// Create extra tagged vectors and matrices
   void createTagVectors();
@@ -2344,6 +2353,33 @@ protected:
   bool _using_ad_mat_props;
 
 private:
+  /**
+   * Helper for getting mortar objects corresponding to primary boundary ID, secondary boundary ID,
+   * and displaced parameters, given some initial set
+   */
+  std::vector<MortarUserObject *>
+  getMortarUserObjects(BoundaryID primary_boundary_id,
+                       BoundaryID secondary_boundary_id,
+                       bool displaced,
+                       const std::vector<MortarUserObject *> & mortar_uo_superset);
+
+  /**
+   * Helper for getting mortar objects corresponding to primary boundary ID, secondary boundary ID,
+   * and displaced parameters from the entire active mortar user object set
+   */
+  std::vector<MortarUserObject *> getMortarUserObjects(BoundaryID primary_boundary_id,
+                                                       BoundaryID secondary_boundary_id,
+                                                       bool displaced);
+
+  /**
+   * Determine what nonlinear system the provided variable name lies in
+   * @param var_name The name of the variable we are doing nonlinear system lookups for
+   * @param error_if_not_found Whether to error if the variable name isn't found in any of the
+   * nonlinear systems
+   * @return A pair in which the first member indicates whether the variable was found in the
+   * nonlinear systems and the second member indicates the nonlinear system number in which the
+   * variable was found (or an invalid unsigned integer if not found)
+   */
   std::pair<bool, unsigned int>
   determineNonlinearSystem(const std::string & var_name,
                            bool error_if_not_found = false) const override;
