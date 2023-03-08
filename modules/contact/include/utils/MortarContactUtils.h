@@ -71,7 +71,7 @@ communicateVelocities(std::unordered_map<const DofObject *, std::array<T, 2>> & 
 
   auto action_functor =
       [nodal, our_proc_id, &lm_mesh, &dof_map](const processor_id_type libmesh_dbg_var(pid),
-                                               const std::vector<Datum> & sent_data)
+                                               std::vector<Datum> && sent_data)
   {
     mooseAssert(pid != our_proc_id, "We do not send messages to ourself here");
     libmesh_ignore(our_proc_id);
@@ -83,8 +83,8 @@ communicateVelocities(std::unordered_map<const DofObject *, std::array<T, 2>> & 
           nodal ? static_cast<const DofObject *>(lm_mesh.node_ptr(dof_id))
                 : static_cast<const DofObject *>(lm_mesh.elem_ptr(dof_id));
       mooseAssert(dof_object, "This should be non-null");
-      dof_map[dof_object][0] += pr.second[0];
-      dof_map[dof_object][1] += pr.second[1];
+      dof_map[dof_object][0] += std::move(pr.second[0]);
+      dof_map[dof_object][1] += std::move(pr.second[1]);
     }
   };
 

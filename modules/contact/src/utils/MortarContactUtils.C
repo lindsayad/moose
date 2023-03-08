@@ -56,7 +56,7 @@ communicateGaps(
        &dof_to_weighted_gap,
        &normalize_c,
        &pid_to_dof_object_for_sending_back,
-       send_data_back](const processor_id_type pid, const std::vector<Datum> & sent_data)
+       send_data_back](const processor_id_type pid, std::vector<Datum> && sent_data)
   {
     mooseAssert(pid != our_proc_id, "We do not send messages to ourself here");
     libmesh_ignore(our_proc_id);
@@ -70,9 +70,9 @@ communicateGaps(
       if (send_data_back)
         pid_to_dof_object_for_sending_back[pid].push_back(dof_object);
       auto & [our_weighted_gap, our_normalization] = dof_to_weighted_gap[dof_object];
-      our_weighted_gap += weighted_gap;
+      our_weighted_gap += std::move(weighted_gap);
       if (normalize_c)
-        our_normalization += normalization;
+        our_normalization += std::move(normalization);
     }
   };
   TIMPI::push_parallel_vector_data(communicator, push_data, action_functor);
@@ -98,7 +98,7 @@ communicateGaps(
 
   auto sent_back_action_functor =
       [nodal, our_proc_id, &lm_mesh, &dof_to_weighted_gap, &normalize_c](
-          const processor_id_type libmesh_dbg_var(pid), const std::vector<Datum> & sent_data)
+          const processor_id_type libmesh_dbg_var(pid), std::vector<Datum> && sent_data)
   {
     mooseAssert(pid != our_proc_id, "We do not send messages to ourself here");
     libmesh_ignore(our_proc_id);
@@ -110,9 +110,9 @@ communicateGaps(
                 : static_cast<const DofObject *>(lm_mesh.elem_ptr(dof_id));
       mooseAssert(dof_object, "This should be non-null");
       auto & [our_weighted_gap, our_normalization] = dof_to_weighted_gap[dof_object];
-      our_weighted_gap = weighted_gap;
+      our_weighted_gap = std::move(weighted_gap);
       if (normalize_c)
-        our_normalization = normalization;
+        our_normalization = std::move(normalization);
     }
   };
   TIMPI::push_parallel_vector_data(communicator, push_back_data, sent_back_action_functor);
