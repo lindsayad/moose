@@ -179,11 +179,11 @@ ComputeDynamicFrictionalForceLMMechanicalContact::post()
 
 #ifdef MOOSE_SPARSE_AD
   Moose::Mortar::Contact::communicateVelocities(
-      _dof_to_weighted_tangential_velocity, this->processor_id(), _mesh, _nodal, _communicator);
+      _dof_to_weighted_tangential_velocity, _mesh, _nodal, _communicator);
 
   if (_has_friction_function)
     Moose::Mortar::Contact::communicateVelocities(
-        _dof_to_real_tangential_velocity, this->processor_id(), _mesh, _nodal, _communicator);
+        _dof_to_real_tangential_velocity, _mesh, _nodal, _communicator);
 #endif
 
   // Enforce frictional complementarity constraints
@@ -220,11 +220,11 @@ ComputeDynamicFrictionalForceLMMechanicalContact::incorrectEdgeDroppingPost(
 
 #ifdef MOOSE_SPARSE_AD
   Moose::Mortar::Contact::communicateVelocities(
-      _dof_to_weighted_tangential_velocity, this->processor_id(), _mesh, _nodal, _communicator);
+      _dof_to_weighted_tangential_velocity, _mesh, _nodal, _communicator);
 
   if (_has_friction_function)
     Moose::Mortar::Contact::communicateVelocities(
-        _dof_to_real_tangential_velocity, this->processor_id(), _mesh, _nodal, _communicator);
+        _dof_to_real_tangential_velocity, _mesh, _nodal, _communicator);
 #endif
 
   // Enforce frictional complementarity constraints

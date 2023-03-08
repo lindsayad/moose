@@ -223,17 +223,12 @@ ComputeFrictionalForceLMMechanicalContact::post()
 {
 
 #ifdef MOOSE_SPARSE_AD
-  Moose::Mortar::Contact::communicateGaps(_dof_to_weighted_gap,
-                                          this->processor_id(),
-                                          _mesh,
-                                          _nodal,
-                                          _normalize_c,
-                                          _communicator,
-                                          false);
+  Moose::Mortar::Contact::communicateGaps(
+      _dof_to_weighted_gap, _mesh, _nodal, _normalize_c, _communicator, false);
   Moose::Mortar::Contact::communicateVelocities(
-      _dof_to_weighted_tangential_velocity, this->processor_id(), _mesh, _nodal, _communicator);
+      _dof_to_weighted_tangential_velocity, _mesh, _nodal, _communicator);
   Moose::Mortar::Contact::communicateVelocities(
-      _dof_to_real_tangential_velocity, this->processor_id(), _mesh, _nodal, _communicator);
+      _dof_to_real_tangential_velocity, _mesh, _nodal, _communicator);
 #endif
 
   // Enforce frictional complementarity constraints
@@ -264,17 +259,12 @@ ComputeFrictionalForceLMMechanicalContact::incorrectEdgeDroppingPost(
     const std::unordered_set<const Node *> & inactive_lm_nodes)
 {
 #ifdef MOOSE_SPARSE_AD
-  Moose::Mortar::Contact::communicateGaps(_dof_to_weighted_gap,
-                                          this->processor_id(),
-                                          _mesh,
-                                          _nodal,
-                                          _normalize_c,
-                                          _communicator,
-                                          false);
+  Moose::Mortar::Contact::communicateGaps(
+      _dof_to_weighted_gap, _mesh, _nodal, _normalize_c, _communicator, false);
   Moose::Mortar::Contact::communicateVelocities(
-      _dof_to_weighted_tangential_velocity, this->processor_id(), _mesh, _nodal, _communicator);
+      _dof_to_weighted_tangential_velocity, _mesh, _nodal, _communicator);
   Moose::Mortar::Contact::communicateVelocities(
-      _dof_to_real_tangential_velocity, this->processor_id(), _mesh, _nodal, _communicator);
+      _dof_to_real_tangential_velocity, _mesh, _nodal, _communicator);
 #endif
 
   // Enforce frictional complementarity constraints
