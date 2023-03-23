@@ -12,7 +12,9 @@
 InputParameters
 RestartableModelInterface::validParams()
 {
-  return emptyInputParameters();
+  InputParameters params = emptyInputParameters();
+  params.addParam<FileName>("filename", "Blabla");
+  return params;
 }
 
 RestartableModelInterface::RestartableModelInterface(const MooseObject * object,
