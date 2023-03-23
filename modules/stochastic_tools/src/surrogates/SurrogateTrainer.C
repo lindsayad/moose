@@ -25,9 +25,8 @@ SurrogateTrainerBase::validParams()
 }
 
 SurrogateTrainerBase::SurrogateTrainerBase(const InputParameters & parameters)
-  : GeneralUserObject(parameters), _model_meta_data_name(_type + "_" + name())
+  : GeneralUserObject(parameters), RestartableModelInterface(this, _type + "_" + name())
 {
-  _app.registerRestartableDataMapName(_model_meta_data_name, name());
 }
 
 InputParameters
