@@ -19,6 +19,7 @@ SurrogateModel::validParams()
   InputParameters params = MooseObject::validParams();
   params += SamplerInterface::validParams();
   params += SurrogateModelInterface::validParams();
+  params += RestartableModelInterface::validParams();
   params.addParam<UserObjectName>(
       "trainer",
       "The SurrogateTrainer object. If this is specified the trainer data is automatically "
