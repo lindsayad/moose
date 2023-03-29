@@ -13,7 +13,8 @@ InputParameters
 RestartableModelInterface::validParams()
 {
   InputParameters params = emptyInputParameters();
-  params.addParam<FileName>("filename", "Blabla");
+  params.addParam<FileName>(
+      "filename", "The name of the file which will be associated with the saved/loaded data.");
   return params;
 }
 
