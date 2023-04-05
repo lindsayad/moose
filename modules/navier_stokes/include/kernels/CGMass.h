@@ -30,7 +30,5 @@ public:
 protected:
   virtual ADReal computeQpResidual() override;
 
-  const ADVariableGradient & _grad_u_vel;
-  const ADVariableGradient & _grad_v_vel;
-  const ADVariableGradient & _grad_w_vel;
+  const ADMaterialProperty<RealVectorValue> & _velocity;
 };
