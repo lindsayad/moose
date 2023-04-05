@@ -16,17 +16,12 @@ InputParameters
 CGMass::validParams()
 {
   InputParameters params = ADKernel::validParams();
-  params.addRequiredCoupledVar("u", "x-velocity");
-  params.addCoupledVar("v", 0, "y-velocity"); // only required in 2D and 3D
-  params.addCoupledVar("w", 0, "z-velocity"); // only required in 3D
+  params.addRequiredParam<MaterialPropertyName>("velocity", "The velocity");
   return params;
 }
 
 CGMass::CGMass(const InputParameters & parameters)
-  : ADKernel(parameters),
-    _grad_u_vel(adCoupledGradient("u")),
-    _grad_v_vel(isCoupled("v") ? adCoupledGradient("v") : _ad_grad_zero),
-    _grad_w_vel(isCoupled("w") ? adCoupledGradient("w") : _ad_grad_zero)
+  : ADKernel(parameters), _velocity(getADMaterialProperty<RealVectorValue>("velocity"))
 {
 }
 
@@ -36,5 +31,5 @@ CGMass::computeQpResidual()
   // (div u) * q
   // Note: we (arbitrarily) multiply this term by -1 so that it matches the -p(div v)
   // term in the momentum equation.  Not sure if that is really important?
-  return -(_grad_u_vel[_qp](0) + _grad_v_vel[_qp](1) + _grad_w_vel[_qp](2)) * _test[_i][_qp];
+  return _velocity[_qp] * _grad_test[_i][_qp];
 }
