@@ -76,9 +76,7 @@ mu=1
   [mass]
     type = CGMass
     variable = pressure
-    # velocity = velocity
-    u = u
-    v = v
+    velocity = velocity
   []
   [p_forcing]
     type = BodyForce
