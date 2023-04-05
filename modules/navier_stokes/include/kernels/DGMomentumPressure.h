@@ -31,4 +31,5 @@ protected:
   virtual ADReal computeQpResidual() override;
 
   const ADVariableGradient & _grad_pressure;
+  const unsigned short _component;
 };

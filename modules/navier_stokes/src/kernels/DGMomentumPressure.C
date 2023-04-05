@@ -9,6 +9,7 @@
 
 #include "DGMomentumPressure.h"
 #include "Function.h"
+#include "NS.h"
 
 registerMooseObject("NavierStokesApp", DGMomentumPressure);
 

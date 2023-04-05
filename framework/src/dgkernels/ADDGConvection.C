@@ -44,7 +44,7 @@ ADDGConvection::computeQpResidual(Moose::DGResidualType type)
       break;
 
     case Moose::Neighbor:
-      r += vdotn * average(_u[_qp], _u_neighbor[_qp]) * _test_neighbor[_i][_qp];
+      r -= vdotn * average(_u[_qp], _u_neighbor[_qp]) * _test_neighbor[_i][_qp];
       break;
   }
 
