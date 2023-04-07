@@ -1,13 +1,18 @@
+mu = 1
+rho = 1
+l = 200
+U = 1
+
 [Mesh]
   [gen]
     type = GeneratedMeshGenerator
     dim = 2
     xmin = 0
-    xmax = 100.0
+    xmax = ${l}
     ymin = 0
-    ymax = 100.0
-    nx = 16
-    ny = 16
+    ymax = ${l}
+    nx = 20
+    ny = 20
   []
   [corner_node]
     type = ExtraNodesetGenerator
@@ -113,7 +118,7 @@
     variable = u
     sigma = 6
     epsilon = -1
-    function = '1'
+    function = '${U}'
   []
   [pressure_pin]
     type = DirichletBC
@@ -140,6 +145,10 @@
     family = MONOMIAL
     order = CONSTANT
   []
+  [p]
+    family = MONOMIAL
+    order = CONSTANT
+  []
 []
 
 [AuxKernels]
@@ -153,6 +162,11 @@
     variable = vel_y
     v = v
   []
+  [p]
+    type = SelfAux
+    variable = p
+    v = pressure
+  []
 []
 
 [Executioner]
@@ -165,8 +179,12 @@
 
 [Outputs]
   exodus = true
-  [dof]
-    type = DOFMap
-    execute_on = 'initial'
+[]
+
+[Postprocessors]
+  [Re]
+    type = ParsedPostprocessor
+    pp_names = ''
+    function = '${rho} * ${U} * ${l} / ${mu}'
   []
 []
