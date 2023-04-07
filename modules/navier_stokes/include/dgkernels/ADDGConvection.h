@@ -19,8 +19,13 @@ public:
   ADDGConvection(const InputParameters & parameters);
 
 protected:
-  virtual ADReal computeQpResidual(Moose::DGResidualType type);
+  virtual ADReal computeQpResidual(Moose::DGResidualType type) override;
 
+  /// The velocity on the element
   const ADMaterialProperty<RealVectorValue> & _velocity;
+  /// The velocity on the neighbor
   const ADMaterialProperty<RealVectorValue> & _velocity_neighbor;
+
+  /// The interpolation method used to compute the advected quantity's face value
+  Moose::FV::InterpMethod _advected_interp_method;
 };
