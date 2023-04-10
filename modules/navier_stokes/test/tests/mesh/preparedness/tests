@@ -1,0 +1,10 @@
+[Tests]
+  design = 'Mesh/index.md'
+  issues = '#14329'
+  [test]
+    type = RunApp
+    requirement = 'The system shall ensure that the mesh is prepared at the time users execute their simulation.'
+    input = 'gpbr200_mesh_test_phth.i'
+    absent_out = '[nN][oO][tT] [cC]onverge'
+  []
+[]
