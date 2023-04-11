@@ -348,10 +348,15 @@ MooseMesh::freeBndElems()
   _bnd_elem_ids.clear();
 }
 
-void
-MooseMesh::prepare(bool)
+bool
+MooseMesh::prepare(const bool force_mesh_prepare)
 {
   TIME_SECTION("prepare", 2, "Preparing Mesh", true);
+  if (force_mesh_prepare && !_allow_final_prepare_for_use)
+    mooseError("'prepare' has been asked to force mesh preparation, however, we have also been "
+               "told not to allow any prepare_for_use calls");
+
+  bool called_prepare_for_use = false;
 
   mooseAssert(_mesh, "The MeshBase has not been constructed");
 
@@ -359,14 +364,15 @@ MooseMesh::prepare(bool)
     // For whatever reason we do not want to allow renumbering here nor ever in the future?
     getMesh().allow_renumbering(false);
 
-  if (!_mesh->is_prepared() && _allow_final_prepare_for_use)
+  if ((!_mesh->is_prepared() || force_mesh_prepare) && _allow_final_prepare_for_use)
   {
     _mesh->prepare_for_use();
     _moose_mesh_prepared = false;
+    called_prepare_for_use = true;
   }
 
   if (_moose_mesh_prepared)
-    return;
+    return called_prepare_for_use;
 
   // Collect (local) subdomain IDs
   _mesh_subdomains.clear();
@@ -421,6 +427,8 @@ MooseMesh::prepare(bool)
   checkDuplicateSubdomainNames();
 
   _moose_mesh_prepared = true;
+
+  return called_prepare_for_use;
 }
 
 void
