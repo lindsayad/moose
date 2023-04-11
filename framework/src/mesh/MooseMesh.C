@@ -360,7 +360,7 @@ MooseMesh::prepare(const bool force_mesh_prepare)
 
   mooseAssert(_mesh, "The MeshBase has not been constructed");
 
-  if (!dynamic_cast<DistributedMesh *>(&getMesh()) || _is_nemesis)
+  if (!dynamic_cast<DistributedMesh *>(&getMesh()))
     // For whatever reason we do not want to allow renumbering here nor ever in the future?
     getMesh().allow_renumbering(false);
 
