@@ -26,6 +26,8 @@ protected:
   /// The velocity on the neighbor
   const ADMaterialProperty<RealVectorValue> & _velocity_neighbor;
 
-  /// The interpolation method used to compute the advected quantity's face value
-  Moose::FV::InterpMethod _advected_interp_method;
+  /// The advected quantity value on the element side of the face
+  const MooseArray<ADReal> & _adv_quant_elem;
+  /// The advected quantity value on the neighbor side of the face
+  const MooseArray<ADReal> & _adv_quant_neighbor;
 };

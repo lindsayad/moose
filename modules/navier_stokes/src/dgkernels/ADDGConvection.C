@@ -20,25 +20,23 @@ ADDGConvection::validParams()
   InputParameters params = ADDGKernel::validParams();
   params.addRequiredParam<MaterialPropertyName>("velocity", "Velocity vector");
   params.addClassDescription("DG for convection");
-  params.addParam<MooseEnum>(
-      "advected_interp_method",
-      interpolationMethods(),
-      "The interpolation to use for the advected quantity. Options are "
-      "'upwind', 'average', 'sou' (for second-order upwind), 'min_mod', 'vanLeer', 'quick', and "
-      "'skewness-corrected' with the default being 'upwind'.");
-  MooseEnum velocity_interp_method("average rc", "rc");
+  params.addParam<MaterialPropertyName>("advected_quantity",
+                                        "An optional material property to be advected. If not "
+                                        "supplied, then the variable will be used.");
   return params;
 }
 
 ADDGConvection::ADDGConvection(const InputParameters & parameters)
   : ADDGKernel(parameters),
     _velocity(getADMaterialProperty<RealVectorValue>("velocity")),
-    _velocity_neighbor(getNeighborADMaterialProperty<RealVectorValue>("velocity"))
+    _velocity_neighbor(getNeighborADMaterialProperty<RealVectorValue>("velocity")),
+    _adv_quant_elem(isParamValid("advected_quantity")
+                        ? getADMaterialProperty<Real>("advected_quantity").get()
+                        : _u),
+    _adv_quant_neighbor(isParamValid("advected_quantity")
+                            ? getNeighborADMaterialProperty<Real>("advected_quantity").get()
+                            : _u_neighbor)
 {
-  setInterpolationMethod(*this, _advected_interp_method, "advected_interp_method");
-  if ((_advected_interp_method != InterpMethod::Average) &&
-      (_advected_interp_method != InterpMethod::Upwind))
-    paramError("advected_interp_method", "Currently only support 'upwind' or 'average'");
 }
 
 ADReal
@@ -53,16 +51,10 @@ ADDGConvection::computeQpResidual(Moose::DGResidualType type)
 
   const auto face_u = [&]()
   {
-    if (_advected_interp_method == InterpMethod::Average)
-      return average(_u[_qp], _u_neighbor[_qp]);
+    if (vdotn >= 0)
+      return _adv_quant_elem[_qp];
     else
-    {
-      if (vdotn >= 0)
-        return _u[_qp];
-      else
-        return _u_neighbor[_qp];
-    }
-    mooseError("We should never get here");
+      return _adv_quant_neighbor[_qp];
   }();
 
   switch (type)

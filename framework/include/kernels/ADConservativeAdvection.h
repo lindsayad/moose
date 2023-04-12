@@ -27,4 +27,7 @@ protected:
 
   /// advection velocity
   const ADMaterialProperty<RealVectorValue> & _velocity;
+
+  /// advected quantity
+  const MooseArray<ADReal> & _adv_quant;
 };

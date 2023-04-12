@@ -19,16 +19,23 @@ ADConservativeAdvection::validParams()
   params.addClassDescription("Conservative form of $\\nabla \\cdot \\vec{v} u$ which in its weak "
                              "form is given by: $(-\\nabla \\psi_i, \\vec{v} u)$.");
   params.addRequiredParam<MaterialPropertyName>("velocity", "Velocity vector");
+  params.addParam<MaterialPropertyName>("advected_quantity",
+                                        "An optional material property to be advected. If not "
+                                        "supplied, then the variable will be used.");
   return params;
 }
 
 ADConservativeAdvection::ADConservativeAdvection(const InputParameters & parameters)
-  : ADKernel(parameters), _velocity(getADMaterialProperty<RealVectorValue>("velocity"))
+  : ADKernel(parameters),
+    _velocity(getADMaterialProperty<RealVectorValue>("velocity")),
+    _adv_quant(isParamValid("advected_quantity")
+                   ? getADMaterialProperty<Real>("advected_quantity").get()
+                   : _u)
 {
 }
 
 ADReal
 ADConservativeAdvection::computeQpResidual()
 {
-  return -_grad_test[_i][_qp] * _velocity[_qp] * _u[_qp];
+  return -_grad_test[_i][_qp] * _velocity[_qp] * _adv_quant[_qp];
 }
