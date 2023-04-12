@@ -37,10 +37,12 @@ U = 1
     type = ADConservativeAdvection
     variable = u
     velocity = 'velocity'
+    advected_quantity = 'rhou'
   []
   [momentum_x_diffusion]
-    type = Diffusion
+    type = MatDiffusion
     variable = u
+    diffusivity = 'mu'
   []
   [momentum_x_pressure]
     type = DGMomentumPressure
@@ -52,10 +54,12 @@ U = 1
     type = ADConservativeAdvection
     variable = v
     velocity = 'velocity'
+    advected_quantity = 'rhov'
   []
   [momentum_y_diffusion]
-    type = Diffusion
+    type = MatDiffusion
     variable = v
+    diffusivity = 'mu'
   []
   [momentum_y_pressure]
     type = DGMomentumPressure
@@ -75,23 +79,27 @@ U = 1
     type = ADDGConvection
     variable = u
     velocity = 'velocity'
+    advected_quantity = 'rhou'
   []
   [momentum_x_diffusion]
     type = DGDiffusion
     variable = u
     sigma = 6
     epsilon = -1
+    diff = 'mu'
   []
   [momentum_y_convection]
     type = ADDGConvection
     variable = v
     velocity = 'velocity'
+    advected_quantity = 'rhov'
   []
   [momentum_y_diffusion]
     type = DGDiffusion
     variable = v
     sigma = 6
     epsilon = -1
+    diff = 'mu'
   []
 []
 
@@ -103,6 +111,7 @@ U = 1
     sigma = 6
     epsilon = -1
     function = '0'
+    diff = 'mu'
   []
   [v_walls]
     type = DGFunctionDiffusionDirichletBC
@@ -111,6 +120,7 @@ U = 1
     sigma = 6
     epsilon = -1
     function = '0'
+    diff = 'mu'
   []
   [u_top]
     type = DGFunctionDiffusionDirichletBC
@@ -119,6 +129,7 @@ U = 1
     sigma = 6
     epsilon = -1
     function = '${U}'
+    diff = 'mu'
   []
   [pressure_pin]
     type = DirichletBC
@@ -129,10 +140,21 @@ U = 1
 []
 
 [Materials]
+  [const]
+    type = ADGenericConstantMaterial
+    prop_names = 'rho'
+    prop_values = '${rho}'
+  []
+  [const_reg]
+    type = GenericConstantMaterial
+    prop_names = 'mu'
+    prop_values = '${mu}'
+  []
   [vel]
     type = CGDGMaterial
     u = u
     v = v
+    rho = 'rho'
   []
 []
 

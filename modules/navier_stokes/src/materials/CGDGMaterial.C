@@ -23,20 +23,28 @@ CGDGMaterial::validParams()
   params.addRequiredCoupledVar("u", "x-velocity");
   params.addCoupledVar("v", 0, "y-velocity"); // only required in 2D and 3D
   params.addCoupledVar("w", 0, "z-velocity"); // only required in 3D
+  params.addRequiredParam<MaterialPropertyName>(NS::density, "The density");
   return params;
 }
 
 CGDGMaterial::CGDGMaterial(const InputParameters & parameters)
   : Material(parameters),
-    _velocity(declareADProperty<RealVectorValue>("velocity")),
-    _u_vel(adCoupledValue("u")),
-    _v_vel(isCoupled("v") ? adCoupledValue("v") : _ad_zero),
-    _w_vel(isCoupled("w") ? adCoupledValue("w") : _ad_zero)
+    _velocity(declareADProperty<RealVectorValue>(NS::velocity)),
+    _vel_x(adCoupledValue("u")),
+    _vel_y(isCoupled("v") ? adCoupledValue("v") : _ad_zero),
+    _vel_z(isCoupled("w") ? adCoupledValue("w") : _ad_zero),
+    _mom_x(declareADProperty<Real>(NS::momentum_x)),
+    _mom_y(declareADProperty<Real>(NS::momentum_y)),
+    _mom_z(declareADProperty<Real>(NS::momentum_z)),
+    _rho(getADMaterialProperty<Real>(NS::density))
 {
 }
 
 void
 CGDGMaterial::computeQpProperties()
 {
-  _velocity[_qp] = ADRealVectorValue{_u_vel[_qp], _v_vel[_qp], _w_vel[_qp]};
+  _velocity[_qp] = ADRealVectorValue{_vel_x[_qp], _vel_y[_qp], _vel_z[_qp]};
+  _mom_x[_qp] = _rho[_qp] * _vel_x[_qp];
+  _mom_y[_qp] = _rho[_qp] * _vel_y[_qp];
+  _mom_z[_qp] = _rho[_qp] * _vel_z[_qp];
 }
