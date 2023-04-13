@@ -93,30 +93,4 @@
     requirement = 'The system shall compute an accurate Jacobian when a scaling factor is applied to a scalar variable.'
     difference_tol = 1e-7
   []
-  [hybrid]
-    requirement = 'The system shall be able to solve a lid driven cavity problem for a Reynolds number of 200 using a hybrid CG-DG scheme in which the pressure is first order Lagrange and the velocity is first order monomial and show'
-    [residual]
-      type = Exodiff
-      input = hybrid-cg-dg.i
-      exodiff = hybrid-cg-dg_out.e
-      detail = 'accurate results, and'
-    []
-    [hybrid-jac]
-      type = PetscJacobianTester
-      run_sim = True
-      input = hybrid-cg-dg.i
-      cli_args = 'Mesh/gen/nx=4 Mesh/gen/ny=4'
-      detail = 'a perfect Jacobian.'
-      difference_tol = 1e0
-      ratio_tol = 1e-7
-    []
-  []
-  [hybrid-channel]
-    type = Exodiff
-    input = channel-hybrid.i
-    exodiff = channel-hybrid_out.e
-    requirement = 'The system shall be able to solve a channel flow problem using a hybrid CG-DG discretization with first Lagrange pressure and first monomial velocity.'
-    method = "!dbg"
-    valgrind = 'none'
-  []
 []
