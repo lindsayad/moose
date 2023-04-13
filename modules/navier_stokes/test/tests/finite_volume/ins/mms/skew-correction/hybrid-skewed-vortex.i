@@ -129,6 +129,7 @@ mu=1
     type = CGDGMaterial
     u = u
     v = v
+    rho = 1
   []
 []
 

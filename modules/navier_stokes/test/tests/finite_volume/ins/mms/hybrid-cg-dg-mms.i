@@ -1,5 +1,11 @@
 rho=1
 mu=1
+cp=1
+k=1
+# rho=1.1
+# mu=1.1
+# cp=1.1
+# k=1.1
 
 [Mesh]
   [gen]
@@ -28,6 +34,9 @@ mu=1
     family = MONOMIAL
   []
   [pressure][]
+  [T]
+    family = MONOMIAL
+  []
 []
 
 [Kernels]
@@ -35,10 +44,12 @@ mu=1
     type = ADConservativeAdvection
     variable = u
     velocity = 'velocity'
+    advected_quantity = 'rhou'
   []
   [momentum_x_diffusion]
-    type = Diffusion
+    type = MatDiffusion
     variable = u
+    diffusivity = 'mu'
   []
   [momentum_x_pressure]
     type = DGMomentumPressure
@@ -55,10 +66,12 @@ mu=1
     type = ADConservativeAdvection
     variable = v
     velocity = 'velocity'
+    advected_quantity = 'rhov'
   []
   [momentum_y_diffusion]
-    type = Diffusion
+    type = MatDiffusion
     variable = v
+    diffusivity = 'mu'
   []
   [momentum_y_pressure]
     type = DGMomentumPressure
@@ -81,6 +94,22 @@ mu=1
     variable = pressure
     function = forcing_p
   []
+  [T_convection]
+    type = ADConservativeAdvection
+    variable = T
+    velocity = 'velocity'
+    advected_quantity = 'rho_cp_temp'
+  []
+  [T_diffusion]
+    type = MatDiffusion
+    variable = T
+    diffusivity = 'k'
+  []
+  [T_forcing]
+    type = BodyForce
+    variable = T
+    function = forcing_T
+  []
 []
 
 [DGKernels]
@@ -88,23 +117,40 @@ mu=1
     type = ADDGConvection
     variable = u
     velocity = 'velocity'
+    advected_quantity = 'rhou'
   []
   [momentum_x_diffusion]
     type = DGDiffusion
     variable = u
     sigma = 6
     epsilon = -1
+    diff = 'mu'
   []
   [momentum_y_convection]
     type = ADDGConvection
     variable = v
     velocity = 'velocity'
+    advected_quantity = 'rhov'
   []
   [momentum_y_diffusion]
     type = DGDiffusion
     variable = v
     sigma = 6
     epsilon = -1
+    diff = 'mu'
+  []
+  [T_convection]
+    type = ADDGConvection
+    variable = T
+    velocity = 'velocity'
+    advected_quantity = 'rho_cp_temp'
+  []
+  [T_diffusion]
+    type = DGDiffusion
+    variable = T
+    sigma = 6
+    epsilon = -1
+    diff = 'k'
   []
 []
 
@@ -116,6 +162,7 @@ mu=1
     sigma = 6
     epsilon = -1
     function = exact_u
+    diff = 'mu'
   []
   [v_walls]
     type = DGFunctionDiffusionDirichletBC
@@ -124,6 +171,7 @@ mu=1
     sigma = 6
     epsilon = -1
     function = exact_v
+    diff = 'mu'
   []
   [pressure_pin]
     type = FunctionDirichletBC
@@ -131,13 +179,39 @@ mu=1
     boundary = 'pinned_node'
     function = 'exact_p'
   []
+  [T_walls]
+    type = DGFunctionDiffusionDirichletBC
+    boundary = 'left bottom right top'
+    variable = T
+    sigma = 6
+    epsilon = -1
+    function = exact_T
+    diff = 'k'
+  []
 []
 
 [Materials]
+  [const]
+    type = ADGenericConstantMaterial
+    prop_names = 'rho cp'
+    prop_values = '${rho} ${cp}'
+  []
+  [const_reg]
+    type = GenericConstantMaterial
+    prop_names = 'mu k'
+    prop_values = '${mu} ${k}'
+  []
   [vel]
     type = CGDGMaterial
     u = u
     v = v
+    rho = 'rho'
+  []
+  [enthalpy]
+    type = CGDGEnthalpyMaterial
+    rho = 'rho'
+    cp = 'cp'
+    temperature = T
   []
 []
 
@@ -145,12 +219,6 @@ mu=1
   [exact_u]
     type = ParsedFunction
     value = 'sin(y)*cos((1/2)*x*pi)'
-  []
-  [exact_rhou]
-    type = ParsedFunction
-    value = 'rho*sin(y)*cos((1/2)*x*pi)'
-    vars = 'rho'
-    vals = '${rho}'
   []
   [forcing_u]
     type = ParsedFunction
@@ -161,12 +229,6 @@ mu=1
   [exact_v]
     type = ParsedFunction
     value = 'sin(x)*cos((1/2)*y*pi)'
-  []
-  [exact_rhov]
-    type = ParsedFunction
-    value = 'rho*sin(x)*cos((1/2)*y*pi)'
-    vars = 'rho'
-    vals = '${rho}'
   []
   [forcing_v]
     type = ParsedFunction
@@ -183,6 +245,16 @@ mu=1
     value = '(1/2)*pi*rho*sin(x)*sin((1/2)*y*pi) + (1/2)*pi*rho*sin(y)*sin((1/2)*x*pi)'
     vars = 'rho'
     vals = '${rho}'
+  []
+  [exact_T]
+    type = ParsedFunction
+    value = 'cos(x)*cos(y)'
+  []
+  [forcing_T]
+    type = ParsedFunction
+    value = '-cp*rho*sin(x)*sin(y)*cos(x)*cos((1/2)*y*pi) - cp*rho*sin(x)*sin(y)*cos(y)*cos((1/2)*x*pi) - 1/2*pi*cp*rho*sin(x)*sin((1/2)*y*pi)*cos(x)*cos(y) - 1/2*pi*cp*rho*sin(y)*sin((1/2)*x*pi)*cos(x)*cos(y) + 2*k*cos(x)*cos(y)'
+    vars = 'rho cp k'
+    vals = '${rho} ${cp} ${k}'
   []
 []
 
@@ -215,6 +287,13 @@ mu=1
   [L2v]
     variable = v
     function = exact_v
+    type = ElementL2Error
+    outputs = 'console csv'
+    execute_on = 'timestep_end'
+  []
+  [L2T]
+    variable = T
+    function = exact_T
     type = ElementL2Error
     outputs = 'console csv'
     execute_on = 'timestep_end'
