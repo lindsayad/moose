@@ -8,11 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "ADDGConvection.h"
-#include "NSFVUtils.h"
 
 registerMooseObject("NavierStokesApp", ADDGConvection);
-
-using namespace Moose::FV;
 
 InputParameters
 ADDGConvection::validParams()
