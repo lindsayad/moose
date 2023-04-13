@@ -138,13 +138,10 @@ rho = 1.1
     rho = 'rho'
   []
   [p_in]
-    type = ADDGConvectionBC
+    type = CGMassBC
     boundary = 'left'
     variable = pressure
     velocity_function = v_inlet
-    # Have to switch sign because we multiplied the mass equation weak
-    # form by -1 in order to get a symmetric matrix
-    primal_dirichlet_value = -1
   []
   [u_out]
     type = ADDGConvectionBC

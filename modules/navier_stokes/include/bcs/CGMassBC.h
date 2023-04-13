@@ -9,17 +9,17 @@
 
 #pragma once
 
-#include "ADConservativeAdvection.h"
+#include "ADDGConvectionBC.h"
 
 /**
  * This class computes the mass equation residual and Jacobian
  * contributions for the incompressible Navier-Stokes mass
- * equation.
+ * equation at inflow (and possibly outflow) boundaries
  */
-class CGMass : public ADConservativeAdvection
+class CGMassBC : public ADDGConvectionBC
 {
 public:
   static InputParameters validParams();
 
-  CGMass(const InputParameters & parameters);
+  CGMassBC(const InputParameters & parameters);
 };
