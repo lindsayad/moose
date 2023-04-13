@@ -1,11 +1,7 @@
-rho=1
-mu=1
-cp=1
-k=1
-# rho=1.1
-# mu=1.1
-# cp=1.1
-# k=1.1
+rho=1.1
+mu=1.1
+cp=1.1
+k=1.1
 
 [Mesh]
   [gen]
@@ -242,9 +238,7 @@ k=1
   []
   [forcing_p]
     type = ParsedFunction
-    value = '(1/2)*pi*rho*sin(x)*sin((1/2)*y*pi) + (1/2)*pi*rho*sin(y)*sin((1/2)*x*pi)'
-    vars = 'rho'
-    vals = '${rho}'
+    value = '(1/2)*pi*sin(x)*sin((1/2)*y*pi) + (1/2)*pi*sin(y)*sin((1/2)*x*pi)'
   []
   [exact_T]
     type = ParsedFunction
