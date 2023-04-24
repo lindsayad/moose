@@ -10,7 +10,7 @@
 #include "ADConservativeAdvection.h"
 #include "SystemBase.h"
 
-registerMooseObject("MooseApp", ADConservativeAdvection);
+registerMooseObject("NavierStokesApp", ADConservativeAdvection);
 
 InputParameters
 ADConservativeAdvection::validParams()
