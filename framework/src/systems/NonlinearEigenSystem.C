@@ -248,6 +248,9 @@ NonlinearEigenSystem::solve()
   // Update the solution vector to the active eigenvector
   if (n_converged_eigenvalues)
     getConvergedEigenpair(_eigen_problem.activeEigenvalueIndex());
+
+  // Apply any constraints
+  sys().get_dof_map().enforce_constraints_exactly(sys());
 }
 
 void
