@@ -6,7 +6,6 @@
 ################################################################################
 
 # Material properties fuel
-rho = 3279. # density [kg / m^3]  (@1000K)
 mu = 0.005926 # viscosity [Pa s]
 rho_solid = 3279.7
 rho_liquid = 3279.7
@@ -25,13 +24,10 @@ rho_ref = 3580.
 
 power = 10e3
 
-alpha_b = '${fparse 1.0/rho_liquid}'
-
 # Mass flow rate tuning
 friction = 11.0 # [kg / m^4]
 pump_force = '${fparse 0.25*4.0e6}' # [N / m^3]
 porosity = 1.0
-T_hx = 592
 Reactor_Area = ${fparse 3.14159*0.2575*0.2575}
 Pr = ${fparse mu*cp_liquid/k_solid}
 
@@ -54,9 +50,6 @@ velocity_interp_method = 'rc'
   rho = ${rho_liquid}
   mu = mu
   cp = 'cp_mixture'
-
-  #temperature = T
-  gravity = '-9.81 0 0'
 []
 
 ################################################################################
@@ -687,20 +680,22 @@ velocity_interp_method = 'rc'
     [up]
       splitting = 'u p' # 'u' and 'p' are the names of subsolvers
       splitting_type = schur
+      petsc_options = '-ksp_monitor'
       petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type'
       petsc_options_value = 'full                            selfp                             300                1e-4      fgmres'
     []
     [u]
       vars = 'superficial_vel_x superficial_vel_y superficial_vel_z T T_ref'
-      petsc_options = '-ksp_monitor'
       petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type -ksp_rtol -ksp_gmres_restart -ksp_pc_side -pc_hypre_boomeramg_grid_sweeps_down -pc_hypre_boomeramg_grid_sweeps_up -pc_hypre_boomeramg_grid_sweeps_coarse -pc_hypre_boomeramg_restriction_type -pc_hypre_boomeramg_postrelax'
       petsc_options_value = 'hypre    boomeramg      gmres     4e-1      300                right        0                                    1                                  1                                      1                                    F'
     []
     [p]
       vars = 'pressure lambda'
       petsc_options = '-ksp_monitor'
-      petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_jacobi_type'
-      petsc_options_value = 'gmres     300                4e-1      jacobi   right        rowmax'
+      petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -ksp_pc_side -pc_type -pc_hypre_type'
+      petsc_options_value = 'gmres     300                4e-1      right        hypre    euclid'
+      # petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -sub_pc_factor_shift_type'
+      # petsc_options_value = 'gmres     300                4e-1      asm      right        NONZERO'
     []
   []
   [SMP]
@@ -734,7 +729,7 @@ velocity_interp_method = 'rc'
   nl_abs_tol = 1e-3
   nl_max_its = 10 # fail early and try again with a shorter time step
   l_max_its = 80
-  automatic_scaling = true
+  # automatic_scaling = true
 []
 
 [Debug]
