@@ -2,8 +2,8 @@ mu = 1.1
 rho = 1.1
 l = 2
 U = 1
-advected_interp_method = 'average'
-velocity_interp_method = 'rc'
+advected_interp_method = 'upwind'
+velocity_interp_method = 'average'
 
 [GlobalParams]
   rhie_chow_user_object = 'rc'
@@ -174,13 +174,17 @@ velocity_interp_method = 'rc'
     []
     [u]
       vars = 'vel_x vel_y'
-      petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type -ksp_rtol -ksp_gmres_restart -ksp_pc_side'
-      petsc_options_value = 'hypre    boomeramg      gmres    5e-1      300                 right'
+      petsc_options = '-ksp_monitor'
+      petsc_options_iname = '-pc_type -pc_factor_mat_solver_type -ksp_pc_side'
+      petsc_options_value = 'lu       mumps                      right'
+      # petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type -ksp_rtol -ksp_gmres_restart -ksp_pc_side -pc_hypre_boomeramg_restriction_type -pc_hypre_boomeramg_postrelax -pc_hypre_boomeramg_grid_sweeps_down'
+      # petsc_options_value = 'hypre    boomeramg      gmres    1e-5      300                 right 1 F 0'
     []
     [p]
       vars = 'pressure'
-      petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side'
-      petsc_options_value = 'gmres    300                5e-1      jacobi    right'
+      petsc_options = '-ksp_monitor'
+      petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -mat_schur_complement_ainv_type -pc_factor_mat_solver_type'
+      petsc_options_value = 'gmres     300                1e-5      lu       right        diag mumps'
     []
   []
   [SMP]
