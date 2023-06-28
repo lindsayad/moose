@@ -270,7 +270,7 @@ public:
   {
     return _element_data->vectorTagDofValue(tag);
   }
-  const FieldVariableValue & matrixTagValue(TagID tag) const
+  const FieldVariableValue & matrixTagValue(TagID tag) const override
   {
     return _element_data->matrixTagValue(tag);
   }
@@ -659,7 +659,7 @@ public:
   }
 
   const DoFValue & nodalVectorTagValue(TagID tag) const override;
-  const DoFValue & nodalMatrixTagValue(TagID tag) const;
+  const DoFValue & nodalMatrixTagValue(TagID tag) const override;
 
   const typename Moose::ADType<OutputType>::type & adNodalValue() const;
 

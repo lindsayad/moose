@@ -56,20 +56,18 @@ TaggingInterface::TaggingInterface(const MooseObject * moose_object)
 {
   auto & vector_tag_names = _tag_params.get<MultiMooseEnum>("vector_tags");
 
-  if (!vector_tag_names.isValid())
-    mooseError("MUST provide at least one vector_tag for Kernel: ", _moose_object.name());
-
-  for (auto & vector_tag_name : vector_tag_names)
-  {
-    const TagID vector_tag_id = _subproblem.getVectorTagID(vector_tag_name.name());
-    if (_subproblem.vectorTagType(vector_tag_id) != Moose::VECTOR_TAG_RESIDUAL)
-      mooseError("Vector tag '",
-                 vector_tag_name.name(),
-                 "' for Kernel '",
-                 _moose_object.name(),
-                 "' is not a residual vector tag");
-    _vector_tags.insert(vector_tag_id);
-  }
+  if (vector_tag_names.isValid())
+    for (auto & vector_tag_name : vector_tag_names)
+    {
+      const TagID vector_tag_id = _subproblem.getVectorTagID(vector_tag_name.name());
+      if (_subproblem.vectorTagType(vector_tag_id) != Moose::VECTOR_TAG_RESIDUAL)
+        mooseError("Vector tag '",
+                   vector_tag_name.name(),
+                   "' for Kernel '",
+                   _moose_object.name(),
+                   "' is not a residual vector tag");
+      _vector_tags.insert(vector_tag_id);
+    }
 
   // Add extra vector tags. These tags should be created in the System already, otherwise
   // we can not add the extra tags
