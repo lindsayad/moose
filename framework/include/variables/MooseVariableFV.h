@@ -190,6 +190,10 @@ public:
   {
     mooseError("nodalVectorTagValue not implemented for finite volume variables.");
   }
+  const DoFValue & nodalMatrixTagValue(TagID) const override
+  {
+    mooseError("nodalMatrixTagValue not implemented for finite volume variables.");
+  }
 
   const FieldVariableValue & vectorTagValue(TagID tag) const override
   {
@@ -199,7 +203,7 @@ public:
   {
     return _element_data->vectorTagDofValue(tag);
   }
-  const FieldVariableValue & matrixTagValue(TagID tag)
+  const FieldVariableValue & matrixTagValue(TagID tag) const override
   {
     return _element_data->matrixTagValue(tag);
   }
