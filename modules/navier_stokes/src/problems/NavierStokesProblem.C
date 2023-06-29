@@ -20,12 +20,31 @@ NavierStokesProblem::validParams()
   InputParameters params = FEProblem::validParams();
   params.addRequiredParam<TagName>(
       "velocity_mass_matrix", "The matrix tag name corresponding to the velocity mass matrix.");
+  params.addRequiredParam<TagName>(
+      "B_matrix",
+      "The matrix tag name corresponding to the velocity-pressure portion of the system matrix.");
+  params.addRequiredParam<TagName>(
+      "C_matrix",
+      "The matrix tag name corresponding to the pressure-velocity portion of the system matrix.");
+  params.addRequiredParam<std::string>("velocity_split_name",
+                                       "The name of the velocity field split");
   return params;
 }
 
 NavierStokesProblem::NavierStokesProblem(const InputParameters & parameters)
-  : FEProblem(parameters), _velocity_mass_matrix(getParam<TagName>("velocity_mass_matrix"))
+  : FEProblem(parameters),
+    _velocity_mass_matrix(getParam<TagName>("velocity_mass_matrix")),
+    _B_matrix(getParam<TagName>("B_matrix")),
+    _C_matrix(getParam<TagName>("C_matrix")),
+    _velocity_split_name(getParam<std::string>("velocity_split_name"))
 {
+}
+
+NavierStokesProblem::~NavierStokesProblem()
+{
+  if (_L)
+    // We're destructing so don't check for errors which can throw
+    MatDestroy(&_L);
 }
 
 PetscErrorCode
@@ -35,7 +54,10 @@ navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
   KSP schur_ksp;
   PC fs_pc, lsc_pc;
   PetscInt num_splits;
-  Mat lsc_pc_pmat;
+  Mat lsc_pc_pmat, B, C, Qv, CQvdiaginv;
+  Vec Qvdiaginv;
+  IS velocity_is, pressure_is = NULL;
+  PetscInt rstart, rend;
 
   PetscFunctionBegin;
   PetscCall(KSPGetPC(ksp, &fs_pc));
@@ -47,13 +69,46 @@ navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
   PetscCall(PCGetOperators(lsc_pc, NULL, &lsc_pc_pmat));
 
   auto * ns_problem = static_cast<NavierStokesProblem *>(context);
-  const auto mass_matrix_tag_id = ns_problem->massMatrixTagID();
-  auto & libmesh_sparse_mass_matrix =
-      ns_problem->getNonlinearSystemBase(0).getMatrix(mass_matrix_tag_id);
-  auto & libmesh_petsc_mass_matrix = static_cast<PetscMatrix<Number> &>(libmesh_sparse_mass_matrix);
-  auto petsc_mass_matrix = libmesh_petsc_mass_matrix.mat();
+  auto Q = static_cast<PetscMatrix<Number> &>(
+               ns_problem->getNonlinearSystemBase(0).getMatrix(ns_problem->massMatrixTagID()))
+               .mat();
+  auto B_full = static_cast<PetscMatrix<Number> &>(
+                    ns_problem->getNonlinearSystemBase(0).getMatrix(ns_problem->BMatrixTagID()))
+                    .mat();
+  auto C_full = static_cast<PetscMatrix<Number> &>(
+                    ns_problem->getNonlinearSystemBase(0).getMatrix(ns_problem->CMatrixTagID()))
+                    .mat();
+  auto L = ns_problem->getL();
 
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "Q", (PetscObject)petsc_mass_matrix));
+  PetscCall(MatGetOwnershipRange(Q, &rstart, &rend));
+  PetscCall(PCFieldSplitGetIS(fs_pc, ns_problem->velocitySplitName().c_str(), &velocity_is));
+  PetscCall(ISComplement(velocity_is, rstart, rend, &pressure_is));
+  PetscCall(MatCreateSubMatrix(Q, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &Qv));
+  PetscCall(MatCreateSubMatrix(B_full, velocity_is, pressure_is, MAT_INITIAL_MATRIX, &B));
+  PetscCall(MatCreateSubMatrix(C_full, pressure_is, velocity_is, MAT_INITIAL_MATRIX, &C));
+  PetscCall(ISDestroy(&pressure_is));
+
+  // We'll be right-multiplying C so need right compatible
+  PetscCall(MatCreateVecs(C, &Qvdiaginv, NULL));
+  PetscCall(MatGetDiagonal(Qv, Qvdiaginv));
+  PetscCall(VecReciprocal(Qvdiaginv));
+  PetscCall(MatConvert(C, MATSAME, MAT_INITIAL_MATRIX, &CQvdiaginv));
+  PetscCall(MatDiagonalScale(CQvdiaginv, NULL, Qvdiaginv));
+  if (!L)
+    PetscCall(MatMatMult(CQvdiaginv, B, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &L));
+  else
+    PetscCall(MatMatMult(CQvdiaginv, B, MAT_REUSE_MATRIX, PETSC_DEFAULT, &L));
+
+  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L));
+  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Lp", (PetscObject)L));
+  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "Q", (PetscObject)Q));
+
+  PetscCall(VecDestroy(&Qvdiaginv));
+  PetscCall(MatDestroy(&Qv));
+  PetscCall(MatDestroy(&B));
+  PetscCall(MatDestroy(&C));
+  PetscCall(MatDestroy(&CQvdiaginv));
+
   PetscFunctionReturn(PETSC_SUCCESS);
 }
 

@@ -3,9 +3,12 @@
 []
 
 [Problem]
-  extra_tag_matrices = 'mass'
+  extra_tag_matrices = 'mass off_diag'
   type = NavierStokesProblem
   velocity_mass_matrix = 'mass'
+  B_matrix = 'off_diag'
+  C_matrix = 'off_diag'
+  velocity_split_name = 'u'
 []
 
 [Mesh]
@@ -16,8 +19,8 @@
     xmax = 1.0
     ymin = 0
     ymax = 1.0
-    nx = 64
-    ny = 64
+    nx = 2
+    ny = 2
     elem_type = QUAD9
   []
   [./corner_node]
@@ -53,6 +56,7 @@
     u = vel_x
     v = vel_y
     pressure = p
+    extra_matrix_tags = 'off_diag'
   [../]
 
   # x-momentum, space
@@ -69,6 +73,14 @@
     variable = vel_x
     matrix_tags = 'mass'
   []
+  [x_off_diag]
+    type = PressureGradient
+    variable = vel_x
+    pressure = p
+    component = 0
+    vector_tags = ''
+    matrix_tags = 'off_diag'
+  []
 
   # y-momentum, space
   [./y_momentum_space]
@@ -83,6 +95,14 @@
     type = Mass
     variable = vel_y
     matrix_tags = 'mass'
+  []
+  [y_off_diag]
+    type = PressureGradient
+    variable = vel_y
+    pressure = p
+    component = 1
+    vector_tags = ''
+    matrix_tags = 'off_diag'
   []
 []
 
@@ -153,7 +173,7 @@
     []
     [p]
       vars = 'p'
-      petsc_options = '-ksp_monitor -ksp_constant_null_space -pc_lsc_scale_diag'# -lsc_ksp_monitor_true_residual'
+      petsc_options = '-ksp_monitor -ksp_constant_null_space -pc_lsc_scale_diag -lsc_ksp_monitor_true_residual'
       petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
       petsc_options_value = 'fgmres     300                1e-7     lsc      right        lsc       hypre        boomeramg          gmres         1e-5          right            300'
     []
