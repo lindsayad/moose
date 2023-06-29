@@ -22,9 +22,11 @@ public:
   PressureGradient(const InputParameters & parameters);
 
 protected:
-  virtual Real computeQpResidual();
-  virtual Real computeQpJacobian();
+  virtual Real computeQpResidual() override;
+  virtual Real computeQpJacobian() override;
+  virtual Real computeQpOffDiagJacobian(unsigned int jvar) override;
 
   unsigned int _component;
   const VariableValue & _pressure;
+  const unsigned int _pressure_id;
 };

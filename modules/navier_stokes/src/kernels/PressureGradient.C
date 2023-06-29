@@ -27,7 +27,8 @@ PressureGradient::validParams()
 PressureGradient::PressureGradient(const InputParameters & parameters)
   : Kernel(parameters),
     _component(getParam<unsigned int>("component")),
-    _pressure(coupledValue(NS::pressure))
+    _pressure(coupledValue(NS::pressure)),
+    _pressure_id(coupled(NS::pressure))
 {
 }
 
@@ -41,4 +42,13 @@ Real
 PressureGradient::computeQpJacobian()
 {
   return 0.;
+}
+
+Real
+PressureGradient::computeQpOffDiagJacobian(const unsigned int jvar)
+{
+  if (jvar == _pressure_id)
+    return -_phi[_j][_qp] * _grad_test[_i][_qp](_component);
+  else
+    return 0.;
 }
