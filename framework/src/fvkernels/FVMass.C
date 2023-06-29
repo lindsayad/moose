@@ -19,6 +19,7 @@ FVMass::validParams()
   params.addParam<MooseFunctorName>("density", 1.0, "Optional density weighting functor");
   params.set<MultiMooseEnum>("vector_tags") = "";
   params.set<MultiMooseEnum>("matrix_tags") = "";
+  params.suppressParameter<MultiMooseEnum>("vector_tags");
   return params;
 }
 
