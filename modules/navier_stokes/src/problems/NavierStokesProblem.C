@@ -28,36 +28,45 @@ NavierStokesProblem::NavierStokesProblem(const InputParameters & parameters)
 {
 }
 
-void
-NavierStokesProblem::initPetscOutput()
+PetscErrorCode
+navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
 {
-  PetscErrorCode ierr = 0;
-  KSP ksp, schur_ksp;
   KSP * subksp;
+  KSP schur_ksp;
   PC fs_pc, lsc_pc;
   PetscInt num_splits;
   Mat lsc_pc_pmat;
-  auto snes = getNonlinearSystemBase(0).getSNES();
-  ierr = SNESGetKSP(snes, &ksp);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-  ierr = KSPGetPC(ksp, &fs_pc);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-  // Need to call this before getting the sub ksps
-  ierr = PCSetUp(fs_pc);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-  ierr = PCFieldSplitGetSubKSP(fs_pc, &num_splits, &subksp);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-  schur_ksp = subksp[1];
-  ierr = KSPGetPC(schur_ksp, &lsc_pc);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-  ierr = PCGetOperators(lsc_pc, NULL, &lsc_pc_pmat);
-  LIBMESH_CHKERR2(this->comm(), ierr);
 
-  const auto mass_matrix_tag_id = getMatrixTagID(_velocity_mass_matrix);
-  auto & libmesh_sparse_mass_matrix = getNonlinearSystemBase(0).getMatrix(mass_matrix_tag_id);
+  PetscFunctionBegin;
+  PetscCall(KSPGetPC(ksp, &fs_pc));
+  // Need to call this before getting the sub ksps
+  PetscCall(PCSetUp(fs_pc));
+  PetscCall(PCFieldSplitGetSubKSP(fs_pc, &num_splits, &subksp));
+  schur_ksp = subksp[1];
+  PetscCall(KSPGetPC(schur_ksp, &lsc_pc));
+  PetscCall(PCGetOperators(lsc_pc, NULL, &lsc_pc_pmat));
+
+  auto * ns_problem = static_cast<NavierStokesProblem *>(context);
+  const auto mass_matrix_tag_id = ns_problem->massMatrixTagID();
+  auto & libmesh_sparse_mass_matrix =
+      ns_problem->getNonlinearSystemBase(0).getMatrix(mass_matrix_tag_id);
   auto & libmesh_petsc_mass_matrix = static_cast<PetscMatrix<Number> &>(libmesh_sparse_mass_matrix);
   auto petsc_mass_matrix = libmesh_petsc_mass_matrix.mat();
 
-  ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "Qv", (PetscObject)petsc_mass_matrix);
+  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "Q", (PetscObject)petsc_mass_matrix));
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+void
+NavierStokesProblem::initPetscOutput()
+{
+  FEProblem::initPetscOutput();
+
+  PetscErrorCode ierr = 0;
+  KSP ksp;
+  auto snes = getNonlinearSystemBase(0).getSNES();
+  ierr = SNESGetKSP(snes, &ksp);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = KSPSetPreSolve(ksp, &navierStokesKSPPreSolve, this);
   LIBMESH_CHKERR2(this->comm(), ierr);
 }

@@ -24,6 +24,8 @@ public:
 
   NavierStokesProblem(const InputParameters & parameters);
 
+  TagID massMatrixTagID() const { return getMatrixTagID(_velocity_mass_matrix); }
+
 protected:
   /**
    * Reinitialize PETSc output for proper linear/nonlinear iteration display
