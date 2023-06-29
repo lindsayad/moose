@@ -2,6 +2,12 @@
   gravity = '0 0 0'
 []
 
+[Problem]
+  extra_tag_matrices = 'mass'
+  type = NavierStokesProblem
+  velocity_mass_matrix = 'mass'
+[]
+
 [Mesh]
   [gen]
     type = GeneratedMeshGenerator
@@ -10,8 +16,8 @@
     xmax = 1.0
     ymin = 0
     ymax = 1.0
-    nx = 16
-    ny = 16
+    nx = 64
+    ny = 64
     elem_type = QUAD9
   []
   [./corner_node]
@@ -33,16 +39,6 @@
     family = LAGRANGE
   [../]
 
-  [./T]
-    order = SECOND
-    family = LAGRANGE
-
-    [./InitialCondition]
-      type = ConstantIC
-      value = 1.0
-    [../]
-  [../]
-
   [./p]
     order = FIRST
     family = LAGRANGE
@@ -59,12 +55,6 @@
     pressure = p
   [../]
 
-  # x-momentum, time
-  [./x_momentum_time]
-    type = INSMomentumTimeDerivative
-    variable = vel_x
-  [../]
-
   # x-momentum, space
   [./x_momentum_space]
     type = INSMomentumLaplaceForm
@@ -74,12 +64,11 @@
     pressure = p
     component = 0
   [../]
-
-  # y-momentum, time
-  [./y_momentum_time]
-    type = INSMomentumTimeDerivative
-    variable = vel_y
-  [../]
+  [x_mass]
+    type = Mass
+    variable = vel_x
+    matrix_tags = 'mass'
+  []
 
   # y-momentum, space
   [./y_momentum_space]
@@ -90,19 +79,11 @@
     pressure = p
     component = 1
   [../]
-
- # temperature
- [./temperature_time]
-   type = INSTemperatureTimeDerivative
-   variable = T
- [../]
-
- [./temperature_space]
-   type = INSTemperature
-   variable = T
-   u = vel_x
-   v = vel_y
- [../]
+  [y_mass]
+    type = Mass
+    variable = vel_y
+    matrix_tags = 'mass'
+  []
 []
 
 [BCs]
@@ -127,34 +108,20 @@
     value = 0.0
   [../]
 
-  [./T_hot]
-    type = DirichletBC
-    variable = T
-    boundary = 'bottom'
-    value = 1
-  [../]
-
-  [./T_cold]
-    type = DirichletBC
-    variable = T
-    boundary = 'top'
-    value = 0
-  [../]
-
-  [./pressure_pin]
-    type = DirichletBC
-    variable = p
-    boundary = 'pinned_node'
-    value = 0
-  [../]
+  # [./pressure_pin]
+  #   type = DirichletBC
+  #   variable = p
+  #   boundary = 'pinned_node'
+  #   value = 0
+  # [../]
 []
 
 [Materials]
   [./const]
     type = GenericConstantMaterial
     block = 0
-    prop_names = 'rho mu cp k'
-    prop_values = '1  1  1  .01'
+    prop_names = 'rho mu'
+    prop_values = '1  1'
   [../]
 []
 
@@ -169,31 +136,45 @@
 []
 
 [Preconditioning]
-  [./SMP]
+  active = 'FSP'
+  [FSP]
+    type = FSP
+    topsplit = 'up'
+    [up]
+      splitting = 'u p'
+      splitting_type  = schur
+      petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type'
+      petsc_options_value = 'full                            self                             300                1e-5      fgmres'
+    []
+    [u]
+      vars = 'vel_x vel_y'
+      petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol -pc_factor_mat_solver_type'
+      petsc_options_value = 'lu       right        gmres     1e-5      mumps'
+    []
+    [p]
+      vars = 'p'
+      petsc_options = '-ksp_monitor -ksp_constant_null_space -pc_lsc_scale_diag'# -lsc_ksp_monitor_true_residual'
+      petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
+      petsc_options_value = 'fgmres     300                1e-7     lsc      right        lsc       hypre        boomeramg          gmres         1e-5          right            300'
+    []
+  []
+  [SMP]
     type = SMP
     full = true
-    solve_type = 'NEWTON'
-  [../]
+    petsc_options = '-ksp_constant_null_space -ksp_test_null_space'
+    petsc_options_iname = '-pc_type -pc_factor_shift_type -ksp_gmres_restart -ksp_pc_side -ksp_norm_type'
+    petsc_options_value = 'lu       NONZERO          300 left preconditioned'
+  []
 []
 
 [Executioner]
-  type = Transient
-  # Run for 100+ timesteps to reach steady state.
-  num_steps = 5
-  dt = .5
-  dtmin = .5
-  petsc_options_iname = '-pc_type -pc_asm_overlap -sub_pc_type -sub_pc_factor_levels'
-  petsc_options_value = 'asm      2               ilu          4'
+  solve_type = NEWTON
+  type = Steady
   line_search = 'none'
   nl_rel_tol = 1e-12
-  nl_abs_tol = 1e-13
-  nl_max_its = 6
-  l_tol = 1e-6
-  l_max_its = 500
+  nl_abs_tol = 1e-12
 []
 
 [Outputs]
-  file_base = lid_driven_out
   exodus = true
-  perf_graph = true
 []
