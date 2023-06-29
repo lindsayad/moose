@@ -1,13 +1,13 @@
 [GlobalParams]
   gravity = '0 0 0'
+  preset = true
 []
 
 [Problem]
-  extra_tag_matrices = 'mass off_diag'
+  extra_tag_matrices = 'mass physics'
   type = NavierStokesProblem
-  velocity_mass_matrix = 'mass'
-  B_matrix = 'off_diag'
-  C_matrix = 'off_diag'
+  mass_matrix = 'mass'
+  physics_matrix = 'physics'
   velocity_split_name = 'u'
 []
 
@@ -19,8 +19,8 @@
     xmax = 1.0
     ymin = 0
     ymax = 1.0
-    nx = 2
-    ny = 2
+    nx = 64
+    ny = 64
     elem_type = QUAD9
   []
   [./corner_node]
@@ -56,7 +56,7 @@
     u = vel_x
     v = vel_y
     pressure = p
-    extra_matrix_tags = 'off_diag'
+    extra_matrix_tags = 'physics'
   [../]
 
   # x-momentum, space
@@ -67,19 +67,12 @@
     v = vel_y
     pressure = p
     component = 0
+    extra_matrix_tags = 'physics'
   [../]
   [x_mass]
     type = Mass
     variable = vel_x
     matrix_tags = 'mass'
-  []
-  [x_off_diag]
-    type = PressureGradient
-    variable = vel_x
-    pressure = p
-    component = 0
-    vector_tags = ''
-    matrix_tags = 'off_diag'
   []
 
   # y-momentum, space
@@ -90,19 +83,12 @@
     v = vel_y
     pressure = p
     component = 1
+    extra_matrix_tags = 'physics'
   [../]
   [y_mass]
     type = Mass
     variable = vel_y
     matrix_tags = 'mass'
-  []
-  [y_off_diag]
-    type = PressureGradient
-    variable = vel_y
-    pressure = p
-    component = 1
-    vector_tags = ''
-    matrix_tags = 'off_diag'
   []
 []
 

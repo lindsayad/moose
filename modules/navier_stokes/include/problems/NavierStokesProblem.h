@@ -24,10 +24,12 @@ public:
 
   NavierStokesProblem(const InputParameters & parameters);
 
-  TagID massMatrixTagID() const { return getMatrixTagID(_velocity_mass_matrix); }
-  TagID BMatrixTagID() const { return getMatrixTagID(_B_matrix); }
-  TagID CMatrixTagID() const { return getMatrixTagID(_C_matrix); }
+  TagID massMatrixTagID() const { return getMatrixTagID(_mass_matrix); }
+  TagID physicsMatrixTagID() const { return getMatrixTagID(_physics_matrix); }
   Mat getL() { return _L; }
+  Mat getA() { return _A; }
+  Mat getB() { return _B; }
+  Mat getC() { return _C; }
   const std::string & velocitySplitName() const { return _velocity_split_name; }
 
   virtual ~NavierStokesProblem();
@@ -39,10 +41,9 @@ protected:
   virtual void initPetscOutput() override;
 
 private:
-  const TagName & _velocity_mass_matrix;
-  const TagName & _B_matrix;
-  const TagName & _C_matrix;
+  const TagName & _mass_matrix;
+  const TagName & _physics_matrix;
   const std::string & _velocity_split_name;
 
-  Mat _L = nullptr;
+  Mat _L = nullptr, _A = nullptr, _B = nullptr, _C = nullptr;
 };

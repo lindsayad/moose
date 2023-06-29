@@ -18,14 +18,11 @@ InputParameters
 NavierStokesProblem::validParams()
 {
   InputParameters params = FEProblem::validParams();
+  params.addRequiredParam<TagName>("mass_matrix",
+                                   "The matrix tag name corresponding to the mass matrix.");
   params.addRequiredParam<TagName>(
-      "velocity_mass_matrix", "The matrix tag name corresponding to the velocity mass matrix.");
-  params.addRequiredParam<TagName>(
-      "B_matrix",
-      "The matrix tag name corresponding to the velocity-pressure portion of the system matrix.");
-  params.addRequiredParam<TagName>(
-      "C_matrix",
-      "The matrix tag name corresponding to the pressure-velocity portion of the system matrix.");
+      "physics_matrix",
+      "The matrix tag name corresponding to just the physics portion of the system matrix.");
   params.addRequiredParam<std::string>("velocity_split_name",
                                        "The name of the velocity field split");
   return params;
@@ -33,18 +30,24 @@ NavierStokesProblem::validParams()
 
 NavierStokesProblem::NavierStokesProblem(const InputParameters & parameters)
   : FEProblem(parameters),
-    _velocity_mass_matrix(getParam<TagName>("velocity_mass_matrix")),
-    _B_matrix(getParam<TagName>("B_matrix")),
-    _C_matrix(getParam<TagName>("C_matrix")),
+    _mass_matrix(getParam<TagName>("mass_matrix")),
+    _physics_matrix(getParam<TagName>("physics_matrix")),
     _velocity_split_name(getParam<std::string>("velocity_split_name"))
 {
 }
 
 NavierStokesProblem::~NavierStokesProblem()
 {
-  if (_L)
-    // We're destructing so don't check for errors which can throw
-    MatDestroy(&_L);
+  auto destroy_mat = [](auto mat)
+  {
+    if (mat)
+      // We're destructing so don't check for errors which can throw
+      MatDestroy(&mat);
+  };
+  destroy_mat(_L);
+  destroy_mat(_A);
+  destroy_mat(_B);
+  destroy_mat(_C);
 }
 
 PetscErrorCode
@@ -54,7 +57,7 @@ navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
   KSP schur_ksp;
   PC fs_pc, lsc_pc;
   PetscInt num_splits;
-  Mat lsc_pc_pmat, B, C, Qv, CQvdiaginv;
+  Mat lsc_pc_pmat, Qv, CQvdiaginv;
   Vec Qvdiaginv;
   IS velocity_is, pressure_is = NULL;
   PetscInt rstart, rend;
@@ -72,20 +75,34 @@ navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
   auto Q = static_cast<PetscMatrix<Number> &>(
                ns_problem->getNonlinearSystemBase(0).getMatrix(ns_problem->massMatrixTagID()))
                .mat();
-  auto B_full = static_cast<PetscMatrix<Number> &>(
-                    ns_problem->getNonlinearSystemBase(0).getMatrix(ns_problem->BMatrixTagID()))
-                    .mat();
-  auto C_full = static_cast<PetscMatrix<Number> &>(
-                    ns_problem->getNonlinearSystemBase(0).getMatrix(ns_problem->CMatrixTagID()))
-                    .mat();
+  auto physics = static_cast<PetscMatrix<Number> &>(ns_problem->getNonlinearSystemBase(0).getMatrix(
+                                                        ns_problem->physicsMatrixTagID()))
+                     .mat();
   auto L = ns_problem->getL();
+  auto A = ns_problem->getA();
+  auto B = ns_problem->getB();
+  auto C = ns_problem->getC();
 
   PetscCall(MatGetOwnershipRange(Q, &rstart, &rend));
   PetscCall(PCFieldSplitGetIS(fs_pc, ns_problem->velocitySplitName().c_str(), &velocity_is));
   PetscCall(ISComplement(velocity_is, rstart, rend, &pressure_is));
   PetscCall(MatCreateSubMatrix(Q, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &Qv));
-  PetscCall(MatCreateSubMatrix(B_full, velocity_is, pressure_is, MAT_INITIAL_MATRIX, &B));
-  PetscCall(MatCreateSubMatrix(C_full, pressure_is, velocity_is, MAT_INITIAL_MATRIX, &C));
+
+  if (!A)
+    PetscCall(MatCreateSubMatrix(physics, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &A));
+  else
+    PetscCall(MatCreateSubMatrix(physics, velocity_is, velocity_is, MAT_REUSE_MATRIX, &A));
+
+  if (!B)
+    PetscCall(MatCreateSubMatrix(physics, velocity_is, pressure_is, MAT_INITIAL_MATRIX, &B));
+  else
+    PetscCall(MatCreateSubMatrix(physics, velocity_is, pressure_is, MAT_REUSE_MATRIX, &B));
+
+  if (!C)
+    PetscCall(MatCreateSubMatrix(physics, pressure_is, velocity_is, MAT_INITIAL_MATRIX, &C));
+  else
+    PetscCall(MatCreateSubMatrix(physics, pressure_is, velocity_is, MAT_REUSE_MATRIX, &C));
+
   PetscCall(ISDestroy(&pressure_is));
 
   // We'll be right-multiplying C so need right compatible
@@ -102,11 +119,12 @@ navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
   PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L));
   PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Lp", (PetscObject)L));
   PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "Q", (PetscObject)Q));
+  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "A", (PetscObject)A));
+  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "B", (PetscObject)B));
+  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "C", (PetscObject)C));
 
   PetscCall(VecDestroy(&Qvdiaginv));
   PetscCall(MatDestroy(&Qv));
-  PetscCall(MatDestroy(&B));
-  PetscCall(MatDestroy(&C));
   PetscCall(MatDestroy(&CQvdiaginv));
 
   PetscFunctionReturn(PETSC_SUCCESS);
