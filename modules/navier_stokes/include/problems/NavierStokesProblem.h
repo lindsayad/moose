@@ -26,11 +26,11 @@ public:
 
   TagID massMatrixTagID() const { return getMatrixTagID(_mass_matrix); }
   TagID physicsMatrixTagID() const { return getMatrixTagID(_physics_matrix); }
-  Mat getL() { return _L; }
-  Mat getA() { return _A; }
-  Mat getB() { return _B; }
-  Mat getC() { return _C; }
-  Mat getQscale() { return _Q_scale; }
+  Mat & getL() { return _L; }
+  Mat & getA() { return _A; }
+  Mat & getB() { return _B; }
+  Mat & getC() { return _C; }
+  Mat & getQscale() { return _Q_scale; }
   const std::string & velocitySplitName() const { return _velocity_split_name; }
 
   virtual ~NavierStokesProblem();

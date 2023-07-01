@@ -80,12 +80,12 @@ navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
   auto physics = static_cast<PetscMatrix<Number> &>(ns_problem->getNonlinearSystemBase(0).getMatrix(
                                                         ns_problem->physicsMatrixTagID()))
                      .mat();
-  auto L = ns_problem->getL();
-  auto A = ns_problem->getA();
-  auto B = ns_problem->getB();
-  auto C = ns_problem->getC();
+  auto & L = ns_problem->getL();
+  auto & A = ns_problem->getA();
+  auto & B = ns_problem->getB();
+  auto & C = ns_problem->getC();
   // The velocity block of the mass matrix
-  auto Q_scale = ns_problem->getQscale();
+  auto & Q_scale = ns_problem->getQscale();
 
   PetscCall(MatGetOwnershipRange(Q, &rstart, &rend));
   PetscCall(PCFieldSplitGetIS(fs_pc, ns_problem->velocitySplitName().c_str(), &velocity_is));
@@ -133,6 +133,7 @@ navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
 
   PetscCall(VecDestroy(&Q_scale_diag_inv));
   PetscCall(MatDestroy(&C_Q_scale_diag_inv));
+  PetscCall(PetscFree(subksp));
 
   PetscFunctionReturn(PETSC_SUCCESS);
 }
