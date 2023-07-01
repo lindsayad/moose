@@ -1,9 +1,9 @@
-mu = 1.1
-rho = 1.1
+mu = 1e-2
+rho = 1
 l = 2
 U = 1
 advected_interp_method = 'upwind'
-velocity_interp_method = 'average'
+velocity_interp_method = 'rc'
 
 [GlobalParams]
   rhie_chow_user_object = 'rc'
@@ -35,11 +35,11 @@ velocity_interp_method = 'average'
 [Variables]
   [vel_x]
     type = INSFVVelocityVariable
-    initial_condition = 1
+    initial_condition = 0
   []
   [vel_y]
     type = INSFVVelocityVariable
-    initial_condition = 1
+    initial_condition = 0
   []
   [pressure]
     type = INSFVPressureVariable
@@ -55,6 +55,12 @@ velocity_interp_method = 'average'
     rho = ${rho}
   []
 
+  [u_time]
+    type = INSFVMomentumTimeDerivative
+    variable = vel_x
+    rho = ${rho}
+    momentum_component = 'x'
+  []
   [u_advection]
     type = INSFVMomentumAdvection
     variable = vel_x
@@ -76,6 +82,12 @@ velocity_interp_method = 'average'
     pressure = pressure
   []
 
+  [v_time]
+    type = INSFVMomentumTimeDerivative
+    variable = vel_y
+    rho = ${rho}
+    momentum_component = 'y'
+  []
   [v_advection]
     type = INSFVMomentumAdvection
     variable = vel_y
@@ -132,66 +144,38 @@ velocity_interp_method = 'average'
 []
 
 [Executioner]
-  type = Steady
+  type = Transient
   solve_type = 'NEWTON'
-  nl_rel_tol = 1e-12
+  nl_abs_tol = 1e-12
+  [TimeStepper]
+    type = IterationAdaptiveDT
+    optimal_iterations = 6
+    dt = 1e-3
+  []
+  steady_state_detection = true
 []
 
 [Preconditioning]
-  active = FSP
   [FSP]
     type = FSP
-    # It is the starting point of splitting
-    topsplit = 'up' # 'up' should match the following block name
+    topsplit = 'up'
     [up]
-      splitting = 'u p' # 'u' and 'p' are the names of subsolvers
+      splitting = 'u p'
       splitting_type  = schur
-      # Splitting type is set as schur, because the pressure part of Stokes-like systems
-      # is not diagonally dominant. CAN NOT use additive, multiplicative and etc.
-      #
-      # Original system:
-      #
-      # | Auu Aup | | u | = | f_u |
-      # | Apu 0   | | p |   | f_p |
-      #
-      # is factorized into
-      #
-      # |I             0 | | Auu  0|  | I  Auu^{-1}*Aup | | u | = | f_u |
-      # |Apu*Auu^{-1}  I | | 0   -S|  | 0  I            | | p |   | f_p |
-      #
-      # where
-      #
-      # S = Apu*Auu^{-1}*Aup
-      #
-      # The preconditioning is accomplished via the following steps
-      #
-      # (1) p* = f_p - Apu*Auu^{-1}f_u,
-      # (2) p = (-S)^{-1} p*
-      # (3) u = Auu^{-1}(f_u-Aup*p)
-
       petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type'
-      petsc_options_value = 'full                            selfp                             300                1e-4      fgmres'
+      petsc_options_value = 'full                            self                             300                1e-5      fgmres'
     []
     [u]
       vars = 'vel_x vel_y'
-      petsc_options = '-ksp_monitor'
-      petsc_options_iname = '-pc_type -pc_factor_mat_solver_type -ksp_pc_side'
-      petsc_options_value = 'lu       mumps                      right'
-      # petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type -ksp_rtol -ksp_gmres_restart -ksp_pc_side -pc_hypre_boomeramg_restriction_type -pc_hypre_boomeramg_postrelax -pc_hypre_boomeramg_grid_sweeps_down'
-      # petsc_options_value = 'hypre    boomeramg      gmres    1e-5      300                 right 1 F 0'
+      petsc_options_iname = '-pc_type -pc_hypre_type -ksp_pc_side -ksp_type -ksp_rtol -pc_hypre_boomeramg_relax_type_all -pc_hypre_boomeramg_restriction_type -pc_hypre_boomeramg_postrelax -pc_hypre_boomeramg_grid_sweeps_up -pc_hypre_boomeramg_grid_sweeps_down'
+      petsc_options_value = 'hypre    boomeramg      right        gmres     1e-2      SOR/Jacobi                         2                                    F,F,C                         3 0'
     []
     [p]
       vars = 'pressure'
-      petsc_options = '-ksp_monitor'
-      petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -mat_schur_complement_ainv_type -pc_factor_mat_solver_type'
-      petsc_options_value = 'gmres     300                1e-5      lu       right        diag mumps'
+      petsc_options = '-pc_lsc_scale_diag -ksp_monitor'
+      petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_factor_mat_solver_type -lsc_ksp_type -lsc_ksp_rtol'
+      petsc_options_value = 'fgmres    300                1e-3      lsc      right        lsc       lu           mumps                           gmres        1e-1'
     []
-  []
-  [SMP]
-    type = SMP
-    full = true
-    petsc_options_iname = '-pc_type -pc_factor_shift_type'
-    petsc_options_value = 'lu       NONZERO'
   []
 []
 
@@ -201,9 +185,6 @@ velocity_interp_method = 'average'
   [out]
     type = Exodus
     hide = 'Re lin cum_lin'
-  []
-  [perf]
-    type = PerfGraphOutput
   []
 []
 
