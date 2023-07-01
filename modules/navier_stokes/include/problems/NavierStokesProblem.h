@@ -30,6 +30,7 @@ public:
   Mat getA() { return _A; }
   Mat getB() { return _B; }
   Mat getC() { return _C; }
+  Mat getQscale() { return _Q_scale; }
   const std::string & velocitySplitName() const { return _velocity_split_name; }
 
   virtual ~NavierStokesProblem();
@@ -45,5 +46,5 @@ private:
   const TagName & _physics_matrix;
   const std::string & _velocity_split_name;
 
-  Mat _L = nullptr, _A = nullptr, _B = nullptr, _C = nullptr;
+  Mat _L = nullptr, _A = nullptr, _B = nullptr, _C = nullptr, _Q_scale = nullptr;
 };

@@ -48,6 +48,7 @@ NavierStokesProblem::~NavierStokesProblem()
   destroy_mat(_A);
   destroy_mat(_B);
   destroy_mat(_C);
+  destroy_mat(_Q_scale);
 }
 
 PetscErrorCode
@@ -57,8 +58,8 @@ navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
   KSP schur_ksp;
   PC fs_pc, lsc_pc;
   PetscInt num_splits;
-  Mat lsc_pc_pmat, Qv, CQvdiaginv;
-  Vec Qvdiaginv;
+  Mat lsc_pc_pmat, C_Q_scale_diag_inv;
+  Vec Q_scale_diag_inv;
   IS velocity_is, pressure_is = NULL;
   PetscInt rstart, rend;
 
@@ -72,6 +73,7 @@ navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
   PetscCall(PCGetOperators(lsc_pc, NULL, &lsc_pc_pmat));
 
   auto * ns_problem = static_cast<NavierStokesProblem *>(context);
+  // The mass matrix
   auto Q = static_cast<PetscMatrix<Number> &>(
                ns_problem->getNonlinearSystemBase(0).getMatrix(ns_problem->massMatrixTagID()))
                .mat();
@@ -82,11 +84,12 @@ navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
   auto A = ns_problem->getA();
   auto B = ns_problem->getB();
   auto C = ns_problem->getC();
+  // The velocity block of the mass matrix
+  auto Q_scale = ns_problem->getQscale();
 
   PetscCall(MatGetOwnershipRange(Q, &rstart, &rend));
   PetscCall(PCFieldSplitGetIS(fs_pc, ns_problem->velocitySplitName().c_str(), &velocity_is));
   PetscCall(ISComplement(velocity_is, rstart, rend, &pressure_is));
-  PetscCall(MatCreateSubMatrix(Q, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &Qv));
 
   if (!A)
     PetscCall(MatCreateSubMatrix(physics, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &A));
@@ -105,27 +108,31 @@ navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
 
   PetscCall(ISDestroy(&pressure_is));
 
-  // We'll be right-multiplying C so need right compatible
-  PetscCall(MatCreateVecs(C, &Qvdiaginv, NULL));
-  PetscCall(MatGetDiagonal(Qv, Qvdiaginv));
-  PetscCall(VecReciprocal(Qvdiaginv));
-  PetscCall(MatConvert(C, MATSAME, MAT_INITIAL_MATRIX, &CQvdiaginv));
-  PetscCall(MatDiagonalScale(CQvdiaginv, NULL, Qvdiaginv));
-  if (!L)
-    PetscCall(MatMatMult(CQvdiaginv, B, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &L));
+  if (!Q_scale)
+    PetscCall(MatCreateSubMatrix(Q, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &Q_scale));
   else
-    PetscCall(MatMatMult(CQvdiaginv, B, MAT_REUSE_MATRIX, PETSC_DEFAULT, &L));
+    PetscCall(MatCreateSubMatrix(Q, velocity_is, velocity_is, MAT_REUSE_MATRIX, &Q_scale));
+
+  // We'll be right-multiplying C so need right compatible
+  PetscCall(MatCreateVecs(C, &Q_scale_diag_inv, NULL));
+  PetscCall(MatGetDiagonal(Q_scale, Q_scale_diag_inv));
+  PetscCall(VecReciprocal(Q_scale_diag_inv));
+  PetscCall(MatConvert(C, MATSAME, MAT_INITIAL_MATRIX, &C_Q_scale_diag_inv));
+  PetscCall(MatDiagonalScale(C_Q_scale_diag_inv, NULL, Q_scale_diag_inv));
+  if (!L)
+    PetscCall(MatMatMult(C_Q_scale_diag_inv, B, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &L));
+  else
+    PetscCall(MatMatMult(C_Q_scale_diag_inv, B, MAT_REUSE_MATRIX, PETSC_DEFAULT, &L));
 
   PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L));
   PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Lp", (PetscObject)L));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "Q", (PetscObject)Q));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "A", (PetscObject)A));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "B", (PetscObject)B));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "C", (PetscObject)C));
+  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Q_scale", (PetscObject)Q_scale));
+  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_A", (PetscObject)A));
+  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_B", (PetscObject)B));
+  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_C", (PetscObject)C));
 
-  PetscCall(VecDestroy(&Qvdiaginv));
-  PetscCall(MatDestroy(&Qv));
-  PetscCall(MatDestroy(&CQvdiaginv));
+  PetscCall(VecDestroy(&Q_scale_diag_inv));
+  PetscCall(MatDestroy(&C_Q_scale_diag_inv));
 
   PetscFunctionReturn(PETSC_SUCCESS);
 }
