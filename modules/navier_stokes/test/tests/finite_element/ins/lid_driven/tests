@@ -1,12 +1,11 @@
 [Tests]
   design = 'modules/navier_stokes/index.md'
-  [./lid_driven]
-    type = 'Exodiff'
+  [./lid_driven_fsp]
+    type = 'RunApp'
     input = 'lid_driven.i'
-    exodiff = 'lid_driven_out.e'
-    custom_cmp = 'lid_driven.cmp'
     issues = '#000'
-    requirement = 'We shall be able to solve a canonical lid-driven problem without stabilization, using mixed order finite elements for velocity and pressure.'
+    requirement = 'LSC preconditioning shall require only a small number of linear iterations to converge.'
+    absent_out = '14 KSP Residual norm'
   [../]
   [./lid_driven_md]
     type = 'Exodiff'
