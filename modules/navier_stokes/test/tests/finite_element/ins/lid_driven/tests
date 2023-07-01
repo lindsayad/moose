@@ -5,6 +5,7 @@
     input = 'lid_driven.i'
     issues = '#000'
     requirement = 'LSC preconditioning shall require only a small number of linear iterations to converge.'
+    cli_args = "Materials/const/prop_values='1 1'"
     absent_out = '14 KSP Residual norm'
   [../]
   [./lid_driven_md]

@@ -1,6 +1,7 @@
 [GlobalParams]
   gravity = '0 0 0'
   preset = true
+  supg = false
 []
 
 [Problem]
@@ -127,7 +128,7 @@
     type = GenericConstantMaterial
     block = 0
     prop_names = 'rho mu'
-    prop_values = '1  1'
+    prop_values = '1  2e-3'
   [../]
 []
 
@@ -167,9 +168,8 @@
   [SMP]
     type = SMP
     full = true
-    petsc_options = '-ksp_constant_null_space -ksp_test_null_space'
-    petsc_options_iname = '-pc_type -pc_factor_shift_type -ksp_gmres_restart -ksp_pc_side -ksp_norm_type'
-    petsc_options_value = 'lu       NONZERO          300 left preconditioned'
+    petsc_options_iname = '-pc_type -pc_factor_shift_type'
+    petsc_options_value = 'lu       NONZERO'
   []
 []
 
@@ -177,8 +177,8 @@
   solve_type = NEWTON
   type = Steady
   line_search = 'none'
-  nl_rel_tol = 1e-12
-  nl_abs_tol = 1e-12
+  nl_rel_tol = 1e-8
+  nl_abs_tol = 1e-8
 []
 
 [Outputs]
