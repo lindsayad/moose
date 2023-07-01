@@ -159,7 +159,7 @@
     []
     [p]
       vars = 'p'
-      petsc_options = '-ksp_monitor -ksp_constant_null_space -pc_lsc_scale_diag'
+      petsc_options = '-ksp_monitor -pc_lsc_scale_diag'
       petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_factor_mat_solver_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
       petsc_options_value = 'fgmres     300                1e-5     lsc      right        lsc       lu           mumps                          gmres         1e-5          right            300'
     []
