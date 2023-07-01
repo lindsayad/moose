@@ -96,11 +96,6 @@ velocity_interp_method = 'rc'
     initial_from_file_var = superficial_vel_z
     block = 'reactor pipe pump mixing-plate'
   []
-  [lambda]
-    family = SCALAR
-    order = FIRST
-    block = 'reactor pipe pump mixing-plate'
-  []
   [T]
     type = INSFVEnergyVariable
     initial_from_file_var = T
@@ -222,14 +217,6 @@ velocity_interp_method = 'rc'
   variable = pressure
   advected_interp_method = 'skewness-corrected'
   velocity_interp_method = 'rc'
-  block = 'reactor pipe pump mixing-plate'
-[]
-[mean_zero_pressure]
-  #type = FVIntegralValueConstraint
-  type = FVPointValueConstraint
-  variable = pressure
-  lambda = lambda
-  point = '0. 0. 0.'
   block = 'reactor pipe pump mixing-plate'
 []
 ####### X-MOMENTUM EQUATION #######
@@ -668,41 +655,34 @@ velocity_interp_method = 'rc'
   []
 []
 
+[Problem]
+  error_on_jacobian_nonzero_reallocation = true
+[]
+
 ################################################################################
 # EXECUTION / SOLVE
 ################################################################################
 [Preconditioning]
-  active = FSP
   [FSP]
     type = FSP
-    # It is the starting point of splitting
-    topsplit = 'up' # 'up' should match the following block name
+    topsplit = 'up'
     [up]
-      splitting = 'u p' # 'u' and 'p' are the names of subsolvers
-      splitting_type = schur
-      petsc_options = '-ksp_monitor'
+      splitting = 'u p'
+      splitting_type  = schur
       petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type'
-      petsc_options_value = 'full                            selfp                             300                1e-4      fgmres'
+      petsc_options_value = 'upper                           self                             300                1e-5      fgmres'
     []
     [u]
       vars = 'superficial_vel_x superficial_vel_y superficial_vel_z T T_ref'
-      petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type -ksp_rtol -ksp_gmres_restart -ksp_pc_side -pc_hypre_boomeramg_grid_sweeps_down -pc_hypre_boomeramg_grid_sweeps_up -pc_hypre_boomeramg_grid_sweeps_coarse -pc_hypre_boomeramg_restriction_type -pc_hypre_boomeramg_postrelax'
-      petsc_options_value = 'hypre    boomeramg      gmres     4e-1      300                right        0                                    1                                  1                                      1                                    F'
+      petsc_options_iname = '-pc_type -sub_pc_type -ksp_pc_side -ksp_type -ksp_rtol'
+      petsc_options_value = 'bjacobi  ilu          right        gmres     1e-2'
     []
     [p]
-      vars = 'pressure lambda'
-      petsc_options = '-ksp_monitor'
-      petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -ksp_pc_side -pc_type -pc_hypre_type'
-      petsc_options_value = 'gmres     300                4e-1      right        hypre    euclid'
-      # petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -sub_pc_factor_shift_type'
-      # petsc_options_value = 'gmres     300                4e-1      asm      right        NONZERO'
+      vars = 'pressure'
+      petsc_options = '-ksp_monitor -pc_lsc_scale_diag -ksp_constant_null_space -lsc_ksp_constant_null_space'
+      petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_sub_pc_type -lsc_ksp_type -lsc_ksp_rtol'
+      petsc_options_value = 'fgmres     300                1e-2     lsc      right        bjacobi ilu                          gmres         1e-1'
     []
-  []
-  [SMP]
-    type = SMP
-    full = true
-    petsc_options_iname = '-pc_type -pc_factor_shift_type'
-    petsc_options_value = 'lu       NONZERO'
   []
 []
 
@@ -722,8 +702,6 @@ velocity_interp_method = 'rc'
 
   # Solver parameters
   solve_type = 'NEWTON'
-  #petsc_options_iname = '-pc_type -pc_factor_shift_type -ksp_gmres_restart'
-  #petsc_options_value = 'lu NONZERO 20'
   line_search = 'none'
   nl_rel_tol = 1e-5
   nl_abs_tol = 1e-3
