@@ -242,6 +242,7 @@ FEProblemBase::validParams()
       "by objects which compute residuals and Jacobians "
       "(Kernels, BCs, etc.) by setting tags on them. The outer index is for which "
       "nonlinear system the extra tag vectors should be added for");
+  params.addParam<TagName>("preconditioning_matrix", "The preconditioning matrix");
 
   params.addParam<std::vector<TagName>>(
       "extra_tag_solutions",
@@ -5620,10 +5621,13 @@ FEProblemBase::solve(const unsigned int nl_sys_num)
   _fail_next_nonlinear_convergence_check = false;
 
   if (_solve)
+  {
+    if (isParamValid("preconditioning_matrix"))
+      _current_nl_sys->setPreconditioningMatrix(
+          getMatrixTagID(getParam<TagName>("preconditioning_matrix")));
     _current_nl_sys->solve();
-
-  if (_solve)
     _current_nl_sys->update();
+  }
 
   // sync solutions in displaced problem
   if (_displaced_problem)

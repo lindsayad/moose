@@ -168,6 +168,8 @@ public:
 
   void residualAndJacobianTogether() override;
 
+  virtual void setPreconditioningMatrix(TagID) override { mooseError("not implemented"); }
+
 protected:
   virtual void postAddResidualObject(ResidualObject & object) override;
 
