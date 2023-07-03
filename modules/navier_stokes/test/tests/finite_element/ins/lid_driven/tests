@@ -4,9 +4,17 @@
     type = 'RunApp'
     input = 'lid_driven.i'
     issues = '#000'
-    requirement = 'LSC preconditioning shall require only a small number of linear iterations to converge.'
+    requirement = 'LSC preconditioning shall require only a small number of linear iterations to converge when using Newton with a Reynolds number of unity.'
     cli_args = "Materials/const/prop_values='1 1'"
     absent_out = '14 KSP Residual norm'
+  [../]
+  [./lid_driven_fsp_picard]
+    type = 'RunApp'
+    input = 'lid_driven.i'
+    issues = '#000'
+    requirement = 'LSC preconditioning shall require only a small number of linear iterations to converge when using Picard with a Reynolds number of 500.'
+    cli_args = "n=8 GlobalParams/picard=true -snes_linesearch_damping 0.4"
+    absent_out = '44 KSP Residual norm'
   [../]
   [./lid_driven_md]
     type = 'Exodiff'

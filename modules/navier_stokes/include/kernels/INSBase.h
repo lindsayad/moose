@@ -69,6 +69,11 @@ protected:
   const VariableValue & _w_vel;
   const VariableValue & _p;
 
+  const bool _picard;
+  const VariableValue & _u_vel_previous_nl;
+  const VariableValue & _v_vel_previous_nl;
+  const VariableValue & _w_vel_previous_nl;
+
   // Gradients
   const VariableGradient & _grad_u_vel;
   const VariableGradient & _grad_v_vel;

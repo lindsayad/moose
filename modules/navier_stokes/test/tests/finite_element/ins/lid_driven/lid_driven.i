@@ -154,7 +154,7 @@ n=64
       splitting = 'u p'
       splitting_type  = schur
       petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-      petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-11'
+      petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-10'
     []
     [u]
       vars = 'vel_x vel_y'

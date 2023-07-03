@@ -38,6 +38,10 @@ INSBase::validParams()
   params.addParam<bool>("transient_term",
                         false,
                         "Whether there should be a transient term in the momentum residuals.");
+  params.addParam<bool>("picard",
+                        false,
+                        "Whether we are applying a Picard strategy in which case we will linearize "
+                        "the nonlinear convective term.");
 
   return params;
 }
@@ -51,6 +55,11 @@ INSBase::INSBase(const InputParameters & parameters)
     _v_vel(coupledValue("v")),
     _w_vel(coupledValue("w")),
     _p(coupledValue(NS::pressure)),
+
+    _picard(getParam<bool>("picard")),
+    _u_vel_previous_nl(coupledValuePreviousNL("u")),
+    _v_vel_previous_nl(coupledValuePreviousNL("v")),
+    _w_vel_previous_nl(coupledValuePreviousNL("w")),
 
     // Gradients
     _grad_u_vel(coupledGradient("u")),
@@ -95,7 +104,10 @@ INSBase::INSBase(const InputParameters & parameters)
 RealVectorValue
 INSBase::convectiveTerm()
 {
-  RealVectorValue U(_u_vel[_qp], _v_vel[_qp], _w_vel[_qp]);
+  const auto U = _picard ? RealVectorValue(_u_vel_previous_nl[_qp],
+                                           _v_vel_previous_nl[_qp],
+                                           _w_vel_previous_nl[_qp])
+                         : RealVectorValue(_u_vel[_qp], _v_vel[_qp], _w_vel[_qp]);
   return _rho[_qp] *
          RealVectorValue(U * _grad_u_vel[_qp], U * _grad_v_vel[_qp], U * _grad_w_vel[_qp]);
 }
@@ -103,16 +115,27 @@ INSBase::convectiveTerm()
 RealVectorValue
 INSBase::dConvecDUComp(unsigned comp)
 {
-  RealVectorValue U(_u_vel[_qp], _v_vel[_qp], _w_vel[_qp]);
-  RealVectorValue d_U_d_comp(0, 0, 0);
-  d_U_d_comp(comp) = _phi[_j][_qp];
+  if (_picard)
+  {
+    RealVectorValue U(_u_vel_previous_nl[_qp], _v_vel_previous_nl[_qp], _w_vel_previous_nl[_qp]);
+    RealVectorValue convective_term;
+    convective_term(comp) = _rho[_qp] * U * _grad_phi[_j][_qp];
 
-  RealVectorValue convective_term = _rho[_qp] * RealVectorValue(d_U_d_comp * _grad_u_vel[_qp],
-                                                                d_U_d_comp * _grad_v_vel[_qp],
-                                                                d_U_d_comp * _grad_w_vel[_qp]);
-  convective_term(comp) += _rho[_qp] * U * _grad_phi[_j][_qp];
+    return convective_term;
+  }
+  else
+  {
+    RealVectorValue U(_u_vel[_qp], _v_vel[_qp], _w_vel[_qp]);
+    RealVectorValue d_U_d_comp(0, 0, 0);
+    d_U_d_comp(comp) = _phi[_j][_qp];
 
-  return convective_term;
+    RealVectorValue convective_term = _rho[_qp] * RealVectorValue(d_U_d_comp * _grad_u_vel[_qp],
+                                                                  d_U_d_comp * _grad_v_vel[_qp],
+                                                                  d_U_d_comp * _grad_w_vel[_qp]);
+    convective_term(comp) += _rho[_qp] * U * _grad_phi[_j][_qp];
+
+    return convective_term;
+  }
 }
 
 RealVectorValue
