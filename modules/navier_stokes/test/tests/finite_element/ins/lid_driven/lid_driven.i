@@ -1,3 +1,5 @@
+n=64
+
 [GlobalParams]
   gravity = '0 0 0'
   preset = true
@@ -6,6 +8,7 @@
 
 [Problem]
   extra_tag_matrices = 'mass physics'
+  previous_nl_solution_required = true
   type = NavierStokesProblem
   mass_matrix = 'mass'
   physics_matrix = 'physics'
@@ -20,8 +23,8 @@
     xmax = 1.0
     ymin = 0
     ymax = 1.0
-    nx = 64
-    ny = 64
+    nx = ${n}
+    ny = ${n}
     elem_type = QUAD9
   []
   [./corner_node]
@@ -150,8 +153,8 @@
     [up]
       splitting = 'u p'
       splitting_type  = schur
-      petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type'
-      petsc_options_value = 'full                            self                             300                1e-5      fgmres'
+      petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
+      petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-11'
     []
     [u]
       vars = 'vel_x vel_y'
@@ -176,6 +179,8 @@
 [Executioner]
   solve_type = NEWTON
   type = Steady
+  petsc_options_iname = '-snes_max_it'
+  petsc_options_value = '100'
   line_search = 'none'
   nl_rel_tol = 1e-8
   nl_abs_tol = 1e-8
