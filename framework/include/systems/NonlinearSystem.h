@@ -71,8 +71,6 @@ public:
 
   void residualAndJacobianTogether() override;
 
-  virtual void setPreconditioningMatrix(TagID preconditioning_matrix_tag_id) override;
-
 protected:
   void computeScalingJacobian() override;
   void computeScalingResidual() override;

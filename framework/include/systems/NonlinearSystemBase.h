@@ -678,8 +678,6 @@ public:
     _off_diagonals_in_auto_scaling = off_diagonals_in_auto_scaling;
   }
 
-  virtual void setPreconditioningMatrix(TagID preconditioning_matrix_tag_id) = 0;
-
   FEProblemBase & _fe_problem;
   System & _sys;
   // FIXME: make these protected and create getters/setters

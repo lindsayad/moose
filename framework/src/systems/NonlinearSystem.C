@@ -411,9 +411,3 @@ NonlinearSystem::residualAndJacobianTogether()
   nonlinearSolver()->jacobian = nullptr;
   nonlinearSolver()->residual_and_jacobian_object = &_resid_and_jac_functor;
 }
-
-void
-NonlinearSystem::setPreconditioningMatrix(TagID preconditioning_matrix_tag_id)
-{
-  _nl_implicit_sys.set_preconditioning_matrix(getMatrix(preconditioning_matrix_tag_id));
-}

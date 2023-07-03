@@ -37,7 +37,6 @@ public:
   virtual void setupFiniteDifferencedPreconditioner() override {}
   virtual void attachPreconditioner(Preconditioner<Number> * /* preconditioner */) override {}
   void residualAndJacobianTogether() override {}
-  virtual void setPreconditioningMatrix(TagID) override {}
 
 protected:
   void computeScalingJacobian() override {}
