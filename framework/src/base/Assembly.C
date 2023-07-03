@@ -33,8 +33,6 @@
 #include "libmesh/tensor_value.h"
 #include "libmesh/vector_value.h"
 #include "libmesh/fe.h"
-#include "libmesh/petsc_matrix.h"
-#include "libmesh/petsc_vector.h"
 
 template <typename P, typename C>
 void
@@ -4335,11 +4333,15 @@ void Assembly::setCachedJacobian(GlobalDataKey)
   for (MooseIndex(_cached_jacobian_rows) tag = 0; tag < _cached_jacobian_rows.size(); tag++)
     if (_sys.hasMatrix(tag))
     {
-      const auto & rows = _cached_jacobian_rows[tag];
-      auto mat = static_cast<PetscMatrix<Number> &>(_sys.getMatrix(tag)).mat();
-      PetscErrorCode ierr = MatZeroRowsColumns(
-          mat, cast_int<PetscInt>(rows.size()), numeric_petsc_cast(rows.data()), 0, NULL, NULL);
-      LIBMESH_CHKERR(ierr);
+      // First zero the rows (including the diagonals) to prepare for
+      // setting the cached values.
+      _sys.getMatrix(tag).zero_rows(_cached_jacobian_rows[tag], 0.0);
+
+      // TODO: Use SparseMatrix::set_values() for efficiency
+      for (MooseIndex(_cached_jacobian_values) i = 0; i < _cached_jacobian_values[tag].size(); ++i)
+        _sys.getMatrix(tag).set(_cached_jacobian_rows[tag][i],
+                                _cached_jacobian_cols[tag][i],
+                                _cached_jacobian_values[tag][i]);
     }
 
   clearCachedJacobian();
