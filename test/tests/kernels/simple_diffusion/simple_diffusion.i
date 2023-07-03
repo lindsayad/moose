@@ -53,45 +53,32 @@
 [Preconditioning]
   [FSP]
     type = FSP
-    topsplit = 'by_var'
-    [by_var]
-      splitting = 'u v'
-      splitting_type  = additive
+    topsplit = 'by_sides'
+    [by_sides]
+      splitting = 'diri bulk'
+      splitting_type  = multiplicative
       petsc_options_iname = '-ksp_type'
       petsc_options_value = 'fgmres'
     []
-      [u]
-        vars = 'u'
-        splitting = 'u_diri u_bulk'
-        splitting_type = multiplicative
+      [diri]
+        sides = 'left right'
+        petsc_options = '-ksp_view_pmat'
+      []
+      [bulk]
+        splitting_type = additive
         petsc_options_iname = '-ksp_type'
         petsc_options_value = 'fgmres'
+        splitting = 'u v'
+        unsides = 'left right'
       []
-        [u_diri]
-          vars = 'u'
-          petsc_options = '-ksp_view_pmat'
-          sides = 'left right'
-        []
-        [u_bulk]
+        [u]
           vars = 'u'
           petsc_options = '-ksp_view_pmat'
           petsc_options_iname = '-ksp_type'
           petsc_options_value = 'cg'
           unsides = 'left right'
         []
-      [v]
-        vars = 'v'
-        splitting = 'v_diri v_bulk'
-        splitting_type = multiplicative
-        petsc_options_iname = '-ksp_type'
-        petsc_options_value = 'fgmres'
-      []
-        [v_diri]
-          vars = 'v'
-          petsc_options = '-ksp_view_pmat'
-          sides = 'left right'
-        []
-        [v_bulk]
+        [v]
           vars = 'v'
           petsc_options = '-ksp_view_pmat'
           petsc_options_iname = '-ksp_type'
