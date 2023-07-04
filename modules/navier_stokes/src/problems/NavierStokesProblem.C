@@ -10,7 +10,6 @@
 #include "NavierStokesProblem.h"
 #include "NonlinearSystemBase.h"
 #include "libmesh/petsc_matrix.h"
-#include <petscsnes.h>
 
 registerMooseObject("NavierStokesApp", NavierStokesProblem);
 
@@ -25,6 +24,10 @@ NavierStokesProblem::validParams()
       "The matrix tag name corresponding to just the physics portion of the system matrix.");
   params.addRequiredParam<std::string>("velocity_split_name",
                                        "The name of the velocity field split");
+  params.addParam<std::vector<unsigned int>>(
+      "schur_fs_index",
+      "if not provided then the top field split is assumed to be the "
+      "Schur split. This is a vector allow recursive nesting");
   return params;
 }
 
@@ -32,7 +35,8 @@ NavierStokesProblem::NavierStokesProblem(const InputParameters & parameters)
   : FEProblem(parameters),
     _mass_matrix(getParam<TagName>("mass_matrix")),
     _physics_matrix(getParam<TagName>("physics_matrix")),
-    _velocity_split_name(getParam<std::string>("velocity_split_name"))
+    _velocity_split_name(getParam<std::string>("velocity_split_name")),
+    _schur_fs_index(getParam<std::vector<unsigned int>>("schur_fs_index"))
 {
 }
 
@@ -51,89 +55,202 @@ NavierStokesProblem::~NavierStokesProblem()
   destroy_mat(_Q_scale);
 }
 
-PetscErrorCode
-navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
+KSP
+NavierStokesProblem::findSchurKSP(KSP node, const unsigned int tree_position)
 {
+  auto it = _schur_fs_index.begin() + tree_position;
+  if (it == _schur_fs_index.end())
+    return node;
+
+  PetscErrorCode ierr = 0;
+  PC fs_pc;
+  PetscInt num_splits;
   KSP * subksp;
-  KSP schur_ksp;
-  PC fs_pc, lsc_pc;
+  KSP next_ksp;
+  IS is;
+
+  auto sub_ksp_index = *it;
+
+  ierr = KSPGetPC(node, &fs_pc);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  // Need to call this before getting the sub ksps
+  ierr = PCSetUp(fs_pc);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = PCFieldSplitGetSubKSP(fs_pc, &num_splits, &subksp);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  next_ksp = subksp[sub_ksp_index];
+
+  ierr = PCFieldSplitGetISByIndex(fs_pc, sub_ksp_index, &is);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+
+  _index_sets.push_back(is);
+
+  ierr = PetscFree(subksp);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+
+  return findSchurKSP(next_ksp, tree_position + 1);
+}
+
+void
+NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
+{
+  KSP * subksp; // This will be length two, with the former being the A KSP and the latter being the
+                // Schur complement KSP
+  KSP schur_complement_ksp;
+  PC schur_pc, lsc_pc;
   PetscInt num_splits;
   Mat lsc_pc_pmat, C_Q_scale_diag_inv;
   Vec Q_scale_diag_inv;
   IS velocity_is, pressure_is = NULL;
   PetscInt rstart, rend;
+  std::vector<Mat> intermediate_Qs;
+  Mat Q_for_schur; // The mass matrix with the IS of the Schur field split. This IS may not be the
+                   // same index set corresponding to the system matrix
+  PetscErrorCode ierr = 0;
 
-  PetscFunctionBegin;
-  PetscCall(KSPGetPC(ksp, &fs_pc));
+  ierr = KSPGetPC(schur_ksp, &schur_pc);
+  LIBMESH_CHKERR2(this->comm(), ierr);
   // Need to call this before getting the sub ksps
-  PetscCall(PCSetUp(fs_pc));
-  PetscCall(PCFieldSplitGetSubKSP(fs_pc, &num_splits, &subksp));
-  schur_ksp = subksp[1];
-  PetscCall(KSPGetPC(schur_ksp, &lsc_pc));
-  PetscCall(PCGetOperators(lsc_pc, NULL, &lsc_pc_pmat));
+  ierr = PCSetUp(schur_pc);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = PCFieldSplitGetSubKSP(schur_pc, &num_splits, &subksp);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  if (num_splits != 2)
+    mooseError("The number of splits should be two");
+  schur_complement_ksp = subksp[1];
+  ierr = KSPGetPC(schur_complement_ksp, &lsc_pc);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = PCGetOperators(lsc_pc, NULL, &lsc_pc_pmat);
+  LIBMESH_CHKERR2(this->comm(), ierr);
 
-  auto * ns_problem = static_cast<NavierStokesProblem *>(context);
   // The mass matrix
-  auto Q = static_cast<PetscMatrix<Number> &>(
-               ns_problem->getNonlinearSystemBase(0).getMatrix(ns_problem->massMatrixTagID()))
-               .mat();
-  auto physics = static_cast<PetscMatrix<Number> &>(ns_problem->getNonlinearSystemBase(0).getMatrix(
-                                                        ns_problem->physicsMatrixTagID()))
-                     .mat();
-  auto & L = ns_problem->getL();
-  auto & A = ns_problem->getA();
-  auto & B = ns_problem->getB();
-  auto & C = ns_problem->getC();
+  auto Q =
+      static_cast<PetscMatrix<Number> &>(getNonlinearSystemBase(0).getMatrix(massMatrixTagID()))
+          .mat();
+  auto physics =
+      static_cast<PetscMatrix<Number> &>(getNonlinearSystemBase(0).getMatrix(physicsMatrixTagID()))
+          .mat();
+  auto & L = getL();
+  auto & A = getA();
+  auto & B = getB();
+  auto & C = getC();
   // The velocity block of the mass matrix
-  auto & Q_scale = ns_problem->getQscale();
+  auto & Q_scale = getQscale();
 
-  PetscCall(MatGetOwnershipRange(Q, &rstart, &rend));
-  PetscCall(PCFieldSplitGetIS(fs_pc, ns_problem->velocitySplitName().c_str(), &velocity_is));
-  PetscCall(ISComplement(velocity_is, rstart, rend, &pressure_is));
+  intermediate_Qs.resize(_index_sets.size());
+  for (const auto i : index_range(_index_sets))
+  {
+    auto intermediate_is = _index_sets[i];
+    Mat intermediate_Q;
+    ierr = MatCreateSubMatrix(i == 0 ? Q : intermediate_Qs[i - 1],
+                              intermediate_is,
+                              intermediate_is,
+                              MAT_INITIAL_MATRIX,
+                              &intermediate_Q);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+    intermediate_Qs[i] = intermediate_Q;
+  }
 
-  if (!A)
-    PetscCall(MatCreateSubMatrix(physics, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &A));
-  else
-    PetscCall(MatCreateSubMatrix(physics, velocity_is, velocity_is, MAT_REUSE_MATRIX, &A));
+  auto our_parent_Q = _index_sets.empty() ? Q : intermediate_Qs.back();
 
-  if (!B)
-    PetscCall(MatCreateSubMatrix(physics, velocity_is, pressure_is, MAT_INITIAL_MATRIX, &B));
-  else
-    PetscCall(MatCreateSubMatrix(physics, velocity_is, pressure_is, MAT_REUSE_MATRIX, &B));
+  ierr = PCFieldSplitGetISByIndex(schur_pc, 0, &velocity_is);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = MatGetOwnershipRange(our_parent_Q, &rstart, &rend);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = ISComplement(velocity_is, rstart, rend, &pressure_is);
+  LIBMESH_CHKERR2(this->comm(), ierr);
 
-  if (!C)
-    PetscCall(MatCreateSubMatrix(physics, pressure_is, velocity_is, MAT_INITIAL_MATRIX, &C));
-  else
-    PetscCall(MatCreateSubMatrix(physics, pressure_is, velocity_is, MAT_REUSE_MATRIX, &C));
+  // if (!A)
+  // {
+  //   ierr = MatCreateSubMatrix(physics, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &A);
+  //   LIBMESH_CHKERR2(this->comm(), ierr);
+  // }
+  // else
+  // {
+  //   ierr = MatCreateSubMatrix(physics, velocity_is, velocity_is, MAT_REUSE_MATRIX, &A);
+  //   LIBMESH_CHKERR2(this->comm(), ierr);
+  // }
+  // if (!B)
+  // {
+  //   ierr = MatCreateSubMatrix(physics, velocity_is, pressure_is, MAT_INITIAL_MATRIX, &B);
+  //   LIBMESH_CHKERR2(this->comm(), ierr);
+  // }
+  // else
+  // {
+  //   ierr = MatCreateSubMatrix(physics, velocity_is, pressure_is, MAT_REUSE_MATRIX, &B);
+  //   LIBMESH_CHKERR2(this->comm(), ierr);
+  // }
+  // if (!C)
+  // {
+  //   ierr = MatCreateSubMatrix(physics, pressure_is, velocity_is, MAT_INITIAL_MATRIX, &C);
+  //   LIBMESH_CHKERR2(this->comm(), ierr);
+  // }
+  // else
+  // {
+  //   ierr = MatCreateSubMatrix(physics, pressure_is, velocity_is, MAT_REUSE_MATRIX, &C);
+  //   LIBMESH_CHKERR2(this->comm(), ierr);
+  // }
 
-  PetscCall(ISDestroy(&pressure_is));
+  ierr = ISDestroy(&pressure_is);
+  LIBMESH_CHKERR2(this->comm(), ierr);
 
   if (!Q_scale)
-    PetscCall(MatCreateSubMatrix(Q, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &Q_scale));
+  {
+    ierr = MatCreateSubMatrix(our_parent_Q, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &Q_scale);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+  }
   else
-    PetscCall(MatCreateSubMatrix(Q, velocity_is, velocity_is, MAT_REUSE_MATRIX, &Q_scale));
+  {
+    ierr = MatCreateSubMatrix(our_parent_Q, velocity_is, velocity_is, MAT_REUSE_MATRIX, &Q_scale);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+  }
 
-  // We'll be right-multiplying C so need right compatible
-  PetscCall(MatCreateVecs(C, &Q_scale_diag_inv, NULL));
-  PetscCall(MatGetDiagonal(Q_scale, Q_scale_diag_inv));
-  PetscCall(VecReciprocal(Q_scale_diag_inv));
-  PetscCall(MatConvert(C, MATSAME, MAT_INITIAL_MATRIX, &C_Q_scale_diag_inv));
-  PetscCall(MatDiagonalScale(C_Q_scale_diag_inv, NULL, Q_scale_diag_inv));
-  if (!L)
-    PetscCall(MatMatMult(C_Q_scale_diag_inv, B, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &L));
-  else
-    PetscCall(MatMatMult(C_Q_scale_diag_inv, B, MAT_REUSE_MATRIX, PETSC_DEFAULT, &L));
+  // // We'll be right-multiplying C so need right compatible
+  // ierr = MatCreateVecs(C, &Q_scale_diag_inv, NULL);
+  // LIBMESH_CHKERR2(this->comm(), ierr);
+  // ierr = MatGetDiagonal(Q_scale, Q_scale_diag_inv);
+  // LIBMESH_CHKERR2(this->comm(), ierr);
+  // ierr = VecReciprocal(Q_scale_diag_inv);
+  // LIBMESH_CHKERR2(this->comm(), ierr);
+  // ierr = MatConvert(C, MATSAME, MAT_INITIAL_MATRIX, &C_Q_scale_diag_inv);
+  // LIBMESH_CHKERR2(this->comm(), ierr);
+  // ierr = MatDiagonalScale(C_Q_scale_diag_inv, NULL, Q_scale_diag_inv);
+  // LIBMESH_CHKERR2(this->comm(), ierr);
+  // if (!L)
+  // {
+  //   ierr = MatMatMult(C_Q_scale_diag_inv, B, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &L);
+  //   LIBMESH_CHKERR2(this->comm(), ierr);
+  // }
+  // else
+  // {
+  //   ierr = MatMatMult(C_Q_scale_diag_inv, B, MAT_REUSE_MATRIX, PETSC_DEFAULT, &L);
+  //   LIBMESH_CHKERR2(this->comm(), ierr);
+  // }
+  // ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L);
+  // ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Lp", (PetscObject)L);
+  ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Q_scale", (PetscObject)Q_scale);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  // ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_A", (PetscObject)A);
+  // ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_B", (PetscObject)B);
+  // ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_C", (PetscObject)C);
 
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Lp", (PetscObject)L));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Q_scale", (PetscObject)Q_scale));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_A", (PetscObject)A));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_B", (PetscObject)B));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_C", (PetscObject)C));
+  // ierr = VecDestroy(&Q_scale_diag_inv);
+  // LIBMESH_CHKERR2(this->comm(), ierr);
+  // ierr = MatDestroy(&C_Q_scale_diag_inv);
+  // LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = PetscFree(subksp);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+}
 
-  PetscCall(VecDestroy(&Q_scale_diag_inv));
-  PetscCall(MatDestroy(&C_Q_scale_diag_inv));
-  PetscCall(PetscFree(subksp));
+PetscErrorCode
+navierStokesKSPPreSolve(KSP root_ksp, Vec /*rhs*/, Vec /*x*/, void * context)
+{
+  PetscFunctionBegin;
+
+  auto * ns_problem = static_cast<NavierStokesProblem *>(context);
+  ns_problem->clearIndexSets();
+  auto schur_ksp = ns_problem->findSchurKSP(root_ksp, 0);
+  ns_problem->setupLSCMatrices(schur_ksp);
 
   PetscFunctionReturn(PETSC_SUCCESS);
 }
