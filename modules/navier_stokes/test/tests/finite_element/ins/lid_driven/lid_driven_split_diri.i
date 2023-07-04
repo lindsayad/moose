@@ -1,4 +1,4 @@
-n=64
+n=2
 mu=1
 
 [GlobalParams]
@@ -154,9 +154,9 @@ mu=1
     topsplit = 'by_diri_others'
     [by_diri_others]
       splitting = 'diri others'
-      splitting_type  = multiplicative
-      petsc_options_iname = '-ksp_rtol -ksp_type -ksp_pc_side'
-      petsc_options_value = '1e-5      fgmres    right'
+      splitting_type  = additive
+      petsc_options_iname = '-ksp_type'
+      petsc_options_value = 'preonly'
     []
       [diri]
         sides = 'left right top bottom'
@@ -171,7 +171,6 @@ mu=1
         splitting_type = schur
         unside_by_var_boundary_name = 'left top right bottom left top right bottom'
         unside_by_var_var_name = 'vel_x vel_x vel_x vel_x vel_y vel_y vel_y vel_y'
-        petsc_options = '-ksp_monitor'
       []
         [u]
           unside_by_var_boundary_name = 'left top right bottom left top right bottom'
