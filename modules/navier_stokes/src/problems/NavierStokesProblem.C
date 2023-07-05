@@ -19,11 +19,6 @@ NavierStokesProblem::validParams()
   InputParameters params = FEProblem::validParams();
   params.addRequiredParam<TagName>("mass_matrix",
                                    "The matrix tag name corresponding to the mass matrix.");
-  params.addRequiredParam<TagName>(
-      "physics_matrix",
-      "The matrix tag name corresponding to just the physics portion of the system matrix.");
-  params.addRequiredParam<std::string>("velocity_split_name",
-                                       "The name of the velocity field split");
   params.addParam<std::vector<unsigned int>>(
       "schur_fs_index",
       "if not provided then the top field split is assumed to be the "
@@ -34,25 +29,15 @@ NavierStokesProblem::validParams()
 NavierStokesProblem::NavierStokesProblem(const InputParameters & parameters)
   : FEProblem(parameters),
     _mass_matrix(getParam<TagName>("mass_matrix")),
-    _physics_matrix(getParam<TagName>("physics_matrix")),
-    _velocity_split_name(getParam<std::string>("velocity_split_name")),
     _schur_fs_index(getParam<std::vector<unsigned int>>("schur_fs_index"))
 {
 }
 
 NavierStokesProblem::~NavierStokesProblem()
 {
-  auto destroy_mat = [](auto mat)
-  {
-    if (mat)
-      // We're destructing so don't check for errors which can throw
-      MatDestroy(&mat);
-  };
-  destroy_mat(_L);
-  destroy_mat(_A);
-  destroy_mat(_B);
-  destroy_mat(_C);
-  destroy_mat(_Q_scale);
+  if (_Q_scale)
+    // We're destructing so don't check for errors which can throw
+    MatDestroy(&_Q_scale);
 }
 
 KSP
@@ -99,13 +84,10 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
   KSP schur_complement_ksp;
   PC schur_pc, lsc_pc;
   PetscInt num_splits;
-  Mat lsc_pc_pmat, C_Q_scale_diag_inv;
-  Vec Q_scale_diag_inv;
-  IS velocity_is, pressure_is = NULL;
+  Mat lsc_pc_pmat;
+  IS velocity_is;
   PetscInt rstart, rend;
   std::vector<Mat> intermediate_Qs;
-  Mat Q_for_schur; // The mass matrix with the IS of the Schur field split. This IS may not be the
-                   // same index set corresponding to the system matrix
   PetscErrorCode ierr = 0;
 
   ierr = KSPGetPC(schur_ksp, &schur_pc);
@@ -127,13 +109,6 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
   auto Q =
       static_cast<PetscMatrix<Number> &>(getNonlinearSystemBase(0).getMatrix(massMatrixTagID()))
           .mat();
-  auto physics =
-      static_cast<PetscMatrix<Number> &>(getNonlinearSystemBase(0).getMatrix(physicsMatrixTagID()))
-          .mat();
-  auto & L = getL();
-  auto & A = getA();
-  auto & B = getB();
-  auto & C = getC();
   // The velocity block of the mass matrix
   auto & Q_scale = getQscale();
 
@@ -157,42 +132,6 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
   LIBMESH_CHKERR2(this->comm(), ierr);
   ierr = MatGetOwnershipRange(our_parent_Q, &rstart, &rend);
   LIBMESH_CHKERR2(this->comm(), ierr);
-  ierr = ISComplement(velocity_is, rstart, rend, &pressure_is);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-
-  // if (!A)
-  // {
-  //   ierr = MatCreateSubMatrix(physics, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &A);
-  //   LIBMESH_CHKERR2(this->comm(), ierr);
-  // }
-  // else
-  // {
-  //   ierr = MatCreateSubMatrix(physics, velocity_is, velocity_is, MAT_REUSE_MATRIX, &A);
-  //   LIBMESH_CHKERR2(this->comm(), ierr);
-  // }
-  // if (!B)
-  // {
-  //   ierr = MatCreateSubMatrix(physics, velocity_is, pressure_is, MAT_INITIAL_MATRIX, &B);
-  //   LIBMESH_CHKERR2(this->comm(), ierr);
-  // }
-  // else
-  // {
-  //   ierr = MatCreateSubMatrix(physics, velocity_is, pressure_is, MAT_REUSE_MATRIX, &B);
-  //   LIBMESH_CHKERR2(this->comm(), ierr);
-  // }
-  // if (!C)
-  // {
-  //   ierr = MatCreateSubMatrix(physics, pressure_is, velocity_is, MAT_INITIAL_MATRIX, &C);
-  //   LIBMESH_CHKERR2(this->comm(), ierr);
-  // }
-  // else
-  // {
-  //   ierr = MatCreateSubMatrix(physics, pressure_is, velocity_is, MAT_REUSE_MATRIX, &C);
-  //   LIBMESH_CHKERR2(this->comm(), ierr);
-  // }
-
-  ierr = ISDestroy(&pressure_is);
-  LIBMESH_CHKERR2(this->comm(), ierr);
 
   if (!Q_scale)
   {
@@ -205,39 +144,9 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
     LIBMESH_CHKERR2(this->comm(), ierr);
   }
 
-  // // We'll be right-multiplying C so need right compatible
-  // ierr = MatCreateVecs(C, &Q_scale_diag_inv, NULL);
-  // LIBMESH_CHKERR2(this->comm(), ierr);
-  // ierr = MatGetDiagonal(Q_scale, Q_scale_diag_inv);
-  // LIBMESH_CHKERR2(this->comm(), ierr);
-  // ierr = VecReciprocal(Q_scale_diag_inv);
-  // LIBMESH_CHKERR2(this->comm(), ierr);
-  // ierr = MatConvert(C, MATSAME, MAT_INITIAL_MATRIX, &C_Q_scale_diag_inv);
-  // LIBMESH_CHKERR2(this->comm(), ierr);
-  // ierr = MatDiagonalScale(C_Q_scale_diag_inv, NULL, Q_scale_diag_inv);
-  // LIBMESH_CHKERR2(this->comm(), ierr);
-  // if (!L)
-  // {
-  //   ierr = MatMatMult(C_Q_scale_diag_inv, B, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &L);
-  //   LIBMESH_CHKERR2(this->comm(), ierr);
-  // }
-  // else
-  // {
-  //   ierr = MatMatMult(C_Q_scale_diag_inv, B, MAT_REUSE_MATRIX, PETSC_DEFAULT, &L);
-  //   LIBMESH_CHKERR2(this->comm(), ierr);
-  // }
-  // ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L);
-  // ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Lp", (PetscObject)L);
   ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Q_scale", (PetscObject)Q_scale);
   LIBMESH_CHKERR2(this->comm(), ierr);
-  // ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_A", (PetscObject)A);
-  // ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_B", (PetscObject)B);
-  // ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_C", (PetscObject)C);
 
-  // ierr = VecDestroy(&Q_scale_diag_inv);
-  // LIBMESH_CHKERR2(this->comm(), ierr);
-  // ierr = MatDestroy(&C_Q_scale_diag_inv);
-  // LIBMESH_CHKERR2(this->comm(), ierr);
   ierr = PetscFree(subksp);
   LIBMESH_CHKERR2(this->comm(), ierr);
 }

@@ -8,12 +8,10 @@ mu=2e-3
 []
 
 [Problem]
-  extra_tag_matrices = 'mass physics'
+  extra_tag_matrices = 'mass'
   previous_nl_solution_required = true
   type = NavierStokesProblem
   mass_matrix = 'mass'
-  physics_matrix = 'physics'
-  velocity_split_name = 'u'
   schur_fs_index = '1'
 []
 
@@ -62,13 +60,11 @@ mu=2e-3
     u = vel_x
     v = vel_y
     pressure = p
-    extra_matrix_tags = 'physics'
   [../]
 
   [x_time]
     type = INSMomentumTimeDerivative
     variable = vel_x
-    extra_matrix_tags = 'physics'
   []
   [./x_momentum_space]
     type = INSMomentumLaplaceForm
@@ -77,7 +73,6 @@ mu=2e-3
     v = vel_y
     pressure = p
     component = 0
-    extra_matrix_tags = 'physics'
   [../]
   [x_mass]
     type = Mass
@@ -88,7 +83,6 @@ mu=2e-3
   [y_time]
     type = INSMomentumTimeDerivative
     variable = vel_y
-    extra_matrix_tags = 'physics'
   []
   [./y_momentum_space]
     type = INSMomentumLaplaceForm
@@ -97,7 +91,6 @@ mu=2e-3
     v = vel_y
     pressure = p
     component = 1
-    extra_matrix_tags = 'physics'
   [../]
   [y_mass]
     type = Mass
