@@ -149,6 +149,11 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
 
   ierr = PetscFree(subksp);
   LIBMESH_CHKERR2(this->comm(), ierr);
+  for (auto & mat : intermediate_Qs)
+  {
+    ierr = MatDestroy(&mat);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+  }
 }
 
 PetscErrorCode
