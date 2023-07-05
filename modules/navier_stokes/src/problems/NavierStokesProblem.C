@@ -124,12 +124,12 @@ navierStokesKSPPreSolve(KSP ksp, Vec /*rhs*/, Vec /*x*/, void * context)
   else
     PetscCall(MatMatMult(C_Q_scale_diag_inv, B, MAT_REUSE_MATRIX, PETSC_DEFAULT, &L));
 
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Lp", (PetscObject)L));
+  // PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L));
+  // PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Lp", (PetscObject)L));
   PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Q_scale", (PetscObject)Q_scale));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_A", (PetscObject)A));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_B", (PetscObject)B));
-  PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_C", (PetscObject)C));
+  // PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_A", (PetscObject)A));
+  // PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_B", (PetscObject)B));
+  // PetscCall(PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_C", (PetscObject)C));
 
   PetscCall(VecDestroy(&Q_scale_diag_inv));
   PetscCall(MatDestroy(&C_Q_scale_diag_inv));
