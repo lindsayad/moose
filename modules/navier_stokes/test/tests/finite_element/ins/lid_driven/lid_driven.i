@@ -1,5 +1,5 @@
 n=64
-mu=1
+mu=2e-3
 
 [GlobalParams]
   gravity = '0 0 0'
@@ -64,7 +64,11 @@ mu=1
     extra_matrix_tags = 'physics'
   [../]
 
-  # x-momentum, space
+  [x_time]
+    type = INSMomentumTimeDerivative
+    variable = vel_x
+    extra_matrix_tags = 'physics'
+  []
   [./x_momentum_space]
     type = INSMomentumLaplaceForm
     variable = vel_x
@@ -80,7 +84,11 @@ mu=1
     matrix_tags = 'mass'
   []
 
-  # y-momentum, space
+  [y_time]
+    type = INSMomentumTimeDerivative
+    variable = vel_y
+    extra_matrix_tags = 'physics'
+  []
   [./y_momentum_space]
     type = INSMomentumLaplaceForm
     variable = vel_y
@@ -155,16 +163,17 @@ mu=1
       splitting = 'u p'
       splitting_type  = schur
       petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-      petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-10'
+      petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9'
     []
     [u]
       vars = 'vel_x vel_y'
-      petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol -pc_hypre_type'
-      petsc_options_value = 'hypre       right        gmres     1e-5   boomeramg'
+      petsc_options = '-ksp_converged_reason'
+      petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol -pc_hypre_type -pc_hypre_boomeramg_grid_sweeps_up -pc_hypre_boomeramg_relax_type_all -pc_hypre_boomeramg_grid_sweeps_down -pc_hypre_boomeramg_relax_weight_all'
+      petsc_options_value = 'hypre    right        gmres     1e-5      boomeramg      3                                  Jacobi                         2                                        0.5'
     []
     [p]
       vars = 'p'
-      petsc_options = '-ksp_monitor -pc_lsc_scale_diag -lsc_ksp_monitor_true_residual'
+      petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason'
       petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
       petsc_options_value = 'fgmres     300                1e-5     lsc      right        lsc       hypre        boomeramg          gmres         1e-5          right            300'
     []
@@ -179,14 +188,21 @@ mu=1
 
 [Executioner]
   solve_type = NEWTON
-  type = Steady
+  type = Transient
   petsc_options_iname = '-snes_max_it'
   petsc_options_value = '100'
   line_search = 'none'
   nl_rel_tol = 1e-8
   nl_abs_tol = 1e-8
+  [TimeStepper]
+    type = IterationAdaptiveDT
+    optimal_iterations = 6
+    dt = 1e-2
+  []
+  steady_state_detection = true
 []
 
 [Outputs]
   exodus = true
+  checkpoint = true
 []
