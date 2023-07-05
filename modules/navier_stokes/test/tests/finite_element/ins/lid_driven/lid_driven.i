@@ -14,6 +14,7 @@ mu=2e-3
   mass_matrix = 'mass'
   physics_matrix = 'physics'
   velocity_split_name = 'u'
+  schur_fs_index = '1'
 []
 
 [Mesh]
@@ -158,25 +159,41 @@ mu=2e-3
   active = 'FSP'
   [FSP]
     type = FSP
-    topsplit = 'up'
-    [up]
-      splitting = 'u p'
-      splitting_type  = schur
-      petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-      petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9'
+    topsplit = 'by_diri_others'
+    [by_diri_others]
+      splitting = 'diri others'
+      splitting_type  = additive
+      petsc_options_iname = '-ksp_type'
+      petsc_options_value = 'preonly'
     []
-    [u]
-      vars = 'vel_x vel_y'
-      petsc_options = '-ksp_converged_reason'
-      petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol -pc_hypre_type -pc_hypre_boomeramg_grid_sweeps_up -pc_hypre_boomeramg_relax_type_all -pc_hypre_boomeramg_grid_sweeps_down -pc_hypre_boomeramg_relax_weight_all'
-      petsc_options_value = 'hypre    right        gmres     1e-5      boomeramg      3                                  Jacobi                         2                                        0.5'
-    []
-    [p]
-      vars = 'p'
-      petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason'
-      petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
-      petsc_options_value = 'fgmres     300                1e-5     lsc      right        lsc       hypre        boomeramg          gmres         1e-5          right            300'
-    []
+      [diri]
+        sides = 'left right top bottom'
+        vars = 'vel_x vel_y'
+        petsc_options_iname = '-pc_type'
+        petsc_options_value = 'jacobi'
+      []
+      [others]
+        splitting = 'u p'
+        splitting_type  = schur
+        petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
+        petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9'
+        unside_by_var_boundary_name = 'left top right bottom left top right bottom'
+        unside_by_var_var_name = 'vel_x vel_x vel_x vel_x vel_y vel_y vel_y vel_y'
+      []
+      [u]
+          vars = 'vel_x vel_y'
+          unside_by_var_boundary_name = 'left top right bottom left top right bottom'
+          unside_by_var_var_name = 'vel_x vel_x vel_x vel_x vel_y vel_y vel_y vel_y'
+          petsc_options = '-ksp_converged_reason'
+          petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol -pc_hypre_type -pc_hypre_boomeramg_grid_sweeps_up -pc_hypre_boomeramg_relax_type_all -pc_hypre_boomeramg_grid_sweeps_down -pc_hypre_boomeramg_relax_weight_all'
+          petsc_options_value = 'hypre    right        gmres     1e-5      boomeramg      3                                  Jacobi                         2                                        0.5'
+        []
+        [p]
+          vars = 'p'
+          petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason'
+          petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
+          petsc_options_value = 'fgmres     300                1e-5     lsc      right        lsc       hypre        boomeramg          gmres         1e-5          right            300'
+        []
   []
   [SMP]
     type = SMP
