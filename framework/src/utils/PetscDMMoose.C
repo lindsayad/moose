@@ -58,8 +58,11 @@ struct DM_Moose
   std::set<std::string> * _unsides; // excluded sides
   std::map<std::string, BoundaryID> * _unside_ids;
   std::map<BoundaryID, std::string> * _unside_names;
+  std::set<std::string> * _unside_by_var; // excluded sides by variable
+  std::set<std::pair<BoundaryID, unsigned int>> * _unside_by_var_set;
   bool _nosides;   // whether to include any sides
   bool _nounsides; // whether to exclude any sides
+  bool _nounside_by_var;
   typedef std::pair<std::string, std::string> ContactName;
   typedef std::pair<BoundaryID, BoundaryID> ContactID;
   std::set<ContactName> * _contacts;
@@ -390,6 +393,35 @@ DMMooseSetUnSides(DM dm, const std::set<std::string> & unsides)
 }
 
 #undef __FUNCT__
+#define __FUNCT__ "DMMooseSetUnSides"
+PetscErrorCode
+DMMooseSetUnSideByVar(DM dm, const std::set<std::string> & unside_by_var)
+{
+  PetscErrorCode ierr;
+  DM_Moose * dmm = (DM_Moose *)dm->data;
+  PetscBool ismoose;
+
+  PetscFunctionBegin;
+  PetscValidHeaderSpecific(dm, DM_CLASSID, 1);
+  ierr = PetscObjectTypeCompare((PetscObject)dm, DMMOOSE, &ismoose);
+  CHKERRQ(ierr);
+  if (!ismoose)
+    LIBMESH_SETERRQ2(PETSC_COMM_SELF,
+                     PETSC_ERR_ARG_WRONG,
+                     "Got DM oftype %s, not of type %s",
+                     ((PetscObject)dm)->type_name,
+                     DMMOOSE);
+  if (dm->setupcalled)
+    SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_WRONGSTATE, "Not for an already setup DM");
+  if (dmm->_sides)
+    delete dmm->_sides;
+  if (dmm->_unsides)
+    delete dmm->_unsides;
+  dmm->_unside_by_var = new std::set<std::string>(unside_by_var);
+  PetscFunctionReturn(0);
+}
+
+#undef __FUNCT__
 #define __FUNCT__ "DMMooseSetContacts"
 PetscErrorCode
 DMMooseSetContacts(DM dm,
@@ -617,7 +649,7 @@ DMMooseGetEmbedding_Private(DM dm, IS * embedding)
     // To satisfy (3 & 4) simply cmpute subtrahend set 'unindices' as all of the unsides' dofs:
     // Then take the set difference of 'indices' and 'unindices', putting the result in 'dindices'.
     if (!dmm->_all_vars || !dmm->_all_blocks || !dmm->_nosides || !dmm->_nounsides ||
-        !dmm->_nocontacts || !dmm->_nouncontacts)
+        !dmm->_nounside_by_var || !dmm->_nocontacts || !dmm->_nouncontacts)
     {
       DofMap & dofmap = dmm->_nl->system().get_dof_map();
       // Put this outside the lambda scope to avoid constant memory reallocation
@@ -746,6 +778,24 @@ DMMooseGetEmbedding_Private(DM dm, IS * embedding)
               continue;
             const Node * node = bnode->_node;
             process_nodal_dof_indices(*node, v, unindices);
+          }
+        }
+        if (dmm->_unside_by_var_set->size())
+        {
+          std::set<BoundaryID> eligible_bids;
+          for (const auto & [bid, var] : *(dmm->_unside_by_var_set))
+            if (var == v)
+              eligible_bids.insert(bid);
+
+          ConstBndNodeRange & bnodes = *dmm->_nl->mesh().getBoundaryNodeRange();
+          for (const auto & bnode : bnodes)
+          {
+            BoundaryID boundary_id = bnode->_bnd_id;
+            if (eligible_bids.count(boundary_id))
+            {
+              const Node * node = bnode->_node;
+              process_nodal_dof_indices(*node, v, unindices);
+            }
           }
         }
 
@@ -1601,13 +1651,13 @@ DMSetUp_Moose_Pre(DM dm)
   /* libMesh mesh */
   const MeshBase & mesh = dmm->_nl->system().get_mesh();
 
+  // Do sides
   dmm->_nosides = PETSC_TRUE;
   dmm->_side_ids->clear();
   dmm->_side_names->clear();
   if (dmm->_sides)
   {
     dmm->_nosides = PETSC_FALSE;
-    std::set<BoundaryID> ids;
     for (const auto & name : *(dmm->_sides))
     {
       boundary_id_type id = dmm->_nl->mesh().getBoundaryID(name);
@@ -1617,13 +1667,14 @@ DMSetUp_Moose_Pre(DM dm)
     delete dmm->_sides;
     dmm->_sides = LIBMESH_PETSC_NULLPTR;
   }
+
+  // Do unsides
   dmm->_nounsides = PETSC_TRUE;
   dmm->_unside_ids->clear();
   dmm->_unside_names->clear();
   if (dmm->_unsides)
   {
     dmm->_nounsides = PETSC_FALSE;
-    std::set<BoundaryID> ids;
     for (const auto & name : *(dmm->_unsides))
     {
       boundary_id_type id = dmm->_nl->mesh().getBoundaryID(name);
@@ -1633,6 +1684,37 @@ DMSetUp_Moose_Pre(DM dm)
     delete dmm->_unsides;
     dmm->_unsides = LIBMESH_PETSC_NULLPTR;
   }
+
+  // Do unside by var
+  dmm->_nounside_by_var = PETSC_TRUE;
+  dmm->_unside_by_var_set->clear();
+  if (dmm->_unside_by_var)
+  {
+    dmm->_nounside_by_var = PETSC_FALSE;
+    for (const auto & name : *(dmm->_unside_by_var))
+    {
+      const auto colon_pos = name.find(":");
+      auto unside_name = name.substr(0, colon_pos);
+      auto var_name = name.substr(colon_pos + 1);
+      boundary_id_type id = dmm->_nl->mesh().getBoundaryID(unside_name);
+      bool var_found = false;
+      for (unsigned int v = 0; v < dofmap.n_variables(); ++v)
+      {
+        const auto & vname = dofmap.variable(v).name();
+        if (vname == var_name)
+        {
+          dmm->_unside_by_var_set->insert(std::make_pair(id, v));
+          var_found = true;
+          break;
+        }
+      }
+      if (!var_found)
+        mooseError("No variable named '", var_name, "' found");
+    }
+    delete dmm->_unside_by_var;
+    dmm->_unside_by_var = LIBMESH_PETSC_NULLPTR;
+  }
+
   dmm->_nocontacts = PETSC_TRUE;
 
   if (dmm->_contacts)
@@ -2008,10 +2090,12 @@ DMSetFromOptions_Moose(PetscOptions * /*options*/, DM dm) // >= 3.6.0
   }
   PetscInt maxsides = dmm->_nl->system().get_mesh().get_boundary_info().get_boundary_ids().size();
   char ** sides;
-  ierr = PetscMalloc(maxsides * sizeof(char *), &sides);
+  ierr = PetscMalloc(maxsides * maxvars * sizeof(char *), &sides);
   CHKERRQ(ierr);
   PetscInt nsides = maxsides;
   std::set<std::string> sideset;
+
+  // Do sides
   opt = "-dm_moose_sides";
   help = "Sides to include in DMMoose";
   ierr = PetscOptionsStringArray(
@@ -2028,6 +2112,8 @@ DMSetFromOptions_Moose(PetscOptions * /*options*/, DM dm) // >= 3.6.0
     ierr = DMMooseSetSides(dm, sideset);
     CHKERRQ(ierr);
   }
+
+  // Do unsides
   opt = "-dm_moose_unsides";
   help = "Sides to exclude from DMMoose";
   nsides = maxsides;
@@ -2046,6 +2132,27 @@ DMSetFromOptions_Moose(PetscOptions * /*options*/, DM dm) // >= 3.6.0
     ierr = DMMooseSetUnSides(dm, sideset);
     CHKERRQ(ierr);
   }
+
+  // Do unsides by var
+  opt = "-dm_moose_unside_by_var";
+  help = "Sides to exclude from DMMoose on a by-var basis";
+  nsides = maxsides * maxvars;
+  ierr = PetscOptionsStringArray(
+      opt.c_str(), help.c_str(), "DMMooseSetUnSideByVar", sides, &nsides, LIBMESH_PETSC_NULLPTR);
+  CHKERRQ(ierr);
+  sideset.clear();
+  for (PetscInt i = 0; i < nsides; ++i)
+  {
+    sideset.insert(std::string(sides[i]));
+    ierr = PetscFree(sides[i]);
+    CHKERRQ(ierr);
+  }
+  if (sideset.size())
+  {
+    ierr = DMMooseSetUnSideByVar(dm, sideset);
+    CHKERRQ(ierr);
+  }
+
   ierr = PetscFree(sides);
   CHKERRQ(ierr);
   PetscInt maxcontacts = dmm->_nl->_fe_problem.geomSearchData()._penetration_locators.size();
@@ -2317,6 +2424,9 @@ DMDestroy_Moose(DM dm)
     delete dmm->_unsides;
   delete dmm->_unside_ids;
   delete dmm->_unside_names;
+  if (dmm->_unside_by_var)
+    delete dmm->_unside_by_var;
+  delete dmm->_unside_by_var_set;
   if (dmm->_contacts)
     delete dmm->_contacts;
   delete dmm->_contact_names;
@@ -2390,6 +2500,7 @@ DMCreate_Moose(DM dm)
   dmm->_side_names = new (std::map<BoundaryID, std::string>);
   dmm->_unside_ids = new (std::map<std::string, BoundaryID>);
   dmm->_unside_names = new (std::map<BoundaryID, std::string>);
+  dmm->_unside_by_var_set = new (std::set<std::pair<BoundaryID, unsigned int>>);
   dmm->_contact_names = new (std::map<DM_Moose::ContactID, DM_Moose::ContactName>);
   dmm->_uncontact_names = new (std::map<DM_Moose::ContactID, DM_Moose::ContactName>);
   dmm->_contact_displaced = new (std::map<DM_Moose::ContactName, PetscBool>);

@@ -10,6 +10,7 @@
 #pragma once
 
 #include "FEProblem.h"
+#include <petscsnes.h>
 
 class NonlinearSystem;
 
@@ -33,6 +34,10 @@ public:
   Mat & getQscale() { return _Q_scale; }
   const std::string & velocitySplitName() const { return _velocity_split_name; }
 
+  void clearIndexSets() { _index_sets.clear(); }
+  KSP findSchurKSP(KSP node, unsigned int tree_position);
+  void setupLSCMatrices(KSP schur_ksp);
+
   virtual ~NavierStokesProblem();
 
 protected:
@@ -45,6 +50,8 @@ private:
   const TagName & _mass_matrix;
   const TagName & _physics_matrix;
   const std::string & _velocity_split_name;
+  const std::vector<unsigned int> & _schur_fs_index;
 
   Mat _L = nullptr, _A = nullptr, _B = nullptr, _C = nullptr, _Q_scale = nullptr;
+  std::vector<IS> _index_sets;
 };
