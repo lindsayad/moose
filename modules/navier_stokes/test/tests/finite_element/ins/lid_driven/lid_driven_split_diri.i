@@ -1,4 +1,4 @@
-n=2
+n=64
 mu=1
 
 [GlobalParams]
@@ -176,14 +176,15 @@ mu=1
           unside_by_var_boundary_name = 'left top right bottom left top right bottom'
           unside_by_var_var_name = 'vel_x vel_x vel_x vel_x vel_y vel_y vel_y vel_y'
           vars = 'vel_x vel_y'
-          petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol -pc_factor_mat_solver_type'
-          petsc_options_value = 'lu       right        gmres     1e-5      mumps'
+          # petsc_options = '-ksp_monitor_true_residual'
+          petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol -pc_hypre_type'
+          petsc_options_value = 'hypre       right        gmres     1e-5   boomeramg'
         []
         [p]
           vars = 'p'
           petsc_options = '-ksp_monitor -pc_lsc_scale_diag'
-          petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_factor_mat_solver_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
-          petsc_options_value = 'fgmres     300                1e-5     lsc      right        lsc       lu           mumps                          gmres         1e-5          right            300'
+          petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
+          petsc_options_value = 'fgmres     300                1e-5     lsc      right        lsc       hypre        boomeramg          gmres         1e-5          right            300'
         []
   []
   [SMP]
