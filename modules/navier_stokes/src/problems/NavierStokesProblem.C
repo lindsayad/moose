@@ -53,11 +53,16 @@ NavierStokesProblem::findSchurKSP(KSP node, const unsigned int tree_position)
   KSP * subksp;
   KSP next_ksp;
   IS is;
+  PetscBool is_fs;
 
   auto sub_ksp_index = *it;
 
   ierr = KSPGetPC(node, &fs_pc);
   LIBMESH_CHKERR2(this->comm(), ierr);
+  PetscObjectTypeCompare((PetscObject)fs_pc, PCFIELDSPLIT, &is_fs);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  if (!is_fs)
+    mooseError("Not a field split. Please check the 'schur_fs_index' parameter");
   // Need to call this before getting the sub ksps
   ierr = PCSetUp(fs_pc);
   LIBMESH_CHKERR2(this->comm(), ierr);
@@ -87,12 +92,17 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
   Mat lsc_pc_pmat;
   IS velocity_is;
   PetscInt rstart, rend;
-  PetscBool is_lsc;
+  PetscBool is_lsc, is_fs;
   std::vector<Mat> intermediate_Qs;
   PetscErrorCode ierr = 0;
 
   ierr = KSPGetPC(schur_ksp, &schur_pc);
   LIBMESH_CHKERR2(this->comm(), ierr);
+  PetscObjectTypeCompare((PetscObject)schur_pc, PCFIELDSPLIT, &is_fs);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  if (!is_fs)
+    mooseError("Not a field split. Please check the 'schur_fs_index' parameter");
+
   // Need to call this before getting the sub ksps
   ierr = PCSetUp(schur_pc);
   LIBMESH_CHKERR2(this->comm(), ierr);
