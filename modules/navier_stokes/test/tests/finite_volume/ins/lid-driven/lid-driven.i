@@ -1,9 +1,9 @@
 mu = 1
 rho = 1
-n = 4
+n = 64
 
 [GlobalParams]
-  velocity_interp_method = 'rc'
+  velocity_interp_method = 'average'
   advected_interp_method = 'upwind'
   rhie_chow_user_object = 'rc'
 []
