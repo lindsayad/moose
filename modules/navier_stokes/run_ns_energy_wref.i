@@ -672,7 +672,7 @@ velocity_interp_method = 'average'
 # EXECUTION / SOLVE
 ################################################################################
 [Preconditioning]
-  active = FSP
+  active = SMP
   [FSP]
     type = FSP
     topsplit = 'top'
@@ -736,6 +736,12 @@ velocity_interp_method = 'average'
           petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol'
           petsc_options_value = 'lu       right        gmres     1e-5'
         []
+  []
+  [SMP]
+    type = SMP
+    full = true
+    petsc_options_iname = '-pc_type'
+    petsc_options_value = 'lu'
   []
 []
 
