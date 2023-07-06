@@ -87,6 +87,7 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
   Mat lsc_pc_pmat;
   IS velocity_is;
   PetscInt rstart, rend;
+  PetscBool is_lsc;
   std::vector<Mat> intermediate_Qs;
   PetscErrorCode ierr = 0;
 
@@ -102,6 +103,10 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
   schur_complement_ksp = subksp[1];
   ierr = KSPGetPC(schur_complement_ksp, &lsc_pc);
   LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = PetscObjectTypeCompare(PetscObject(lsc_pc), PCLSC, &is_lsc);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  if (!is_lsc)
+    mooseError("Not an LSC PC. Please check the 'schur_fs_index' parameter");
   ierr = PCGetOperators(lsc_pc, NULL, &lsc_pc_pmat);
   LIBMESH_CHKERR2(this->comm(), ierr);
 
