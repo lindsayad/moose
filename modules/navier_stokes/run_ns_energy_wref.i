@@ -33,7 +33,7 @@ Pr = ${fparse mu*cp_liquid/k_solid}
 
 # Numerical scheme parameters
 advected_interp_method = 'upwind'
-velocity_interp_method = 'rc'
+velocity_interp_method = 'average'
 
 [GlobalParams]
   rhie_chow_user_object = 'pins_rhie_chow_interpolator'
@@ -216,7 +216,7 @@ velocity_interp_method = 'rc'
   type = PINSFVMassAdvection
   variable = pressure
   advected_interp_method = 'skewness-corrected'
-  velocity_interp_method = 'rc'
+  velocity_interp_method = 'average'
   block = 'reactor pipe pump mixing-plate'
 []
 ####### X-MOMENTUM EQUATION #######
@@ -595,20 +595,20 @@ velocity_interp_method = 'rc'
     expression = '${power}/0.21757 * max(0, cos(x*pi/2/1.5))*max(0, cos(y*pi/2/1.5))*max(0, cos(z*pi/2/1.5))'
   []
   [ad_rampdown_mu_func]
-    type = ADParsedFunction
+    type = ParsedFunction
     expression = mu*(0.1*exp(-3*t)+1)
     symbol_names = 'mu'
     symbol_values = ${mu}
   []
   [mu_x]
-    type = ADParsedFunction
+    type = ParsedFunction
     expression = 'if(x > -0.08 & x < 0.2 , 10.*mu*(0.1*exp(-3*t)+1),mu*(0.1*exp(-3*t)+1))'
     symbol_names = 'mu'
     symbol_values = ${mu}
   []
   [cosine_guess]
     type = ParsedFunction
-    value = 'max(0, cos(x*pi/2/1.5))*max(0, cos(y*pi/2/1.5))*max(0, cos(z*pi/2/1.5))'
+    expression = 'max(0, cos(x*pi/2/1.5))*max(0, cos(y*pi/2/1.5))*max(0, cos(z*pi/2/1.5))'
   []
 []
 
@@ -663,9 +663,9 @@ velocity_interp_method = 'rc'
 [Problem]
   error_on_jacobian_nonzero_reallocation = true
   extra_tag_matrices = 'mass'
-  type = NavierStokesProblem
-  mass_matrix = 'mass'
-  schur_fs_index = '0'
+  # type = NavierStokesProblem
+  # mass_matrix = 'mass'
+  # schur_fs_index = '0'
 []
 
 ################################################################################
@@ -685,17 +685,17 @@ velocity_interp_method = 'rc'
       [up]
         splitting = 'us p'
         splitting_type  = schur
+        petsc_options = '-ksp_monitor_true_residual'
         petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-        petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9'
+        petsc_options_value = 'full                            selfp                             300                1e-5      fgmres 1e-9'
         vars = 'superficial_vel_x superficial_vel_y superficial_vel_z pressure'
       []
         [us]
           vars = 'superficial_vel_x superficial_vel_y superficial_vel_z'
           splitting = 'u v w'
           splitting_type = symmetric_multiplicative
-          petsc_options = '-ksp_monitor'
-          petsc_options_iname = ' -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-          petsc_options_value = '300                1e-5      fgmres 1e-9'
+          petsc_options_iname = ' -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol -ksp_converged_reason'
+          petsc_options_value = '300                 0.5      fgmres 1e-9          ::failed'
         []
           [u]
             vars = 'superficial_vel_x'
@@ -714,9 +714,9 @@ velocity_interp_method = 'rc'
           []
         [p]
           vars = 'pressure'
-          petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason -ksp_monitor -lsc_ksp_converged_reason -lsc_ksp_monitor'
-          petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
-          petsc_options_value = 'fgmres     300                1e-5     lsc      right        lsc       lu           gmres         1e-5          right            300'
+          petsc_options = '-pc_lsc_scale_diag -ksp_monitor_true_residual'
+          petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side'
+          petsc_options_value = 'gmres     300                0.9      lu       right'
         []
       [temperatures]
         splitting_type = additive
@@ -724,17 +724,15 @@ velocity_interp_method = 'rc'
         petsc_options_iname = ' -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
         petsc_options_value = '300                1e-5      fgmres 1e-9'
         vars = 'T T_ref'
-        petsc_options = '-ksp_monitor -ksp_converged_reason'
+        petsc_options = '-ksp_monitor'
       []
         [T]
           vars = 'T'
-          petsc_options = '-ksp_monitor -ksp_converged_reason'
           petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol'
           petsc_options_value = 'lu       right        gmres     1e-5'
         []
         [T_ref]
           vars = 'T_ref'
-          petsc_options = '-ksp_monitor -ksp_converged_reason'
           petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol'
           petsc_options_value = 'lu       right        gmres     1e-5'
         []
@@ -751,7 +749,7 @@ velocity_interp_method = 'rc'
   [TimeStepper]
     type = IterationAdaptiveDT
     optimal_iterations = 10
-    dt = 1e-3
+    dt = 100
     timestep_limiting_postprocessor = 'dt_limit'
   []
 
@@ -781,9 +779,10 @@ velocity_interp_method = 'rc'
   []
   # Reduce base output
   print_linear_converged_reason = true
-  print_linear_residuals = false
+  print_linear_residuals = true
   print_nonlinear_converged_reason = true
   hide = 'T_hx_top pdrop dt_limit'
+  checkpoint = true
 []
 
 [Postprocessors]
