@@ -665,7 +665,7 @@ velocity_interp_method = 'rc'
   extra_tag_matrices = 'mass'
   type = NavierStokesProblem
   mass_matrix = 'mass'
-  schur_fs_index = '1'
+  schur_fs_index = '0'
 []
 
 ################################################################################
@@ -686,7 +686,7 @@ velocity_interp_method = 'rc'
         splitting = 'us p'
         splitting_type  = schur
         petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-        petsc_options_value = 'full                            selfp                             300                1e-5      fgmres 1e-9'
+        petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9'
         vars = 'superficial_vel_x superficial_vel_y superficial_vel_z pressure'
       []
         [us]
@@ -714,9 +714,9 @@ velocity_interp_method = 'rc'
           []
         [p]
           vars = 'pressure'
-          petsc_options = '-ksp_converged_reason -ksp_monitor'
-          petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side'
-          petsc_options_value = 'fgmres     300                1e-5     lu       right'
+          petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason -ksp_monitor -lsc_ksp_converged_reason -lsc_ksp_monitor'
+          petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
+          petsc_options_value = 'fgmres     300                1e-5     lsc      right        lsc       lu           gmres         1e-5          right            300'
         []
       [temperatures]
         splitting_type = additive
@@ -724,16 +724,17 @@ velocity_interp_method = 'rc'
         petsc_options_iname = ' -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
         petsc_options_value = '300                1e-5      fgmres 1e-9'
         vars = 'T T_ref'
+        petsc_options = '-ksp_monitor -ksp_converged_reason'
       []
         [T]
           vars = 'T'
-          petsc_options = '-ksp_monitor_true_residual -ksp_converged_reason'
+          petsc_options = '-ksp_monitor -ksp_converged_reason'
           petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol'
           petsc_options_value = 'lu       right        gmres     1e-5'
         []
         [T_ref]
           vars = 'T_ref'
-          petsc_options = '-ksp_monitor_true_residual -ksp_converged_reason'
+          petsc_options = '-ksp_monitor -ksp_converged_reason'
           petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol'
           petsc_options_value = 'lu       right        gmres     1e-5'
         []
