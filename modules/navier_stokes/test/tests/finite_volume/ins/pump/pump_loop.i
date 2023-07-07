@@ -1,12 +1,13 @@
-mu = 1.0
-rho = 1.0
+rho = 3279. # density [kg / m^3]  (@1000K)
+mu = 0.005926 # viscosity [Pa s]
+pump_force = '${fparse 1e-2 * 0.25*4.0e6}' # [N / m^3]
 
 [Mesh]
   [gen]
     type = CartesianMeshGenerator
     dim = 2
-    dx = '0.1 0.8 0.1'
-    dy = '0.1 0.8 0.1'
+    dx = '0.2 1.6 0.2'
+    dy = '0.2 1.6 0.2'
     ix = '5 20 5'
     iy = '5 20 5'
     subdomain_id = '1 1 1
@@ -28,7 +29,7 @@ rho = 1.0
   [pump_domain]
     type = ParsedSubdomainMeshGenerator
     input = lump_bdries_to_wall
-    combinatorial_geometry = 'x > 0.3 & x < 0.4 & y > 0.5'
+    combinatorial_geometry = 'x > 0.6 & x < 0.8 & y > 1.0'
     block_id = '3'
   []
   [rename_blocks]
@@ -44,7 +45,7 @@ rho = 1.0
     included_neighbors = 'pipe'
     new_sideset_name = 'pump_side'
     normal = '1 0 0'
-    combinatorial_geometry = 'x > 0.35'
+    combinatorial_geometry = 'x > 0.7'
   []
 []
 
@@ -121,6 +122,13 @@ rho = 1.0
   #   phi0 = 0.0
   # []
 
+  [u_time]
+    type = INSFVMomentumTimeDerivative
+    variable = vel_x
+    rho = ${rho}
+    momentum_component = 'x'
+    extra_matrix_tags = 'mass'
+  []
   [u_advection]
     type = INSFVMomentumAdvection
     variable = vel_x
@@ -140,19 +148,26 @@ rho = 1.0
     pressure = pressure
   []
   [u_pump]
-    type = INSFVPump
+    type = INSFVBodyForce
     variable = vel_x
-    momentum_component = 'x'
-    pump_volume_force = 'pump_volume_force'
+    functor = ${pump_force}
     block = 'pump'
+    momentum_component = 'x'
   []
-  [u_mass]
-    type = FVMass
-    variable = vel_x
-    matrix_tags = 'mass'
-    density = ${rho}
-  []
+  # [u_mass]
+  #   type = FVMass
+  #   variable = vel_x
+  #   matrix_tags = 'mass'
+  #   density = ${rho}
+  # []
 
+  [v_time]
+    type = INSFVMomentumTimeDerivative
+    variable = vel_y
+    rho = ${rho}
+    momentum_component = 'y'
+    extra_matrix_tags = 'mass'
+  []
   [v_advection]
     type = INSFVMomentumAdvection
     variable = vel_y
@@ -244,8 +259,8 @@ rho = 1.0
     [up]
       splitting = 'u p'
       splitting_type  = schur
-      petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-      petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9'
+      petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol -ksp_max_it'
+      petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9          100'
     []
     [u]
         vars = 'vel_x vel_y'
@@ -254,21 +269,29 @@ rho = 1.0
       []
       [p]
         vars = 'pressure'
-        petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason -ksp_monitor'
-        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol'
-        petsc_options_value = 'fgmres     300                1e-5     lsc      right        hypre        boomeramg          gmres         1e-3'
+        petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason'
+        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol -ksp_max_it'
+        petsc_options_value = 'fgmres     300                1e-5     lsc      right        hypre        boomeramg          gmres         1e-3          100'
       []
   []
 []
 
 [Executioner]
-  type = Steady
+  type = Transient
   solve_type = 'NEWTON'
-  nl_rel_tol = 1e-12
+  nl_rel_tol = 1e-8
+  nl_abs_tol = 1e-8
+  [TimeStepper]
+    type = IterationAdaptiveDT
+    dt = 1e-3
+    optimal_iterations = 6
+  []
+  steady_state_detection = true
 []
 
 [Outputs]
-  exodus = false
+  exodus = true
+  checkpoint = true
   [out]
     type = CSV
     execute_on = FINAL
