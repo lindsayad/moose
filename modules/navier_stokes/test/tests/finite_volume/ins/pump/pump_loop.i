@@ -49,13 +49,16 @@ rho = 1.0
 []
 
 [GlobalParams]
-  velocity_interp_method = 'rc'
+  velocity_interp_method = 'average'
   advected_interp_method = 'upwind'
   rhie_chow_user_object = 'rc'
 []
 
 [Problem]
   material_coverage_check = False
+  extra_tag_matrices = 'mass'
+  type = NavierStokesProblem
+  mass_matrix = 'mass'
 []
 
 [UserObjects]
@@ -82,10 +85,10 @@ rho = 1.0
   [pressure]
     type = INSFVPressureVariable
   []
-  [lambda]
-    family = SCALAR
-    order = FIRST
-  []
+  # [lambda]
+  #   family = SCALAR
+  #   order = FIRST
+  # []
 []
 
 [AuxVariables]
@@ -111,12 +114,12 @@ rho = 1.0
     variable = pressure
     rho = ${rho}
   []
-  [mean_zero_pressure]
-    type = FVIntegralValueConstraint
-    variable = pressure
-    lambda = lambda
-    phi0 = 0.0
-  []
+  # [mean_zero_pressure]
+  #   type = FVIntegralValueConstraint
+  #   variable = pressure
+  #   lambda = lambda
+  #   phi0 = 0.0
+  # []
 
   [u_advection]
     type = INSFVMomentumAdvection
@@ -143,6 +146,12 @@ rho = 1.0
     pump_volume_force = 'pump_volume_force'
     block = 'pump'
   []
+  [u_mass]
+    type = FVMass
+    variable = vel_x
+    matrix_tags = 'mass'
+    density = ${rho}
+  []
 
   [v_advection]
     type = INSFVMomentumAdvection
@@ -161,6 +170,12 @@ rho = 1.0
     variable = vel_y
     momentum_component = 'y'
     pressure = pressure
+  []
+  [v_mass]
+    type = FVMass
+    variable = vel_y
+    matrix_tags = 'mass'
+    density = ${rho}
   []
 []
 
@@ -222,11 +237,33 @@ rho = 1.0
   []
 []
 
+[Preconditioning]
+  [FSP]
+    type = FSP
+    topsplit = 'up'
+    [up]
+      splitting = 'u p'
+      splitting_type  = schur
+      petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
+      petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9'
+    []
+    [u]
+        vars = 'vel_x vel_y'
+        petsc_options_iname = '-pc_type'
+        petsc_options_value = 'lu'
+      []
+      [p]
+        vars = 'pressure'
+        petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason -ksp_monitor'
+        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol'
+        petsc_options_value = 'fgmres     300                1e-5     lsc      right        hypre        boomeramg          gmres         1e-3'
+      []
+  []
+[]
+
 [Executioner]
   type = Steady
   solve_type = 'NEWTON'
-  petsc_options_iname = '-pc_type -pc_factor_shift_type'
-  petsc_options_value = 'lu NONZERO'
   nl_rel_tol = 1e-12
 []
 
