@@ -1,6 +1,6 @@
-mu = 1
+mu = 2e-4
 rho = 1
-n = 64
+n = 128
 
 [GlobalParams]
   velocity_interp_method = 'average'
@@ -72,6 +72,13 @@ n = 64
     rho = ${rho}
   []
 
+  [u_time]
+    type = INSFVMomentumTimeDerivative
+    variable = vel_x
+    extra_matrix_tags = 'mass'
+    rho = ${rho}
+    momentum_component = 'x'
+  []
   [u_advection]
     type = INSFVMomentumAdvection
     variable = vel_x
@@ -90,13 +97,20 @@ n = 64
     momentum_component = 'x'
     pressure = pressure
   []
-  [u_mass]
-    type = FVMass
-    matrix_tags = 'mass'
-    variable = vel_x
-    density = ${rho}
-  []
+  # [u_friction]
+  #   type = INSFVMomentumFriction
+  #   variable = vel_x
+  #   momentum_component = 'x'
+  #   linear_coef_name = 1
+  # []
 
+  [v_time]
+    type = INSFVMomentumTimeDerivative
+    variable = vel_y
+    extra_matrix_tags = 'mass'
+    rho = ${rho}
+    momentum_component = 'y'
+  []
   [v_advection]
     type = INSFVMomentumAdvection
     variable = vel_y
@@ -115,12 +129,12 @@ n = 64
     momentum_component = 'y'
     pressure = pressure
   []
-  [v_mass]
-    type = FVMass
-    matrix_tags = 'mass'
-    variable = vel_y
-    density = ${rho}
-  []
+  # [v_friction]
+  #   type = INSFVMomentumFriction
+  #   variable = vel_y
+  #   momentum_component = 'y'
+  #   linear_coef_name = 1
+  # []
 []
 
 [FVBCs]
@@ -181,10 +195,16 @@ n = 64
 []
 
 [Executioner]
-  type = Steady
+  type = Transient
   solve_type = 'NEWTON'
   nl_rel_tol = 1e-8
   nl_abs_tol = 1e-8
+  [TimeStepper]
+    type = IterationAdaptiveDT
+    optimal_iterations = 6
+    dt = 1e-1
+  []
+  steady_state_detection = true
 []
 
 [Outputs]
