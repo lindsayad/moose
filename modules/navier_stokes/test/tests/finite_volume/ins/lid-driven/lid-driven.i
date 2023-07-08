@@ -1,6 +1,6 @@
-mu = 2e-4
+mu = 1
 rho = 1
-n = 128
+n = 64
 
 [GlobalParams]
   velocity_interp_method = 'average'
@@ -22,9 +22,10 @@ n = 128
 []
 
 [Problem]
-  extra_tag_matrices = 'mass'
+  extra_tag_matrices = 'mass L'
   type = NavierStokesProblem
   mass_matrix = 'mass'
+  L_matrix = 'L'
 []
 
 [Variables]
@@ -66,16 +67,21 @@ n = 128
 []
 
 [FVKernels]
-  [mass]
+  [mass_advection]
     type = INSFVMassAdvection
     variable = pressure
     rho = ${rho}
+  []
+  [mass_mass]
+    type = FVMass
+    matrix_tags = 'mass'
+    density = ${rho}
+    variable = pressure
   []
 
   [u_time]
     type = INSFVMomentumTimeDerivative
     variable = vel_x
-    extra_matrix_tags = 'mass'
     rho = ${rho}
     momentum_component = 'x'
   []
@@ -90,6 +96,7 @@ n = 128
     variable = vel_x
     mu = 'mu'
     momentum_component = 'x'
+    extra_matrix_tags = 'L'
   []
   [u_pressure]
     type = INSFVMomentumPressure
@@ -107,7 +114,6 @@ n = 128
   [v_time]
     type = INSFVMomentumTimeDerivative
     variable = vel_y
-    extra_matrix_tags = 'mass'
     rho = ${rho}
     momentum_component = 'y'
   []
@@ -122,6 +128,7 @@ n = 128
     variable = vel_y
     mu = 'mu'
     momentum_component = 'y'
+    extra_matrix_tags = 'L'
   []
   [v_pressure]
     type = INSFVMomentumPressure
@@ -185,7 +192,7 @@ n = 128
       []
       [p]
         vars = 'pressure'
-        petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason -ksp_monitor'
+        petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason -ksp_monitor_true_residual'
         petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type'
         petsc_options_value = 'fgmres     300                1e-5     lsc      right        hypre        boomeramg          preonly'
         # petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
