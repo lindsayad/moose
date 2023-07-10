@@ -1,5 +1,4 @@
 n=64
-mu=1
 
 [Mesh]
   [gen]
@@ -71,10 +70,10 @@ mu=1
   #   variable = velocity
   # [../]
 
-  [./momentum_convection]
-    type = INSADMomentumAdvection
-    variable = velocity
-  [../]
+  # [./momentum_convection]
+  #   type = INSADMomentumAdvection
+  #   variable = velocity
+  # [../]
 
   [./momentum_viscous]
     type = INSADMomentumViscous
@@ -111,7 +110,7 @@ mu=1
   [./const]
     type = ADGenericConstantMaterial
     prop_names = 'rho mu'
-    prop_values = '1  ${mu}'
+    prop_values = '1  1'
   [../]
   [ins_mat]
     type = INSADMaterial
@@ -135,7 +134,7 @@ mu=1
   type = NavierStokesProblem
   mass_matrix = 'mass'
   L_matrix = 'L'
-  use_pressure_mass_matrix = 'false'
+  use_pressure_mass_matrix = 'true'
 []
 
 [Preconditioning]
@@ -147,7 +146,7 @@ mu=1
       splitting = 'u p'
       splitting_type  = schur
       petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-      petsc_options_value = 'full                            self                              300                1e-5      fgmres     1e-8'
+      petsc_options_value = 'full                            user                              300                1e-5      fgmres     1e-8'
     []
       [u]
         vars = 'velocity'
@@ -157,8 +156,8 @@ mu=1
       [p]
         vars = 'p'
         petsc_options = '-ksp_monitor'
-        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_mass_pc_type'
-        petsc_options_value = 'fgmres    300                1e-2      lsc      right        lu           lu'
+        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type'
+        petsc_options_value = 'gmres    300                1e-5      lu'
       []
   []
 []
