@@ -26,6 +26,10 @@ NavierStokesProblem::validParams()
       "schur_fs_index",
       "if not provided then the top field split is assumed to be the "
       "Schur split. This is a vector allow recursive nesting");
+  params.addParam<bool>("use_pressure_mass_matrix",
+                        false,
+                        "Whether to just use the pressure mass matrix as the preconditioner for "
+                        "the Schur complement");
   return params;
 }
 
@@ -108,23 +112,6 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
   if (!is_fs)
     mooseError("Not a field split. Please check the 'schur_fs_index' parameter");
 
-  // Need to call this before getting the sub ksps
-  ierr = PCSetUp(schur_pc);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-  ierr = PCFieldSplitGetSubKSP(schur_pc, &num_splits, &subksp);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-  if (num_splits != 2)
-    mooseError("The number of splits should be two");
-  schur_complement_ksp = subksp[1];
-  ierr = KSPGetPC(schur_complement_ksp, &lsc_pc);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-  ierr = PetscObjectTypeCompare(PetscObject(lsc_pc), PCLSC, &is_lsc);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-  if (!is_lsc)
-    mooseError("Not an LSC PC. Please check the 'schur_fs_index' parameter");
-  ierr = PCGetOperators(lsc_pc, NULL, &lsc_pc_pmat);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-
   // The mass matrix
   auto global_Q =
       static_cast<PetscMatrix<Number> &>(getNonlinearSystemBase(0).getMatrix(massMatrixTagID()))
@@ -155,6 +142,10 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
 
   auto our_parent_Q = process_intermediate_mats(intermediate_Qs, global_Q);
   auto our_parent_L = process_intermediate_mats(intermediate_Ls, global_L);
+
+  // Need to call this before getting index sets or sub ksps, etc.
+  ierr = PCSetUp(schur_pc);
+  LIBMESH_CHKERR2(this->comm(), ierr);
 
   ierr = PCFieldSplitGetISByIndex(schur_pc, 0, &velocity_is);
   LIBMESH_CHKERR2(this->comm(), ierr);
@@ -187,13 +178,6 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
   ierr = ISDestroy(&pressure_is);
   LIBMESH_CHKERR2(this->comm(), ierr);
 
-  ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-  ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Qscale", (PetscObject)Q_scale);
-  LIBMESH_CHKERR2(this->comm(), ierr);
-
-  ierr = PetscFree(subksp);
-  LIBMESH_CHKERR2(this->comm(), ierr);
   for (auto & mat : intermediate_Qs)
   {
     ierr = MatDestroy(&mat);
@@ -202,6 +186,42 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
   for (auto & mat : intermediate_Ls)
   {
     ierr = MatDestroy(&mat);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+  }
+
+  ierr = PCFieldSplitGetSubKSP(schur_pc, &num_splits, &subksp);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  if (num_splits != 2)
+    mooseError("The number of splits should be two");
+  schur_complement_ksp = subksp[1];
+
+  if (getParam<bool>("use_pressure_mass_matrix"))
+  {
+    Mat S;
+    ierr = PCFieldSplitSetSchurPre(schur_pc, PC_FIELDSPLIT_SCHUR_PRE_USER, Q_scale);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+    ierr = KSPGetOperators(schur_complement_ksp, &S, NULL);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+    ierr = KSPSetOperators(schur_complement_ksp, S, Q_scale);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+  }
+  else
+  {
+    ierr = KSPGetPC(schur_complement_ksp, &lsc_pc);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+    ierr = PetscObjectTypeCompare(PetscObject(lsc_pc), PCLSC, &is_lsc);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+    if (!is_lsc)
+      mooseError("Not an LSC PC. Please check the 'schur_fs_index' parameter");
+    ierr = PCGetOperators(lsc_pc, NULL, &lsc_pc_pmat);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+
+    ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+    ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Qscale", (PetscObject)Q_scale);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+
+    ierr = PetscFree(subksp);
     LIBMESH_CHKERR2(this->comm(), ierr);
   }
 }
