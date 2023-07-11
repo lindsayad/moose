@@ -46,7 +46,7 @@ template <typename T>
 void
 ADDirichletBCBaseTempl<T>::computeValue(NumericVector<Number> & current_solution)
 {
-  mooseAssert(_preset, "BC is not preset");
+  mooseAssert(this->_preset, "BC is not preset");
 
   if (_var.isNodalDefined())
   {
