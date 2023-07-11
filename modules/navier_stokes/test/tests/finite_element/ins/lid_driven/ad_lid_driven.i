@@ -157,8 +157,8 @@ mu=1
       [p]
         vars = 'p'
         petsc_options = '-ksp_monitor'
-        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_mass_pc_type'
-        petsc_options_value = 'fgmres    300                1e-2      lsc      right        lu           lu'
+        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_mass_pc_type -lsc_mass_ksp_type -lsc_mass_ksp_pc_side'
+        petsc_options_value = 'fgmres    300                1e-2      lsc      right        lu           lu                gmres              right'
       []
   []
 []
