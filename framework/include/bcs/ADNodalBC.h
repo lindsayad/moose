@@ -9,14 +9,13 @@
 
 #pragma once
 
-#include "NodalBCBase.h"
 #include "MooseVariableInterface.h"
 
 /**
  * Base class for deriving any automatic differentiation boundary condition of a integrated type
  */
-template <typename T>
-class ADNodalBCTempl : public NodalBCBase, public MooseVariableInterface<T>
+template <typename T, typename Base>
+class ADNodalBCTempl : public Base, public MooseVariableInterface<T>
 {
 public:
   static InputParameters validParams();
@@ -24,6 +23,8 @@ public:
   ADNodalBCTempl(const InputParameters & parameters);
 
   const MooseVariableFE<T> & variable() const override { return _var; }
+
+  bool shouldSetComp(unsigned short i) const { return _set_components[i]; }
 
 protected:
   /**
@@ -44,6 +45,13 @@ protected:
   const typename Moose::ADType<T>::type & _u;
 
   const std::array<bool, 3> _set_components;
+
+  using Base::_fe_problem;
+  using Base::_subproblem;
+  using Base::_sys;
+  using Base::_tid;
+  using Base::addMooseVariableDependency;
+  using Base::setResidual;
 
 private:
   void computeResidual() override final;
@@ -70,5 +78,6 @@ private:
   Assembly & _undisplaced_assembly;
 };
 
-using ADNodalBC = ADNodalBCTempl<Real>;
-using ADVectorNodalBC = ADNodalBCTempl<RealVectorValue>;
+class NodalBCBase;
+using ADNodalBC = ADNodalBCTempl<Real, NodalBCBase>;
+using ADVectorNodalBC = ADNodalBCTempl<RealVectorValue, NodalBCBase>;

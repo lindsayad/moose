@@ -2,6 +2,10 @@ n=64
 mu=1
 rho=1
 
+[GlobalParams]
+  preset = true
+[]
+
 [Mesh]
   [gen]
     type = GeneratedMeshGenerator
@@ -100,14 +104,14 @@ rho=1
 
 [BCs]
   [./no_slip]
-    type = VectorFunctionDirichletBC
+    type = ADVectorFunctionDirichletBC
     variable = velocity
     boundary = 'bottom right left'
     extra_matrix_tags = 'L'
   [../]
 
   [./lid]
-    type = VectorFunctionDirichletBC
+    type = ADVectorFunctionDirichletBC
     variable = velocity
     boundary = 'top'
     function_x = 'lid_function'

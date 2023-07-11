@@ -9,12 +9,13 @@
 
 #pragma once
 
+#include "NodalBCBase.h"
 #include "ADNodalBC.h"
 
 /**
  * Base class for automatic differentiation Dirichlet BCs
  */
-class ADDirichletBCBase : public ADNodalBC
+class ADDirichletBCBase : public NodalBCBase
 {
 public:
   ADDirichletBCBase(const InputParameters & parameters);
@@ -22,20 +23,45 @@ public:
   /**
    * Method to preset the nodal value if applicable
    */
-  void computeValue(NumericVector<Number> & current_solution);
+  virtual void computeValue(NumericVector<Number> & current_solution) = 0;
 
   static InputParameters validParams();
 
   bool preset() const { return _preset; }
 
 protected:
-  virtual ADReal computeQpResidual() override;
+  /// Whether or not the value is to be preset
+  const bool _preset;
+};
+
+/**
+ * Base class for automatic differentiation Dirichlet BCs
+ */
+template <typename T>
+class ADDirichletBCBaseTempl : public ADNodalBCTempl<T, ADDirichletBCBase>
+{
+public:
+  ADDirichletBCBaseTempl(const InputParameters & parameters);
+
+  /**
+   * Method to preset the nodal value if applicable
+   */
+  virtual void computeValue(NumericVector<Number> & current_solution) override;
+
+  static InputParameters validParams();
+
+protected:
+  virtual typename Moose::ADType<T>::type computeQpResidual() override;
 
   /**
    * Compute the value of the Dirichlet BC at the current quadrature point
    */
-  virtual ADReal computeQpValue() = 0;
+  virtual typename Moose::ADType<T>::type computeQpValue() = 0;
 
-  /// Whether or not the value is to be preset
-  const bool _preset;
+  using ADNodalBCTempl<T, ADDirichletBCBase>::_var;
+  using ADNodalBCTempl<T, ADDirichletBCBase>::_sys;
+  using ADNodalBCTempl<T, ADDirichletBCBase>::_current_node;
+  using ADNodalBCTempl<T, ADDirichletBCBase>::_u;
+  using ADNodalBCTempl<T, ADDirichletBCBase>::_t;
+  using ADNodalBCTempl<T, ADDirichletBCBase>::shouldSetComp;
 };

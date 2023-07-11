@@ -16,7 +16,7 @@
  *
  * Sets the values of a nodal variable at nodes to values specified by a function
  */
-class ADFunctionDirichletBC : public ADDirichletBCBase
+class ADFunctionDirichletBC : public ADDirichletBCBaseTempl<Real>
 {
 public:
   static InputParameters validParams();
