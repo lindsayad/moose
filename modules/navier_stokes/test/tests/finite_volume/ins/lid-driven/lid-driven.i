@@ -79,12 +79,12 @@ n = 64
     variable = pressure
   []
 
-  [u_time]
-    type = INSFVMomentumTimeDerivative
-    variable = vel_x
-    rho = ${rho}
-    momentum_component = 'x'
-  []
+  # [u_time]
+  #   type = INSFVMomentumTimeDerivative
+  #   variable = vel_x
+  #   rho = ${rho}
+  #   momentum_component = 'x'
+  # []
   [u_advection]
     type = INSFVMomentumAdvection
     variable = vel_x
@@ -111,12 +111,12 @@ n = 64
   #   linear_coef_name = 1
   # []
 
-  [v_time]
-    type = INSFVMomentumTimeDerivative
-    variable = vel_y
-    rho = ${rho}
-    momentum_component = 'y'
-  []
+  # [v_time]
+  #   type = INSFVMomentumTimeDerivative
+  #   variable = vel_y
+  #   rho = ${rho}
+  #   momentum_component = 'y'
+  # []
   [v_advection]
     type = INSFVMomentumAdvection
     variable = vel_y
@@ -183,35 +183,31 @@ n = 64
       petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
       petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9'
     []
-    [u]
+      [u]
         vars = 'vel_x vel_y'
         petsc_options_iname = '-pc_type'
         petsc_options_value = 'lu'
-        # petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol -pc_hypre_type -pc_hypre_boomeramg_grid_sweeps_up -pc_hypre_boomeramg_relax_type_all -pc_hypre_boomeramg_grid_sweeps_down -pc_hypre_boomeramg_relax_weight_all'
-        # petsc_options_value = 'hypre    right        gmres     1e-5      boomeramg      3                                  Jacobi                         2                                        0.5'
       []
       [p]
         vars = 'pressure'
-        petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason -ksp_monitor_true_residual'
-        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type'
-        petsc_options_value = 'fgmres     300                1e-5     lsc      right        hypre        boomeramg          preonly'
-        # petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
-        # petsc_options_value = 'fgmres     300                1e-5     lsc      right        lsc       hypre        boomeramg          gmres         1e-5          right            300'
+        petsc_options = '-ksp_converged_reason -ksp_monitor_true_residual'
+        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_mass_pc_type'
+        petsc_options_value = 'fgmres     300                1e-2     lsc      right        lu           lu'
       []
   []
 []
 
 [Executioner]
-  type = Transient
+  type = Steady
   solve_type = 'NEWTON'
   nl_rel_tol = 1e-8
   nl_abs_tol = 1e-8
-  [TimeStepper]
-    type = IterationAdaptiveDT
-    optimal_iterations = 6
-    dt = 1e-1
-  []
-  steady_state_detection = true
+  # [TimeStepper]
+  #   type = IterationAdaptiveDT
+  #   optimal_iterations = 6
+  #   dt = 1e-1
+  # []
+  # steady_state_detection = true
 []
 
 [Outputs]
