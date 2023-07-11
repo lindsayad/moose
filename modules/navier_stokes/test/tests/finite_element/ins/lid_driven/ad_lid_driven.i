@@ -148,7 +148,7 @@ rho=1
   mass_matrix = 'mass'
   L_matrix = 'L'
   use_pressure_mass_matrix = 'false'
-  commute_lsc = 'true'
+  commute_lsc = 'false'
 []
 
 [Preconditioning]
@@ -169,14 +169,15 @@ rho=1
       []
       [p]
         vars = 'p'
-        petsc_options = '-ksp_monitor'
-        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_mass_pc_type -lsc_mass_ksp_type -lsc_mass_ksp_pc_side'
-        petsc_options_value = 'fgmres    300                1e-2      lsc      right        lu           lu                gmres              right'
+        petsc_options = '-ksp_monitor -pc_lsc_scale_diag'
+        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_pc_side -lsc_ksp_type -lsc_ksp_gmres_restart -lsc_ksp_rtol -lsc_mass_pc_type -lsc_mass_ksp_type -lsc_mass_ksp_pc_side'
+        petsc_options_value = 'fgmres    300                1e-2      lsc      right        hypre        boomeramg          right            gmres         300                    1e-1          lu                gmres              right'
       []
   []
 []
 
 [Executioner]
+  solve_type = 'NEWTON'
   type = Steady
   line_search = 'none'
   nl_rel_tol = 1e-8
