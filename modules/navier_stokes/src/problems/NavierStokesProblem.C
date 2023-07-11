@@ -32,8 +32,13 @@ NavierStokesProblem::validParams()
                         "the Schur complement");
   params.addParam<bool>(
       "commute_lsc",
-      true,
+      false,
       "Whether to use the commuted form of the LSC preconditioner, created by Olshanskii");
+  params.addParam<bool>("use_mass_matrix_for_scaling",
+                        true,
+                        "Whether to use the mass matrix for scaling. This should always be true if "
+                        "'commute_lsc' is true. If this is false, then the diagonal of A will be "
+                        "used for scaling if scaling is requested.");
   return params;
 }
 
@@ -43,6 +48,9 @@ NavierStokesProblem::NavierStokesProblem(const InputParameters & parameters)
     _L_matrix(getParam<TagName>("L_matrix")),
     _schur_fs_index(getParam<std::vector<unsigned int>>("schur_fs_index"))
 {
+  if (getParam<bool>("commute_lsc") && !getParam<bool>("use_mass_matrix_for_scaling"))
+    paramError("use_mass_matrix_for_scaling",
+               "This must be true if we are commuting the LSC commutator.");
 }
 
 NavierStokesProblem::~NavierStokesProblem()
@@ -273,6 +281,9 @@ void
 NavierStokesProblem::initPetscOutput()
 {
   FEProblem::initPetscOutput();
+
+  if (!getParam<bool>("commute_lsc") && !getParam<bool>("use_mass_matrix_for_scaling"))
+    return;
 
   PetscErrorCode ierr = 0;
   KSP ksp;

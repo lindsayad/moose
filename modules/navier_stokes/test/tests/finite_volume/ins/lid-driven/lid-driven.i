@@ -21,13 +21,6 @@ n = 64
   []
 []
 
-[Problem]
-  extra_tag_matrices = 'mass L'
-  type = NavierStokesProblem
-  mass_matrix = 'mass'
-  L_matrix = 'L'
-[]
-
 [Variables]
   [vel_x]
     type = INSFVVelocityVariable
@@ -173,6 +166,14 @@ n = 64
   []
 []
 
+[Problem]
+  extra_tag_matrices = 'mass L'
+  type = NavierStokesProblem
+  mass_matrix = 'mass'
+  L_matrix = 'L'
+  use_mass_matrix_for_scaling = false
+[]
+
 [Preconditioning]
   [FSP]
     type = FSP
@@ -190,7 +191,7 @@ n = 64
       []
       [p]
         vars = 'pressure'
-        petsc_options = '-ksp_converged_reason -ksp_monitor_true_residual'
+        petsc_options = '-ksp_monitor -pc_lsc_scale_diag'
         petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_mass_pc_type'
         petsc_options_value = 'fgmres     300                1e-2     lsc      right        lu           lu'
       []
