@@ -1,5 +1,6 @@
 n=64
 mu=1
+rho=1
 
 [Mesh]
   [gen]
@@ -64,6 +65,7 @@ mu=1
     type = Mass
     variable = p
     matrix_tags = 'mass'
+    density = ${rho}
   []
 
   # [./momentum_time]
@@ -88,6 +90,12 @@ mu=1
     pressure = p
     integrate_p_by_parts = true
   [../]
+  [velocity_mass]
+    type = VectorMass
+    variable = velocity
+    matrix_tags = 'mass'
+    density = ${rho}
+  []
 []
 
 [BCs]
@@ -111,7 +119,7 @@ mu=1
   [./const]
     type = ADGenericConstantMaterial
     prop_names = 'rho mu'
-    prop_values = '1  ${mu}'
+    prop_values = '${rho} ${mu}'
   [../]
   [ins_mat]
     type = INSADMaterial
@@ -136,6 +144,7 @@ mu=1
   mass_matrix = 'mass'
   L_matrix = 'L'
   use_pressure_mass_matrix = 'false'
+  commute_lsc = 'true'
 []
 
 [Preconditioning]

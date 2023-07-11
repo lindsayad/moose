@@ -46,6 +46,9 @@ VectorKernel::VectorKernel(const InputParameters & parameters)
 void
 VectorKernel::computeResidual()
 {
+  if (!hasVectorTags())
+    return;
+
   prepareVectorTag(_assembly, _var.number());
   precalculateResidual();
   for (_i = 0; _i < _test.size(); _i++)

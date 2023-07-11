@@ -30,6 +30,10 @@ NavierStokesProblem::validParams()
                         false,
                         "Whether to just use the pressure mass matrix as the preconditioner for "
                         "the Schur complement");
+  params.addParam<bool>(
+      "commute_lsc",
+      true,
+      "Whether to use the commuted form of the LSC preconditioner, created by Olshanskii");
   return params;
 }
 
@@ -152,28 +156,51 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
   ierr = MatGetOwnershipRange(our_parent_Q, &rstart, &rend);
   LIBMESH_CHKERR2(this->comm(), ierr);
 
-  if (!L)
+  const auto commute_lsc = getParam<bool>("commute_lsc");
+
+  if (commute_lsc)
   {
-    ierr = MatCreateSubMatrix(our_parent_L, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &L);
-    LIBMESH_CHKERR2(this->comm(), ierr);
-  }
-  else
-  {
-    ierr = MatCreateSubMatrix(our_parent_L, velocity_is, velocity_is, MAT_REUSE_MATRIX, &L);
-    LIBMESH_CHKERR2(this->comm(), ierr);
+    if (!L)
+    {
+      ierr = MatCreateSubMatrix(our_parent_L, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &L);
+      LIBMESH_CHKERR2(this->comm(), ierr);
+    }
+    else
+    {
+      ierr = MatCreateSubMatrix(our_parent_L, velocity_is, velocity_is, MAT_REUSE_MATRIX, &L);
+      LIBMESH_CHKERR2(this->comm(), ierr);
+    }
   }
 
   ierr = ISComplement(velocity_is, rstart, rend, &pressure_is);
   LIBMESH_CHKERR2(this->comm(), ierr);
   if (!Q_scale)
   {
-    ierr = MatCreateSubMatrix(our_parent_Q, pressure_is, pressure_is, MAT_INITIAL_MATRIX, &Q_scale);
-    LIBMESH_CHKERR2(this->comm(), ierr);
+    if (commute_lsc)
+    {
+      ierr =
+          MatCreateSubMatrix(our_parent_Q, pressure_is, pressure_is, MAT_INITIAL_MATRIX, &Q_scale);
+      LIBMESH_CHKERR2(this->comm(), ierr);
+    }
+    else
+    {
+      ierr =
+          MatCreateSubMatrix(our_parent_Q, velocity_is, velocity_is, MAT_INITIAL_MATRIX, &Q_scale);
+      LIBMESH_CHKERR2(this->comm(), ierr);
+    }
   }
   else
   {
-    ierr = MatCreateSubMatrix(our_parent_Q, pressure_is, pressure_is, MAT_REUSE_MATRIX, &Q_scale);
-    LIBMESH_CHKERR2(this->comm(), ierr);
+    if (commute_lsc)
+    {
+      ierr = MatCreateSubMatrix(our_parent_Q, pressure_is, pressure_is, MAT_REUSE_MATRIX, &Q_scale);
+      LIBMESH_CHKERR2(this->comm(), ierr);
+    }
+    else
+    {
+      ierr = MatCreateSubMatrix(our_parent_Q, velocity_is, velocity_is, MAT_REUSE_MATRIX, &Q_scale);
+      LIBMESH_CHKERR2(this->comm(), ierr);
+    }
   }
   ierr = ISDestroy(&pressure_is);
   LIBMESH_CHKERR2(this->comm(), ierr);
@@ -216,8 +243,11 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
     ierr = PCGetOperators(lsc_pc, NULL, &lsc_pc_pmat);
     LIBMESH_CHKERR2(this->comm(), ierr);
 
-    ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L);
-    LIBMESH_CHKERR2(this->comm(), ierr);
+    if (commute_lsc)
+    {
+      ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L);
+      LIBMESH_CHKERR2(this->comm(), ierr);
+    }
     ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Qscale", (PetscObject)Q_scale);
     LIBMESH_CHKERR2(this->comm(), ierr);
 
