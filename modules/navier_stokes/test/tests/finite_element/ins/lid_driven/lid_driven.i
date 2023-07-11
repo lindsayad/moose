@@ -8,11 +8,13 @@ mu=2e-3
 []
 
 [Problem]
-  extra_tag_matrices = 'mass'
+  extra_tag_matrices = 'mass L'
   previous_nl_solution_required = true
   type = NavierStokesProblem
   mass_matrix = 'mass'
-  schur_fs_index = '1'
+  L_matrix = 'L'
+  # schur_fs_index = '1'
+  commute_lsc = 'false'
 []
 
 [Mesh]
@@ -62,10 +64,10 @@ mu=2e-3
     pressure = p
   [../]
 
-  [x_time]
-    type = INSMomentumTimeDerivative
-    variable = vel_x
-  []
+  # [x_time]
+  #   type = INSMomentumTimeDerivative
+  #   variable = vel_x
+  # []
   [./x_momentum_space]
     type = INSMomentumLaplaceForm
     variable = vel_x
@@ -80,10 +82,10 @@ mu=2e-3
     matrix_tags = 'mass'
   []
 
-  [y_time]
-    type = INSMomentumTimeDerivative
-    variable = vel_y
-  []
+  # [y_time]
+  #   type = INSMomentumTimeDerivative
+  #   variable = vel_y
+  # []
   [./y_momentum_space]
     type = INSMomentumLaplaceForm
     variable = vel_y
@@ -150,43 +152,64 @@ mu=2e-3
 
 [Preconditioning]
   active = 'FSP'
+  # [FSP]
+  #   type = FSP
+  #   topsplit = 'by_diri_others'
+  #   [by_diri_others]
+  #     splitting = 'diri others'
+  #     splitting_type  = additive
+  #     petsc_options_iname = '-ksp_type'
+  #     petsc_options_value = 'preonly'
+  #   []
+  #     [diri]
+  #       sides = 'left right top bottom'
+  #       vars = 'vel_x vel_y'
+  #       petsc_options_iname = '-pc_type'
+  #       petsc_options_value = 'jacobi'
+  #     []
+  #     [others]
+  #       splitting = 'u p'
+  #       splitting_type  = schur
+  #       petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
+  #       petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9'
+  #       unside_by_var_boundary_name = 'left top right bottom left top right bottom'
+  #       unside_by_var_var_name = 'vel_x vel_x vel_x vel_x vel_y vel_y vel_y vel_y'
+  #     []
+  #     [u]
+  #         vars = 'vel_x vel_y'
+  #         unside_by_var_boundary_name = 'left top right bottom left top right bottom'
+  #         unside_by_var_var_name = 'vel_x vel_x vel_x vel_x vel_y vel_y vel_y vel_y'
+  #         petsc_options = '-ksp_converged_reason'
+  #         petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol -pc_hypre_type -pc_hypre_boomeramg_grid_sweeps_up -pc_hypre_boomeramg_relax_type_all -pc_hypre_boomeramg_grid_sweeps_down -pc_hypre_boomeramg_relax_weight_all'
+  #         petsc_options_value = 'hypre    right        gmres     1e-5      boomeramg      3                                  Jacobi                         2                                        0.5'
+  #       []
+  #       [p]
+  #         vars = 'p'
+  #         petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason'
+  #         petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
+  #         petsc_options_value = 'fgmres     300                1e-5     lsc      right        lsc       hypre        boomeramg          gmres         1e-5          right            300'
+  #       []
+  # []
   [FSP]
     type = FSP
-    topsplit = 'by_diri_others'
-    [by_diri_others]
-      splitting = 'diri others'
-      splitting_type  = additive
-      petsc_options_iname = '-ksp_type'
-      petsc_options_value = 'preonly'
+    topsplit = 'up'
+    [up]
+      splitting = 'u p'
+      splitting_type  = schur
+      petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
+      petsc_options_value = 'full                            self                              300                1e-5      fgmres     1e-8'
     []
-      [diri]
-        sides = 'left right top bottom'
-        vars = 'vel_x vel_y'
-        petsc_options_iname = '-pc_type'
-        petsc_options_value = 'jacobi'
-      []
-      [others]
-        splitting = 'u p'
-        splitting_type  = schur
-        petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-        petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9'
-        unside_by_var_boundary_name = 'left top right bottom left top right bottom'
-        unside_by_var_var_name = 'vel_x vel_x vel_x vel_x vel_y vel_y vel_y vel_y'
-      []
       [u]
-          vars = 'vel_x vel_y'
-          unside_by_var_boundary_name = 'left top right bottom left top right bottom'
-          unside_by_var_var_name = 'vel_x vel_x vel_x vel_x vel_y vel_y vel_y vel_y'
-          petsc_options = '-ksp_converged_reason'
-          petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol -pc_hypre_type -pc_hypre_boomeramg_grid_sweeps_up -pc_hypre_boomeramg_relax_type_all -pc_hypre_boomeramg_grid_sweeps_down -pc_hypre_boomeramg_relax_weight_all'
-          petsc_options_value = 'hypre    right        gmres     1e-5      boomeramg      3                                  Jacobi                         2                                        0.5'
-        []
-        [p]
-          vars = 'p'
-          petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason'
-          petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -pc_type  -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol -lsc_ksp_pc_side -lsc_ksp_gmres_restart'
-          petsc_options_value = 'fgmres     300                1e-5     lsc      right        lsc       hypre        boomeramg          gmres         1e-5          right            300'
-        []
+        vars = 'vel_x vel_y'
+        petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol'
+        petsc_options_value = 'lu       right        gmres     1e-5'
+      []
+      [p]
+        vars = 'p'
+        petsc_options = '-ksp_monitor -pc_lsc_scale_diag'
+        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_pc_side -lsc_ksp_type -lsc_ksp_gmres_restart -lsc_ksp_rtol'
+        petsc_options_value = 'fgmres    300                1e-2      lsc      right        hypre        boomeramg          right            gmres         300                    1e-1'
+      []
   []
   [SMP]
     type = SMP
@@ -198,18 +221,18 @@ mu=2e-3
 
 [Executioner]
   solve_type = NEWTON
-  type = Transient
-  petsc_options_iname = '-snes_max_it'
-  petsc_options_value = '100'
+  type = Steady
   line_search = 'none'
   nl_rel_tol = 1e-8
   nl_abs_tol = 1e-8
-  [TimeStepper]
-    type = IterationAdaptiveDT
-    optimal_iterations = 6
-    dt = 1e-2
-  []
-  steady_state_detection = true
+  # petsc_options_iname = '-snes_max_it'
+  # petsc_options_value = '100'
+  # [TimeStepper]
+  #   type = IterationAdaptiveDT
+  #   optimal_iterations = 6
+  #   dt = 1e-2
+  # []
+  # steady_state_detection = true
 []
 
 [Outputs]
