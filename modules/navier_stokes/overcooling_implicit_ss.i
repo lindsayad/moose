@@ -770,10 +770,13 @@ velocity_interp_method = 'average'
 
 [Problem]
   error_on_jacobian_nonzero_reallocation = true
-  extra_tag_matrices = 'mass'
+  extra_tag_matrices = 'mass L'
   type = NavierStokesProblem
   mass_matrix = 'mass'
-  # schur_fs_index = '0'
+  L_matrix = 'L'
+  use_mass_matrix_for_scaling = false
+  commute_lsc = false
+  material_coverage_check = false
   kernel_coverage_check = false
 []
 
@@ -796,7 +799,7 @@ velocity_interp_method = 'average'
         splitting_type  = schur
         petsc_options = '-ksp_monitor_true_residual'
         petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-        petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9'
+        petsc_options_value = 'full                            self                             300                 1e-2      fgmres    1e-9'
         vars = 'superficial_vel_x superficial_vel_y superficial_vel_z pressure'
       []
         [us]
@@ -804,7 +807,7 @@ velocity_interp_method = 'average'
           splitting = 'u v w'
           splitting_type = symmetric_multiplicative
           petsc_options_iname = ' -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol -ksp_converged_reason'
-          petsc_options_value = '300                 1e-2      fgmres 1e-9          ::failed'
+          petsc_options_value = '300                 1e-1      fgmres 1e-9          ::failed'
         []
           [u]
             vars = 'superficial_vel_x'
@@ -823,9 +826,9 @@ velocity_interp_method = 'average'
           []
         [p]
           vars = 'pressure'
-          petsc_options = '-ksp_monitor_true_residual'
+          petsc_options = '-ksp_monitor_true_residual -pc_lsc_scale_diag'
           petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type'
-          petsc_options_value = 'gmres     300                1e-3       lsc       right       lu'
+          petsc_options_value = 'gmres     300                1e-1       lsc       right       lu'
         []
       # [temperatures]
       #   splitting_type = additive
@@ -865,7 +868,7 @@ velocity_interp_method = 'average'
   [TimeStepper]
     type = IterationAdaptiveDT
     optimal_iterations = 10
-    dt = 10.
+    dt = 1.
     timestep_limiting_postprocessor = 'dt_limit'
   []
 
@@ -874,7 +877,7 @@ velocity_interp_method = 'average'
   #petsc_options_iname = '-pc_type -pc_factor_shift_type -ksp_gmres_restart'
   #petsc_options_value = 'lu NONZERO 20'
   line_search = 'none'
-  nl_rel_tol = 1e-6
+  nl_rel_tol = 1e-5
   nl_abs_tol = 1e-8
   nl_max_its = 10 # fail early and try again with a shorter time step
   l_max_its = 80
