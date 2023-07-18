@@ -14,14 +14,14 @@ k_solid = 0.38
 k_liquid = 0.38
 cp_solid = 640.
 cp_liquid = 640.
-# L = 4e5
-# T_liquidus = 798. #812.
-# T_solidus =  790. #785.
+L = 4e5
+T_liquidus = 798. #812.
+T_solidus =  790. #785.
 
 # Material properties reflector
-# k_ref = 30.
-# cp_ref = 880.
-# rho_ref = 3580.
+k_ref = 30.
+cp_ref = 880.
+rho_ref = 3580.
 
 power = 25e3
 
@@ -50,7 +50,7 @@ velocity_interp_method = 'average'
 
   rho = ${rho_liquid}
   mu = mu
-  # cp = 'cp_mixture'
+  cp = 'cp_mixture'
 
   #temperature = T
 []
@@ -112,29 +112,29 @@ velocity_interp_method = 'average'
   #  block = 'reactor pipe pump mixing-plate'
   #  initial_from_file_var = lambda
   #[]
-  # [T]
-  #   type = INSFVEnergyVariable
-  #   initial_from_file_var = T
-  #   block = 'reactor pipe pump mixing-plate'
-  # []
-  # [T_ref]
-  #   type = INSFVEnergyVariable
-  #   block = 'reflector'
-  #   initial_from_file_var = T_ref
-  # []
-[]
-
-[AuxVariables]
   [T]
-    type = MooseVariableFVReal
+    type = INSFVEnergyVariable
     initial_from_file_var = T
     block = 'reactor pipe pump mixing-plate'
   []
   [T_ref]
-    type = MooseVariableFVReal
+    type = INSFVEnergyVariable
     block = 'reflector'
     initial_from_file_var = T_ref
   []
+[]
+
+[AuxVariables]
+  # [T]
+  #   type = MooseVariableFVReal
+  #   initial_from_file_var = T
+  #   block = 'reactor pipe pump mixing-plate'
+  # []
+  # [T_ref]
+  #   type = MooseVariableFVReal
+  #   block = 'reflector'
+  #   initial_from_file_var = T_ref
+  # []
   [a_u_var]
     type = MooseVariableFVReal
     initial_from_file_var = a_u_var
@@ -218,20 +218,20 @@ velocity_interp_method = 'average'
   #   block = 'reactor pipe pump mixing-plate'
   #   execute_on = 'timestep_end'
   # []
-  # [compute_T_debug]
-  #   type = DebugResidualAux
-  #   variable = T_debug
-  #   debug_variable = T
-  #   execute_on = NONLINEAR
-  # []
-  # [compute_fl]
-  #   type = NSLiquidFractionAux
-  #   variable = fl
-  #   temperature = T
-  #   T_liquidus = '${T_liquidus}'
-  #   T_solidus = '${T_solidus}'
-  #   execute_on = 'TIMESTEP_END'
-  # []
+  [compute_T_debug]
+    type = DebugResidualAux
+    variable = T_debug
+    debug_variable = T
+    execute_on = NONLINEAR
+  []
+  [compute_fl]
+    type = NSLiquidFractionAux
+    variable = fl
+    temperature = T
+    T_liquidus = '${T_liquidus}'
+    T_solidus = '${T_solidus}'
+    execute_on = 'TIMESTEP_END'
+  []
   [rho_out]
     type = ADFunctorElementalAux
     functor = 'rho_mixture'
@@ -257,24 +257,24 @@ velocity_interp_method = 'average'
     functor = 'Forchheimer_coefficient'
     variable = 'fch_coef'
   []
-  # [h_DeltaT_out]
-  #   type = ParsedAux
-  #   variable = h_DeltaT
-  #   coupled_variables = 'T'
-  #   expression = '3.*(T-300.)'
-  # []
-  # [h_DeltaT_rad_out_pre]
-  #   type = ParsedAux
-  #   variable = h_DeltaT_rad_aux
-  #   coupled_variables = 'T_ref'
-  #   expression = 'T_ref-350.'
-  # []
-  # [h_DeltaT_rad_out]
-  #   type = FunctorElementalAux
-  #   functor = 'h_DeltaT_rad_aux'
-  #   variable = h_DeltaT_rad
-  #   factor = 'htc_rad_ref'
-  # []
+  [h_DeltaT_out]
+    type = ParsedAux
+    variable = h_DeltaT
+    coupled_variables = 'T'
+    expression = '3.*(T-300.)'
+  []
+  [h_DeltaT_rad_out_pre]
+    type = ParsedAux
+    variable = h_DeltaT_rad_aux
+    coupled_variables = 'T_ref'
+    expression = 'T_ref-350.'
+  []
+  [h_DeltaT_rad_out]
+    type = FunctorElementalAux
+    functor = 'h_DeltaT_rad_aux'
+    variable = h_DeltaT_rad
+    factor = 'htc_rad_ref'
+  []
 []
 
 [FVKernels]
@@ -530,68 +530,68 @@ velocity_interp_method = 'average'
 
   ####### FUEL ENERGY EQUATION #######
 
-  # [heat_time]
-  #   type = PINSFVEnergyTimeDerivative
-  #   variable = T
-  #   is_solid = false
-  #   extra_matrix_tags = 'mass'
-  # []
-  # [heat_advection]
-  #   type = PINSFVEnergyAdvection
-  #   variable = T
-  # []
-  # [heat_diffusion]
-  #   type = PINSFVEnergyDiffusion
-  #   variable = T
-  #   k = k_mixture
-  # []
-  # # [heat_src]
-  # #   type = FVCoupledForce
-  # #   variable = T
-  # #   v = power_density
-  # #   coef = '${fparse 1.0}'
-  # #   block = 'reactor'
-  # # []
+  [heat_time]
+    type = PINSFVEnergyTimeDerivative
+    variable = T
+    is_solid = false
+    extra_matrix_tags = 'mass'
+  []
+  [heat_advection]
+    type = PINSFVEnergyAdvection
+    variable = T
+  []
+  [heat_diffusion]
+    type = PINSFVEnergyDiffusion
+    variable = T
+    k = k_mixture
+  []
   # [heat_src]
-  #   type = FVBodyForce
+  #   type = FVCoupledForce
   #   variable = T
-  #   function = cosine_guess
-  #   value = '${fparse power/0.21757}'  #Volume integral of cosine shape is 0.21757
+  #   v = power_density
+  #   coef = '${fparse 1.0}'
   #   block = 'reactor'
   # []
-  # #[heat_sink]
-  # #  type = PINSFVEnergyAmbientConvection
-  # #  variable = T
-  # #  T_fluid = T
-  # #  T_solid = ${T_hx}
-  # #  h_solid_fluid = 1e6
-  # #  is_solid = false
-  # #  block = 'pump pipe'
-  # #[]
-  # [heat_latent_source]
-  #   type = NSFVPhaseChangeSource
-  #   variable = T
-  #   L = ${L}
-  #   liquid_fraction = fl
-  #   T_liquidus = ${T_liquidus}
-  #   T_solidus = ${T_solidus}
-  #   block = 'reactor pipe'
-  # []
+  [heat_src]
+    type = FVBodyForce
+    variable = T
+    function = cosine_guess
+    value = '${fparse power/0.21757}'  #Volume integral of cosine shape is 0.21757
+    block = 'reactor'
+  []
+  #[heat_sink]
+  #  type = PINSFVEnergyAmbientConvection
+  #  variable = T
+  #  T_fluid = T
+  #  T_solid = ${T_hx}
+  #  h_solid_fluid = 1e6
+  #  is_solid = false
+  #  block = 'pump pipe'
+  #[]
+  [heat_latent_source]
+    type = NSFVPhaseChangeSource
+    variable = T
+    L = ${L}
+    liquid_fraction = fl
+    T_liquidus = ${T_liquidus}
+    T_solidus = ${T_solidus}
+    block = 'reactor pipe'
+  []
 
   ####### REFLECTOR ENERGY EQUATION #######
 
-  # [heat_time_ref]
-  #   type = INSFVEnergyTimeDerivative
-  #   variable = T_ref
-  #   cp = ${cp_ref}
-  #   rho = ${rho_ref}
-  #   extra_matrix_tags = 'mass'
-  # []
-  # [heat_diffusion_ref]
-  #   type = FVDiffusion
-  #   variable = T_ref
-  #   coeff = ${k_ref}
-  # []
+  [heat_time_ref]
+    type = INSFVEnergyTimeDerivative
+    variable = T_ref
+    cp = ${cp_ref}
+    rho = ${rho_ref}
+    extra_matrix_tags = 'mass'
+  []
+  [heat_diffusion_ref]
+    type = FVDiffusion
+    variable = T_ref
+    coeff = ${k_ref}
+  []
 []
 
 [FVBCs]
@@ -613,58 +613,58 @@ velocity_interp_method = 'average'
     variable = superficial_vel_z
     function = 0
   []
-  # [heat-losses-outshield]
-  #   type = FVFunctorConvectiveHeatFluxBC
-  #   variable = T
-  #   T_bulk = T
-  #   T_solid = 300.
-  #   is_solid = false
-  #   heat_transfer_coefficient = 3
-  #   boundary = 'heat-loss-section-outshield'
-  # []
-  # [heated-outshield-pipe]
-  #   type = FVFunctorNeumannBC
-  #   variable = T
-  #   boundary = 'heat-loss-section-outshield'
-  #   functor = heat-input-pipe
-  # []
-  # [heat-losses-reflector]
-  #   type = FVFunctorConvectiveHeatFluxBC
-  #   variable = T_ref
-  #   T_bulk = 350.
-  #   T_solid = T_ref
-  #   is_solid = true
-  #   heat_transfer_coefficient = htc_rad_ref
-  #   boundary = 'wall-reflector'
-  # []
-  # [heated-reflector-walls]
-  #   type = FVFunctorNeumannBC
-  #   variable = T_ref
-  #   boundary = 'heated-reflector-walls'
-  #   functor = heat-input-ref
-  # []
-  # [heated-inshield-pipe]
-  #   type = FVNeumannBC
-  #   variable = T
-  #   boundary = 'heat-loss-section-inshield'
-  #   value = 1000.
-  # []
+  [heat-losses-outshield]
+    type = FVFunctorConvectiveHeatFluxBC
+    variable = T
+    T_bulk = T
+    T_solid = 300.
+    is_solid = false
+    heat_transfer_coefficient = 50
+    boundary = 'heat-loss-section-outshield'
+  []
+  [heated-outshield-pipe]
+    type = FVFunctorNeumannBC
+    variable = T
+    boundary = 'heat-loss-section-outshield'
+    functor = heat-input-pipe
+  []
+  [heat-losses-reflector]
+    type = FVFunctorConvectiveHeatFluxBC
+    variable = T_ref
+    T_bulk = 350.
+    T_solid = T_ref
+    is_solid = true
+    heat_transfer_coefficient = htc_rad_ref
+    boundary = 'wall-reflector'
+  []
+  [heated-reflector-walls]
+    type = FVFunctorNeumannBC
+    variable = T_ref
+    boundary = 'heated-reflector-walls'
+    functor = heat-input-ref
+  []
+  [heated-inshield-pipe]
+    type = FVNeumannBC
+    variable = T
+    boundary = 'heat-loss-section-inshield'
+    value = 1000.
+  []
 []
 
-# [FVInterfaceKernels]
-#   [convection]
-#     type = FVConvectionCorrelationInterface
-#     variable1 = T
-#     variable2 = T_ref
-#     boundary = 'wall-reactor-full'
-#     h = htc
-#     T_solid = T_ref
-#     T_fluid = T
-#     subdomain1 = reactor
-#     subdomain2 = reflector
-#     wall_cell_is_bulk = true
-#   []
-# []
+[FVInterfaceKernels]
+  [convection]
+    type = FVConvectionCorrelationInterface
+    variable1 = T
+    variable2 = T_ref
+    boundary = 'wall-reactor-full'
+    h = htc
+    T_solid = T_ref
+    T_fluid = T
+    subdomain1 = reactor
+    subdomain2 = reflector
+    wall_cell_is_bulk = true
+  []
+[]
 
 ################################################################################
 # MATERIALS
@@ -787,19 +787,19 @@ velocity_interp_method = 'average'
   active = FSP
   [FSP]
     type = FSP
-    topsplit = 'up'
-    # [top]
-    #   splitting = 'up temperatures'
-    #   splitting_type = multiplicative
-    #   petsc_options_iname = '-ksp_type'
-    #   petsc_options_value = 'preonly'
-    # []
+    topsplit = 'top'
+    [top]
+      splitting = 'up temperatures'
+      splitting_type = multiplicative
+      petsc_options_iname = '-ksp_type'
+      petsc_options_value = 'preonly'
+    []
       [up]
         splitting = 'us p'
         splitting_type  = schur
         petsc_options = '-ksp_monitor_true_residual'
         petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-        petsc_options_value = 'full                            self                             300                 1e-2      fgmres    1e-9'
+        petsc_options_value = 'full                            self                             300                 1e-2      fgmres    1e-5'
         vars = 'superficial_vel_x superficial_vel_y superficial_vel_z pressure'
       []
         [us]
@@ -830,24 +830,24 @@ velocity_interp_method = 'average'
           petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type'
           petsc_options_value = 'gmres     300                1e-1       lsc       right       lu'
         []
-      # [temperatures]
-      #   splitting_type = additive
-      #   splitting = 'T T_ref'
-      #   petsc_options_iname = ' -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-      #   petsc_options_value = '300                1e-5      fgmres 1e-9'
-      #   vars = 'T T_ref'
-      #   petsc_options = '-ksp_monitor'
-      # []
-      #   [T]
-      #     vars = 'T'
-      #     petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol'
-      #     petsc_options_value = 'lu       right        gmres     1e-5'
-      #   []
-      #   [T_ref]
-      #     vars = 'T_ref'
-      #     petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol'
-      #     petsc_options_value = 'lu       right        gmres     1e-5'
-      #   []
+      [temperatures]
+        splitting_type = additive
+        splitting = 'T T_ref'
+        petsc_options_iname = ' -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
+        petsc_options_value = '300                1e-5      fgmres 1e-9'
+        vars = 'T T_ref'
+        petsc_options = '-ksp_monitor'
+      []
+        [T]
+          vars = 'T'
+          petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol'
+          petsc_options_value = 'lu       right        gmres     1e-5'
+        []
+        [T_ref]
+          vars = 'T_ref'
+          petsc_options_iname = '-pc_type -ksp_pc_side -ksp_type -ksp_rtol'
+          petsc_options_value = 'lu       right        gmres     1e-5'
+        []
   []
 
   [SMP]
