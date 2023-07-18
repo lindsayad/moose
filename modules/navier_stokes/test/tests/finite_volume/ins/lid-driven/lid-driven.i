@@ -172,6 +172,7 @@ n = 64
   mass_matrix = 'mass'
   L_matrix = 'L'
   use_mass_matrix_for_scaling = false
+  commute_lsc = false
 []
 
 [Preconditioning]

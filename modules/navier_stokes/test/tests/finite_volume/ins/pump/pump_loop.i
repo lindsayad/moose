@@ -55,13 +55,6 @@ pump_force = '${fparse 1e-2 * 0.25*4.0e6}' # [N / m^3]
   rhie_chow_user_object = 'rc'
 []
 
-[Problem]
-  material_coverage_check = False
-  extra_tag_matrices = 'mass'
-  type = NavierStokesProblem
-  mass_matrix = 'mass'
-[]
-
 [UserObjects]
   [rc]
     type = INSFVRhieChowInterpolator
@@ -98,6 +91,9 @@ pump_force = '${fparse 1e-2 * 0.25*4.0e6}' # [N / m^3]
     family = MONOMIAL
     fv = true
   []
+  [Re]
+    type = MooseVariableFVReal
+  []
 []
 
 [AuxKernels]
@@ -106,6 +102,13 @@ pump_force = '${fparse 1e-2 * 0.25*4.0e6}' # [N / m^3]
     variable = U
     x = vel_x
     y = vel_y
+  []
+  [Re]
+    type = ReynoldsNumberFunctorAux
+    speed = U
+    rho = ${rho}
+    mu = ${mu}
+    variable = Re
   []
 []
 
@@ -186,12 +189,12 @@ pump_force = '${fparse 1e-2 * 0.25*4.0e6}' # [N / m^3]
     momentum_component = 'y'
     pressure = pressure
   []
-  [v_mass]
-    type = FVMass
-    variable = vel_y
-    matrix_tags = 'mass'
-    density = ${rho}
-  []
+  # [v_mass]
+  #   type = FVMass
+  #   variable = vel_y
+  #   matrix_tags = 'mass'
+  #   density = ${rho}
+  # []
 []
 
 [FVBCs]
@@ -250,6 +253,21 @@ pump_force = '${fparse 1e-2 * 0.25*4.0e6}' # [N / m^3]
     functor = vel_x
     value_type = max
   []
+  [maximum_cell_Re]
+    type = ADElementExtremeFunctorValue
+    functor = Re
+    value_type = max
+  []
+[]
+
+[Problem]
+  extra_tag_matrices = 'mass L'
+  type = NavierStokesProblem
+  mass_matrix = 'mass'
+  L_matrix = 'L'
+  use_mass_matrix_for_scaling = false
+  commute_lsc = false
+  material_coverage_check = false
 []
 
 [Preconditioning]
@@ -260,18 +278,18 @@ pump_force = '${fparse 1e-2 * 0.25*4.0e6}' # [N / m^3]
       splitting = 'u p'
       splitting_type  = schur
       petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol -ksp_max_it'
-      petsc_options_value = 'full                            self                             300                1e-5      fgmres 1e-9          100'
+      petsc_options_value = 'full                            self                             300                1e-5       fgmres    1e-9      10'
     []
-    [u]
+      [u]
         vars = 'vel_x vel_y'
         petsc_options_iname = '-pc_type'
         petsc_options_value = 'lu'
       []
       [p]
         vars = 'pressure'
-        petsc_options = '-pc_lsc_scale_diag -ksp_converged_reason'
-        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_type -lsc_ksp_rtol -ksp_max_it'
-        petsc_options_value = 'fgmres     300                1e-5     lsc      right        hypre        boomeramg          gmres         1e-3          100'
+        petsc_options = '-ksp_converged_reason -pc_lsc_scale_diag'
+        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_max_it -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_pc_hypre_type -lsc_ksp_rtol -lsc_ksp_type -lsc_ksp_gmres_restart'
+        petsc_options_value = 'fgmres    100                100         1e-2     lsc      right        hypre        boomeramg          1e-1          gmres         300'
       []
   []
 []
@@ -286,7 +304,10 @@ pump_force = '${fparse 1e-2 * 0.25*4.0e6}' # [N / m^3]
     dt = 1e-3
     optimal_iterations = 6
   []
+  dtmax = 1
   steady_state_detection = true
+  line_search = 'none'
+  steady_state_tolerance = 1e-12
 []
 
 [Outputs]
