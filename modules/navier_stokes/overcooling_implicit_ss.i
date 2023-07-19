@@ -828,7 +828,7 @@ velocity_interp_method = 'average'
           vars = 'pressure'
           petsc_options = '-ksp_monitor_true_residual -pc_lsc_scale_diag'
           petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type'
-          petsc_options_value = 'gmres     300                1e-1       lsc       right       lu'
+          petsc_options_value = 'gmres     300                0.5       lsc       right       lu'
         []
       [temperatures]
         splitting_type = additive
@@ -863,13 +863,15 @@ velocity_interp_method = 'average'
 
   # Time-stepping parameters
   start_time = 0.0
-  end_time = 1000.
+  end_time = 10000.
+  dtmax = 1000
+  steady_state_detection = true
 
   [TimeStepper]
     type = IterationAdaptiveDT
-    optimal_iterations = 10
+    optimal_iterations = 7
     dt = 1.
-    timestep_limiting_postprocessor = 'dt_limit'
+    # timestep_limiting_postprocessor = 'dt_limit'
   []
 
   # Solver parameters
@@ -1018,6 +1020,6 @@ velocity_interp_method = 'average'
   []
   [dt_limit]
     type = Receiver
-    default = 10.
+    default = 100.
   []
 []
