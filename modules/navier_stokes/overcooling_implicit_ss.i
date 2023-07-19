@@ -864,7 +864,7 @@ velocity_interp_method = 'average'
   # Time-stepping parameters
   start_time = 0.0
   end_time = 10000.
-  dtmax = 1000
+  dtmax = 100
   steady_state_detection = true
 
   [TimeStepper]
