@@ -799,7 +799,7 @@ velocity_interp_method = 'average'
         splitting_type  = schur
         petsc_options = '-ksp_monitor_true_residual'
         petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-        petsc_options_value = 'full                            self                             300                 1e-2      fgmres    3e-5'
+        petsc_options_value = 'full                            self                             300                 1e-2      fgmres    7e-5'
         vars = 'superficial_vel_x superficial_vel_y superficial_vel_z pressure'
       []
         [us]
