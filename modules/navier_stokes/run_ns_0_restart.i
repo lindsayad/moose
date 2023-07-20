@@ -387,16 +387,16 @@ velocity_interp_method = 'average'
         splitting = 'us p'
         splitting_type  = schur
         petsc_options = '-ksp_monitor_true_residual'
-        petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol'
-        petsc_options_value = 'full                            self                             300                 1e-2      fgmres    3e-5'
+        petsc_options_iname = '-pc_fieldsplit_schur_fact_type  -pc_fieldsplit_schur_precondition -ksp_gmres_restart -ksp_rtol -ksp_type'
+        petsc_options_value = 'full                            self                             300                 1e-2      fgmres'
         vars = 'superficial_vel_x superficial_vel_y superficial_vel_z pressure'
       []
         [us]
           vars = 'superficial_vel_x superficial_vel_y superficial_vel_z'
           splitting = 'u v w'
           splitting_type = symmetric_multiplicative
-          petsc_options_iname = ' -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_atol -ksp_converged_reason'
-          petsc_options_value = '300                 1e-1      fgmres 1e-9          ::failed'
+          petsc_options_iname = ' -ksp_gmres_restart -ksp_rtol -ksp_type -ksp_converged_reason'
+          petsc_options_value = '300                 1e-1      fgmres    ::failed'
         []
           [u]
             vars = 'superficial_vel_x'
@@ -417,7 +417,7 @@ velocity_interp_method = 'average'
           vars = 'pressure'
           petsc_options = '-ksp_monitor_true_residual -pc_lsc_scale_diag'
           petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type'
-          petsc_options_value = 'gmres     300                0.5       lsc       right       lu'
+          petsc_options_value = 'gmres     300                0.5       lsc      right        lu'
         []
     []
   [SMP]
@@ -463,6 +463,7 @@ velocity_interp_method = 'average'
 ################################################################################
 
 [Outputs]
+  checkpoint = true
   csv = false
   hide = 'dt_limit'
   [restart]
