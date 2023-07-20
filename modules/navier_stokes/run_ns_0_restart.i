@@ -334,13 +334,13 @@ velocity_interp_method = 'rc'
 
 [Functions]
   [ad_rampdown_mu_func]
-    type = ADParsedFunction
+    type = ParsedFunction
     expression = mu*(0.1*exp(-3*t)+1)
     symbol_names = 'mu'
     symbol_values = ${mu}
   []
   [mu_x]
-    type = ADParsedFunction
+    type = ParsedFunction
     expression = 'if(x > -0.08 & x < 0.2 , 10.*mu*(0.1*exp(-3*t)+1),mu*(0.1*exp(-3*t)+1))'
     symbol_names = 'mu'
     symbol_values = ${mu}
@@ -364,13 +364,13 @@ velocity_interp_method = 'rc'
   [friction_material_pump]
     type = ADGenericVectorFunctorMaterial      #defines mu artificially for numerical convergence
     prop_names = 'DFC FFC'     #it converges to the real mu eventually.
-    prop_values = '${fparse 1*friction} ${fparse 1*friction} ${fparse 1*friction} 
+    prop_values = '${fparse 1*friction} ${fparse 1*friction} ${fparse 1*friction}
                    ${fparse 1*friction} ${fparse 1*friction} ${fparse 1*friction}'
   []
   [friction_material_mixing_plate]
     type = ADGenericVectorFunctorMaterial      #defines mu artificially for numerical convergence
     prop_names = 'DFC_plate FFC_plate'     #it converges to the real mu eventually.
-    prop_values = '${fparse 1*friction} ${fparse 1*friction} ${fparse 1*friction} 
+    prop_values = '${fparse 1*friction} ${fparse 1*friction} ${fparse 1*friction}
                    ${fparse 1*friction} ${fparse 1*friction} ${fparse 1*friction}'
   []
 []
