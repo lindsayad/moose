@@ -16,7 +16,7 @@ porosity = 1.0
 
 # Numerical scheme parameters
 advected_interp_method = 'upwind'
-velocity_interp_method = 'rc'
+velocity_interp_method = 'average'
 
 [GlobalParams]
   rhie_chow_user_object = 'pins_rhie_chow_interpolator'
@@ -107,7 +107,7 @@ velocity_interp_method = 'rc'
     type = PINSFVMassAdvection
     variable = pressure
     advected_interp_method = 'skewness-corrected'
-    velocity_interp_method = 'rc'
+    velocity_interp_method = ${velocity_interp_method}
     rho = ${rho}
   []
   #[mean_zero_pressure]
