@@ -58,6 +58,9 @@ NavierStokesProblem::~NavierStokesProblem()
   if (_Q_scale)
     // We're destructing so don't check for errors which can throw
     MatDestroy(&_Q_scale);
+
+  if (_viewer)
+    PetscViewerDestroy(&_viewer);
 }
 
 KSP
@@ -161,6 +164,8 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
 
   ierr = PCFieldSplitGetISByIndex(schur_pc, 0, &velocity_is);
   LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = ISView(velocity_is, _viewer);
+  LIBMESH_CHKERR2(this->comm(), ierr);
   ierr = MatGetOwnershipRange(our_parent_Q, &rstart, &rend);
   LIBMESH_CHKERR2(this->comm(), ierr);
 
@@ -182,6 +187,9 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
 
   ierr = ISComplement(velocity_is, rstart, rend, &pressure_is);
   LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = ISView(pressure_is, _viewer);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+
   if (!Q_scale)
   {
     if (commute_lsc)
@@ -251,17 +259,50 @@ NavierStokesProblem::setupLSCMatrices(KSP schur_ksp)
     ierr = PCGetOperators(lsc_pc, NULL, &lsc_pc_pmat);
     LIBMESH_CHKERR2(this->comm(), ierr);
 
+    ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Qscale", (PetscObject)Q_scale);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+    ierr = MatView(Q_scale, _viewer);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+
     if (commute_lsc)
     {
       ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_L", (PetscObject)L);
       LIBMESH_CHKERR2(this->comm(), ierr);
+      ierr = MatView(L, _viewer);
+      LIBMESH_CHKERR2(this->comm(), ierr);
     }
-    ierr = PetscObjectCompose((PetscObject)lsc_pc_pmat, "LSC_Qscale", (PetscObject)Q_scale);
-    LIBMESH_CHKERR2(this->comm(), ierr);
 
     ierr = PetscFree(subksp);
     LIBMESH_CHKERR2(this->comm(), ierr);
   }
+}
+
+void
+NavierStokesProblem::initViewer(KSP ksp)
+{
+  PetscErrorCode ierr = 0;
+  Mat Pmat;
+  Vec rhs;
+
+  if (_viewer)
+  {
+    ierr = PetscViewerDestroy(&_viewer);
+    LIBMESH_CHKERR2(this->comm(), ierr);
+  }
+
+  const bool commute_lsc = getParam<bool>("commute_lsc");
+  const std::string viewer_name =
+      std::string(commute_lsc ? "olshanskii" : "elman") + "_" + std::to_string(_counter++);
+  ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD, viewer_name.c_str(), FILE_MODE_WRITE, &_viewer);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = KSPGetOperators(ksp, nullptr, &Pmat);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = MatView(Pmat, _viewer);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = KSPGetRhs(ksp, &rhs);
+  LIBMESH_CHKERR2(this->comm(), ierr);
+  ierr = VecView(rhs, _viewer);
+  LIBMESH_CHKERR2(this->comm(), ierr);
 }
 
 PetscErrorCode
@@ -270,6 +311,7 @@ navierStokesKSPPreSolve(KSP root_ksp, Vec /*rhs*/, Vec /*x*/, void * context)
   PetscFunctionBegin;
 
   auto * ns_problem = static_cast<NavierStokesProblem *>(context);
+  ns_problem->initViewer(root_ksp);
   ns_problem->clearIndexSets();
   auto schur_ksp = ns_problem->findSchurKSP(root_ksp, 0);
   ns_problem->setupLSCMatrices(schur_ksp);
@@ -282,10 +324,8 @@ NavierStokesProblem::initPetscOutput()
 {
   FEProblem::initPetscOutput();
 
-  if (!getParam<bool>("commute_lsc") && !getParam<bool>("use_mass_matrix_for_scaling"))
-    return;
-
   PetscErrorCode ierr = 0;
+
   KSP ksp;
   auto snes = getNonlinearSystemBase(0).getSNES();
   ierr = SNESGetKSP(snes, &ksp);

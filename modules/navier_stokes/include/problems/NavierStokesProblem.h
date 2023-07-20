@@ -33,6 +33,7 @@ public:
   void clearIndexSets() { _index_sets.clear(); }
   KSP findSchurKSP(KSP node, unsigned int tree_position);
   void setupLSCMatrices(KSP schur_ksp);
+  void initViewer(KSP ksp);
 
   virtual ~NavierStokesProblem();
 
@@ -49,5 +50,7 @@ private:
 
   Mat _Q_scale = nullptr;
   Mat _L = nullptr;
+  PetscViewer _viewer;
   std::vector<IS> _index_sets;
+  unsigned int _counter = 0;
 };
