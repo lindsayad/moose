@@ -961,6 +961,15 @@ mooseSlepcEigenFormFunctionAB(SNES /*snes*/, Vec x, Vec Ax, Vec Bx, void * ctx)
   PetscFunctionReturn(0);
 }
 
+PetscErrorCode
+mooseSlepcEigenFormNorm(SNES /*snes*/, Vec /*Bx*/, PetscReal * norm, void * ctx)
+{
+  PetscFunctionBegin;
+  auto * const eigen_problem = static_cast<EigenProblem *>(ctx);
+  *norm = eigen_problem->formNorm();
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 void
 attachCallbacksToMat(EigenProblem & eigen_problem, Mat mat, bool eigen)
 {
@@ -975,6 +984,9 @@ attachCallbacksToMat(EigenProblem & eigen_problem, Mat mat, bool eigen)
 
   PetscObjectComposeFunction(
       (PetscObject)mat, "formFunctionAB", Moose::SlepcSupport::mooseSlepcEigenFormFunctionAB);
+  if (eigen_problem.bxNormProvided())
+    PetscObjectComposeFunction(
+        (PetscObject)mat, "formNorm", Moose::SlepcSupport::mooseSlepcEigenFormNorm);
 
   PetscContainer container;
   PetscContainerCreate(eigen_problem.comm().get(), &container);
@@ -983,6 +995,11 @@ attachCallbacksToMat(EigenProblem & eigen_problem, Mat mat, bool eigen)
   PetscObjectCompose((PetscObject)mat, "formJacobianCtx", (PetscObject)container);
   PetscObjectCompose((PetscObject)mat, "formFunctionCtx", nullptr);
   PetscObjectCompose((PetscObject)mat, "formFunctionCtx", (PetscObject)container);
+  if (eigen_problem.bxNormProvided())
+  {
+    PetscObjectCompose((PetscObject)mat, "formNormCtx", nullptr);
+    PetscObjectCompose((PetscObject)mat, "formNormCtx", (PetscObject)container);
+  }
   PetscContainerDestroy(&container);
 }
 
