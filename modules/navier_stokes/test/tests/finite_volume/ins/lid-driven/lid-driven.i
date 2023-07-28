@@ -3,7 +3,7 @@ rho = 1
 n = 64
 
 [GlobalParams]
-  velocity_interp_method = 'average'
+  velocity_interp_method = 'rc'
   advected_interp_method = 'upwind'
   rhie_chow_user_object = 'rc'
 []
@@ -174,9 +174,9 @@ n = 64
       []
       [p]
         vars = 'pressure'
-        petsc_options = '-ksp_monitor -pc_lsc_scale_diag'
-        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_ksp_rtol -lsc_ksp_type'
-        petsc_options_value = 'fgmres     300                1e-2     lsc      right        hypre        1e-1 gmres'
+        petsc_options = '-ksp_monitor -pc_lsc_scale_diag -pc_lsc_stabilized'
+        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_ksp_rtol -lsc_ksp_type -lsc_ksp_pc_side'
+        petsc_options_value = 'fgmres     300               1e-2      lsc      right        hypre        1e-1          gmres         left'
       []
   []
 []
@@ -196,4 +196,20 @@ n = 64
 
 [Outputs]
   exodus = true
+[]
+
+[Postprocessors]
+  [h]
+    type = AverageElementSize
+  []
+  [A]
+    type = ParsedPostprocessor
+    pp_names = 'h'
+    function = 'h^2'
+  []
+  [one_over_A]
+    type = ParsedPostprocessor
+    pp_names = 'A'
+    function = '1/A'
+  []
 []
