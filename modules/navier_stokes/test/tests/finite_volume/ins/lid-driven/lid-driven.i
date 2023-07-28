@@ -65,13 +65,6 @@ n = 64
     variable = pressure
     rho = ${rho}
   []
-  [mass_mass]
-    type = FVMass
-    matrix_tags = 'mass'
-    density = ${rho}
-    variable = pressure
-  []
-
   # [u_time]
   #   type = INSFVMomentumTimeDerivative
   #   variable = vel_x
@@ -89,7 +82,6 @@ n = 64
     variable = vel_x
     mu = 'mu'
     momentum_component = 'x'
-    extra_matrix_tags = 'L'
   []
   [u_pressure]
     type = INSFVMomentumPressure
@@ -121,7 +113,6 @@ n = 64
     variable = vel_y
     mu = 'mu'
     momentum_component = 'y'
-    extra_matrix_tags = 'L'
   []
   [v_pressure]
     type = INSFVMomentumPressure
@@ -166,15 +157,6 @@ n = 64
   []
 []
 
-[Problem]
-  extra_tag_matrices = 'mass L'
-  type = NavierStokesProblem
-  mass_matrix = 'mass'
-  L_matrix = 'L'
-  use_mass_matrix_for_scaling = false
-  commute_lsc = false
-[]
-
 [Preconditioning]
   [FSP]
     type = FSP
@@ -193,8 +175,8 @@ n = 64
       [p]
         vars = 'pressure'
         petsc_options = '-ksp_monitor -pc_lsc_scale_diag'
-        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_mass_pc_type'
-        petsc_options_value = 'fgmres     300                1e-2     lsc      right        lu           lu'
+        petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -lsc_pc_type -lsc_ksp_rtol -lsc_ksp_type'
+        petsc_options_value = 'fgmres     300                1e-2     lsc      right        hypre        1e-1 gmres'
       []
   []
 []
