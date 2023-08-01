@@ -25,6 +25,8 @@ TaggingInterface::validParams()
   MultiMooseEnum vtags("nontime time", "nontime", true);
   MultiMooseEnum mtags("nontime system", "system", true);
 
+  params.addPrivateParam<bool>("matrix_only", false);
+
   params.addParam<MultiMooseEnum>(
       "vector_tags", vtags, "The tag for the vectors this Kernel should fill");
 
@@ -56,7 +58,12 @@ TaggingInterface::TaggingInterface(const MooseObject * moose_object)
 {
   auto & vector_tag_names = _tag_params.get<MultiMooseEnum>("vector_tags");
 
-  if (vector_tag_names.isValid())
+  if (!vector_tag_names.isValid())
+  {
+    if (!_tag_params.get<bool>("matrix_only"))
+      mooseError("MUST provide at least one vector_tag for Kernel: ", _moose_object.name());
+  }
+  else
     for (auto & vector_tag_name : vector_tag_names)
     {
       const TagID vector_tag_id = _subproblem.getVectorTagID(vector_tag_name.name());

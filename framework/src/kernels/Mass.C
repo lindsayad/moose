@@ -19,6 +19,7 @@ Mass::validParams()
   params.set<MultiMooseEnum>("vector_tags") = "";
   params.set<MultiMooseEnum>("matrix_tags") = "";
   params.suppressParameter<MultiMooseEnum>("vector_tags");
+  params.set<bool>("matrix_only") = true;
   return params;
 }
 
