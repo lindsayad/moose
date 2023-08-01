@@ -53,7 +53,7 @@ n = 20
     component = 0
   []
   [momentum_x_mass]
-    type = Mass
+    type = MassKernel
     variable = u
     density = ${rho}
     matrix_tags = 'mass'
@@ -77,7 +77,7 @@ n = 20
     component = 1
   []
   [momentum_y_mass]
-    type = Mass
+    type = MassKernel
     variable = v
     density = ${rho}
     matrix_tags = 'mass'

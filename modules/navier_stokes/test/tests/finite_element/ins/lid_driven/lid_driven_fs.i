@@ -63,7 +63,7 @@ n=16
     extra_matrix_tags = 'L'
   [../]
   [momentum_x_mass]
-    type = Mass
+    type = MassKernel
     variable = vel_x
     density = ${rho}
     matrix_tags = 'mass'
@@ -78,7 +78,7 @@ n=16
     extra_matrix_tags = 'L'
   [../]
   [momentum_y_mass]
-    type = Mass
+    type = MassKernel
     variable = vel_y
     density = ${rho}
     matrix_tags = 'mass'

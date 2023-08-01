@@ -7,12 +7,12 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "Mass.h"
+#include "MassKernel.h"
 
-registerMooseObject("MooseApp", Mass);
+registerMooseObject("MooseApp", MassKernel);
 
 InputParameters
-Mass::validParams()
+MassKernel::validParams()
 {
   InputParameters params = Reaction::validParams();
   params.renameParam("rate", "density", "Optional density for scaling the computed mass.");
@@ -23,4 +23,4 @@ Mass::validParams()
   return params;
 }
 
-Mass::Mass(const InputParameters & parameters) : Reaction(parameters) {}
+MassKernel::MassKernel(const InputParameters & parameters) : Reaction(parameters) {}

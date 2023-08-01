@@ -11,12 +11,12 @@
 
 #include "Reaction.h"
 
-class Mass : public Reaction
+class MassKernel : public Reaction
 {
 public:
   static InputParameters validParams();
 
-  Mass(const InputParameters & parameters);
+  MassKernel(const InputParameters & parameters);
 
   virtual void computeResidual() override {}
 };
