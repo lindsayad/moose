@@ -175,17 +175,17 @@ U = 1
 
 [AuxKernels]
   [vel_x]
-    type = SelfAux
+    type = ProjectionAux
     variable = vel_x
     v = u
   []
   [vel_y]
-    type = SelfAux
+    type = ProjectionAux
     variable = vel_y
     v = v
   []
   [p]
-    type = SelfAux
+    type = ProjectionAux
     variable = p
     v = pressure
   []
