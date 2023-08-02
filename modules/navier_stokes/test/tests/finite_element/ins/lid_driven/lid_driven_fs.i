@@ -2,8 +2,8 @@ rho=1
 mu=1
 U=1
 l=1
-prefactor=${fparse 1/(l/2)^2}
-n=2789
+prefactor=${fparse 1/(l/2)^4}
+n=224
 
 [GlobalParams]
   gravity = '0 0 0'
@@ -12,14 +12,16 @@ n=2789
 [Mesh]
   [gen]
     type = DistributedRectilinearMeshGenerator
-    dim = 2
+    dim = 3
     xmin = 0
     xmax = ${l}
     ymin = 0
     ymax = ${l}
+    zmin = 0
+    zmax = ${l}
     nx = ${n}
     ny = ${n}
-    elem_type = QUAD4
+    nz = ${n}
   []
   [./corner_node]
     type = ExtraNodesetGenerator
@@ -40,6 +42,10 @@ n=2789
     order = SECOND
     family = LAGRANGE
   [../]
+  [./vel_z]
+    order = SECOND
+    family = LAGRANGE
+  [../]
   [./p]
     order = FIRST
     family = LAGRANGE
@@ -52,6 +58,7 @@ n=2789
     variable = p
     u = vel_x
     v = vel_y
+    w = vel_z
     pressure = p
   [../]
 
@@ -60,6 +67,7 @@ n=2789
     variable = vel_x
     u = vel_x
     v = vel_y
+    w = vel_z
     pressure = p
     component = 0
     extra_matrix_tags = 'L'
@@ -75,6 +83,7 @@ n=2789
     variable = vel_y
     u = vel_x
     v = vel_y
+    w = vel_z
     pressure = p
     component = 1
     extra_matrix_tags = 'L'
@@ -85,6 +94,22 @@ n=2789
     density = ${rho}
     matrix_tags = 'mass'
   []
+  [./z_momentum_space]
+    type = INSMomentumLaplaceForm
+    variable = vel_z
+    u = vel_x
+    v = vel_y
+    w = vel_z
+    pressure = p
+    component = 2
+    extra_matrix_tags = 'L'
+  [../]
+  [momentum_z_mass]
+    type = MassKernel
+    variable = vel_z
+    density = ${rho}
+    matrix_tags = 'mass'
+  []
 []
 
 [BCs]
@@ -92,7 +117,7 @@ n=2789
   [./x_no_slip]
     type = DirichletBC
     variable = vel_x
-    boundary = 'bottom right left'
+    boundary = 'bottom right left front back'
     value = 0.0
   [../]
 
@@ -106,7 +131,14 @@ n=2789
   [./y_no_slip]
     type = DirichletBC
     variable = vel_y
-    boundary = 'bottom right top left'
+    boundary = 'bottom right top left front back'
+    value = 0.0
+  [../]
+
+  [./z_no_slip]
+    type = DirichletBC
+    variable = vel_z
+    boundary = 'bottom right top left front back'
     value = 0.0
   [../]
 
@@ -133,7 +165,7 @@ n=2789
     # space so that the Dirichlet conditions are the same regardless
     # of the mesh spacing.
     type = ParsedFunction
-    expression = '${prefactor}*${U}*x*(${l}-x)'
+    expression = '${prefactor}*${U}*x*(${l}-x)*z*(${l}-z)'
   [../]
 []
 
@@ -156,7 +188,7 @@ n=2789
       petsc_options_value = 'full                            self                              300                fgmres    right        1e-4'
     []
     [u]
-      vars = 'vel_x vel_y'
+      vars = 'vel_x vel_y vel_z'
       petsc_options = '-ksp_monitor'
       petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type -ksp_rtol -ksp_gmres_restart -ksp_pc_side'
       petsc_options_value = 'hypre    boomeramg      gmres     1e-2      300                right'
