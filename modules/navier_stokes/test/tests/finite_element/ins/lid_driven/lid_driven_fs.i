@@ -3,7 +3,7 @@ mu=1
 U=1
 l=1
 prefactor=${fparse 1/(l/2)^2}
-n=16
+n=2789
 
 [GlobalParams]
   gravity = '0 0 0'
@@ -11,7 +11,7 @@ n=16
 
 [Mesh]
   [gen]
-    type = GeneratedMeshGenerator
+    type = DistributedRectilinearMeshGenerator
     dim = 2
     xmin = 0
     xmax = ${l}
@@ -19,7 +19,7 @@ n=16
     ymax = ${l}
     nx = ${n}
     ny = ${n}
-    elem_type = QUAD9
+    elem_type = QUAD4
   []
   [./corner_node]
     type = ExtraNodesetGenerator
@@ -27,6 +27,8 @@ n=16
     nodes = '0'
     input = gen
   [../]
+  second_order = true
+  parallel_type = distributed
 []
 
 [Variables]
@@ -174,6 +176,6 @@ n=16
 []
 
 [Outputs]
-  exodus = true
+  exodus = false
   perf_graph = true
 []
