@@ -119,7 +119,11 @@ externalPETScDiffusionFDMSolve(
   PetscValidType(u0, 2);
   PetscValidHeaderSpecific(u, VEC_CLASSID, 3);
   PetscValidType(u, 3);
+#if PETSC_RELEASE_GREATER_EQUALS(3, 20, 0)
+  PetscAssertPointer(converged, 6);
+#else
   PetscValidPointer(converged, 6);
+#endif
 
   ierr = TSGetDM(ts, &da);
   CHKERRQ(ierr);
