@@ -98,7 +98,7 @@
     block = 0
   []
   [momentum_mesh]
-    type = INSADConvectedMesh
+    type = INSADMeshConvection
     variable = vel
     disp_x = 'disp_x'
     disp_y = 'disp_y'
