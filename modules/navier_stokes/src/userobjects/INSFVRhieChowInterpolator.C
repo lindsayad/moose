@@ -216,6 +216,19 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
     }
   };
 
+  auto process_displacement =
+      [this, fill_container, check_blocks](const auto & disp_name, auto & disp_container)
+  {
+    if (!_displaced)
+      paramError(disp_name,
+                 "Displacement provided but we are not running on the displaced mesh. If you "
+                 "really want this object to run on the displaced mesh, then set "
+                 "'use_displaced_mesh = true', otherwise remove this displacement parameter");
+    disp_container.resize(libMesh::n_threads());
+    fill_container(disp_name, disp_container);
+    check_blocks(*disp_container[0]);
+  };
+
   fill_container(NS::pressure, _ps);
   check_blocks(*_p);
 
@@ -225,11 +238,7 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
   check_blocks(*_u);
   _var_numbers.push_back(_u->number());
   if (isParamValid("disp_x"))
-  {
-    _disp_xs.resize(libMesh::n_threads());
-    fill_container("disp_x", _disp_xs);
-    check_blocks(*_disp_xs[0]);
-  }
+    process_displacement("disp_x", _disp_xs);
 
   if (_dim >= 2)
   {
@@ -244,11 +253,7 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
       mooseError("x and y velocity component face interpolation methods do not match");
 
     if (isParamValid("disp_y"))
-    {
-      _disp_ys.resize(libMesh::n_threads());
-      fill_container("disp_y", _disp_ys);
-      check_blocks(*_disp_ys[0]);
-    }
+      process_displacement("disp_y", _disp_ys);
     else if (isParamValid("disp_x"))
       paramError("disp_y", "If 'disp_x' is provided, then 'disp_y' must be as well");
   }
@@ -266,11 +271,7 @@ INSFVRhieChowInterpolator::INSFVRhieChowInterpolator(const InputParameters & par
       mooseError("x and z velocity component face interpolation methods do not match");
 
     if (isParamValid("disp_z"))
-    {
-      _disp_zs.resize(libMesh::n_threads());
-      fill_container("disp_z", _disp_zs);
-      check_blocks(*_disp_zs[0]);
-    }
+      process_displacement("disp_z", _disp_zs);
     else if (isParamValid("disp_x"))
       paramError("disp_z", "If 'disp_x' is provided, then 'disp_z' must be as well");
   }
