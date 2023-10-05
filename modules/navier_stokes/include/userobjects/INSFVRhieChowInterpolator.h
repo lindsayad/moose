@@ -90,20 +90,6 @@ public:
                                   THREAD_ID tid,
                                   bool subtract_mesh_velocity) const;
 
-  /**
-   * Retrieve an element velocity
-   * @param elem_arg The element that we wish to retrieve the velocity for
-   * @param time The time at which to evaluate the velocity
-   * @param tid The thread ID
-   * @param subtract_mesh_velocity Whether to subtracet the mesh velocity if running on a displaced
-   * mesh
-   * @return The element velocity
-   */
-  VectorValue<ADReal> getVelocity(const Moose::ElemArg & elem_arg,
-                                  const Moose::StateArg & time,
-                                  THREAD_ID tid,
-                                  bool subtract_mesh_velocity) const;
-
   /// Return the interpolation method used for velocity
   Moose::FV::InterpMethod velocityInterpolationMethod() const { return _velocity_interp_method; }
 
