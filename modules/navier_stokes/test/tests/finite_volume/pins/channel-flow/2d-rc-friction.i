@@ -98,6 +98,7 @@ velocity_interp_method = 'rc'
     Darcy_name = 'Darcy_coefficient'
     Forchheimer_name = 'Forchheimer_coefficient'
     rho = ${rho}
+    speed = speed
   []
 
   [v_advection]
@@ -131,6 +132,7 @@ velocity_interp_method = 'rc'
     Darcy_name = 'Darcy_coefficient'
     Forchheimer_name = 'Forchheimer_coefficient'
     rho = ${rho}
+    speed = speed
   []
 
   [mean-pressure]
@@ -212,11 +214,17 @@ velocity_interp_method = 'rc'
   []
 []
 
-[Materials]
+[FunctorMaterials]
   [darcy]
     type = ADGenericVectorFunctorMaterial
     prop_names = 'Darcy_coefficient Forchheimer_coefficient'
     prop_values = '0.1 0.1 0.1 0.1 0.1 0.1'
+  []
+  [speec]
+    type = PINSFVSpeedFunctorMaterial
+    superficial_vel_x = superficial_vel_x
+    superficial_vel_y = superficial_vel_y
+    porosity = porosity
   []
 []
 
