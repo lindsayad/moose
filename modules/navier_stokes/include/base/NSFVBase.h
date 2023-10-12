@@ -1969,8 +1969,11 @@ NSFVBase<BaseType>::addINSMomentumFrictionKernels()
           if (upper_name == "DARCY")
             params.template set<MooseFunctorName>("Darcy_name") = _friction_coeffs[block_i][type_i];
           else if (upper_name == "FORCHHEIMER")
+          {
             params.template set<MooseFunctorName>("Forchheimer_name") =
                 _friction_coeffs[block_i][type_i];
+            params.template set<MooseFunctorName>(NS::speed) = NS::speed;
+          }
         }
 
         getProblem().addFVKernel(kernel_type,
@@ -2004,8 +2007,11 @@ NSFVBase<BaseType>::addINSMomentumFrictionKernels()
               corr_params.template set<MooseFunctorName>("Darcy_name") =
                   _friction_coeffs[block_i][type_i];
             else if (upper_name == "FORCHHEIMER")
+            {
               corr_params.template set<MooseFunctorName>("Forchheimer_name") =
                   _friction_coeffs[block_i][type_i];
+              corr_params.template set<MooseFunctorName>(NS::speed) = NS::speed;
+            }
           }
 
           getProblem().addFVKernel(correction_kernel_type,
