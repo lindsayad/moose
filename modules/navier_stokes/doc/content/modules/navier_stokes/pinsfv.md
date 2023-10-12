@@ -6,13 +6,13 @@ The weakly compressible formulation is also implemented for porous flow finite v
 ## Equations
 
 This module implements the porous media Navier Stokes equations. They are expressed in terms of the superficial
-velocity $\vec{v}_d = \epsilon \vec{V}$ where $\epsilon$ is the porosity and $\vec{V}$ the interstitial velocity. The
+velocity $\vec{v}_D = \epsilon \vec{v}$ where $\epsilon$ is the porosity and $\vec{v}$ the interstitial velocity. The
 superficial velocity is also known as the extrinsic or Darcy velocity. The other non-linear variables used are
 pressure and temperature. This is known as the primitive superficial set of variables.
 
 Mass equation:
 \begin{equation}
-\nabla \cdot \rho \vec{v}_d = 0
+\nabla \cdot \rho \vec{v}_D = 0
 \end{equation}
 
 Momentum equation, with friction and gravity force as example forces:
