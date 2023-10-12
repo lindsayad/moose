@@ -9,6 +9,7 @@
 
 #include "PINSFVSpeedFunctorMaterial.h"
 #include "NS.h"
+#include "NavierStokesMethods.h"
 
 registerMooseObject("NavierStokesApp", PINSFVSpeedFunctorMaterial);
 
@@ -51,33 +52,18 @@ PINSFVSpeedFunctorMaterial::PINSFVSpeedFunctorMaterial(const InputParameters & p
                blocksMaxDimension());
 
   // Interstitial velocity is needed by certain correlations
-  addFunctorProperty<ADRealVectorValue>(NS::velocity,
-                                        [this](const auto & r, const auto & t) -> ADRealVectorValue
-                                        {
-                                          return ADRealVectorValue(_superficial_vel_x(r, t),
-                                                                   _superficial_vel_y(r, t),
-                                                                   _superficial_vel_z(r, t)) /
-                                                 _eps(r, t);
-                                        });
+  const auto & interstitial_velocity = addFunctorProperty<ADRealVectorValue>(
+      NS::velocity,
+      [this](const auto & r, const auto & t) -> ADRealVectorValue
+      {
+        return ADRealVectorValue(
+                   _superficial_vel_x(r, t), _superficial_vel_y(r, t), _superficial_vel_z(r, t)) /
+               _eps(r, t);
+      });
 
   // Speed is normal of regular interstitial velocity
   // This is needed to compute the Reynolds number
   addFunctorProperty<ADReal>(NS::speed,
-                             [this](const auto & r, const auto & t) -> ADReal
-                             {
-                               // if the velocity is zero, then the norm function call fails because
-                               // AD tries to calculate the derivatives which causes a divide by
-                               // zero - because d/dx(sqrt(f(x))) = 1/2/sqrt(f(x))*df/dx. So add a
-                               // bit of noise to avoid this failure mode.
-                               if ((MooseUtils::absoluteFuzzyEqual(_superficial_vel_x(r, t), 0)) &&
-                                   (MooseUtils::absoluteFuzzyEqual(_superficial_vel_y(r, t), 0)) &&
-                                   (MooseUtils::absoluteFuzzyEqual(_superficial_vel_z(r, t), 0)))
-                                 return 1e-42;
-
-                               return ADRealVectorValue(_superficial_vel_x(r, t),
-                                                        _superficial_vel_y(r, t),
-                                                        _superficial_vel_z(r, t))
-                                          .norm() /
-                                      _eps(r, t);
-                             });
+                             [&interstitial_velocity](const auto & r, const auto & t) -> ADReal
+                             { return NS::computeSpeed(interstitial_velocity(r, t)); });
 }
