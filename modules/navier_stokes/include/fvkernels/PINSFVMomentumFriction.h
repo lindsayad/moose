@@ -41,4 +41,6 @@ protected:
   const Moose::Functor<ADReal> & _eps;
   /// Density as a functor
   const Moose::Functor<ADReal> & _rho;
+  /// Speed (norm of the interstitial velocity) as a functor
+  const Moose::Functor<ADReal> * const _speed;
 };

@@ -25,6 +25,9 @@ PINSFVMomentumFriction::validParams()
   params.addParam<MooseFunctorName>("Forchheimer_name",
                                     "Name of the Forchheimer coefficients property.");
   params.addParam<MooseFunctorName>(NS::porosity, NS::porosity, "the porosity");
+  params.addParam<MooseFunctorName>(
+      NS::speed,
+      "The norm of the interstitial velocity. This is required for Forchheimer calculations");
   params.addRequiredParam<MooseFunctorName>(NS::density, "The density.");
   return params;
 }
@@ -37,10 +40,16 @@ PINSFVMomentumFriction::PINSFVMomentumFriction(const InputParameters & params)
     _use_Darcy_friction_model(isParamValid("Darcy_name")),
     _use_Forchheimer_friction_model(isParamValid("Forchheimer_name")),
     _eps(getFunctor<ADReal>(NS::porosity)),
-    _rho(getFunctor<ADReal>(NS::density))
+    _rho(getFunctor<ADReal>(NS::density)),
+    _speed(isParamValid(NS::speed) ? &getFunctor<ADReal>(NS::speed) : nullptr)
 {
   if (!_use_Darcy_friction_model && !_use_Forchheimer_friction_model)
     mooseError("At least one friction model needs to be specified.");
+
+  if (_use_Forchheimer_friction_model && !_speed)
+    mooseError("If using a Forchheimer friction model, then the '",
+               NS::speed,
+               "' parameter must be provided");
 }
 
 ADReal
@@ -51,7 +60,8 @@ PINSFVMomentumFriction::computeFrictionWCoefficient(const Moose::ElemArg & elem_
   if (_use_Darcy_friction_model)
     coefficient += (*_cL)(elem_arg, state)(_index)*_rho(elem_arg, state) / _eps(elem_arg, state);
   if (_use_Forchheimer_friction_model)
-    coefficient += (*_cQ)(elem_arg, state)(_index)*_rho(elem_arg, state) / _eps(elem_arg, state);
+    coefficient += (*_cQ)(elem_arg, state)(_index)*_rho(elem_arg, state) / _eps(elem_arg, state) *
+                   (*_speed)(elem_arg, state);
 
   return coefficient;
 }
