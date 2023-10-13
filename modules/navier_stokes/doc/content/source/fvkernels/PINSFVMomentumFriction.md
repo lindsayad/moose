@@ -27,7 +27,7 @@ difference. Darcy is meant to represent viscous effects and should
 have a linear dependence on the fluid velocity, whereas Forchheimer is meant to
 represent inertial effects and should have a quadratic dependence on velocity. These additional dependencies, as well as other prefactors commonly present in the Darcy and Forchheimer models, are baked into the definition of the friction factors.
 
-## Computation of friction factors and pre-factors
+## Computation of friction factors and pre-factors id=friction_example
 
 To outline how friction factors for Darcy and Forchheimer may be calculated,
 let's consider a specific example. We'll draw from the Ergun equation, which is
