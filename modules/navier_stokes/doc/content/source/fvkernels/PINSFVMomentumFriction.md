@@ -7,10 +7,12 @@ Forchheimer friction models:
 
 Darcy drag model
 \begin{equation}
+\label{darcy}
 \epsilon F_i = - f_i \rho \frac{v_{D,i}}{\epsilon}
 \end{equation}
 Forchheimer drag model
 \begin{equation}
+\label{forchheimer}
 \epsilon F_i = - f_i \rho \frac{v_{D,i}}{\epsilon}\frac{|v_D|}{\epsilon}
 \end{equation}
 where $F_i$ is the i-th component of the friction force (denoted by $\mathbf{F_f}$ in [!eqref](pinsfv.md#eq:pinsfv_mom)), $f_i$ the friction factor, which may be anisotropic,
@@ -21,11 +23,10 @@ superficial velocity. We have used a negative sign to match the notation used in
 right-hand-side of the equation. When moved to the left-hand side, which is done
 when setting up a Newton scheme, the term becomes positive which is what is
 shown in the source code itself.
-Though the functional forms above are identical and their
-treatment in this kernel is identical, there is a fundamental conceptual
-difference. Darcy is meant to represent viscous effects and should
-have a linear dependence on the fluid velocity, whereas Forchheimer is meant to
-represent inertial effects and should have a quadratic dependence on velocity. These additional dependencies, as well as other prefactors commonly present in the Darcy and Forchheimer models, are baked into the definition of the friction factors.
+Darcy and Forchheimer terms represent fundamentally different friction
+effects. Darcy is meant to represent viscous effects and as shown in [darcy]
+has a linear dependence on the fluid velocity. Meanwhile, Forchheimer is meant to
+represent inertial effects and as shown in [forchheimer] has a quadratic dependence on velocity.
 
 ## Computation of friction factors and pre-factors id=friction_example
 
