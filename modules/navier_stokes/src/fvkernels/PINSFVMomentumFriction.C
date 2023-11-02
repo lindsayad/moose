@@ -58,10 +58,10 @@ PINSFVMomentumFriction::computeFrictionWCoefficient(const Moose::ElemArg & elem_
 {
   ADReal coefficient = 0.0;
   if (_use_Darcy_friction_model)
-    coefficient += (*_cL)(elem_arg, state)(_index)*_rho(elem_arg, state) / _eps(elem_arg, state);
+    coefficient += (*_cL)(elem_arg, state)(_index)*_rho(elem_arg, state);
   if (_use_Forchheimer_friction_model)
-    coefficient += (*_cQ)(elem_arg, state)(_index)*_rho(elem_arg, state) / _eps(elem_arg, state) *
-                   (*_speed)(elem_arg, state);
+    coefficient +=
+        (*_cQ)(elem_arg, state)(_index)*_rho(elem_arg, state) * (*_speed)(elem_arg, state);
 
   return coefficient;
 }
