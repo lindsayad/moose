@@ -8,12 +8,12 @@ Forchheimer friction models:
 Darcy drag model
 \begin{equation}
 \label{darcy}
-\epsilon F_i = - f_i \rho \frac{v_{D,i}}{\epsilon}
+\epsilon F_i = - f_i \rho \epsilon \frac{v_{D,i}}{\epsilon} = -f_i \rho v_{D,i}
 \end{equation}
 Forchheimer drag model
 \begin{equation}
 \label{forchheimer}
-\epsilon F_i = - f_i \rho \frac{v_{D,i}}{\epsilon}\frac{|v_D|}{\epsilon}
+\epsilon F_i = - f_i \rho \epsilon \frac{v_{D,i}}{\epsilon}\frac{|v_D|}{\epsilon} = - f_i \rho v_{D,i} \frac{|v_D|}{\epsilon}
 \end{equation}
 where $F_i$ is the i-th component of the friction force (denoted by $\mathbf{F_f}$ in [!eqref](pinsfv.md#eq:pinsfv_mom)), $f_i$ the friction factor, which may be anisotropic,
 $\epsilon$ the porosity and $\rho$ the fluid density and $v_{D,i}$ the i-th
@@ -56,19 +56,19 @@ If we define the hydraulic diameter as $D_h = \frac{\epsilon d_p}{1 -
 \epsilon}$, then the above equation can be rewritten as:
 
 \begin{equation}
-\epsilon \nabla p + \frac{150\mu\epsilon}{\rho D_h^2}
- \frac{\rho v_D}{\epsilon} + \frac{1.75\epsilon}{D_h}
-\rho \frac{|\vec{v}_D|}{\epsilon} \frac{v_D}{\epsilon} = 0
+\epsilon \nabla p + \frac{150\mu}{\rho D_h^2}
+ \rho v_D + \frac{1.75}{D_h}
+\rho v_D \frac{|\vec{v}_D|}{\epsilon} = 0
 \end{equation}
 
 From this equation we can see that the Darcy coefficient is computed via
 \begin{equation}
-\frac{150\mu\epsilon}{\rho D_h^2}
+\frac{150\mu}{\rho D_h^2}
 \end{equation}
 
 and the Forchheimer coefficient is computed via
 \begin{equation}
-\frac{1.75\epsilon}{D_h}
+\frac{1.75}{D_h}
 \end{equation}
 
 !syntax parameters /FVKernels/PINSFVMomentumFriction

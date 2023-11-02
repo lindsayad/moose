@@ -87,7 +87,7 @@ ADReal
 FunctorPebbleBedDragCoefficients<Derived>::computeDarcyPrefactor(const Space & r, const Time & t)
 {
   ADReal Dh = computeHydraulicDiameter(r, t);
-  return (_mu(r, t) / _rho(r, t)) * _eps(r, t) / (Dh * Dh);
+  return (_mu(r, t) / _rho(r, t)) / (Dh * Dh);
 }
 
 template <typename Derived>
@@ -96,8 +96,7 @@ ADReal
 FunctorPebbleBedDragCoefficients<Derived>::computeForchheimerPrefactor(const Space & r,
                                                                        const Time & t)
 {
-  ADReal Dh = computeHydraulicDiameter(r, t);
-  return _eps(r, t) / Dh;
+  return 1 / computeHydraulicDiameter(r, t);
 }
 
 template <typename Derived>
