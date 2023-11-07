@@ -17,9 +17,9 @@
  * pebble bed. These correlations generally share common proportionalities to
  * porosity, hydraulic diameter, etc. that are placed into this
  * base class. The Darcy coefficient in this case scales a term with
- * proportionality \f$\frac{\mu_f}{\rho_f}\frac{\epsilon}{D_h^2}\f$,
+ * proportionality \f$\frac{1}{D_h^2}\f$,
  * while the Forchheimer coefficient scales a term with proportionality
- * \f$\epsilon\|\vec{V}\|/D_h\f$.
+ * \f$\frac{1}{D_h}\f$.
  */
 template <typename Derived>
 class FunctorPebbleBedDragCoefficients : public FunctorIsotropicDragCoefficients<Derived>
@@ -48,9 +48,6 @@ protected:
   /// fluid density
   const Moose::Functor<ADReal> & _rho;
 
-  /// fluid dynamic viscosity
-  const Moose::Functor<ADReal> & _mu;
-
   /// pebble diameter
   const Real & _d_pebble;
 };
@@ -65,8 +62,6 @@ FunctorPebbleBedDragCoefficients<Derived>::validParams()
   params.addRequiredParam<MooseFunctorName>(NS::porosity, "Porosity");
 
   params.addParam<MooseFunctorName>(NS::density, NS::density, "Density");
-  params.addParam<MooseFunctorName>(NS::mu, NS::mu, "Dynamic viscosity");
-
   return params;
 }
 
@@ -76,7 +71,6 @@ FunctorPebbleBedDragCoefficients<Derived>::FunctorPebbleBedDragCoefficients(
   : FunctorIsotropicDragCoefficients<Derived>(parameters),
     _eps(this->template getFunctor<ADReal>(NS::porosity)),
     _rho(this->template getFunctor<ADReal>(NS::density)),
-    _mu(this->template getFunctor<ADReal>(NS::mu)),
     _d_pebble(this->template getParam<Real>(NS::pebble_diameter))
 {
 }
@@ -86,8 +80,8 @@ template <typename Space, typename Time>
 ADReal
 FunctorPebbleBedDragCoefficients<Derived>::computeDarcyPrefactor(const Space & r, const Time & t)
 {
-  ADReal Dh = computeHydraulicDiameter(r, t);
-  return (_mu(r, t) / _rho(r, t)) / (Dh * Dh);
+  const auto Dh = computeHydraulicDiameter(r, t);
+  return 1 / (Dh * Dh);
 }
 
 template <typename Derived>
@@ -96,7 +90,11 @@ ADReal
 FunctorPebbleBedDragCoefficients<Derived>::computeForchheimerPrefactor(const Space & r,
                                                                        const Time & t)
 {
-  return 1 / computeHydraulicDiameter(r, t);
+  // Why the factor of 2? Because we multiply by a factor of 1/2 in the friction kernel to be
+  // consistent with the formulation of Forchheimer in
+  // https://holzmann-cfd.com/community/blog-and-tools/darcy-forchheimer and
+  // https://www.simscale.com/knowledge-base/predict-darcy-and-forchheimer-coefficients-for-perforated-plates-using-analytical-approach/
+  return 2 / computeHydraulicDiameter(r, t);
 }
 
 template <typename Derived>

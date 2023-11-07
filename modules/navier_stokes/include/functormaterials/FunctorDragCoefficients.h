@@ -12,12 +12,9 @@
 #include "FunctorMaterial.h"
 
 /**
- * Abstract base class material providing the drag coefficients
- * proportional to velocity (Darcy coefficient) and proportional to the
- * square of velocity (Forchheimer coefficient). The drag term in the
- * momentum equation has a strong form \f$W\rho_f\vec{V}\f$, where
- * \f$W\equiv C_L+C_Q\f$, where \f$C_L\f$ is the linear drag coefficient
- * and \f$C_Q\f$ is the quadratic drag coefficient.
+ * Abstract base class material providing the drag coefficients for linear and quadratic friction
+ * models. The expression of the coefficients is highly dependent on the formulation of the kernel.
+ * The reader should consult the PINSFVMomentumFrictionKernel documentation for details
  */
 class FunctorDragCoefficients : public FunctorMaterial
 {
