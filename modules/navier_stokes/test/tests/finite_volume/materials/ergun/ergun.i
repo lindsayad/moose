@@ -130,6 +130,7 @@ advected_interp_method = 'upwind'
     Forchheimer_name = 'Forchheimer_coefficient'
     momentum_component = 'x'
     speed = speed
+    mu = 'mu'
   []
 
   # Momentum y component equation.
@@ -161,6 +162,7 @@ advected_interp_method = 'upwind'
     Darcy_name = 'Darcy_coefficient'
     Forchheimer_name = 'Forchheimer_coefficient'
     momentum_component = 'y'
+    mu = 'mu'
     speed = speed
   []
   [gravity]
@@ -198,17 +200,17 @@ advected_interp_method = 'upwind'
 
 [AuxKernels]
   [vel_x]
-    type = FunctorElementalAux
+    type = FunctorAux
     variable = vel_x
     functor = vel_x_mat
   []
   [vel_y]
-    type = FunctorElementalAux
+    type = FunctorAux
     variable = vel_y
     functor = vel_y_mat
   []
   [porosity_out]
-    type = ADFunctorElementalAux
+    type = FunctorAux
     variable = porosity_out
     functor = porosity
   []

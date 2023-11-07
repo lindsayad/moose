@@ -92,11 +92,11 @@ velocity_interp_method = 'rc'
     type = PINSFVMomentumFriction
     variable = u
     momentum_component = 'x'
-    porosity = porosity
     Darcy_name = 'Darcy_coefficient'
     Forchheimer_name = 'Forchheimer_coefficient'
     rho = ${rho}
     speed = speed
+    mu = ${mu}
   []
 
   [v_advection]
@@ -140,11 +140,11 @@ velocity_interp_method = 'rc'
     type = PINSFVMomentumFriction
     variable = v
     momentum_component = 'y'
-    porosity = porosity
     Darcy_name = 'Darcy_coefficient'
     Forchheimer_name = 'Forchheimer_coefficient'
     rho = ${rho}
     speed = speed
+    mu = ${mu}
   []
 []
 

@@ -94,9 +94,9 @@ pressure_tag = "pressure_grad"
     momentum_component = 'y'
     Darcy_name = 'Darcy_coefficient'
     Forchheimer_name = 'Forchheimer_coefficient'
-    porosity = 'porosity'
     rho = ${rho}
     speed = speed
+    mu = ${mu}
   []
 
   [v_advection]
@@ -127,9 +127,9 @@ pressure_tag = "pressure_grad"
     momentum_component = 'y'
     Darcy_name = 'Darcy_coefficient'
     Forchheimer_name = 'Forchheimer_coefficient'
-    porosity = 'porosity'
     rho = ${rho}
     speed = speed
+    mu = ${mu}
   []
 
   [p_diffusion]

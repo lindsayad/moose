@@ -1943,7 +1943,6 @@ NSFVBase<BaseType>::addINSMomentumFrictionKernels()
     params.template set<MooseFunctorName>(NS::density) = _density_name;
     params.template set<UserObjectName>("rhie_chow_user_object") =
         prefix() + "pins_rhie_chow_interpolator";
-    params.template set<MooseFunctorName>(NS::porosity) = _flow_porosity_functor_name;
 
     for (unsigned int block_i = 0; block_i < num_used_blocks; ++block_i)
     {
@@ -1967,7 +1966,10 @@ NSFVBase<BaseType>::addINSMomentumFrictionKernels()
         {
           const auto upper_name = MooseUtils::toUpper(_friction_types[block_i][type_i]);
           if (upper_name == "DARCY")
+          {
+            params.template set<MooseFunctorName>(NS::mu) = _dynamic_viscosity_name;
             params.template set<MooseFunctorName>("Darcy_name") = _friction_coeffs[block_i][type_i];
+          }
           else if (upper_name == "FORCHHEIMER")
           {
             params.template set<MooseFunctorName>("Forchheimer_name") =
