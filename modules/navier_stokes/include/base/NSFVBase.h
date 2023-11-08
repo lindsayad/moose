@@ -2883,14 +2883,15 @@ template <class BaseType>
 void
 NSFVBase<BaseType>::addEnthalpyMaterial()
 {
-  InputParameters params = getFactory().getValidParams("INSFVEnthalpyMaterial");
+  InputParameters params = getFactory().getValidParams("INSFVEnthalpyFunctorMaterial");
   assignBlocks(params, _blocks);
 
   params.template set<MooseFunctorName>(NS::density) = _density_name;
   params.template set<MooseFunctorName>(NS::cp) = _specific_heat_name;
   params.template set<MooseFunctorName>("temperature") = _fluid_temperature_name;
 
-  getProblem().addMaterial("INSFVEnthalpyMaterial", prefix() + "ins_enthalpy_material", params);
+  getProblem().addMaterial(
+      "INSFVEnthalpyFunctorMaterial", prefix() + "ins_enthalpy_material", params);
 }
 
 template <class BaseType>
