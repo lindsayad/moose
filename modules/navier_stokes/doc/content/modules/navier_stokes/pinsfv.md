@@ -31,7 +31,7 @@ Solid phase energy equation, with convective heat transfer and an energy source 
 \dfrac{\partial (1-\epsilon) \rho c_{ps} T_s}{\partial t} = \nabla \cdot (\kappa_s \nabla T_s) + \alpha (T_f - T_s) + (1-\epsilon) \dot{Q}
 \end{equation}
 
-where $\rho$ is the fluid density, $\mu$ the viscosity, $c_p$ the specific heat capacity $\alpha$ the convective heat transfer coefficient. The effective diffusivities $\kappa$ include the effect of porosity, which is often approximated as $\epsilon k$ with $k$ the thermal diffusivity.
+where $\rho$ is the fluid density, $\mu$ the dynamic viscosity, $c_p$ the specific heat capacity $\alpha$ the convective heat transfer coefficient. The effective diffusivities $\kappa$ include the effect of porosity, which is often approximated as $\epsilon k$ with $k$ the thermal diffusivity.
 
 ## Implementation for a straight channel
 

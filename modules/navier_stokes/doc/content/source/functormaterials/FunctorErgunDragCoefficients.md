@@ -18,7 +18,7 @@ where $d_p$ is the diameter of the pebbles in the bed. The Forchheimer
 coefficient is given as
 
 \begin{equation}
-\frac{2(1.75)}{D_h}
+\frac{2 \cdot 1.75}{D_h}
 \end{equation}
 
 where we have made the $2(1.75)$ multiplication explicit, instead of writing
