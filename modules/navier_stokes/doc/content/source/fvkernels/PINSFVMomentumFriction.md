@@ -2,7 +2,7 @@
 
 This kernel adds the friction term to the porous media Navier Stokes momentum
 equations. This kernel must be used with the canonical PINSFV variable set,
-e.g. pressure and superficial velocity. This kernel supports Darcy and
+e.g. pressure and superficial velocity, and supports Darcy and
 Forchheimer friction models:
 
 Darcy drag model
@@ -44,7 +44,7 @@ the form:
 where $L$ is the bed length, $\mu$ is the fluid dynamic viscosity and $d_p$ is
 representative of the diameter of the pebbles in the pebble bed. We can divide
 the equation through by $L$, recognize that $\Delta p$ denotes $p_0 - p_L$ such
-that $\Delta p/L \leftarrow -\nabla p$, multiply the equation through by
+that $\Delta p/L \approx -\nabla p$, multiply the equation through by
 $-\epsilon$, move all terms to the left-hand-side, and do
 some term manipulation in order to yield:
 
@@ -104,10 +104,10 @@ and arrive at the Ergun expression for the Darcy coefficient:
 and the Ergun expression for the Forchheimer coefficient:
 
 \begin{equation}
-\frac{2(1.75)}{D_h}
+\frac{2 \cdot 1.75}{D_h}
 \end{equation}
 
-where we have made the $2(1.75)$ multiplication explicit to make the 1.75 factor
+where we have made the $2 \cdot 1.75$ multiplication explicit to make the 1.75 factor
 from the [Ergun wikipedia page](https://en.wikipedia.org/wiki/Ergun_equation)
 more recognizable. We perform a similar separation in the implementation of the
 Ergun Forchheimer coefficient outlined in [FunctorErgunDragCoefficients.md].

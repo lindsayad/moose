@@ -14,7 +14,7 @@
 /**
  *  Material providing the interphase drag coefficient according to the correlation
  *  provided by \cite ergun.
- * NOTE: Do not inherit this class, inherit FunctorPebbleBedDragCoefficients or turn this
+ *  NOTE: Do not inherit this class, inherit FunctorPebbleBedDragCoefficients or turn this
  *       into a template before inheriting, for the sake of the CRTP static polymorphism
  */
 class FunctorErgunDragCoefficients final
