@@ -218,10 +218,41 @@ pressure_tag = "pressure_grad"
 []
 
 [FunctorMaterials]
-  [darcy]
+  [friction_factors]
     type = ADGenericVectorFunctorMaterial
     prop_names = 'Darcy_coefficient Forchheimer_coefficient'
-    prop_values = '0.01 0.02 0.03 0.01 0.02 0.03'
+    prop_values = 'D_old_convention1 D_old_convention2 D_old_convention1
+                   F_old_convention1 F_old_convention2 F_old_convention1'
+  []
+  # These materials are only used to adapt to the old convention for friction coefficient
+  # This should never be used outside of this input file.
+  [legacy_darcy_conversion1]
+    type = ADParsedFunctorMaterial
+    property_name = 'D_old_convention1'
+    expression = '0.01 * rho / porosity / mu'
+    functor_symbols = 'rho porosity mu'
+    functor_names = '${rho} porosity ${mu}'
+  []
+  [legacy_darcy_conversion2]
+    type = ADParsedFunctorMaterial
+    property_name = 'D_old_convention2'
+    expression = '0.02 * rho / porosity / mu'
+    functor_symbols = 'rho porosity mu'
+    functor_names = '${rho} porosity ${mu}'
+  []
+  [legacy_forchheimer_conversion1]
+    type = ADParsedFunctorMaterial
+    property_name = 'F_old_convention1'
+    expression = '0.01 * 2 / porosity / speed'
+    functor_symbols = 'speed porosity'
+    functor_names = 'speed porosity'
+  []
+  [legacy_forchheimer_conversion2]
+    type = ADParsedFunctorMaterial
+    property_name = 'F_old_convention2'
+    expression = '0.02 * 2 / porosity / speed'
+    functor_symbols = 'speed porosity'
+    functor_names = 'speed porosity'
   []
   [speed]
     type = PINSFVSpeedFunctorMaterial

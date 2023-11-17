@@ -220,10 +220,27 @@ velocity_interp_method = 'rc'
 []
 
 [FunctorMaterials]
-  [darcy]
+  [friction_factors]
     type = ADGenericVectorFunctorMaterial
     prop_names = 'Darcy_coefficient Forchheimer_coefficient'
-    prop_values = '0.1 0.1 0.1 0.1 0.1 0.1'
+    prop_values = 'D_old_convention D_old_convention D_old_convention
+                   F_old_convention F_old_convention F_old_convention'
+  []
+  # These two materials are only used to adapt to the old convention for friction coefficient
+  # This should never be used outside of this input file.
+  [legacy_darcy_conversion]
+    type = ADParsedFunctorMaterial
+    property_name = 'D_old_convention'
+    expression = '0.1 * rho / porosity / mu'
+    functor_symbols = 'rho porosity mu'
+    functor_names = '${rho} porosity ${mu}'
+  []
+  [legacy_forchheimer_conversion]
+    type = ADParsedFunctorMaterial
+    property_name = 'F_old_convention'
+    expression = '0.2 / porosity / speed'
+    functor_symbols = 'speed porosity'
+    functor_names = 'speed porosity'
   []
   [speed]
     type = PINSFVSpeedFunctorMaterial

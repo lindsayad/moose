@@ -54,9 +54,18 @@ rho = 1
     superficial_vel_x = superficial_vel_x
     superficial_vel_y = superficial_vel_y
     f = '0'
-    g = '11'
+    g = 'F_old_convention'
     A = '1 1 1'
     B = '1 1 1'
+  []
+  # This material is only used to adapt to the old convention for friction coefficient
+  # This should never be used outside of this input file.
+  [legacy_forchheimer_conversion]
+    type = ADParsedFunctorMaterial
+    property_name = 'F_old_convention'
+    expression = '11 * rho / porosity / mu'
+    functor_symbols = 'rho porosity mu'
+    functor_names = '${rho} porosity ${mu}'
   []
 []
 
