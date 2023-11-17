@@ -11,7 +11,11 @@
 #include "NS.h"
 #include "NavierStokesMethods.h"
 
-registerMooseObject("NavierStokesApp", LinearFrictionFactorFunctorMaterial);
+// This object is confusing now that we use the expected definition of the Darcy and Forchheimer
+// friction factors
+registerMooseObjectDeprecated("NavierStokesApp",
+                              LinearFrictionFactorFunctorMaterial,
+                              "06/30/2024 24:00");
 
 InputParameters
 LinearFrictionFactorFunctorMaterial::validParams()
