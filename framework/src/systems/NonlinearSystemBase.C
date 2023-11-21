@@ -1156,6 +1156,17 @@ NonlinearSystemBase::setConstraintSecondaryValues(NumericVector<Number> & soluti
                 constraints_applied = true;
                 nfc->computeSecondaryValue(solution);
               }
+
+              if (nfc->hasWritableCoupledVariables())
+              {
+                Threads::spin_mutex::scoped_lock lock(Threads::spin_mtx);
+                for (auto * var : nfc->getWritableCoupledVariables())
+                {
+                  var->insert(_fe_problem.getAuxiliarySystem().solution());
+                }
+                _fe_problem.getAuxiliarySystem().solution().close();
+                _fe_problem.getAuxiliarySystem().system().update();
+              }
             }
           }
         }
@@ -1333,6 +1344,16 @@ NonlinearSystemBase::constraintResiduals(NumericVector<Number> & residual, bool 
                 else
                   _fe_problem.cacheResidual(0);
                 _fe_problem.cacheResidualNeighbor(0);
+              }
+              if (nfc->hasWritableCoupledVariables())
+              {
+                Threads::spin_mutex::scoped_lock lock(Threads::spin_mtx);
+                for (auto * var : nfc->getWritableCoupledVariables())
+                {
+                  var->insert(_fe_problem.getAuxiliarySystem().solution());
+                }
+                _fe_problem.getAuxiliarySystem().solution().close();
+                _fe_problem.getAuxiliarySystem().system().update();
               }
             }
           }
