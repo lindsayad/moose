@@ -1143,6 +1143,8 @@ NonlinearSystemBase::setConstraintSecondaryValues(NumericVector<Number> & soluti
 
             for (const auto & nfc : constraints)
             {
+              if (nfc->isExplicitConstraint())
+                continue;
               // Return if this constraint does not correspond to the primary-secondary pair
               // prepared by the outer loops.
               // This continue statement is required when, e.g. one secondary surface constrains
@@ -1162,10 +1164,9 @@ NonlinearSystemBase::setConstraintSecondaryValues(NumericVector<Number> & soluti
                 Threads::spin_mutex::scoped_lock lock(Threads::spin_mtx);
                 for (auto * var : nfc->getWritableCoupledVariables())
                 {
-                  var->insert(_fe_problem.getAuxiliarySystem().solution());
+                  if (var->isNodalDefined())
+                    var->insert(_fe_problem.getAuxiliarySystem().solution());
                 }
-                _fe_problem.getAuxiliarySystem().solution().close();
-                _fe_problem.getAuxiliarySystem().system().update();
               }
             }
           }
@@ -1350,16 +1351,23 @@ NonlinearSystemBase::constraintResiduals(NumericVector<Number> & residual, bool 
                 Threads::spin_mutex::scoped_lock lock(Threads::spin_mtx);
                 for (auto * var : nfc->getWritableCoupledVariables())
                 {
-                  var->insert(_fe_problem.getAuxiliarySystem().solution());
+                  if (var->isNodalDefined())
+                    var->insert(_fe_problem.getAuxiliarySystem().solution());
                 }
-                _fe_problem.getAuxiliarySystem().solution().close();
-                _fe_problem.getAuxiliarySystem().system().update();
               }
             }
           }
         }
       }
     }
+    const bool has_explicit_contact(true);
+    if (has_explicit_contact)
+    {
+      _fe_problem.getAuxiliarySystem().solution().close();
+      _fe_problem.getAuxiliarySystem().system().update();
+      solutionOld().close();
+    }
+
     if (_assemble_constraints_separately)
     {
       // Make sure that secondary contribution to primary are assembled, and ghosts have been
@@ -2214,6 +2222,8 @@ NonlinearSystemBase::constraintJacobians(bool displaced)
 
             for (const auto & nfc : constraints)
             {
+              if (nfc->isExplicitConstraint())
+                continue;
               // Return if this constraint does not correspond to the primary-secondary pair
               // prepared by the outer loops.
               // This continue statement is required when, e.g. one secondary surface constrains
