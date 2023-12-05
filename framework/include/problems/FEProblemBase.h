@@ -2095,9 +2095,9 @@ public:
    */
   MooseAppCoordTransform & coordTransform();
 
-  virtual std::size_t numNonlinearSystems() const { return _num_nl_sys; }
+  virtual std::size_t numNonlinearSystems() const override { return _num_nl_sys; }
 
-  virtual std::size_t numLinearSystems() const { return _num_linear_sys; }
+  virtual std::size_t numLinearSystems() const override { return _num_linear_sys; }
 
   virtual unsigned int currentNlSysNum() const override;
 
@@ -2111,7 +2111,7 @@ public:
   /**
    * @return the nonlinear system number corresponding to the provided \p nl_sys_name
    */
-  unsigned int linearSysNum(const NonlinearSystemName & linear_sys_name) const;
+  unsigned int linearSysNum(const NonlinearSystemName & linear_sys_name) const override;
 
   /**
    * Whether it will skip further residual evaluations and fail the next nonlinear convergence check
