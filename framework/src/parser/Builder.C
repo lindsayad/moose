@@ -1091,6 +1091,7 @@ Builder::extractParams(const std::string & prefix, InputParameters & p)
         setscalar(OutFileBase, string);
         setscalar(VariableName, string);
         setscalar(NonlinearVariableName, string);
+        setscalar(LinearVariableName, string);
         setscalar(AuxVariableName, string);
         setscalar(FunctionName, string);
         setscalar(MeshDivisionName, string);
@@ -1159,6 +1160,7 @@ Builder::extractParams(const std::string & prefix, InputParameters & p)
         setvector(SubdomainName, string);
         setvector(BoundaryName, string);
         setvector(NonlinearVariableName, string);
+        setvector(LinearVariableName, string);
         setvector(AuxVariableName, string);
         setvector(FunctionName, string);
         setvector(MeshDivisionName, string);
@@ -1217,6 +1219,7 @@ Builder::extractParams(const std::string & prefix, InputParameters & p)
         setvectorvector(BoundaryName);
         setvectorvector(VariableName);
         setvectorvector(NonlinearVariableName);
+        setvectorvector(LinearVariableName);
         setvectorvector(AuxVariableName);
         setvectorvector(FunctionName);
         setvectorvector(UserObjectName);
@@ -1256,6 +1259,7 @@ Builder::extractParams(const std::string & prefix, InputParameters & p)
         setvectorvectorvector(BoundaryName);
         setvectorvectorvector(VariableName);
         setvectorvectorvector(NonlinearVariableName);
+        setvectorvectorvector(LinearVariableName);
         setvectorvectorvector(AuxVariableName);
         setvectorvectorvector(FunctionName);
         setvectorvectorvector(UserObjectName);
