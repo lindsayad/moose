@@ -100,7 +100,6 @@ Assembly::Assembly(SystemBase & sys, THREAD_ID tid)
     _current_qrule_face(nullptr),
     _current_qface_arbitrary(nullptr),
     _current_qrule_neighbor(nullptr),
-    _need_JxW_neighbor(false),
     _qrule_msm(nullptr),
     _custom_mortar_qrule(false),
     _current_qrule_lower(nullptr),
@@ -251,13 +250,6 @@ Assembly::~Assembly()
   _ad_coord.release();
 
   delete _qrule_msm;
-}
-
-const MooseArray<Real> &
-Assembly::JxWNeighbor() const
-{
-  _need_JxW_neighbor = true;
-  return _current_JxW_neighbor;
 }
 
 void
@@ -1598,8 +1590,6 @@ Assembly::reinitFEFaceNeighbor(const Elem * neighbor, const std::vector<Point> &
 
   _current_q_points_face_neighbor.shallowCopy(
       const_cast<std::vector<Point> &>(_holder_fe_face_neighbor_helper[neighbor_dim]->get_xyz()));
-  _current_JxW_neighbor.shallowCopy(
-      const_cast<std::vector<Real> &>(_holder_fe_face_neighbor_helper[neighbor_dim]->get_JxW()));
 }
 
 void
@@ -1987,14 +1977,6 @@ Assembly::reinitElemAndNeighbor(const Elem * elem,
   }
 
   _current_neighbor_side_elem = &_current_neighbor_side_elem_builder(*neighbor, neighbor_side);
-
-  if (_need_JxW_neighbor)
-    // first do the side element. We need to do this to at a minimum get the correct neighbor
-    // face physical q points, and neighbor normals for the neighbor face. *Note* that while this
-    // below call is triggered by the _need_JxW_neighbor flag, the irony is that the JxW that comes
-    // out of this is *wrong* because we are providing the "quadrature" points but no weights.
-    // Consequently dummy weights (equal to 1) are used
-    reinitFEFaceNeighbor(_current_neighbor_side_elem, *reference_points_ptr);
 
   reinitFEFaceNeighbor(neighbor, *reference_points_ptr);
   reinitNeighbor(neighbor, *reference_points_ptr);
@@ -2405,10 +2387,6 @@ Assembly::reinitNeighborAtPhysical(const Elem * neighbor,
   // first do the side element
   reinitFEFaceNeighbor(_current_neighbor_side_elem, reference_points);
   reinitNeighbor(_current_neighbor_side_elem, reference_points);
-  // compute JxW on the neighbor's face
-  unsigned int neighbor_side_dim = _current_neighbor_side_elem->dim();
-  _current_JxW_neighbor.shallowCopy(const_cast<std::vector<Real> &>(
-      _holder_fe_face_neighbor_helper[neighbor_side_dim]->get_JxW()));
 
   reinitFEFaceNeighbor(neighbor, reference_points);
   reinitNeighbor(neighbor, reference_points);
