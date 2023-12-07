@@ -443,6 +443,7 @@ public:
 
   virtual void init() override;
   virtual void solve(const unsigned int nl_sys_num);
+  virtual void solveLinearSystem(const unsigned int linear_sys_num);
 
   ///@{
   /**
@@ -1345,6 +1346,14 @@ public:
   virtual void computeLinearSystemMatrixSys(LinearImplicitSystem & sys,
                                             SparseMatrix<Number> & system_matrix);
 
+  virtual void computeLinearSystemRightHandSideTags(const NumericVector<Number> & soln,
+                                                    NumericVector<Number> & rhs,
+                                                    const std::set<TagID> & tags);
+
+  virtual void computeLinearSystemMatrixTags(const NumericVector<Number> & soln,
+                                             SparseMatrix<Number> & system_matrix,
+                                             const std::set<TagID> & tags);
+
   virtual void computeLinearSystemSys(LinearImplicitSystem & sys,
                                       SparseMatrix<Number> & system_matrix,
                                       NumericVector<Number> & rhs);
@@ -1354,14 +1363,6 @@ public:
                                        NumericVector<Number> & rhs,
                                        const std::set<TagID> & vector_tags,
                                        const std::set<TagID> & matrix_tags);
-
-  virtual void computeLinearSystemRightHandSideTags(const NumericVector<Number> & soln,
-                                                    NumericVector<Number> & rhs,
-                                                    const std::set<TagID> & tags);
-
-  virtual void computeLinearSystemMatrixTags(const NumericVector<Number> & soln,
-                                             SparseMatrix<Number> & system_matrix,
-                                             const std::set<TagID> & tags);
 
   virtual Real computeDamping(const NumericVector<Number> & soln,
                               const NumericVector<Number> & update);
