@@ -1832,6 +1832,11 @@ public:
    */
   void havePRefinement(const std::vector<FEFamily> & disable_p_refinement_for_families);
 
+  /**
+   * Get the current reference points on the neighbor element face
+   */
+  const std::vector<Point> & getNeighborRefPoints() const;
+
 private:
   /**
    * Just an internal helper function to reinit the volume FE objects.
@@ -2444,7 +2449,6 @@ private:
   /// Flag specifying whether a custom quadrature rule has been specified for mortar segment mesh
   bool _custom_mortar_qrule;
 
-private:
   /// quadrature rule used on lower dimensional elements. This should always be
   /// the same as the face qrule
   QBase * _current_qrule_lower;
@@ -2747,6 +2751,9 @@ protected:
 
   /// Whether we have ever conducted p-refinement
   bool _have_p_refinement;
+
+  /// The current reference points on the neighbor element
+  std::vector<Point> _current_neighbor_ref_points;
 };
 
 template <typename OutputType>
@@ -3049,4 +3056,10 @@ Assembly::assignDisplacements(
     std::vector<std::pair<unsigned int, unsigned short>> && disp_numbers_and_directions)
 {
   _disp_numbers_and_directions = std::move(disp_numbers_and_directions);
+}
+
+inline const std::vector<Point> &
+Assembly::getNeighborRefPoints() const
+{
+  return _current_neighbor_ref_points;
 }

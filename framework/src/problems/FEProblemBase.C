@@ -2072,7 +2072,7 @@ FEProblemBase::reinitNeighbor(const Elem * elem, unsigned int side, const THREAD
     // because the physical points coming from the element don't actually lie on the neighbor.
     // Moreover, what's the point of doing another physical point inversion in other cases? We only
     // care about the reference points which we can just take from the undisplaced computation
-    const auto & displaced_ref_pts = _assembly[tid][0]->qRuleNeighbor()->get_points();
+    const auto & displaced_ref_pts = _assembly[tid][0]->getNeighborRefPoints();
 
     _displaced_problem->reinitNeighbor(
         _displaced_mesh->elemPtr(elem->id()), side, tid, &displaced_ref_pts);
