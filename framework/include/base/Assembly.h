@@ -458,13 +458,7 @@ public:
    * Returns the reference to the current quadrature being used on a current neighbor
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const QBase * const & qRuleNeighbor() const { return constify_ref(_current_qrule_neighbor); }
-
-  /**
-   * Returns the reference to the current quadrature being used on a current neighbor
-   * @return A _reference_.  Make sure to store this as a reference!
-   */
-  QBase * const & writeableQRuleNeighbor() { return _current_qrule_neighbor; }
+  const QBase * const & qRuleNeighbor() const;
 
   /**
    * Returns the reference to the current quadrature points being used on the neighbor face
@@ -1833,9 +1827,12 @@ public:
   void havePRefinement(const std::vector<FEFamily> & disable_p_refinement_for_families);
 
   /**
-   * Get the current reference points on the neighbor element face
+   * Get the current reference points on the neighbor element face. As suggested by the name, a
+   * caller should not expect this container to always contain something valid. An example of a
+   * valid usage is calling, or using the data returned by, this API after a call to something like
+   * \p reinitNeighborAtPhysical
    */
-  const std::vector<Point> & getNeighborRefPoints() const;
+  const std::vector<Point> & currentNeighborRefPoints() const;
 
 private:
   /**
@@ -3059,7 +3056,17 @@ Assembly::assignDisplacements(
 }
 
 inline const std::vector<Point> &
-Assembly::getNeighborRefPoints() const
+Assembly::currentNeighborRefPoints() const
 {
   return _current_neighbor_ref_points;
+}
+
+inline const QBase * const &
+Assembly::qRuleNeighbor() const
+{
+  mooseDeprecated("Assembly::qRuleNeighbor is being deprecated. If you have a use for this method "
+                  "other than querying the number of points in the rule, or if you expect this "
+                  "method to return a different number of points than qRuleFace for your use case, "
+                  "please contact a MOOSE developer, and we will consider keeping it around.");
+  return constify_ref(_current_qrule_neighbor);
 }
