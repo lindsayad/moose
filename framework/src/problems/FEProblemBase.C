@@ -272,8 +272,7 @@ FEProblemBase::validParams()
   params.addParam<std::vector<NonlinearSystemName>>(
       "nl_sys_names", std::vector<NonlinearSystemName>{"nl0"}, "The nonlinear system names");
 
-  params.addParam<std::vector<NonlinearSystemName>>(
-      "linear_sys_names", {}, "The linear system names");
+  params.addParam<std::vector<LinearSystemName>>("linear_sys_names", {}, "The linear system names");
 
   params.addParam<bool>("check_uo_aux_state",
                         false,
@@ -339,7 +338,7 @@ FEProblemBase::FEProblemBase(const InputParameters & parameters)
     _num_nl_sys(_nl_sys_names.size()),
     _nl(_num_nl_sys, nullptr),
     _current_nl_sys(nullptr),
-    _linear_sys_names(getParam<std::vector<NonlinearSystemName>>("linear_sys_names")),
+    _linear_sys_names(getParam<std::vector<LinearSystemName>>("linear_sys_names")),
     _num_linear_sys(_linear_sys_names.size()),
     _linear_systems(_num_linear_sys, nullptr),
     _current_linear_sys(nullptr),
@@ -2473,7 +2472,7 @@ FEProblemBase::addVariable(const std::string & var_type,
   if (should_be_linear)
   {
     params.set<Moose::VarKindType>("_var_kind") = Moose::VarKindType::VAR_LINEAR;
-    const auto & linear_sys_name = params.get<NonlinearSystemName>("linear_sys");
+    const auto & linear_sys_name = params.get<LinearSystemName>("linear_sys");
     std::istringstream ss(linear_sys_name);
     unsigned int linear_sys_num;
     if (!(ss >> linear_sys_num) || !ss.eof())
@@ -5904,7 +5903,7 @@ FEProblemBase::nlSysNum(const NonlinearSystemName & nl_sys_name) const
 }
 
 unsigned int
-FEProblemBase::linearSysNum(const NonlinearSystemName & linear_sys_name) const
+FEProblemBase::linearSysNum(const LinearSystemName & linear_sys_name) const
 {
   std::istringstream ss(linear_sys_name);
   unsigned int linear_sys_num;
