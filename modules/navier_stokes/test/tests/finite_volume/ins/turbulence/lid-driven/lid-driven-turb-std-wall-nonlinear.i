@@ -31,9 +31,11 @@ C_mu = 0.09
 
 ### Modeling parameters ###
 non_equilibrium_treatment = false
-walls = ''
+bulk_wall_treatment = false
+walls = 'left top right bottom'
 max_mixing_length = 1e10
-linearized_model = false
+linearized_yplus_mu_t = false
+wall_treatment = 'eq_newton' # Options: eq_newton, eq_incremental, eq_linearized, neq
 
 [GlobalParams]
   rhie_chow_user_object = 'rc'
@@ -49,13 +51,14 @@ linearized_model = false
     xmax = ${side_length}
     ymin = 0
     ymax = ${side_length}
-    nx = 10
-    ny = 10
+    nx = 12
+    ny = 12
   []
 []
 
 [Problem]
   previous_nl_solution_required = true
+  error_on_jacobian_nonzero_reallocation = false
 []
 
 [UserObjects]
@@ -70,15 +73,18 @@ linearized_model = false
 [Variables]
   [vel_x]
     type = INSFVVelocityVariable
-    initial_condition = 1e-10
+    initial_condition = 0.0
+    two_term_boundary_expansion = false
   []
   [vel_y]
     type = INSFVVelocityVariable
-    initial_condition = 1e-10
+    initial_condition = 0.0
+    two_term_boundary_expansion = false
   []
   [pressure]
     type = INSFVPressureVariable
     initial_condition = 0.2
+    two_term_boundary_expansion = false
   []
   [TKE]
     type = INSFVEnergyVariable
@@ -101,9 +107,10 @@ linearized_model = false
     rho = ${rho}
   []
   [mean_zero_pressure]
-    type = FVIntegralValueConstraint
+    type = FVPointValueConstraint
     variable = pressure
     lambda = lambda
+    point = '0.01 0.099 0.0'
   []
   [u_time]
     type = INSFVMomentumTimeDerivative
@@ -122,7 +129,6 @@ linearized_model = false
     variable = vel_x
     mu = ${mu}
     momentum_component = 'x'
-    mu_interp_method = average
   []
   [u_viscosity_turbulent]
     type = INSFVMomentumDiffusion
@@ -132,7 +138,6 @@ linearized_model = false
     complete_expansion = true
     u = vel_x
     v = vel_y
-    mu_interp_method = average
   []
   [u_pressure]
     type = INSFVMomentumPressure
@@ -158,7 +163,6 @@ linearized_model = false
     variable = vel_y
     mu = ${mu}
     momentum_component = 'y'
-    mu_interp_method = average
   []
   [v_viscosity_turbulent]
     type = INSFVMomentumDiffusion
@@ -168,7 +172,6 @@ linearized_model = false
     complete_expansion = true
     u = vel_x
     v = vel_y
-    mu_interp_method = average
   []
   [v_pressure]
     type = INSFVMomentumPressure
@@ -197,7 +200,6 @@ linearized_model = false
     variable = TKE
     coeff = 'mu_t'
     scaling_coef = ${sigma_k}
-    coeff_interp_method = average
   []
   [TKE_source_sink]
     type = INSFVTKESourceSink
@@ -211,7 +213,6 @@ linearized_model = false
     walls = ${walls}
     non_equilibrium_treatment = ${non_equilibrium_treatment}
     max_mixing_length = ${max_mixing_length}
-    linearized_model = ${linearized_model}
   []
 
   [TKED_time]
@@ -230,7 +231,6 @@ linearized_model = false
     variable = TKED
     coeff = ${mu}
     walls = ${walls}
-    coeff_interp_method = average
   []
   [TKED_diffusion_turbulent]
     type = INSFVTurbulentDiffusion
@@ -238,7 +238,6 @@ linearized_model = false
     coeff = 'mu_t'
     scaling_coef = ${sigma_eps}
     walls = ${walls}
-    coeff_interp_method = average
   []
   [TKED_source_sink]
     type = INSFVTKEDSourceSink
@@ -254,7 +253,6 @@ linearized_model = false
     walls = ${walls}
     non_equilibrium_treatment = ${non_equilibrium_treatment}
     max_mixing_length = ${max_mixing_length}
-    linearized_model = ${linearized_model}
   []
 []
 
@@ -277,48 +275,85 @@ linearized_model = false
     boundary = 'left right top bottom'
     function = 0
   []
-  [walls_TKE]
-    type = FVDirichletBC
+  [walls_mu_t]
+    type = INSFVTurbulentViscosityWallFunction
     boundary = 'left right top bottom'
-    variable = TKE
-    value = ${k_init}
-  []
-  [walls_TKED]
-    type = FVDirichletBC
-    boundary = 'left right top bottom'
-    variable = TKED
-    value = ${eps_init}
+    variable = mu_t
+    u = vel_x
+    v = vel_y
+    rho = ${rho}
+    mu = ${mu}
+    mu_t = 'mu_t'
+    k = TKE
+    wall_treatment = ${wall_treatment}
   []
 []
 
-[Materials]
-  [mu_t_material]
-    type = INSFVkEpsilonViscosityMaterial
+[AuxVariables]
+  [mu_t]
+    type = MooseVariableFVReal
+    initial_condition = '${fparse rho * C_mu * ${k_init}^2 / eps_init}'
+    two_term_boundary_expansion = false
+  []
+[]
+
+[AuxKernels]
+  [compute_mu_t]
+    type = kEpsilonViscosityAux
+    variable = mu_t
+    C_mu = ${C_mu}
     k = TKE
     epsilon = TKED
+    mu = ${mu}
     rho = ${rho}
+    u = vel_x
+    v = vel_y
+    bulk_wall_treatment = ${bulk_wall_treatment}
+    walls = ${walls}
+    linearized_yplus = ${linearized_yplus_mu_t}
+    non_equilibrium_treatment = ${non_equilibrium_treatment}
+    execute_on = 'LINEAR NONLINEAR'
+  []
+[]
+
+[Preconditioning]
+  [smp]
+    type = SMP
+    full = true
   []
 []
 
 [Executioner]
   type = Transient
   end_time = 200
-  dt = 1
   steady_state_detection = true
   steady_state_tolerance = 1e-3
-  solve_type = 'NEWTON'
-  petsc_options_iname = '-pc_type -pc_factor_shift_type -snes_linesearch_damping'
-  petsc_options_value = 'lu        NONZERO               0.7'
-  nl_abs_tol = 1e-8
+  solve_type = 'PJFNK'
+  petsc_options_iname = '-pc_type -pc_factor_shift_type -pc_factor_mat_solver_type'
+  petsc_options_value = 'lu       NONZERO               mumps'
+  nl_abs_tol = 3e-9
   nl_rel_tol = 1e-8
-  nl_max_its = 50
+  nl_max_its = 20
   line_search = none
+  [TimeStepper]
+    dt = 1e-4
+    type = IterationAdaptiveDT
+    optimal_iterations = 10
+    growth_factor = 1.5
+  []
 []
 
 [Outputs]
-  exodus = true
+  [out]
+    type = Exodus
+    execute_on = 'final'
+  []
   csv = false
   perf_graph = false
   print_nonlinear_residuals = true
   print_linear_residuals = true
+[]
+
+[Debug]
+  show_var_residual_norms = true
 []
