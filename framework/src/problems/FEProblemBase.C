@@ -6065,7 +6065,8 @@ FEProblemBase::checkExceptionAndStopSolve(bool print_message)
 }
 
 void
-FEProblemBase::solveLinearSystem(const unsigned int linear_sys_num, const Moose::PetscSupport::PetscOptions * po)
+FEProblemBase::solveLinearSystem(const unsigned int linear_sys_num,
+                                 const Moose::PetscSupport::PetscOptions * po)
 {
   TIME_SECTION("solve", 1, "Solving", false);
 
