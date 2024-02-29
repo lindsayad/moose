@@ -1512,11 +1512,9 @@ MooseApp::run()
 
   try
   {
-    {
-      TIME_SECTION("setup", 2, "Setting Up");
-      setupOptions();
-      runInputFile();
-    }
+    TIME_SECTION("setup", 2, "Setting Up");
+    setupOptions();
+    runInputFile();
   }
   catch (std::exception & err)
   {
