@@ -100,7 +100,29 @@ sedinplace() {
   fi
 }
 
-# Replace ${BUILD_PREFIX} after installation
+# Remove abspath of ${BUILD_PREFIX}/bin/python
+sedinplace "s%${BUILD_PREFIX}/bin/python%python%g" $PETSC_ARCH/include/petscconf.h
+sedinplace "s%${BUILD_PREFIX}/bin/python%python%g" $PETSC_ARCH/lib/petsc/conf/petscvariables
+sedinplace "s%${BUILD_PREFIX}/bin/python%/usr/bin/env python%g" $PETSC_ARCH/lib/petsc/conf/reconfigure-arch-conda-c-opt.py
+
+# Replace abspath of ${PETSC_DIR} and ${BUILD_PREFIX} with ${PREFIX}
+for path in $PETSC_DIR $BUILD_PREFIX; do
+    for f in $(grep -l "${path}" $PETSC_ARCH/include/petsc*.h); do
+        echo "Fixing ${path} in $f"
+        sedinplace s%$path%\${PREFIX}%g $f
+    done
+done
+
+make
+make install
+make check
+
+# Remove unneeded files
+rm -f ${PREFIX}/lib/petsc/conf/configure-hash
+find $PREFIX/lib/petsc -name '*.pyc' -delete
+
+# Replace ${BUILD_PREFIX} after installation,
+# otherwise 'make install' above may fail
 grep -l "${BUILD_PREFIX}" -R "${PREFIX}/petsc/lib/petsc" | while IFS= read -r line; do
   echo "Fixing ${BUILD_PREFIX} in $line"
   sedinplace s%"${BUILD_PREFIX}"%"${PREFIX}"%g "$line"
