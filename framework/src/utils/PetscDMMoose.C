@@ -27,7 +27,7 @@
 #include "libmesh/nonlinear_solver.h"
 #include "libmesh/petsc_macro.h"
 #include "libmesh/petsc_vector.h"
-#include "libmesh/petsc_matrix.h"
+#include "libmesh/petsc_aij_matrix.h"
 #include "libmesh/dof_map.h"
 #include "libmesh/preconditioner.h"
 #include "libmesh/elem_side_builder.h"
@@ -791,8 +791,8 @@ DMMooseGetEmbedding_Private(DM dm, IS * embedding)
                 process_elem_dof_indices(
                     evindices, indices_to_insert_to, &nonlocal_indices_to_insert_to);
               } // if pinfo
-            }   // for penetration
-          }     // for contact name
+            } // for penetration
+          } // for contact name
         };
 
         // Include all nodes on the contact surfaces
@@ -1127,8 +1127,8 @@ DMMooseJacobian(DM dm, Vec x, Mat jac, Mat pc)
   ierr = DMMooseGetNonlinearSystem(dm, nl);
   CHKERRQ(ierr);
 
-  PetscMatrix<Number> the_pc(pc, nl->comm());
-  PetscMatrix<Number> Jac(jac, nl->comm());
+  PetscAIJMatrix<Number> the_pc(pc, nl->comm());
+  PetscAIJMatrix<Number> Jac(jac, nl->comm());
   PetscVector<Number> & X_sys = *cast_ptr<PetscVector<Number> *>(nl->system().solution.get());
   PetscVector<Number> X_global(x, nl->comm());
 

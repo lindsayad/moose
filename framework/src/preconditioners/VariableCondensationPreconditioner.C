@@ -29,7 +29,7 @@
 #include "libmesh/string_to_enum.h"
 #include "libmesh/mesh_base.h"
 #include "libmesh/variable.h"
-#include "libmesh/petsc_matrix.h"
+#include "libmesh/petsc_aij_matrix.h"
 #include "libmesh/parallel_object.h"
 #include "libmesh/boundary_info.h"
 
@@ -88,11 +88,11 @@ VariableCondensationPreconditioner::VariableCondensationPreconditioner(
     _n_vars(_nl.nVariables()),
     _lm_var_names(getParam<std::vector<std::string>>("lm_variable")),
     _primary_var_names(getParam<std::vector<std::string>>("primary_variable")),
-    _D(std::make_unique<PetscMatrix<Number>>(MoosePreconditioner::_communicator)),
-    _M(std::make_unique<PetscMatrix<Number>>(MoosePreconditioner::_communicator)),
-    _K(std::make_unique<PetscMatrix<Number>>(MoosePreconditioner::_communicator)),
+    _D(std::make_unique<PetscAIJMatrix<Number>>(MoosePreconditioner::_communicator)),
+    _M(std::make_unique<PetscAIJMatrix<Number>>(MoosePreconditioner::_communicator)),
+    _K(std::make_unique<PetscAIJMatrix<Number>>(MoosePreconditioner::_communicator)),
     _dinv(nullptr),
-    _J_condensed(std::make_unique<PetscMatrix<Number>>(MoosePreconditioner::_communicator)),
+    _J_condensed(std::make_unique<PetscAIJMatrix<Number>>(MoosePreconditioner::_communicator)),
     _x_hat(NumericVector<Number>::build(MoosePreconditioner::_communicator)),
     _y_hat(NumericVector<Number>::build(MoosePreconditioner::_communicator)),
     _primary_rhs_vec(NumericVector<Number>::build(MoosePreconditioner::_communicator)),
@@ -380,12 +380,12 @@ VariableCondensationPreconditioner::condenseSystem()
   // calculate MdinvK
   ierr = MatMatMatMult(_M->mat(), _dinv, _K->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &MdinvK);
   LIBMESH_CHKERR(ierr);
-  PetscMatrix<Number> MDinv_K(MdinvK, MoosePreconditioner::_communicator);
+  PetscAIJMatrix<Number> MDinv_K(MdinvK, MoosePreconditioner::_communicator);
 
   // Preallocate memory for _J_condensed
   // memory info is obtained from _matrix and MDinv_K
   // indices are from _global_rows, _global_cols
-  auto pc_original_mat = cast_ptr<PetscMatrix<Number> *>(_matrix);
+  auto pc_original_mat = cast_ptr<PetscAIJMatrix<Number> *>(_matrix);
   preallocateCondensedJacobian(
       *_J_condensed, *pc_original_mat, _rows, _cols, _global_rows, _global_cols, MDinv_K);
 
@@ -398,10 +398,10 @@ VariableCondensationPreconditioner::condenseSystem()
 }
 
 void
-VariableCondensationPreconditioner::computeCondensedJacobian(PetscMatrix<Number> & condensed_mat,
-                                                             PetscMatrix<Number> & original_mat,
+VariableCondensationPreconditioner::computeCondensedJacobian(PetscAIJMatrix<Number> & condensed_mat,
+                                                             PetscAIJMatrix<Number> & original_mat,
                                                              const std::vector<dof_id_type> & grows,
-                                                             PetscMatrix<Number> & block_mat)
+                                                             PetscAIJMatrix<Number> & block_mat)
 {
   PetscErrorCode ierr = (PetscErrorCode)0;
 
@@ -481,13 +481,13 @@ VariableCondensationPreconditioner::computeCondensedJacobian(PetscMatrix<Number>
 
 void
 VariableCondensationPreconditioner::preallocateCondensedJacobian(
-    PetscMatrix<Number> & condensed_mat,
-    PetscMatrix<Number> & original_mat,
+    PetscAIJMatrix<Number> & condensed_mat,
+    PetscAIJMatrix<Number> & original_mat,
     const std::vector<dof_id_type> & rows,
     const std::vector<dof_id_type> & cols,
     const std::vector<dof_id_type> & grows,
     const std::vector<dof_id_type> & gcols,
-    PetscMatrix<Number> & block_mat)
+    PetscAIJMatrix<Number> & block_mat)
 {
   // quantities from the original matrix and the block matrix
   PetscInt ncols = 0, block_ncols = 0;
@@ -656,7 +656,7 @@ VariableCondensationPreconditioner::getCondensedXY(const NumericVector<Number> &
   // calculate mdinv
   ierr = MatMatMult(_M->mat(), _dinv, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &mdinv);
   LIBMESH_CHKERR(ierr);
-  PetscMatrix<Number> MDinv(mdinv, MoosePreconditioner::_communicator);
+  PetscAIJMatrix<Number> MDinv(mdinv, MoosePreconditioner::_communicator);
 
   _x_hat->init(_J_condensed->n(), _J_condensed->local_n(), false, PARALLEL);
   _y_hat->init(_J_condensed->m(), _J_condensed->local_m(), false, PARALLEL);
@@ -690,7 +690,7 @@ VariableCondensationPreconditioner::computeCondensedVariables()
 {
   _lm_sol_vec->clear();
 
-  PetscMatrix<Number> Dinv(_dinv, MoosePreconditioner::_communicator);
+  PetscAIJMatrix<Number> Dinv(_dinv, MoosePreconditioner::_communicator);
 
   _lm_sol_vec->init(_D->m(), _D->local_m(), false, PARALLEL);
 
@@ -741,7 +741,7 @@ VariableCondensationPreconditioner::findZeroDiagonals(SparseMatrix<Number> & mat
   const PetscInt * petsc_idx;
   PetscInt nrows;
   // make sure we have a PETSc matrix
-  PetscMatrix<Number> * petsc_mat = cast_ptr<PetscMatrix<Number> *>(&mat);
+  PetscAIJMatrix<Number> * petsc_mat = cast_ptr<PetscAIJMatrix<Number> *>(&mat);
   ierr = MatFindZeroDiagonals(petsc_mat->mat(), &zerodiags);
   LIBMESH_CHKERR(ierr);
   // synchronize all indices
