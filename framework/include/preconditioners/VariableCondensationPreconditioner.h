@@ -17,6 +17,7 @@
 #include "libmesh/linear_implicit_system.h"
 #include "libmesh/enum_preconditioner_type.h"
 #include "libmesh/mesh_base.h"
+#include "libmesh/petsc_matrix.h"
 #include "libmesh/parallel_object.h"
 
 // C++ includes
@@ -25,11 +26,6 @@
 // Forward declarations
 class NonlinearSystemBase;
 class VariableCondensationPreconditioner;
-namespace libMesh
-{
-template <typename>
-class PetscAIJMatrix;
-}
 
 /**
  * Interface for condensing out LMs for the dual mortar approach.
@@ -89,21 +85,21 @@ private:
   /**
    * Preallocate memory for the condensed Jacobian matrix
    */
-  void preallocateCondensedJacobian(PetscAIJMatrix<Number> & condensed_mat,
-                                    PetscAIJMatrix<Number> & original_mat,
+  void preallocateCondensedJacobian(PetscMatrix<Number> & condensed_mat,
+                                    PetscMatrix<Number> & original_mat,
                                     const std::vector<dof_id_type> & rows,
                                     const std::vector<dof_id_type> & cols,
                                     const std::vector<dof_id_type> & grows,
                                     const std::vector<dof_id_type> & gcols,
-                                    PetscAIJMatrix<Number> & block_mat);
+                                    PetscMatrix<Number> & block_mat);
 
   /**
    * The condensed Jacobian matrix is computed in this function.
    */
-  void computeCondensedJacobian(PetscAIJMatrix<Number> & condensed_mat,
-                                PetscAIJMatrix<Number> & original_mat,
+  void computeCondensedJacobian(PetscMatrix<Number> & condensed_mat,
+                                PetscMatrix<Number> & original_mat,
                                 const std::vector<dof_id_type> & grows,
-                                PetscAIJMatrix<Number> & block_mat);
+                                PetscMatrix<Number> & block_mat);
   /**
    * Compute inverse of D using LU. This method is used when _is_lm_coupling_diagonal = false.
    */
@@ -171,12 +167,12 @@ private:
   /// _D: the submatrix that couples the primary variable with the Lagrange multiplier variable
   /// _M: the columns that correspond to the Lagrange multiplier DoFs
   /// _K: the rows that correspond to the primary variable DoFs
-  std::unique_ptr<PetscAIJMatrix<Number>> _D, _M, _K;
+  std::unique_ptr<PetscMatrix<Number>> _D, _M, _K;
   /// inverse of _D
   Mat _dinv;
 
   /// Condensed Jacobian
-  std::unique_ptr<PetscAIJMatrix<Number>> _J_condensed;
+  std::unique_ptr<PetscMatrix<Number>> _J_condensed;
 
   /// _x_hat, _y_hat: condensed solution and RHS vectors
   /// _primary_rhs_vec: part of the RHS vector that correspond to the primary variable DoFs
