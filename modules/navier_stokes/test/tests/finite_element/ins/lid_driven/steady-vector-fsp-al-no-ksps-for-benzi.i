@@ -3,8 +3,8 @@ mu=1e-2
 U=1
 l=1
 prefactor=${fparse 1/(l/2)^2}
-n=64
-gamma=1
+n=2
+gamma=1e4
 alpha=1e-2
 
 [Mesh]
@@ -149,14 +149,14 @@ alpha=1e-2
           unside_by_var_boundary_name = 'left top right bottom'
           unside_by_var_var_name =      'vel  vel vel   vel'
           petsc_options = '-ksp_converged_reason'
-          petsc_options_iname = '-pc_type  -ksp_type -ksp_rtol -ksp_gmres_restart -ksp_pc_side -pc_composite_pcs -pc_composite_type -sub_1_pc_factor_mat_solver_type'
-          petsc_options_value = 'composite gmres     1e-2      300                right        ilu,lu            special            strumpack'
+          petsc_options_iname = '-pc_type  -ksp_type -ksp_rtol -ksp_gmres_restart -ksp_pc_side -pc_composite_pcs -pc_composite_type -sub_0_pc_factor_mat_solver_type -sub_1_pc_factor_mat_solver_type'
+          petsc_options_value = 'composite gmres     1e-2      300                right        lu,lu             special            mumps                            mumps'
         []
         [p]
           vars = 'p'
           petsc_options = '-ksp_converged_reason -inner_ksp_converged_reason'
-          petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -inner_pc_type -inner_pc_composite_pcs -inner_pc_composite_type -inner_ksp_rtol -inner_ksp_pc_side -inner_ksp_gmres_restart -inner_sub_1_pc_factor_mat_solver_type -pc_factor_mat_solver_type'
-          petsc_options_value = 'fgmres    300                1e-2      lu       right        composite      ilu,lu                  special                  1e-2            right              300                      strumpack                              strumpack'
+          petsc_options_iname = '-ksp_type -ksp_gmres_restart -ksp_rtol -pc_type -ksp_pc_side -inner_pc_type -inner_pc_composite_pcs -inner_pc_composite_type -inner_ksp_rtol -inner_ksp_pc_side -inner_ksp_gmres_restart -inner_sub_0_pc_factor_mat_solver_type -inner_sub_1_pc_factor_mat_solver_type -pc_factor_mat_solver_type'
+          petsc_options_value = 'fgmres    300                1e-2      lu       right        composite      lu,lu                   special                  1e-2            right              300                      mumps                                  mumps                                  mumps'
         []
   []
 []
@@ -168,7 +168,7 @@ alpha=1e-2
   []
 []
 
-[UserObjects]
+[Correctors]
   [set_pressure]
     type = NSPressurePin
     pin_type = 'average'
