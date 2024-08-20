@@ -116,10 +116,10 @@ NavierStokesProblem::NavierStokesProblem(const InputParameters & parameters) : F
 
 NavierStokesProblem::~NavierStokesProblem()
 {
-  auto destroy_mat = [](Mat mat)
+  auto destroy_mat = [this](Mat mat)
   {
     if (mat)
-      PetscCallAbort(MatDestroy(&mat));
+      PetscCallAbort(this->comm().get(), MatDestroy(&mat));
   };
 
   destroy_mat(_M);
@@ -452,27 +452,31 @@ NavierStokesProblem::setupMatrices(KSP schur_ksp)
 
       {
         PetscViewer mat_viewer;
-        PetscViewerBinaryOpen(PETSC_COMM_WORLD, "AplusJ", FILE_MODE_WRITE, &mat_viewer);
-        MatView(AplusJ, mat_viewer);
-        PetscViewerDestroy(&mat_viewer);
+        LibmeshPetscCall(
+            PetscViewerBinaryOpen(PETSC_COMM_WORLD, "AplusJ", FILE_MODE_WRITE, &mat_viewer));
+        LibmeshPetscCall(MatView(AplusJ, mat_viewer));
+        LibmeshPetscCall(PetscViewerDestroy(&mat_viewer));
       }
       {
         PetscViewer mat_viewer;
-        PetscViewerBinaryOpen(PETSC_COMM_WORLD, "AplusD", FILE_MODE_WRITE, &mat_viewer);
-        MatView(_AplusD, mat_viewer);
-        PetscViewerDestroy(&mat_viewer);
+        LibmeshPetscCall(
+            PetscViewerBinaryOpen(PETSC_COMM_WORLD, "AplusD", FILE_MODE_WRITE, &mat_viewer));
+        LibmeshPetscCall(MatView(_AplusD, mat_viewer));
+        LibmeshPetscCall(PetscViewerDestroy(&mat_viewer));
       }
       {
         PetscViewer mat_viewer;
-        PetscViewerBinaryOpen(PETSC_COMM_WORLD, "JplusD", FILE_MODE_WRITE, &mat_viewer);
-        MatView(_JplusD, mat_viewer);
-        PetscViewerDestroy(&mat_viewer);
+        LibmeshPetscCall(
+            PetscViewerBinaryOpen(PETSC_COMM_WORLD, "JplusD", FILE_MODE_WRITE, &mat_viewer));
+        LibmeshPetscCall(MatView(_JplusD, mat_viewer));
+        LibmeshPetscCall(PetscViewerDestroy(&mat_viewer));
       }
       {
         PetscViewer mat_viewer;
-        PetscViewerBinaryOpen(PETSC_COMM_WORLD, "D", FILE_MODE_WRITE, &mat_viewer);
-        MatView(_D, mat_viewer);
-        PetscViewerDestroy(&mat_viewer);
+        LibmeshPetscCall(
+            PetscViewerBinaryOpen(PETSC_COMM_WORLD, "D", FILE_MODE_WRITE, &mat_viewer));
+        LibmeshPetscCall(MatView(_D, mat_viewer));
+        LibmeshPetscCall(PetscViewerDestroy(&mat_viewer));
       }
 
       ierr = VecDestroy(&Diag);
