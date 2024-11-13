@@ -386,7 +386,16 @@ NonlinearSystem::getSNES()
       dynamic_cast<PetscNonlinearSolver<Number> *>(nonlinearSolver());
 
   if (petsc_solver)
-    return petsc_solver->snes();
+  {
+    const char * snes_prefix = nullptr;
+    std::string snes_prefix_str;
+    if (feProblem().numSolverSystems() > 1)
+    {
+      snes_prefix_str = name() + "_";
+      snes_prefix = snes_prefix_str.c_str();
+    }
+    return petsc_solver->snes(snes_prefix);
+  }
   else
     mooseError("It is not a petsc nonlinear solver");
 }

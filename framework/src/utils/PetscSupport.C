@@ -189,7 +189,14 @@ petscSetupDM(NonlinearSystemBase & nl, const std::string & dm_name)
   // Create and set up the DM that will consume the split options and deal with block matrices.
   PetscNonlinearSolver<Number> * petsc_solver =
       dynamic_cast<PetscNonlinearSolver<Number> *>(nl.nonlinearSolver());
-  SNES snes = petsc_solver->snes();
+  const char * snes_prefix = nullptr;
+  std::string snes_prefix_str;
+  if (nl.feProblem().numSolverSystems() > 1)
+  {
+    snes_prefix_str = nl.name() + "_";
+    snes_prefix = snes_prefix_str.c_str();
+  }
+  SNES snes = petsc_solver->snes(snes_prefix);
   // if there exists a DMMoose object, not to recreate a new one
   LibmeshPetscCallA(nl.comm().get(), SNESGetDM(snes, &dm));
   if (dm)
@@ -235,13 +242,10 @@ addPetscOptionsFromCommandline()
 void
 petscSetOptions(const PetscOptions & po,
                 const SolverParams & solver_params,
-                FEProblemBase * const problem /*=nullptr*/)
+                FEProblemBase * const problem)
 {
-#if PETSC_VERSION_LESS_THAN(3, 7, 0)
-  LibmeshPetscCallA(PETSC_COMM_WORLD, PetscOptionsClear());
-#else
+
   LibmeshPetscCallA(PETSC_COMM_WORLD, PetscOptionsClear(LIBMESH_PETSC_NULLPTR));
-#endif
 
   setSolverOptions(solver_params);
 
@@ -254,6 +258,15 @@ petscSetOptions(const PetscOptions & po,
     setSinglePetscOption(option.first, option.second, problem);
 
   addPetscOptionsFromCommandline();
+}
+
+void
+petscClearAndSetOptions(const PetscOptions & po,
+                        const SolverParams & solver_params,
+                        FEProblemBase * const problem)
+{
+  PetscCallAbort(PETSC_COMM_WORLD, PetscOptionsClear(LIBMESH_PETSC_NULLPTR));
+  petscSetOptions(po, solver_params, problem);
 }
 
 PetscErrorCode
@@ -458,7 +471,7 @@ petscSetDefaults(FEProblemBase & problem)
 }
 
 void
-storePetscOptions(FEProblemBase & fe_problem, const InputParameters & params)
+processSingletonMooseWrappedOptions(FEProblemBase & fe_problem, const InputParameters & params)
 {
   // Note: Options set in the Preconditioner block will override those set in the Executioner block
   if (params.isParamValid("solve_type") && !params.isParamValid("_use_eigen_value"))
@@ -500,6 +513,12 @@ storePetscOptions(FEProblemBase & fe_problem, const InputParameters & params)
     MooseEnum mffd_type = params.get<MooseEnum>("mffd_type");
     fe_problem.solverParams()._mffd_type = Moose::stringToEnum<Moose::MffdType>(mffd_type);
   }
+}
+
+void
+storePetscOptions(FEProblemBase & fe_problem, const InputParameters & params)
+{
+  processSingletonMooseWrappedOptions(fe_problem, params);
 
   // The parameters contained in the Action
   const auto & petsc_options = params.get<MultiMooseEnum>("petsc_options");
@@ -812,7 +831,7 @@ getCommonPetscKeys()
 bool
 isSNESVI(FEProblemBase & fe_problem)
 {
-  PetscOptions & petsc = fe_problem.getPetscOptions();
+  const PetscOptions & petsc = fe_problem.getPetscOptions();
 
   int argc;
   char ** args;
@@ -996,6 +1015,57 @@ disableLinearConvergedReason(FEProblemBase & fe_problem)
   auto it = MooseUtils::findPair(pairs, "-ksp_converged_reason", MooseUtils::Any);
   if (it != pairs.end())
     pairs.erase(it);
+}
+
+void
+storePrefixedPetscOptions(
+    FEProblemBase & fe_problem,
+    const std::string & prefix,
+    const MultiMooseEnum & flags_to_prefix,
+    const std::vector<std::pair<MooseEnumItem, std::string>> & pairs_to_prefix,
+    const MooseObject & moose_object)
+{
+  auto invalid_error = [&moose_object](auto &&... str_args)
+  {
+    moose_object.mooseError(std::forward<decltype(str_args)>(str_args)...,
+                            " for ",
+                            moose_object.type(),
+                            " ",
+                            moose_object.name());
+  };
+
+  if (prefix[0] != '-')
+    invalid_error("Leading prefix character must be a '-'. Current prefix is '", prefix, "'");
+  // Prefix may simply be '-' hence the first check
+  if (prefix.size() > 1 && prefix.back() != '_')
+    invalid_error("Terminating prefix character must be a '_'. Current prefix is '", prefix, "'");
+
+  auto & po = fe_problem.getPetscOptions();
+
+  auto invalid_op_error = [invalid_error](const std::string & op)
+  { invalid_error("Invalid PETSc option name ", op); };
+
+  for (const auto & item : flags_to_prefix)
+  {
+    // Need to prepend the prefix and strip off the leading '-' on the option name.
+    std::string op(item);
+    if (op[0] != '-')
+      invalid_op_error(op);
+
+    // push back PETSc options
+    po.flags.setAdditionalValue(prefix + op.substr(1));
+  }
+
+  for (const auto & [option_item, option_value] : pairs_to_prefix)
+  {
+    const auto & option_name = option_item.name();
+
+    // Need to prepend the prefix and strip off the leading '-' on the option name.
+    if (option_name[0] != '-')
+      invalid_op_error(option_name);
+
+    po.pairs.emplace_back(prefix + option_name.substr(1), option_value);
+  }
 }
 
 } // Namespace PetscSupport

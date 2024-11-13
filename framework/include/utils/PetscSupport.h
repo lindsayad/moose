@@ -58,6 +58,14 @@ void petscSetOptions(const PetscOptions & po,
                      FEProblemBase * const problem = nullptr);
 
 /**
+ * A function for clearing and then setting the PETSc options in PETSc from the options supplied to
+ * MOOSE
+ */
+void petscClearAndSetOptions(const PetscOptions & po,
+                             const SolverParams & solver_params,
+                             FEProblemBase * const problem = nullptr);
+
+/**
  * Set the default options for a KSP
  */
 void petscSetKSPDefaults(FEProblemBase & problem, KSP ksp);
@@ -98,9 +106,26 @@ void outputNorm(libMesh::Real old_norm, libMesh::Real norm, bool use_color = fal
 PetscErrorCode petscLinearMonitor(KSP /*ksp*/, PetscInt its, PetscReal rnorm, void * void_ptr);
 
 /**
+ * Process some MOOSE-wrapped PETSc options. These options have no support for multi-system as
+ * indicated by the fact that this function takes no prefix nor solver system argument
+ */
+void processSingletonMooseWrappedOptions(FEProblemBase & fe_problem,
+                                         const InputParameters & params);
+
+/**
  * Stores the PETSc options supplied from the InputParameters with MOOSE
  */
 void storePetscOptions(FEProblemBase & fe_problem, const InputParameters & params);
+
+/**
+ * Store prefixed PETSc options
+ */
+void storePrefixedPetscOptions(
+    FEProblemBase & fe_problem,
+    const std::string & prefix,
+    const MultiMooseEnum & flags_to_prefix,
+    const std::vector<std::pair<MooseEnumItem, std::string>> & pairs_to_prefix,
+    const MooseObject & moose_object);
 
 /**
  * Populate flags in a given PetscOptions object using a vector of input arguments

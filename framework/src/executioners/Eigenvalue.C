@@ -188,25 +188,13 @@ Eigenvalue::init()
 void
 Eigenvalue::prepareSolverOptions()
 {
-#if PETSC_RELEASE_LESS_THAN(3, 12, 0)
-  // Make sure the SLEPc options are setup for this app
+  // Master app has the default data base
+  if (!_app.isUltimateMaster())
+    LibmeshPetscCall(PetscOptionsPush(_eigen_problem.petscOptionsDatabase()));
   Moose::SlepcSupport::slepcSetOptions(_eigen_problem, _pars);
-#else
-  // Options need to be setup once only
-  if (!_eigen_problem.petscOptionsInserted())
-  {
-    // Master app has the default data base
-    if (!_app.isUltimateMaster())
-      LibmeshPetscCall(PetscOptionsPush(_eigen_problem.petscOptionsDatabase()));
 
-    Moose::SlepcSupport::slepcSetOptions(_eigen_problem, _pars);
-
-    if (!_app.isUltimateMaster())
-      LibmeshPetscCall(PetscOptionsPop());
-
-    _eigen_problem.petscOptionsInserted() = true;
-  }
-#endif
+  if (!_app.isUltimateMaster())
+    LibmeshPetscCall(PetscOptionsPop());
 }
 
 void

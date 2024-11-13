@@ -2047,11 +2047,6 @@ public:
    */
   bool isSNESMFReuseBaseSetbyUser() { return _snesmf_reuse_base_set_by_user; }
 
-  /**
-   * If PETSc options are already inserted
-   */
-  bool & petscOptionsInserted() { return _is_petsc_options_inserted; }
-
 #if !PETSC_RELEASE_LESS_THAN(3, 12, 0)
   PetscOptions & petscOptionsDatabase() { return _petsc_option_data_base; }
 #endif
@@ -2773,9 +2768,6 @@ protected:
   PetscOptions _petsc_option_data_base;
 #endif
 
-  /// If or not PETSc options have been added to database
-  bool _is_petsc_options_inserted;
-
   std::shared_ptr<LineSearch> _line_search;
 
   std::unique_ptr<libMesh::ConstElemRange> _evaluable_local_elem_range;
@@ -2789,6 +2781,9 @@ protected:
   /// Automatic differentiaion (AD) flag which indicates whether any consumer has
   /// requested an AD material property or whether any suppier has declared an AD material property
   bool _using_ad_mat_props;
+
+  /// Map tracking whether petsc options have been set for a given solver system
+  std::unordered_map<unsigned int, bool> _petsc_options_inserted;
 
 private:
   /**
