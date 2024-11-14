@@ -222,6 +222,16 @@ FEProblemSolve::FEProblemSolve(Executioner & ex)
       _moose_line_searches.end())
     _problem.addLineSearch(_pars);
 
+  auto check_petsc_param = [this](const std::string & param_name)
+  {
+    if (isParamSetByUser(param_name) && _problem.numSolverSystems() > 1)
+      paramError(param_name,
+                 "Cannot be used with multiple solver systems. Please specify multiple "
+                 "preconditioning blocks to specify petsc options for each system");
+  };
+  check_petsc_param("petsc_options");
+  check_petsc_param("petsc_options_iname");
+
   // Extract and store PETSc related settings on FEProblemBase
   Moose::PetscSupport::storePetscOptions(_problem, _pars);
 
