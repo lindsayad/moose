@@ -412,6 +412,9 @@ petscSetKSPDefaults(FEProblemBase & problem, KSP ksp)
 void
 petscSetDefaults(FEProblemBase & problem)
 {
+  // We care about both nonlinear and linear systems when setting the SNES prefix because
+  // SNESSetOptionsPrefix will also set its KSP prefix which could compete with linear system KSPs
+  const auto num_solver_sys = problem.numSolverSystems();
   for (auto nl_index : make_range(problem.numNonlinearSystems()))
   {
     // dig out PETSc solver
@@ -428,7 +431,14 @@ petscSetDefaults(FEProblemBase & problem)
                               (problem.getNonlinearSystemNames()[nl_index] + "_").c_str()));
       LibmeshPetscCall2(nl.comm(), MatSetFromOptions(petsc_sys_matrix->mat()));
     }
-    SNES snes = petsc_solver->snes();
+    const char * snes_prefix = nullptr;
+    std::string snes_prefix_str;
+    if (num_solver_sys > 1)
+    {
+      snes_prefix_str = nl.name() + "_";
+      snes_prefix = snes_prefix_str.c_str();
+    }
+    SNES snes = petsc_solver->snes(snes_prefix);
     KSP ksp;
     LibmeshPetscCallA(nl.comm().get(), SNESGetKSP(snes, &ksp));
 
