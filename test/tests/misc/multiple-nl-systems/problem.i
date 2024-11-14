@@ -80,7 +80,6 @@
 [Executioner]
   type = SteadySolve2
   solve_type = 'NEWTON'
-  petsc_options = '-u_snes_view -v_snes_view'
   first_nl_sys_to_solve = 'u'
   second_nl_sys_to_solve = 'v'
 []
