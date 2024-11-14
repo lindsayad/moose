@@ -58,14 +58,6 @@ void petscSetOptions(const PetscOptions & po,
                      FEProblemBase * const problem = nullptr);
 
 /**
- * A function for clearing and then setting the PETSc options in PETSc from the options supplied to
- * MOOSE
- */
-void petscClearAndSetOptions(const PetscOptions & po,
-                             const SolverParams & solver_params,
-                             FEProblemBase * const problem = nullptr);
-
-/**
  * Set the default options for a KSP
  */
 void petscSetKSPDefaults(FEProblemBase & problem, KSP ksp);

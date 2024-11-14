@@ -260,15 +260,6 @@ petscSetOptions(const PetscOptions & po,
   addPetscOptionsFromCommandline();
 }
 
-void
-petscClearAndSetOptions(const PetscOptions & po,
-                        const SolverParams & solver_params,
-                        FEProblemBase * const problem)
-{
-  PetscCallAbort(PETSC_COMM_WORLD, PetscOptionsClear(LIBMESH_PETSC_NULLPTR));
-  petscSetOptions(po, solver_params, problem);
-}
-
 PetscErrorCode
 petscSetupOutput(CommandLine * cmd_line)
 {

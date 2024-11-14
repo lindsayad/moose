@@ -467,6 +467,7 @@ FEProblemBase::FEProblemBase(const InputParameters & parameters)
     _verbose_multiapps(getParam<bool>("verbose_multiapps")),
     _current_execute_on_flag(EXEC_NONE),
     _control_warehouse(_app.getExecuteOnEnum(), /*threaded=*/false),
+    _is_petsc_options_inserted(false),
     _line_search(nullptr),
     _using_ad_mat_props(false),
     _error_on_jacobian_nonzero_reallocation(
@@ -590,8 +591,12 @@ FEProblemBase::FEProblemBase(const InputParameters & parameters)
 #endif
 
   if (!_solve)
+  {
     // If we are not solving, we do not care about seeing unused petsc options
     Moose::PetscSupport::setSinglePetscOption("-options_left", "0");
+    // We don't want petscSetOptions being called in solve and clearing the option that was just set
+    _is_petsc_options_inserted = true;
+  }
 }
 
 const MooseMesh &
@@ -6198,8 +6203,6 @@ FEProblemBase::solve(const unsigned int nl_sys_num)
 {
   TIME_SECTION("solve", 1, "Solving", false);
 
-  mooseAssert(_solve, "Why are we calling solve() if we're not supposed to solve");
-
   setCurrentNonlinearSystem(nl_sys_num);
 
   // This prevents stale dof indices from lingering around and possibly leading to invalid reads
@@ -6212,12 +6215,11 @@ FEProblemBase::solve(const unsigned int nl_sys_num)
   // Each app should have only one database
   if (!_app.isUltimateMaster())
     LibmeshPetscCall(PetscOptionsPush(_petsc_option_data_base));
-
   // We did not add PETSc options to database yet
-  if (bool & options_inserted = _petsc_options_inserted[nl_sys_num]; !options_inserted)
+  if (!_is_petsc_options_inserted)
   {
     Moose::PetscSupport::petscSetOptions(_petsc_options, _solver_params, this);
-    options_inserted = true;
+    _is_petsc_options_inserted = true;
   }
 
   // set up DM which is required if use a field split preconditioner
@@ -6354,28 +6356,38 @@ FEProblemBase::solveLinearSystem(const unsigned int linear_sys_num,
 
   setCurrentLinearSystem(linear_sys_num);
 
+  const Moose::PetscSupport::PetscOptions & options = po ? *po : _petsc_options;
+  SolverParams solver_params;
+  solver_params._type = Moose::SolveType::ST_LINEAR;
+  solver_params._line_search = Moose::LineSearchType::LS_NONE;
+
+#if PETSC_RELEASE_LESS_THAN(3, 12, 0)
+  LibmeshPetscCall(Moose::PetscSupport::petscSetOptions(
+      options, solver_params)); // Make sure the PETSc options are setup for this app
+#else
   // Now this database will be the default
   // Each app should have only one database
   if (!_app.isUltimateMaster())
     LibmeshPetscCall(PetscOptionsPush(_petsc_option_data_base));
 
-  SolverParams solver_params;
-  solver_params._type = Moose::SolveType::ST_LINEAR;
-  solver_params._line_search = Moose::LineSearchType::LS_NONE;
-  if (po)
-    Moose::PetscSupport::petscClearAndSetOptions(*po, solver_params, this);
-  else if (bool & options_inserted = _petsc_options_inserted[_num_nl_sys + linear_sys_num];
-           !options_inserted)
+  // We did not add PETSc options to database yet
+  if (!_is_petsc_options_inserted)
   {
-    Moose::PetscSupport::petscSetOptions(_petsc_options, solver_params, this);
-    options_inserted = true;
+    Moose::PetscSupport::petscSetOptions(options, solver_params, this);
+    _is_petsc_options_inserted = true;
   }
+#endif
 
   if (_solve)
     _current_linear_sys->solve();
 
+#if !PETSC_RELEASE_LESS_THAN(3, 12, 0)
   if (!_app.isUltimateMaster())
-    LibmeshPetscCall(PetscOptionsPop());
+  {
+    auto ierr = PetscOptionsPop();
+    LIBMESH_CHKERR(ierr);
+  }
+#endif
 }
 
 bool
