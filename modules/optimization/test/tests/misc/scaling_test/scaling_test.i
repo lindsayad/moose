@@ -66,13 +66,25 @@
   []
 []
 
+[Preconditioning]
+  [nl0]
+    type = SMP
+    nl_sys = 'nl0'
+    petsc_options_iname = '-pc_type -pc_factor_mat_soler_type'
+    petsc_options_value = 'lu mumps'
+  []
+  [adjoint]
+    type = SMP
+    nl_sys = 'adjoint'
+    petsc_options_iname = '-pc_type -pc_factor_mat_solver_type'
+    petsc_options_value = 'lu mumps'
+  []
+[]
+
 [Executioner]
   type = SteadyAndAdjoint
   forward_system = nl0
   adjoint_system = adjoint
-
-  petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
-  petsc_options_value = 'lu mumps'
 
   line_search = 'none'
 
