@@ -517,8 +517,11 @@ processSingletonMooseWrappedOptions(FEProblemBase & fe_problem, const InputParam
 }
 
 void
-storePetscOptions(FEProblemBase & fe_problem, const InputParameters & params)
+storePetscOptions(FEProblemBase & fe_problem,
+                  const std::string & prefix,
+                  const ParallelParamObject & param_object)
 {
+  const auto & params = param_object.parameters();
   processSingletonMooseWrappedOptions(fe_problem, params);
 
   // The parameters contained in the Action
@@ -531,18 +534,42 @@ storePetscOptions(FEProblemBase & fe_problem, const InputParameters & params)
   Moose::PetscSupport::PetscOptions & po = fe_problem.getPetscOptions();
 
   // First process the single petsc options/flags
-  processPetscFlags(petsc_options, po);
+  processPetscFlags(petsc_options, prefix, param_object, po);
 
   // Then process the option-value pairs
-  processPetscPairs(petsc_pair_options, fe_problem.mesh().dimension(), po);
+  processPetscPairs(petsc_pair_options, fe_problem.mesh().dimension(), prefix, param_object, po);
+}
+
+#define checkPrefix(prefix)                                                                        \
+  mooseAssert(prefix[0] == '-',                                                                    \
+              "Leading prefix character must be a '-'. Current prefix is '" << prefix << "'");     \
+  mooseAssert((prefix.size() == 1) || (prefix.back() == '_'),                                      \
+              "Terminating prefix character must be a '_'. Current prefix is '" << prefix << "'")
+
+template <typename T>
+void
+checkUserProvidedPetscOption(const T & option, const ParallelParamObject & param_object)
+{
+  const auto & string_option = static_cast<const std::string &>(option);
+  if (string_option[0] != '-')
+    param_object.mooseError("PETSc option '", string_option, "' does not begin with '-'");
 }
 
 void
-processPetscFlags(const MultiMooseEnum & petsc_flags, PetscOptions & po)
+processPetscFlags(const MultiMooseEnum & petsc_flags,
+                  const std::string & prefix,
+                  const ParallelParamObject & param_object,
+                  PetscOptions & po)
 {
+  checkPrefix(prefix);
+
   // Update the PETSc single flags
   for (const auto & option : petsc_flags)
   {
+    checkUserProvidedPetscOption(option, param_object);
+
+    const std::string & string_option = option.name();
+
     /**
      * "-log_summary" cannot be used in the input file. This option needs to be set when PETSc is
      * initialized
@@ -566,32 +593,51 @@ processPetscFlags(const MultiMooseEnum & petsc_flags, PetscOptions & po)
 
       if (help_string != "")
         mooseWarning("The PETSc option ",
-                     std::string(option),
+                     string_option,
                      " should not be used directly in a MOOSE input file. ",
                      help_string);
     }
 
     // Update the stored items, but do not create duplicates
-    if (!po.flags.isValueSet(option))
-      po.flags.setAdditionalValue(option);
+    const std::string prefixed_option = prefix + string_option.substr(1);
+    if (!po.flags.isValueSet(prefixed_option))
+      po.flags.setAdditionalValue(prefixed_option);
   }
+}
+
+void
+setConvergedReasonFlags(FEProblemBase & fe_problem, const std::string & prefix)
+{
+  checkPrefix(prefix);
+  libmesh_ignore(fe_problem); // avoid unused warnings for old PETSc
+
+#if !PETSC_VERSION_LESS_THAN(3, 14, 0)
+  // the boolean in these pairs denote whether the user has specified any of the reason flags in the
+  // input file
+  std::array<std::pair<bool, std::string>, 2> reason_flags = {
+      {std::make_pair(false, "snes_converged_reason"),
+       std::make_pair(false, "ksp_converged_reason")}};
+
+  auto & po = fe_problem.getPetscOptions();
+
+  for (auto & [reason_flag_set, reason_flag] : reason_flags)
+    if (!po.flags.isValueSet(prefix + reason_flag) &&
+        (std::find_if(po.pairs.begin(),
+                      po.pairs.end(),
+                      [&reason_flag, &prefix](auto & pair)
+                      { return pair.first == (prefix + reason_flag); }) == po.pairs.end()))
+      po.pairs.emplace_back(prefix + reason_flag, "::failed");
+#endif
 }
 
 void
 processPetscPairs(const std::vector<std::pair<MooseEnumItem, std::string>> & petsc_pair_options,
                   const unsigned int mesh_dimension,
+                  const std::string & prefix,
+                  const ParallelParamObject & param_object,
                   PetscOptions & po)
 {
-  // the boolean in these pairs denote whether the user has specified any of the reason flags in the
-  // input file
-  std::array<std::pair<bool, std::string>, 2> reason_flags = {
-      {std::make_pair(false, "-snes_converged_reason"),
-       std::make_pair(false, "-ksp_converged_reason")}};
-
-  for (auto & reason_flag : reason_flags)
-    if (po.flags.isValueSet(reason_flag.second))
-      // We register the reason option as already existing
-      reason_flag.first = true;
+  checkPrefix(prefix);
 
   // Setup the name value pairs
   bool boomeramg_found = false;
@@ -610,28 +656,34 @@ processPetscPairs(const std::vector<std::pair<MooseEnumItem, std::string>> & pet
 #endif
   std::vector<std::pair<std::string, std::string>> new_options;
 
-  for (const auto & option : petsc_pair_options)
+  for (const auto & [option_name, option_value] : petsc_pair_options)
   {
+    checkUserProvidedPetscOption(option_name, param_object);
+
     new_options.clear();
 
     // Do not add duplicate settings
-    if (MooseUtils::findPair(po.pairs, option.first, MooseUtils::Any) == po.pairs.end())
+    if (auto it =
+            MooseUtils::findPair(po.pairs,
+                                 prefix + static_cast<const std::string &>(option_name).substr(1),
+                                 MooseUtils::Any);
+        it == po.pairs.end())
     {
 #if !PETSC_VERSION_LESS_THAN(3, 9, 0)
-      if (option.first == "-pc_factor_mat_solver_package")
-        new_options.emplace_back("-pc_factor_mat_solver_type", option.second);
+      if (option_name == "-pc_factor_mat_solver_package")
+        new_options.emplace_back(prefix + "pc_factor_mat_solver_type", option_value);
 #else
-      if (option.first == "-pc_factor_mat_solver_type")
-        new_options.push_back("-pc_factor_mat_solver_package", option.second);
+      if (option_name == "-pc_factor_mat_solver_type")
+        new_options.push_back(prefix + "pc_factor_mat_solver_package", option_value);
 #endif
 
       // Look for a pc description
-      if (option.first == "-pc_type" || option.first == "-pc_sub_type" ||
-          option.first == "-pc_hypre_type")
-        pc_description += option.second + ' ';
+      if (option_name == "-pc_type" || option_name == "-pc_sub_type" ||
+          option_name == "-pc_hypre_type")
+        pc_description += option_value + ' ';
 
 #if !PETSC_VERSION_LESS_THAN(3, 12, 0)
-      if (option.first == "-pc_type" && option.second == "hmg")
+      if (option_name == "-pc_type" && option_value == "hmg")
         hmg_found = true;
 
         // MPIAIJ for PETSc 3.12.0: -matptap_via
@@ -641,81 +693,66 @@ processPetscPairs(const std::vector<std::pair<MooseEnumItem, std::string>> & pet
         // MPIAIJ for PETSc 3.17 and higher: -matptap_via, -mat_product_algorithm
         // MAIJ for PETSc 3.17 and higher: -mat_product_algorithm
 #if !PETSC_VERSION_LESS_THAN(3, 17, 0)
-      if (hmg_found && (option.first == "-matptap_via" || option.first == "-matmaijptap_via" ||
-                        option.first == "-matproduct_ptap_via"))
-        new_options.emplace_back("-mat_product_algorithm", option.second);
+      if (hmg_found && (option_name == "-matptap_via" || option_name == "-matmaijptap_via" ||
+                        option_name == "-matproduct_ptap_via"))
+        new_options.emplace_back(prefix + "mat_product_algorithm", option_value);
 #elif !PETSC_VERSION_LESS_THAN(3, 13, 0)
-      if (hmg_found && (option.first == "-matptap_via" || option.first == "-matmaijptap_via"))
-        new_options.emplace_back("-matproduct_ptap_via", option.second);
+      if (hmg_found && (option_name == "-matptap_via" || option_name == "-matmaijptap_via"))
+        new_options.emplace_back(prefix + "matproduct_ptap_via", option_value);
 #else
-      if (hmg_found && (option.first == "-matproduct_ptap_via"))
+      if (hmg_found && (option_name == "-matproduct_ptap_via"))
       {
-        new_options.emplace_back("-matptap_via", option.second);
-        new_options.emplace_back("-matmaijptap_via", option.second);
+        new_options.emplace_back(prefix + "matptap_via", option_value);
+        new_options.emplace_back(prefix + "matmaijptap_via", option_value);
       }
 #endif
 
-      if (option.first == "-matptap_via" || option.first == "-matmaijptap_via" ||
-          option.first == "-matproduct_ptap_via" || option.first == "-mat_product_algorithm")
+      if (option_name == "-matptap_via" || option_name == "-matmaijptap_via" ||
+          option_name == "-matproduct_ptap_via" || option_name == "-mat_product_algorithm")
         matptap_found = true;
 
       // For 3D problems, we need to set this 0.7
-      if (option.first == "-hmg_inner_pc_hypre_boomeramg_strong_threshold")
+      if (option_name == "-hmg_inner_pc_hypre_boomeramg_strong_threshold")
         hmg_strong_threshold_found = true;
 #endif
       // This special case is common enough that we'd like to handle it for the user.
-      if (option.first == "-pc_hypre_type" && option.second == "boomeramg")
+      if (option_name == "-pc_hypre_type" && option_value == "boomeramg")
         boomeramg_found = true;
-      if (option.first == "-pc_hypre_boomeramg_strong_threshold")
+      if (option_name == "-pc_hypre_boomeramg_strong_threshold")
         strong_threshold_found = true;
 #if !PETSC_VERSION_LESS_THAN(3, 7, 0)
-      if ((option.first == "-pc_factor_mat_solver_package" ||
-           option.first == "-pc_factor_mat_solver_type") &&
-          option.second == "superlu_dist")
+      if ((option_name == "-pc_factor_mat_solver_package" ||
+           option_name == "-pc_factor_mat_solver_type") &&
+          option_value == "superlu_dist")
         superlu_dist_found = true;
-      if (option.first == "-mat_superlu_dist_fact")
+      if (option_name == "-mat_superlu_dist_fact")
         fact_pattern_found = true;
-      if (option.first == "-mat_superlu_dist_replacetinypivot")
+      if (option_name == "-mat_superlu_dist_replacetinypivot")
         tiny_pivot_found = true;
 #endif
 
       if (!new_options.empty())
         std::copy(new_options.begin(), new_options.end(), std::back_inserter(po.pairs));
       else
-        po.pairs.push_back(option);
+        po.pairs.push_back(std::make_pair(
+            prefix + static_cast<const std::string &>(option_name).substr(1), option_value));
     }
     else
-    {
-      for (unsigned int j = 0; j < po.pairs.size(); j++)
-        if (option.first == po.pairs[j].first)
-          po.pairs[j].second = option.second;
-    }
+      it->second = option_value;
   }
-
-#if !PETSC_VERSION_LESS_THAN(3, 14, 0)
-  for (const auto & reason_flag : reason_flags)
-    // Was the option already found in PetscOptions::flags? Or does it exist in PetscOptions::pairs
-    // as an iname already? If not, then we add our flag
-    if (!reason_flag.first && (std::find_if(po.pairs.begin(),
-                                            po.pairs.end(),
-                                            [&reason_flag](auto & pair) {
-                                              return pair.first == reason_flag.second;
-                                            }) == po.pairs.end()))
-      po.pairs.emplace_back(reason_flag.second, "::failed");
-#endif
 
   // When running a 3D mesh with boomeramg, it is almost always best to supply a strong threshold
   // value. We will provide that for the user here if they haven't supplied it themselves.
   if (boomeramg_found && !strong_threshold_found && mesh_dimension == 3)
   {
-    po.pairs.emplace_back("-pc_hypre_boomeramg_strong_threshold", "0.7");
+    po.pairs.emplace_back(prefix + "pc_hypre_boomeramg_strong_threshold", "0.7");
     pc_description += "strong_threshold: 0.7 (auto)";
   }
 
 #if !PETSC_VERSION_LESS_THAN(3, 12, 0)
   if (hmg_found && !hmg_strong_threshold_found && mesh_dimension == 3)
   {
-    po.pairs.emplace_back("-hmg_inner_pc_hypre_boomeramg_strong_threshold", "0.7");
+    po.pairs.emplace_back(prefix + "hmg_inner_pc_hypre_boomeramg_strong_threshold", "0.7");
     pc_description += "strong_threshold: 0.7 (auto)";
   }
 
@@ -724,12 +761,12 @@ processPetscPairs(const std::vector<std::pair<MooseEnumItem, std::string>> & pet
   if (hmg_found && !matptap_found)
   {
 #if !PETSC_VERSION_LESS_THAN(3, 17, 0)
-    po.pairs.emplace_back("-mat_product_algorithm", "allatonce");
+    po.pairs.emplace_back(prefix + "mat_product_algorithm", "allatonce");
 #elif !PETSC_VERSION_LESS_THAN(3, 13, 0)
-    po.pairs.emplace_back("-matproduct_ptap_via", "allatonce");
+    po.pairs.emplace_back(prefix + "matproduct_ptap_via", "allatonce");
 #else
-    po.pairs.emplace_back("-matptap_via", "allatonce");
-    po.pairs.emplace_back("-matmaijptap_via", "allatonce");
+    po.pairs.emplace_back(prefix + "matptap_via", "allatonce");
+    po.pairs.emplace_back(prefix + "matmaijptap_via", "allatonce");
 #endif
   }
 #endif
@@ -739,7 +776,7 @@ processPetscPairs(const std::vector<std::pair<MooseEnumItem, std::string>> & pet
   // SamePattern_SameRowPerm, otherwise we use whatever we have in PETSc
   if (superlu_dist_found && !fact_pattern_found)
   {
-    po.pairs.emplace_back("-mat_superlu_dist_fact",
+    po.pairs.emplace_back(prefix + "mat_superlu_dist_fact",
 #if PETSC_VERSION_LESS_THAN(3, 7, 5)
                           "SamePattern_SameRowPerm");
     pc_description += "mat_superlu_dist_fact: SamePattern_SameRowPerm ";
@@ -752,7 +789,7 @@ processPetscPairs(const std::vector<std::pair<MooseEnumItem, std::string>> & pet
   // restore this superlu  option
   if (superlu_dist_found && !tiny_pivot_found)
   {
-    po.pairs.emplace_back("-mat_superlu_dist_replacetinypivot", "1");
+    po.pairs.emplace_back(prefix + "mat_superlu_dist_replacetinypivot", "1");
     pc_description += " mat_superlu_dist_replacetinypivot: true ";
   }
 #endif
@@ -1016,57 +1053,6 @@ disableLinearConvergedReason(FEProblemBase & fe_problem)
   auto it = MooseUtils::findPair(pairs, "-ksp_converged_reason", MooseUtils::Any);
   if (it != pairs.end())
     pairs.erase(it);
-}
-
-void
-storePrefixedPetscOptions(
-    FEProblemBase & fe_problem,
-    const std::string & prefix,
-    const MultiMooseEnum & flags_to_prefix,
-    const std::vector<std::pair<MooseEnumItem, std::string>> & pairs_to_prefix,
-    const MooseObject & moose_object)
-{
-  auto invalid_error = [&moose_object](auto &&... str_args)
-  {
-    moose_object.mooseError(std::forward<decltype(str_args)>(str_args)...,
-                            " for ",
-                            moose_object.type(),
-                            " ",
-                            moose_object.name());
-  };
-
-  if (prefix[0] != '-')
-    invalid_error("Leading prefix character must be a '-'. Current prefix is '", prefix, "'");
-  // Prefix may simply be '-' hence the first check
-  if (prefix.size() > 1 && prefix.back() != '_')
-    invalid_error("Terminating prefix character must be a '_'. Current prefix is '", prefix, "'");
-
-  auto & po = fe_problem.getPetscOptions();
-
-  auto invalid_op_error = [invalid_error](const std::string & op)
-  { invalid_error("Invalid PETSc option name ", op); };
-
-  for (const auto & item : flags_to_prefix)
-  {
-    // Need to prepend the prefix and strip off the leading '-' on the option name.
-    std::string op(item);
-    if (op[0] != '-')
-      invalid_op_error(op);
-
-    // push back PETSc options
-    po.flags.setAdditionalValue(prefix + op.substr(1));
-  }
-
-  for (const auto & [option_item, option_value] : pairs_to_prefix)
-  {
-    const auto & option_name = option_item.name();
-
-    // Need to prepend the prefix and strip off the leading '-' on the option name.
-    if (option_name[0] != '-')
-      invalid_op_error(option_name);
-
-    po.pairs.emplace_back(prefix + option_name.substr(1), option_value);
-  }
 }
 
 } // Namespace PetscSupport

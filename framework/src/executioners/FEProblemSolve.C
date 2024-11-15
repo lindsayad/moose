@@ -233,7 +233,15 @@ FEProblemSolve::FEProblemSolve(Executioner & ex)
   check_petsc_param("petsc_options_iname");
 
   // Extract and store PETSc related settings on FEProblemBase
-  Moose::PetscSupport::storePetscOptions(_problem, _pars);
+  Moose::PetscSupport::storePetscOptions(_problem, "-", ex);
+  // For backwards compatibility
+  if (_problem.numSolverSystems() == 1)
+    Moose::PetscSupport::setConvergedReasonFlags(_problem, "-");
+  else
+  {
+    for (const auto & nl_sys_name : _problem.getNonlinearSystemNames())
+      Moose::PetscSupport::setConvergedReasonFlags(_problem, "-" + nl_sys_name + "_");
+  }
 
   // Set linear solve parameters in the equation system
   // Nonlinear solve parameters are added in the DefaultNonlinearConvergence

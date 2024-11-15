@@ -173,10 +173,5 @@ Split::setup(NonlinearSystemBase & nl, const std::string & prefix)
 
   // Now we set the user-specified petsc options for this split, possibly overriding the above
   // settings.
-  Moose::PetscSupport::storePrefixedPetscOptions(
-      _fe_problem,
-      prefix,
-      getParam<MultiMooseEnum>("petsc_options"),
-      getParam<MooseEnumItem, std::string>("petsc_options_iname", "petsc_options_value"),
-      *this);
+  Moose::PetscSupport::storePetscOptions(_fe_problem, prefix, *this);
 }
