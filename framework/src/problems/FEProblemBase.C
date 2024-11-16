@@ -445,6 +445,7 @@ FEProblemBase::FEProblemBase(const InputParameters & parameters)
     _previous_nl_solution_required(getParam<bool>("previous_nl_solution_required")),
     _has_nonlocal_coupling(false),
     _calculate_jacobian_in_uo(false),
+    _solver_params(_num_nl_sys),
     _kernel_coverage_check(
         getParam<MooseEnum>("kernel_coverage_check").getEnum<CoverageCheckMode>()),
     _kernel_coverage_blocks(getParam<std::vector<SubdomainName>>("kernel_coverage_block_list")),
@@ -6089,7 +6090,7 @@ FEProblemBase::init()
 
   // do not assemble system matrix for JFNK solve
   for (auto & nl : _nl)
-    if (solverParams()._type == Moose::ST_JFNK)
+    if (solverParams(nl->number())._type == Moose::ST_JFNK)
       nl->turnOffJacobian();
 
   for (auto & sys : _solver_systems)
@@ -6222,6 +6223,7 @@ FEProblemBase::solve(const unsigned int nl_sys_num)
   // We did not add PETSc options to database yet
   if (!_is_petsc_options_inserted)
   {
+    // Insert options for all systems all at once
     Moose::PetscSupport::petscSetOptions(_petsc_options, _solver_params, this);
     _is_petsc_options_inserted = true;
   }
@@ -8419,15 +8421,19 @@ FEProblemBase::getVariableNames()
 }
 
 SolverParams &
-FEProblemBase::solverParams()
+FEProblemBase::solverParams(const unsigned int solver_sys_num)
 {
-  return _solver_params;
+  mooseAssert(solver_sys_num < numNonlinearSystems(),
+              "The _solver_params data member is currently not leveraged for linear system solves");
+  return _solver_params[solver_sys_num];
 }
 
 const SolverParams &
-FEProblemBase::solverParams() const
+FEProblemBase::solverParams(const unsigned int solver_sys_num) const
 {
-  return _solver_params;
+  mooseAssert(solver_sys_num < numNonlinearSystems(),
+              "The _solver_params data member is currently not leveraged for linear system solves");
+  return _solver_params[solver_sys_num];
 }
 
 void
@@ -9069,4 +9075,10 @@ FEProblemBase::setCurrentAlgebraicBndNodeRange(ConstBndNodeRange * range)
   }
 
   _current_algebraic_bnd_node_range = std::make_unique<ConstBndNodeRange>(*range);
+}
+
+std::string
+FEProblemBase::solverTypeString(const unsigned int solver_sys_num)
+{
+  return Moose::stringify(solverParams(solver_sys_num)._type);
 }

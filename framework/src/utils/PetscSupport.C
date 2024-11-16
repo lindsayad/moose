@@ -147,25 +147,27 @@ setSolverOptions(const SolverParams & solver_params)
   switch (solver_params._type)
   {
     case Moose::ST_PJFNK:
-      setSinglePetscOption("-snes_mf_operator");
-      setSinglePetscOption("-mat_mffd_type", stringify(solver_params._mffd_type));
+      setSinglePetscOption(solver_params._prefix + "snes_mf_operator");
+      setSinglePetscOption(solver_params._prefix + "mat_mffd_type",
+                           stringify(solver_params._mffd_type));
       break;
 
     case Moose::ST_JFNK:
-      setSinglePetscOption("-snes_mf");
-      setSinglePetscOption("-mat_mffd_type", stringify(solver_params._mffd_type));
+      setSinglePetscOption(solver_params._prefix + "snes_mf");
+      setSinglePetscOption(solver_params._prefix + "mat_mffd_type",
+                           stringify(solver_params._mffd_type));
       break;
 
     case Moose::ST_NEWTON:
       break;
 
     case Moose::ST_FD:
-      setSinglePetscOption("-snes_fd");
+      setSinglePetscOption(solver_params._prefix + "snes_fd");
       break;
 
     case Moose::ST_LINEAR:
-      setSinglePetscOption("-snes_type", "ksponly");
-      setSinglePetscOption("-snes_monitor_cancel");
+      setSinglePetscOption(solver_params._prefix + "snes_type", "ksponly");
+      setSinglePetscOption(solver_params._prefix + "snes_monitor_cancel");
       break;
   }
 
@@ -174,7 +176,7 @@ setSolverOptions(const SolverParams & solver_params)
     ls_type = Moose::LS_BASIC;
 
   if (ls_type != Moose::LS_DEFAULT && ls_type != Moose::LS_CONTACT && ls_type != Moose::LS_PROJECT)
-    setSinglePetscOption("-snes_linesearch_type", stringify(ls_type));
+    setSinglePetscOption(solver_params._prefix + "snes_linesearch_type", stringify(ls_type));
 }
 
 void
@@ -240,15 +242,8 @@ addPetscOptionsFromCommandline()
 }
 
 void
-petscSetOptions(const PetscOptions & po,
-                const SolverParams & solver_params,
-                FEProblemBase * const problem)
+petscSetOptionsHelper(const PetscOptions & po, FEProblemBase * const problem)
 {
-
-  LibmeshPetscCallA(PETSC_COMM_WORLD, PetscOptionsClear(LIBMESH_PETSC_NULLPTR));
-
-  setSolverOptions(solver_params);
-
   // Add any additional options specified in the input file
   for (const auto & flag : po.flags)
     setSinglePetscOption(flag.rawName().c_str());
@@ -258,6 +253,27 @@ petscSetOptions(const PetscOptions & po,
     setSinglePetscOption(option.first, option.second, problem);
 
   addPetscOptionsFromCommandline();
+}
+
+void
+petscSetOptions(const PetscOptions & po,
+                const SolverParams & solver_params,
+                FEProblemBase * const problem)
+{
+  PetscCallAbort(PETSC_COMM_WORLD, PetscOptionsClear(LIBMESH_PETSC_NULLPTR));
+  setSolverOptions(solver_params);
+  petscSetOptionsHelper(po, problem);
+}
+
+void
+petscSetOptions(const PetscOptions & po,
+                const std::vector<SolverParams> & solver_params_vec,
+                FEProblemBase * const problem)
+{
+  PetscCallAbort(PETSC_COMM_WORLD, PetscOptionsClear(LIBMESH_PETSC_NULLPTR));
+  for (const auto & solver_params : solver_params_vec)
+    setSolverOptions(solver_params);
+  petscSetOptionsHelper(po, problem);
 }
 
 PetscErrorCode
@@ -422,7 +438,7 @@ petscSetDefaults(FEProblemBase & problem)
     auto * const petsc_solver = cast_ptr<PetscNonlinearSolver<Number> *>(nl.nonlinearSolver());
     auto * const sys_matrix = petsc_solver->system().request_matrix("System Matrix");
     // Prefix the name of the system matrix with the name of the system
-    if (sys_matrix && problem.solverParams()._type != Moose::ST_JFNK)
+    if (sys_matrix && problem.solverParams(nl_index)._type != Moose::ST_JFNK)
     {
       auto * const petsc_sys_matrix = cast_ptr<PetscMatrix<Number> *>(sys_matrix);
       LibmeshPetscCall2(
@@ -474,45 +490,49 @@ petscSetDefaults(FEProblemBase & problem)
 void
 processSingletonMooseWrappedOptions(FEProblemBase & fe_problem, const InputParameters & params)
 {
-  // Note: Options set in the Preconditioner block will override those set in the Executioner block
-  if (params.isParamValid("solve_type") && !params.isParamValid("_use_eigen_value"))
+  for (const auto i : make_range(fe_problem.numNonlinearSystems()))
   {
-    // Extract the solve type
-    const std::string & solve_type = params.get<MooseEnum>("solve_type");
-    fe_problem.solverParams()._type = Moose::stringToEnum<Moose::SolveType>(solve_type);
-  }
-
-  if (params.isParamValid("line_search"))
-  {
-    MooseEnum line_search = params.get<MooseEnum>("line_search");
-    if (fe_problem.solverParams()._line_search == Moose::LS_INVALID || line_search != "default")
+    // Note: Options set in the Preconditioner block will override those set in the Executioner
+    // block
+    if (params.isParamValid("solve_type") && !params.isParamValid("_use_eigen_value"))
     {
-      Moose::LineSearchType enum_line_search =
-          Moose::stringToEnum<Moose::LineSearchType>(line_search);
-      fe_problem.solverParams()._line_search = enum_line_search;
-      if (enum_line_search == LS_CONTACT || enum_line_search == LS_PROJECT)
-        for (auto nl_index : make_range(fe_problem.numNonlinearSystems()))
-        {
-          NonlinearImplicitSystem * nl_system = dynamic_cast<NonlinearImplicitSystem *>(
-              &fe_problem.getNonlinearSystemBase(nl_index).system());
-          if (!nl_system)
-            mooseError("You've requested a line search but you must be solving an EigenProblem. "
-                       "These two things are not consistent.");
-          PetscNonlinearSolver<Real> * petsc_nonlinear_solver =
-              dynamic_cast<PetscNonlinearSolver<Real> *>(nl_system->nonlinear_solver.get());
-          if (!petsc_nonlinear_solver)
-            mooseError("Currently the MOOSE line searches all use Petsc, so you "
-                       "must use Petsc as your non-linear solver.");
-          petsc_nonlinear_solver->linesearch_object =
-              std::make_unique<ComputeLineSearchObjectWrapper>(fe_problem);
-        }
+      // Extract the solve type
+      const std::string & solve_type = params.get<MooseEnum>("solve_type");
+      fe_problem.solverParams(i)._type = Moose::stringToEnum<Moose::SolveType>(solve_type);
     }
-  }
 
-  if (params.isParamValid("mffd_type"))
-  {
-    MooseEnum mffd_type = params.get<MooseEnum>("mffd_type");
-    fe_problem.solverParams()._mffd_type = Moose::stringToEnum<Moose::MffdType>(mffd_type);
+    if (params.isParamValid("line_search"))
+    {
+      MooseEnum line_search = params.get<MooseEnum>("line_search");
+      if (fe_problem.solverParams(i)._line_search == Moose::LS_INVALID || line_search != "default")
+      {
+        Moose::LineSearchType enum_line_search =
+            Moose::stringToEnum<Moose::LineSearchType>(line_search);
+        fe_problem.solverParams(i)._line_search = enum_line_search;
+        if (enum_line_search == LS_CONTACT || enum_line_search == LS_PROJECT)
+          for (auto nl_index : make_range(fe_problem.numNonlinearSystems()))
+          {
+            NonlinearImplicitSystem * nl_system = dynamic_cast<NonlinearImplicitSystem *>(
+                &fe_problem.getNonlinearSystemBase(nl_index).system());
+            if (!nl_system)
+              mooseError("You've requested a line search but you must be solving an EigenProblem. "
+                         "These two things are not consistent.");
+            PetscNonlinearSolver<Real> * petsc_nonlinear_solver =
+                dynamic_cast<PetscNonlinearSolver<Real> *>(nl_system->nonlinear_solver.get());
+            if (!petsc_nonlinear_solver)
+              mooseError("Currently the MOOSE line searches all use Petsc, so you "
+                         "must use Petsc as your non-linear solver.");
+            petsc_nonlinear_solver->linesearch_object =
+                std::make_unique<ComputeLineSearchObjectWrapper>(fe_problem);
+          }
+      }
+    }
+
+    if (params.isParamValid("mffd_type"))
+    {
+      MooseEnum mffd_type = params.get<MooseEnum>("mffd_type");
+      fe_problem.solverParams(i)._mffd_type = Moose::stringToEnum<Moose::MffdType>(mffd_type);
+    }
   }
 }
 
@@ -935,7 +955,7 @@ setSinglePetscOption(const std::string & name,
   else if (lower_case_name.find("mat_type") != std::string::npos)
   {
     check_problem();
-    if (problem->solverParams()._type == Moose::ST_JFNK)
+    if ((problem->numNonlinearSystems() == 1) && (problem->solverParams(0)._type == Moose::ST_JFNK))
       mooseError("Setting option '", lower_case_name, "' is incompatible with a JFNK 'solve_type'");
 
     bool found_matching_prefix = false;

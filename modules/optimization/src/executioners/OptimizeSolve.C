@@ -198,7 +198,9 @@ OptimizeSolve::taoSolve()
 
   // save nonTAO PETSC options to reset before every call to execute()
   _petsc_options = _problem.getPetscOptions();
-  _solver_params = _problem.solverParams();
+  // We're logically asssociated with the zeroth solver system because our inner solve is a
+  // FixedPointSolve whose inner solve is a FEProblemSolve whose solver system is hard-coded to 0
+  _solver_params = _problem.solverParams(0);
 
   // Set bounds for bounded optimization
   LibmeshPetscCallQ(TaoSetVariableBoundsRoutine(_tao, variableBoundsWrapper, this));

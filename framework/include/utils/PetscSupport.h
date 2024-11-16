@@ -51,11 +51,22 @@ public:
 };
 
 /**
- * A function for setting the PETSc options in PETSc from the options supplied to MOOSE
+ * A function for setting the PETSc options in PETSc from the options supplied to MOOSE. This
+ * interface function should be used when setting options on a per-system basis
  */
 void petscSetOptions(const PetscOptions & po,
                      const SolverParams & solver_params,
                      FEProblemBase * const problem = nullptr);
+
+/**
+ * A function for setting the PETSc options in PETSc from the options supplied to MOOSE. This
+ * interface function should be used for setting options all at once for all systems in a
+ * multi-system context. Note that PetscOptions is not a vector because the options database has
+ * prefixes for the different systems
+ */
+void petscSetOptions(const PetscOptions & po,
+                     const std::vector<SolverParams> & solver_params,
+                     FEProblemBase * problem);
 
 /**
  * Set the default options for a KSP

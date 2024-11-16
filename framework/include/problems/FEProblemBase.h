@@ -498,7 +498,7 @@ public:
   /**
    * Return solver type as a human readable string
    */
-  virtual std::string solverTypeString() { return Moose::stringify(solverParams()._type); }
+  virtual std::string solverTypeString(unsigned int solver_sys_num /*=0*/);
 
   /**
    * Returns true if we are in or beyond the initialSetup stage
@@ -1660,12 +1660,12 @@ public:
   /**
    * Get the solver parameters
    */
-  SolverParams & solverParams();
+  SolverParams & solverParams(unsigned int solver_sys_num /*= 0*/);
 
   /**
    * const version
    */
-  const SolverParams & solverParams() const;
+  const SolverParams & solverParams(unsigned int solver_sys_num /*= 0*/) const;
 
 #ifdef LIBMESH_ENABLE_AMR
   // Adaptivity /////
@@ -2710,7 +2710,7 @@ protected:
   /// Whether there are active material properties on each thread
   std::vector<unsigned char> _has_active_material_properties;
 
-  SolverParams _solver_params;
+  std::vector<SolverParams> _solver_params;
 
   /// Determines whether and which subdomains are to be checked to ensure that they have an active kernel
   CoverageCheckMode _kernel_coverage_check;
