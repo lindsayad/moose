@@ -14,12 +14,14 @@ omega = '${fparse 2*3.14159265359*frequencyHz}'
     nl_sys = 'nl0'
     petsc_options_iname = '-pc_type'
     petsc_options_value = 'lu'
+    full = true
   []
   [adjoint]
     type = SMP
     nl_sys = 'adjoint'
     petsc_options_iname = '-pc_type'
     petsc_options_value = 'lu'
+    full = true
   []
 []
 
