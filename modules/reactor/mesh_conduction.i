@@ -291,30 +291,9 @@ reflector_tri = 2000
     paired_block = '${gap_reflector}'
     new_boundary = 'reflector'
   []
-  [assign_material]
-    type = SubdomainExtraElementIDGenerator
-    input = reflector_sideset
-    subdomains = '${uo2_11} ${uo2_12} ${uo2_13} ${uo2_21} ${uo2_22} ${uo2_23}
-                  ${uo2_11_tri} ${uo2_12_tri} ${uo2_13_tri} ${uo2_21_tri} ${uo2_22_tri} ${uo2_23_tri}
-                  ${monolith_11} ${monolith_12} ${monolith_13} ${monolith_21} ${monolith_22} ${monolith_23}
-                  ${monolith_lr} ${monolith_ur} ${monolith_rr} ${monolith_cr}
-                  ${monolith_lr_tri} ${monolith_ur_tri} ${monolith_rr_tri} ${monolith_cr_tri}
-                  ${htpipe}
-                  ${reflector} ${reflector_tri}
-                  ${gap_uo2} ${gap_htpipe} ${gap_reflector}'
-    extra_element_id_names = 'material_id'
-    extra_element_ids = '${uo2_11} ${uo2_12} ${uo2_13} ${uo2_21} ${uo2_22} ${uo2_23}
-                         ${uo2_11} ${uo2_12} ${uo2_13} ${uo2_21} ${uo2_22} ${uo2_23}
-                         ${monolith_11} ${monolith_12} ${monolith_13} ${monolith_21} ${monolith_22} ${monolith_23}
-                         ${monolith_lr} ${monolith_ur} ${monolith_rr} ${monolith_cr}
-                         ${monolith_lr} ${monolith_ur} ${monolith_rr} ${monolith_cr}
-                         ${htpipe}
-                         ${reflector} ${reflector}
-                         ${gap} ${gap} ${gap}'
-  []
   [finalize_block]
     type = RenameBlockGenerator
-    input = assign_material
+    input = reflector_sideset
     old_block = '${uo2_11} ${uo2_12} ${uo2_13} ${uo2_21} ${uo2_22} ${uo2_23}
                  ${uo2_11_tri} ${uo2_12_tri} ${uo2_13_tri} ${uo2_21_tri} ${uo2_22_tri} ${uo2_23_tri}
                  ${monolith_11} ${monolith_12} ${monolith_13} ${monolith_21} ${monolith_22} ${monolith_23}
