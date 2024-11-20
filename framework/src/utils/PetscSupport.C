@@ -634,13 +634,11 @@ setConvergedReasonFlags(FEProblemBase & fe_problem, const std::string & prefix)
 #if !PETSC_VERSION_LESS_THAN(3, 14, 0)
   // the boolean in these pairs denote whether the user has specified any of the reason flags in the
   // input file
-  std::array<std::pair<bool, std::string>, 2> reason_flags = {
-      {std::make_pair(false, "snes_converged_reason"),
-       std::make_pair(false, "ksp_converged_reason")}};
+  std::array<std::string, 2> reason_flags = {{"snes_converged_reason", "ksp_converged_reason"}};
 
   auto & po = fe_problem.getPetscOptions();
 
-  for (auto & [reason_flag_set, reason_flag] : reason_flags)
+  for (const auto & reason_flag : reason_flags)
     if (!po.flags.isValueSet(prefix + reason_flag) &&
         (std::find_if(po.pairs.begin(),
                       po.pairs.end(),
