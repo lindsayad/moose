@@ -2416,6 +2416,11 @@ private:
                                      const std::string & base_name,
                                      bool & reinit_displaced);
 
+  /**
+   * Make basic solver params for linear solves
+   */
+  static SolverParams makeLinearSolverParams();
+
 protected:
   bool _initialized;
 
