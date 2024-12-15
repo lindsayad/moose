@@ -498,7 +498,7 @@ public:
   /**
    * Return solver type as a human readable string
    */
-  virtual std::string solverTypeString(unsigned int solver_sys_num /*=0*/);
+  virtual std::string solverTypeString(unsigned int solver_sys_num = 0);
 
   /**
    * Returns true if we are in or beyond the initialSetup stage
@@ -1660,12 +1660,12 @@ public:
   /**
    * Get the solver parameters
    */
-  SolverParams & solverParams(unsigned int solver_sys_num /*= 0*/);
+  SolverParams & solverParams(unsigned int solver_sys_num = 0);
 
   /**
    * const version
    */
-  const SolverParams & solverParams(unsigned int solver_sys_num /*= 0*/) const;
+  const SolverParams & solverParams(unsigned int solver_sys_num = 0) const;
 
 #ifdef LIBMESH_ENABLE_AMR
   // Adaptivity /////

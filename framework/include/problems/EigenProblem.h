@@ -25,7 +25,7 @@ public:
 
   EigenProblem(const InputParameters & parameters);
 
-  virtual std::string solverTypeString(unsigned int solver_sys_num /*=0*/) override;
+  virtual std::string solverTypeString(unsigned int solver_sys_num = 0) override;
 
 #ifdef LIBMESH_HAVE_SLEPC
   virtual void solve(const unsigned int nl_sys_num) override;
