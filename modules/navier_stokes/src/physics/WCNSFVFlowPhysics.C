@@ -1086,6 +1086,9 @@ WCNSFVFlowPhysics::addRhieChowUserObjects()
   if (have_matching_rc_uo)
     return;
 
+  _rc_uo_name =
+      _porous_medium_treatment ? +"pins_rhie_chow_interpolator" : "ins_rhie_chow_interpolator";
+
   const std::string u_names[3] = {"u", "v", "w"};
   const auto object_type =
       _porous_medium_treatment ? "PINSFVRhieChowInterpolator" : "INSFVRhieChowInterpolator";
@@ -1115,10 +1118,7 @@ WCNSFVFlowPhysics::addRhieChowUserObjects()
   }
 
   params.applySpecificParameters(parameters(), INSFVRhieChowInterpolator::listOfCommonParams());
-  getProblem().addUserObject(
-      object_type,
-      (_porous_medium_treatment ? +"pins_rhie_chow_interpolator" : "ins_rhie_chow_interpolator"),
-      params);
+  getProblem().addUserObject(object_type, _rc_uo_name, params);
 }
 
 void
