@@ -41,7 +41,7 @@
   []
 []
 
-[UserObject]
+[UserObjects]
   [layered_average]
     execute_on = 'linear nonlinear'
     type = LayeredAverage
