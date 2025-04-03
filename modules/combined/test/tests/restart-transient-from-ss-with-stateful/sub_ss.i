@@ -5,8 +5,8 @@
 [Mesh]
   [gen]
     type = GeneratedMeshGenerator
-    nx = 8
-    ny = 8
+    nx = 2
+    ny = 2
     xmin = -82.627
     xmax = 82.627
     ymin = -82.627
@@ -137,4 +137,5 @@
   exodus = true
   print_linear_residuals = false
   perf_graph = true
+  checkpoint = true
 []
