@@ -12,6 +12,7 @@
 #include <vector>
 #include <memory>
 #include <typeinfo>
+#include <iostream>
 
 #include "MooseArray.h"
 #include "MooseTypes.h"
@@ -30,6 +31,40 @@
 class PropertyValue;
 class Material;
 class MaterialPropertyInterface;
+
+template <typename T>
+std::ostream &
+operator<<(std::ostream & os, const std::vector<T> & vec)
+{
+  os << "[";
+  for (size_t i = 0; i < vec.size(); ++i)
+  {
+    os << vec[i];
+    if (i != vec.size() - 1)
+    {
+      os << ", ";
+    }
+  }
+  os << "]";
+  return os;
+}
+
+template <typename T, std::size_t N>
+std::ostream &
+operator<<(std::ostream & os, const std::array<T, N> & arr)
+{
+  os << "[";
+  for (std::size_t i = 0; i < arr.size(); ++i)
+  {
+    os << arr[i];
+    if (i != arr.size() - 1)
+    {
+      os << ", ";
+    }
+  }
+  os << "]";
+  return os;
+}
 
 /**
  * Abstract definition of a property value.
@@ -273,7 +308,11 @@ inline void
 MaterialPropertyBase<T, is_ad>::store(std::ostream & stream)
 {
   for (const auto i : index_range(_value))
+  {
     storeHelper(stream, _value[i], nullptr);
+    std::cout << _value[i] << " ";
+  }
+  std::cout << std::endl;
 }
 
 template <typename T, bool is_ad>
@@ -281,7 +320,11 @@ inline void
 MaterialPropertyBase<T, is_ad>::load(std::istream & stream)
 {
   for (const auto i : index_range(_value))
+  {
     loadHelper(stream, _value[i], nullptr);
+    std::cout << _value[i] << " ";
+  }
+  std::cout << std::endl;
 }
 
 template <typename T, bool is_ad>

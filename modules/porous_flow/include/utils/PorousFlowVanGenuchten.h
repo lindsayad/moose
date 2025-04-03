@@ -194,6 +194,12 @@ struct LowCapillaryPressureExtension
 
   LowCapillaryPressureExtension(const ExtensionStrategy & strategy, Real S, Real Pc, Real dPc)
     : strategy(strategy), S(S), Pc(Pc), dPc(dPc){};
+
+  friend std::ostream & operator<<(std::ostream & os, const LowCapillaryPressureExtension &)
+  {
+    mooseError("operator<< not implemented for LowCapillaryPressureExtension");
+    return os;
+  }
 };
 
 /**
@@ -224,6 +230,12 @@ struct HighCapillaryPressureExtension
 
   HighCapillaryPressureExtension(const ExtensionStrategy & strategy, Real S, Real Pc, Real dPc)
     : strategy(strategy), S(S), Pc(Pc), dPc(dPc){};
+
+  friend std::ostream & operator<<(std::ostream & os, const HighCapillaryPressureExtension &)
+  {
+    mooseError("operator<< not implemented for HighCapillaryPressureExtension");
+    return os;
+  }
 };
 
 /**

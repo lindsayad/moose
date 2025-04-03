@@ -386,6 +386,8 @@ MaterialPropertyStorage::initStatefulProps(const THREAD_ID tid,
         for (const auto state : index_range(*datum_ptr))
         {
           (*datum_ptr)[state].seekg(0, std::ios::beg);
+          std::cout << "Loading property " << stateful_id << " for state " << state << ", elem id "
+                    << elem.id() << ", and side " << side << std::endl;
           dataLoad((*datum_ptr)[state], (*props[state])[stateful_id], nullptr);
         }
     }
@@ -614,11 +616,15 @@ dataStore(std::ostream & stream, MaterialPropertyStorage & storage, void * conte
         // upon load we don't know if we can load it immediately into place or if we need to cache
         // it to load later. We also store it as skippable so that we can support not loading a
         // property if it no longer exists in restart
+        unsigned int i = 0;
         for (auto & entry : props)
         {
           std::stringstream out;
+          std::cout << "Storing property " << i << " for state " << state << ", elem id "
+                    << elem->id() << ", and side " << side << std::endl;
           dataStore(out, entry, nullptr);
           dataStore(stream, out, nullptr);
+          ++i;
         }
       }
     }
