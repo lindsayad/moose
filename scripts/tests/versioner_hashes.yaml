@@ -956,3 +956,34 @@ ccd296b7f4e78c4174be0af721db4a2420fd5759: #29984
   wasp:
     full_version: 2025.02.25_1
     hash: a8340b3
+  b6fd1e9e212f4e36b33a02f8b5e0c409fa6fb86f: #29764 #30227 Clang 18 bump Sequoia 15.4
+  libmesh:
+    full_version: 2025.03.06_2
+    hash: a1e9a7b
+  libmesh-vtk:
+    full_version: 9.4.2_0
+    hash: 11ee918
+  moose-dev:
+    full_version: 2025.04.08
+    hash: 1dde603
+  mpi:
+    full_version: 2025.04.08
+    hash: ef81563
+  peacock:
+    full_version: 2025.04.08
+    hash: b0ccd7b
+  petsc:
+    full_version: 3.22.1.193.g72c1e49ee3d_3
+    hash: d98e4aa
+  pprof:
+    full_version: 2025.04.08_0
+    hash: 1acc807
+  seacas:
+    full_version: 2025.02.27_1
+    hash: 5d0701b
+  tools:
+    full_version: 2025.04.08
+    hash: e29409b
+  wasp:
+    full_version: 2025.02.25_2
+    hash: e181ec5
