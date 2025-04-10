@@ -2772,6 +2772,7 @@ NonlinearSystemBase::computeJacobianInternal(const std::set<TagID> & tags)
     // Necessary for speed
     if (auto petsc_matrix = dynamic_cast<PetscMatrix<Number> *>(&jacobian))
     {
+      std::cout << "I can properly cast myself to a petsc matrix and set Jacobian options" << std::endl;
       LibmeshPetscCall(MatSetOption(petsc_matrix->mat(),
                                     MAT_KEEP_NONZERO_PATTERN, // This is changed in 3.1
                                     PETSC_TRUE));
