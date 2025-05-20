@@ -37,7 +37,7 @@ public:
   void getConnectedDofIndices(unsigned int var_num);
 
 protected:
-  /// prepare the _secondary_to_primary_map
+  /// prepare the _secondary_to_primary_map (see NodeElemConstraintBase)
   virtual void prepareSecondaryToPrimaryMap() = 0;
 
   /// This is the virtual method that derived classes should override for computing the residual.
