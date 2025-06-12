@@ -524,6 +524,9 @@ FEProblemBase::FEProblemBase(const InputParameters & parameters)
   //  We will toggle this to false when doing residual evaluations
   ADReal::do_derivatives = true;
 
+  // Disable refinement/coarsening in EquationSystems::reinit because we already do this ourselves
+  es().disable_refine_in_reinit();
+
   _solver_params.reserve(_num_nl_sys + _num_linear_sys);
   // Default constructor fine for nonlinear because it will be populated later by framework
   // executioner/solve object parameters
@@ -8030,10 +8033,15 @@ FEProblemBase::meshChangedHelper(bool intermediate_change)
   // If we're just going to alter the mesh again, all we need to
   // handle here is AMR and projections, not full system reinit
   if (intermediate_change)
+  {
     es().reinit_solutions();
+    // Once vectors are all restricted, we can delete children of coarsened elements
+    _mesh.getMesh().contract();
+  }
   else
   {
     es().reinit();
+    _mesh.getMesh().contract();
     // Since the mesh has changed, we need to make sure that we update any of our
     // MOOSE-system specific data.
     for (auto & sys : _solver_systems)
