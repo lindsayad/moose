@@ -58,7 +58,7 @@
 
   [binder_inner_left]
     type = SideSetsFromBoundingBoxGenerator
-    input = binder
+    input = binder_inner_top
     included_boundaries = 815
     boundary_new = 813
     bottom_left = '0.9e+2 0 0'
@@ -85,7 +85,7 @@
 
   [crystal_subdomain]
     type = MeshCollectionGenerator
-    inputs = 'binder binder_inner_top binder_inner_left crystal' # bcit_boundary ct_boundary'
+    inputs = 'binder_inner_left crystal' # bcit_boundary ct_boundary'
   []
 []
 
