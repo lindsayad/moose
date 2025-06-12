@@ -1104,8 +1104,6 @@ DisplacedProblem::meshChanged()
   // EquationSystems::reinit only prolongs/restricts the solution vectors, which is something that
   // needs to happen for every step of mesh adaptivity.
   _eq.reinit();
-  // Once vectors are all restricted, we can delete children of coarsened elements
-  _mesh.getMesh().contract();
   // Since the mesh has changed, we need to make sure that we update any of our
   // MOOSE-system specific data.
   for (auto & nl : _displaced_solver_systems)
