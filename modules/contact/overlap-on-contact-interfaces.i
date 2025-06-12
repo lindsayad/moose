@@ -158,6 +158,7 @@
         eigenstrain_names = 'thermal_strain irr_strain'
         add_variables = true
         generate_output = 'vonmises_stress'
+        block = '100 800'
       []
     []
   []
@@ -264,13 +265,13 @@
 
   [elasticity_tensor]
     type = ComputeElasticityTensor
-    block = '100 802'
+    block = '100'
     fill_method = orthotropic
     C_ijkl = '1.095e12 3.65e10 1.095e12 2.8568e8 9.549e6 9.549e6 0.01 0.01 0.3 0.3 0.01 0.01'
   []
   [therm_prefactor]
     type = DerivativeParsedMaterial
-    block = '100 802'
+    block = '100'
     coupled_variables = 'temp'
     property_name = therm_prefactor
     constant_names = 'a T'
@@ -279,7 +280,7 @@
   []
   [thermal_strain]
     type = ComputeVariableEigenstrain
-    block = '100 802'
+    block = '100'
     #eigen_base = '1 0 0 0 1 0 0 0 1'
     eigen_base = '-0.0577 0 0 0 1 0 0 0 1'
     args = 'temp'
@@ -288,7 +289,7 @@
   []
   [irr_prefactor]
     type = DerivativeParsedMaterial
-    block = '100 802'
+    block = '100'
     coupled_variables = 'irr initial_x'
     property_name = irr_prefactor
     constant_names = 'm'
@@ -297,7 +298,7 @@
   []
   [irr_strain]
     type = ComputeVariableEigenstrain
-    block = '100 802'
+    block = '100'
     #eigen_base = '1 0 0 0 1 0 0 0 1'
     eigen_base = '-0.31 0 0 0 1 0 0 0 1'
     args = 'irr'
@@ -307,6 +308,7 @@
 
   [stress]
     type = ComputeLinearElasticStress
+    block = '100 800'
   []
 []
 
