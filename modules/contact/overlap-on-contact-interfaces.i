@@ -325,6 +325,8 @@
   petsc_options = '-snes_ksp_ew'
   petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
   petsc_options_value = 'lu superlu_dist'
+  nl_rel_tol = 0
+  nl_abs_tol = 1e-2
 []
 
 [Outputs]
