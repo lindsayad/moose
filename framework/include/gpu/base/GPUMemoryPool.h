@@ -38,8 +38,6 @@ public:
   KOKKOS_FUNCTION MemoryChunk(const ::Kokkos::MemoryPool<MemSpace> & pool, size_t size)
     : _pool(pool), _size(size)
   {
-    KOKKOS_ASSERT(!pool.is_empty());
-
     auto ptr = pool.allocate(size);
 
     KOKKOS_ASSERT(ptr);
