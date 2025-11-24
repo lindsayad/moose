@@ -26,6 +26,11 @@ WCNSFVFluidHeatTransferPhysics::validParams()
       true,
       "Whether to check for known incompatibility between boundary conditions for "
       "the heat transport equation physics and other physics");
+  params.addParam<bool>(
+      "force_constant_cp",
+      false,
+      "Whether to force an assumption of a constant heat capacity even if using a fluid properties "
+      "object. This cannot be true if solving for enthalpy; we will error in that case.");
   params.addParamNamesToGroup("check_bc_compatibility", "Advanced");
 
   params.addParamNamesToGroup("energy_face_interpolation energy_scaling", "Numerical scheme");
@@ -508,6 +513,9 @@ WCNSFVFluidHeatTransferPhysics::addMaterials()
       params.set<UserObjectName>(NS::fluid) = getParam<UserObjectName>(NS::fluid);
     else
       paramError(NS::fluid, "Required when solving for enthalpy");
+    if (getParam<bool>("force_constant_cp"))
+      paramError("force_constant_cp",
+                 "Cannot force a constant heat capacity when solving for the enthalpy");
   }
   // the functor material defines the temperature
   else
@@ -516,7 +524,8 @@ WCNSFVFluidHeatTransferPhysics::addMaterials()
     params.set<MooseFunctorName>(NS::specific_enthalpy) = _fluid_enthalpy_name;
     if (isParamValid(NS::fluid))
     {
-      params.set<bool>("assumed_constant_cp") = false;
+      if (!getParam<bool>("force_constant_cp"))
+        params.set<bool>("assumed_constant_cp") = false;
       params.set<UserObjectName>(NS::fluid) = getParam<UserObjectName>(NS::fluid);
       params.set<MooseFunctorName>(NS::pressure) = _flow_equations_physics->getPressureName();
     }
