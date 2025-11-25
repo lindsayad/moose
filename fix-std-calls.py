@@ -81,27 +81,63 @@ def looks_like_function_header(header: str) -> bool:
     head = t.split("(")[0].split()[-1] if "(" in t else ""
     return head not in KW_BLOCK_HEADERS
 
-def find_function_block(src: str, err_line_idx0: int) -> tuple[int, int]:
-    lines = src.splitlines(True)
-    open_idx, close_idx = find_enclosing_block_bounds(src, err_line_idx0)
-    acc = 0; char_line = []
+def _compute_char_line_index(lines: list[str]) -> list[tuple[int,int]]:
+    acc = 0; out = []
     for i, ln in enumerate(lines):
-        char_line.append((acc, i)); acc += len(ln)
+        out.append((acc, i)); acc += len(ln)
+    return out
+
+def _header_text_before_open(src: str, lines: list[str], char_line: list[tuple[int,int]], open_idx: int, ctx_lines: int = 16) -> str:
+    # Find the line containing/opening the '{'
     open_line = 0
     for cp, ln in reversed(char_line):
-        if cp <= open_idx: open_line = ln; break
-    start_ctx = max(0, open_line - 8)
-    header_text = src[sum(len(x) for x in lines[:start_ctx]) : open_idx + 1]
-    if FUNC_SIG_RE.search(header_text) or looks_like_function_header(header_text):
-        return open_idx, close_idx
-    # one level outward
-    outer_line = max(0, open_line - 1)
-    open2, close2 = find_enclosing_block_bounds(src, outer_line)
-    if (open2, close2) != (open_idx, close_idx):
-        start_ctx2 = max(0, outer_line - 8)
-        header2 = src[sum(len(x) for x in lines[:start_ctx2]) : open2 + 1]
-        if FUNC_SIG_RE.search(header2) or looks_like_function_header(header2):
-            return open2, close2
+        if cp <= open_idx:
+            open_line = ln
+            break
+    start_ctx = max(0, open_line - ctx_lines)
+    return src[sum(len(x) for x in lines[:start_ctx]) : open_idx + 1]
+
+def find_function_block(src: str, err_line_idx0: int) -> tuple[int, int]:
+    """
+    Starting from the innermost enclosing block, repeatedly walk outward
+    until we find a function-like header. Falls back to the nearest block
+    if nothing looks like a function.
+    """
+    lines = src.splitlines(True)
+    char_line = _compute_char_line_index(lines)
+
+    # Initial (possibly inner) block
+    open_idx, close_idx = find_enclosing_block_bounds(src, err_line_idx0)
+
+    # Keep a record to avoid infinite loops
+    visited: set[tuple[int,int]] = set()
+
+    while True:
+        if (open_idx, close_idx) in visited:
+            break
+        visited.add((open_idx, close_idx))
+
+        header_text = _header_text_before_open(src, lines, char_line, open_idx)
+        if FUNC_SIG_RE.search(header_text) or looks_like_function_header(header_text):
+            return open_idx, close_idx
+
+        # Move one level outward: choose a line just before the current '{' line
+        # to force the next enclosing block to be the parent.
+        open_line = 0
+        for cp, ln in reversed(char_line):
+            if cp <= open_idx:
+                open_line = ln
+                break
+        outer_probe_line = max(0, open_line - 1)
+        new_open, new_close = find_enclosing_block_bounds(src, outer_probe_line)
+
+        # If we didn't find a different block, stop.
+        if (new_open, new_close) == (open_idx, close_idx):
+            break
+
+        open_idx, close_idx = new_open, new_close
+
+    # Fallback: return the original nearest block
     return open_idx, close_idx
 
 def already_has_using(block_src: str, name: str) -> bool:
