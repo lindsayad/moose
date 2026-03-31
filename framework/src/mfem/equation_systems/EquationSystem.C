@@ -411,6 +411,10 @@ void
 EquationSystem::FormJacobianMatrix(const mfem::Vector & u)
 {
   const mfem::BlockVector update_vector(const_cast<mfem::Vector &>(u), _block_true_offsets);
+  for (const auto i : make_range(_jacobian_blocks.NumRows()))
+    for (const auto j : make_range(_jacobian_blocks.NumCols()))
+      delete _jacobian_blocks(i, j);
+  _jacobian_blocks.DeleteAll();
   _jacobian_blocks.SetSize(_test_var_names.size(), _trial_var_names.size());
   _jacobian_blocks = nullptr;
 
