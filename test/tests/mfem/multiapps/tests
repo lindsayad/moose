@@ -32,17 +32,12 @@
   [MFEMFullSolveMultiApps]
     requirement = "The system shall support executing a sub-application solving an entire sub-problem:"
     [MFEM_full_solve_transient]
-      type = XMLDiff
+      type = CSVDiff
       input = 'full_solve_parent.i'
-      xmldiff = 'OutputData/full_solve_parent/Run0/Run0.pvd
-                  OutputData/full_solve_parent/Run0/Cycle000000/proc000000.vtu
-                  OutputData/full_solve_parent/Run0/Cycle000002/proc000000.vtu
-                  OutputData/full_solve_sub/Run0/Run0.pvd
-                  OutputData/full_solve_sub/Run0/Cycle000005/proc000000.vtu'
+      csvdiff = 'full_solve_parent.csv full_solve_sub.csv'
       detail = "with a transient problem running in the parent app."
       capabilities = 'mfem'
       compute_devices = 'cpu cuda'
-      max_parallel = 1 # schemadiff with multiple ranks
       recover = false
       restep = false
     []

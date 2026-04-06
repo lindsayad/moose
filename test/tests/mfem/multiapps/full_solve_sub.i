@@ -28,9 +28,10 @@
     type = MFEMDiffusionKernel
     variable = u
   []
-  [td]
-    type = MFEMTimeDerivativeMassKernel
+  [source]
+    type = MFEMDomainLFKernel
     variable = u
+    coefficient = forcing
   []
 []
 
@@ -39,13 +40,36 @@
     type = MFEMScalarDirichletBC
     variable = u
     boundary = left
-    coefficient = 0
+    coefficient = exact_solution
   []
   [right]
     type = MFEMScalarDirichletBC
     variable = u
     boundary = right
-    coefficient = 1
+    coefficient = exact_solution
+  []
+  [top]
+    type = MFEMScalarDirichletBC
+    variable = u
+    boundary = top
+    coefficient = exact_solution
+  []
+  [bottom]
+    type = MFEMScalarDirichletBC
+    variable = u
+    boundary = bottom
+    coefficient = exact_solution
+  []
+[]
+
+[Functions]
+  [exact_solution]
+    type = ParsedFunction
+    expression = 'x*x + y*y'
+  []
+  [forcing]
+    type = ParsedFunction
+    expression = '-4'
   []
 []
 
@@ -67,15 +91,22 @@
 []
 
 [Executioner]
-  type = MFEMTransient
-  num_steps = 2
-  dt = 0.01
+  type = MFEMSteady
+[]
+
+[Postprocessors]
+  [error]
+    type = MFEML2Error
+    variable = u
+    function = exact_solution
+    execute_on = TIMESTEP_END
+  []
 []
 
 [Outputs]
-  [ParaViewDataCollection]
-    type = MFEMParaViewDataCollection
-    file_base = OutputData/full_solve_sub
-    vtk_format = ASCII
+  [CSV]
+    type = CSV
+    execute_on = TIMESTEP_END
+    file_base = full_solve_sub
   []
 []
