@@ -31,6 +31,8 @@ MFEMTransient::MFEMTransient(const InputParameters & params)
     _mfem_problem_data(_mfem_problem.getProblemData()),
     _mfem_problem_solve(*this, getProblemOperators())
 {
+  _fixed_point_solve->setInnerSolve(_mfem_problem_solve);
+
   // If no ProblemOperators have been added by the user, add a default
   if (getProblemOperators().empty())
   {
@@ -62,6 +64,8 @@ MFEMTransient::init()
     problem_operator->SetGridFunctions();
     problem_operator->Init(_mfem_problem_data.f);
   }
+
+  _mfem_problem_solve.initialSetup();
 }
 
 void
