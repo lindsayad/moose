@@ -16,7 +16,7 @@ object at a time. Common examples include:
 - a linear solver together with a preconditioner
 - a nonlinear solver that drives the global solve and a separate linear
   solver used for Jacobian solves
-=
+
 ## Structure
 
 Each child block under `Solvers` names one solver object:
