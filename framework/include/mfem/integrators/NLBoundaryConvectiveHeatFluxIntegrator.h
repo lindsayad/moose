@@ -28,6 +28,7 @@ class NLBoundaryConvectiveHeatFluxIntegrator : public mfem::NonlinearFormIntegra
 public:
   NLBoundaryConvectiveHeatFluxIntegrator(mfem::Coefficient & k,
                                          mfem::Coefficient & dk_du,
+                                         mfem::Coefficient & duinf_du,
                                          mfem::Coefficient & gf_offset,
                                          mfem::Coefficient & gf);
 
@@ -44,10 +45,13 @@ protected:
   mfem::SumCoefficient _shifted_gf_coef;       // (u_inf-u)
   mfem::ProductCoefficient _k_uinf_coef;       // k(u)*u_inf
   mfem::ProductCoefficient _net_flux_du_coef;  // dk/du*(u-u_inf)
+  mfem::ProductCoefficient _k_duinf_du_coef;   // k(u) * du_inf/du
+  mfem::ProductCoefficient _duinf_du_flux_coef; // -k(u) * du_inf/du
   mfem::BoundaryLFIntegrator _inwards_flux;    // (k(u) u_inf, v)
   mfem::BoundaryMassIntegrator _outwards_flux; // (k(u) u, v)
   mfem::BoundaryMassIntegrator _jacobian_k_component;
   mfem::BoundaryMassIntegrator _jacobian_dk_du_component;
+  mfem::BoundaryMassIntegrator _jacobian_duinf_du_component;
   mfem::SumIntegrator _jacobian_action{0};
 };
 }

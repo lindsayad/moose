@@ -31,6 +31,7 @@ public:
 protected:
   mfem::Coefficient & _heat_transfer_coef;
   mfem::Coefficient & _d_heat_transfer_dT_coef;
+  mfem::Coefficient & _d_T_inf_dT_coef;
   mfem::Coefficient & _T_inf_coef;
   mfem::Coefficient & _T_coef;
 };

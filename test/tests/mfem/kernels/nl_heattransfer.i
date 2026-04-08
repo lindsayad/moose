@@ -49,6 +49,12 @@
     symbol_names = 'temperature'
     symbol_values = 'temperature'
   []
+  [dT_inf_dT]
+    type = MFEMParsedFunction
+    expression = '1'
+    symbol_names = 'temperature'
+    symbol_values = 'temperature'
+  []
 []
 
 [Solvers]
@@ -83,6 +89,7 @@
     variable = temperature
     boundary = 'right'
     T_infinity = T_inf
+    d_T_infinity_dT_coefficient = dT_inf_dT
     heat_transfer_coefficient = htc
     d_heat_transfer_dT_coefficient = dhtc_dT
   []
