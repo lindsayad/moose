@@ -73,6 +73,49 @@ ProblemOperatorBase::SetTrialVariablesFromTrueVectors()
     trial_var->SetFromTrueVector();
   }
 }
+
+void
+ProblemOperatorBase::SolveWithOperator(mfem::Operator & op,
+                                       const mfem::Vector & rhs,
+                                       mfem::Vector & x,
+                                       const bool nonlinear,
+                                       const std::function<void()> & prepare_linear_solver)
+{
+  if (nonlinear)
+  {
+    if (!_problem_data.nonlinear_solver)
+      mooseError("A nonlinear MFEM solve requires a nonlinear solver, but none was provided.");
+
+    auto & solver = *_problem_data.nonlinear_solver;
+    if (solver.usesExternalLinearSolver())
+    {
+      if (!_problem_data.jacobian_solver)
+        mooseError("The configured MFEM nonlinear solver requires an external linear solver, but "
+                   "none was provided.");
+      prepare_linear_solver();
+      solver.SetLinearSolver(_problem_data.jacobian_solver->getSolver());
+    }
+
+    solver.SetOperator(op);
+    solver.Mult(rhs, x);
+    return;
+  }
+
+  mooseAssert(!_problem_data.nonlinear_solver,
+              "Linear MFEM solves should not have a configured nonlinear solver.");
+
+  if (!_problem_data.jacobian_solver)
+    mooseError("A linear MFEM solve requires a linear solver, but none was provided.");
+
+  prepare_linear_solver();
+
+  mfem::NewtonSolver linear_solver(_problem.getComm());
+  linear_solver.SetSolver(_problem_data.jacobian_solver->getSolver());
+  linear_solver.SetOperator(op);
+  linear_solver.SetPrintLevel(0);
+  linear_solver.SetMaxIter(1);
+  linear_solver.Mult(rhs, x);
+}
 }
 
 #endif
