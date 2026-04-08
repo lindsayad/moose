@@ -27,10 +27,14 @@ MultiAppMFEMCopyTransfer::validParams()
   params.addRequiredParam<std::vector<VariableName>>("source_variable",
                                                      "Variable to transfer from");
   MooseEnum comp_opts("real imag", "real");
-  params.addParam<MooseEnum>("to_component", comp_opts,
-                             "Choose whether to copy into the real or imaginary part of a complex target");
-  params.addParam<MooseEnum>("from_component", comp_opts,
-                             "Choose whether to copy from the real or imaginary part of a complex source");
+  params.addParam<MooseEnum>(
+      "to_component",
+      comp_opts,
+      "Choose whether to copy into the real or imaginary part of a complex target");
+  params.addParam<MooseEnum>(
+      "from_component",
+      comp_opts,
+      "Choose whether to copy from the real or imaginary part of a complex source");
   params.addClassDescription("Copies variable values from one MFEM application to another");
   return params;
 }
@@ -105,7 +109,8 @@ MultiAppMFEMCopyTransfer::transfer(MFEMProblem & to_problem, MFEMProblem & from_
     {
       // Copy real source into chosen component of complex target
       mfem::ParGridFunction & from_pf = *from_problem.getProblemData().gridfunctions.Get(from_name);
-      mfem::ParComplexGridFunction & to_cpf = *to_problem.getProblemData().cmplx_gridfunctions.Get(to_name);
+      mfem::ParComplexGridFunction & to_cpf =
+          *to_problem.getProblemData().cmplx_gridfunctions.Get(to_name);
       mfem::ParGridFunction & target_component = _to_imag ? to_cpf.imag() : to_cpf.real();
       if (from_pf.Size() != target_component.Size())
         mooseError("'", from_name, "' and '", to_name, "' differ in no. of DoFs.");
@@ -114,7 +119,8 @@ MultiAppMFEMCopyTransfer::transfer(MFEMProblem & to_problem, MFEMProblem & from_
     else if (from_is_cmplx && to_is_real)
     {
       // Copy complex source's selected component into real target
-      mfem::ParComplexGridFunction & from_cpf = *from_problem.getProblemData().cmplx_gridfunctions.Get(from_name);
+      mfem::ParComplexGridFunction & from_cpf =
+          *from_problem.getProblemData().cmplx_gridfunctions.Get(from_name);
       mfem::ParGridFunction & to_pf = *to_problem.getProblemData().gridfunctions.Get(to_name);
       mfem::ParGridFunction & source_component = _from_imag ? from_cpf.imag() : from_cpf.real();
       if (source_component.Size() != to_pf.Size())
@@ -123,7 +129,10 @@ MultiAppMFEMCopyTransfer::transfer(MFEMProblem & to_problem, MFEMProblem & from_
     }
     else
     {
-      mooseError("No real or complex variable named '", from_name, "' or '", to_name,
+      mooseError("No real or complex variable named '",
+                 from_name,
+                 "' or '",
+                 to_name,
                  "' found or unsupported transfer combination.");
     }
   }
