@@ -18,8 +18,11 @@
 #include "MFEMVectorBoundaryIntegratedBC.h"
 #include "MFEMBoundaryNormalIntegratedBC.h"
 #include "MFEMConvectiveHeatFluxBC.h"
+#include "NLBoundaryConvectiveHeatFluxIntegrator.h"
 #include "MFEMDiffusionKernel.h"
 #include "MFEMIntegratedBC.h"
+
+#include <functional>
 
 namespace
 {
@@ -45,6 +48,24 @@ public:
     elmat.SetSize(el1.GetDof());
     elmat = 0.0;
   }
+};
+
+class NonlinearGridFunctionCoefficient : public mfem::Coefficient
+{
+public:
+  NonlinearGridFunctionCoefficient(mfem::GridFunction & gf, std::function<double(double)> func)
+    : _gf(gf), _func(std::move(func))
+  {
+  }
+
+  double Eval(mfem::ElementTransformation & T, const mfem::IntegrationPoint & ip) override
+  {
+    return _func(_gf.GetValue(T, ip));
+  }
+
+private:
+  mfem::GridFunction & _gf;
+  std::function<double(double)> _func;
 };
 
 class TestOffDiagonalLinearIntegratedBC : public MFEMIntegratedBC
@@ -269,6 +290,67 @@ TEST_F(MFEMIntegratedBCTest, MFEMConvectiveHeatFluxBC)
       dynamic_cast<mfem::BoundaryMassIntegrator *>(integrated_bc.createBFIntegrator());
   ASSERT_NE(blf_integrator, nullptr);
   delete blf_integrator;
+}
+
+TEST_F(MFEMIntegratedBCTest, NLBoundaryConvectiveHeatFluxIntegratorJacobianMatchesFiniteDifference)
+{
+  mfem::Mesh mesh = mfem::Mesh::MakeCartesian2D(1, 1, mfem::Element::QUADRILATERAL, true, 1.0, 1.0);
+  mfem::H1_FECollection fec(1, mesh.Dimension());
+  mfem::FiniteElementSpace fespace(&mesh, &fec);
+
+  mfem::GridFunction gf(&fespace);
+  gf = 0.0;
+
+  const int be = 0;
+  mfem::Array<int> vdofs;
+  fespace.GetBdrElementVDofs(be, vdofs);
+
+  mfem::Vector elfun(vdofs.Size());
+  elfun(0) = 2.0;
+  elfun(1) = 3.0;
+  gf.SetSubVector(vdofs, elfun);
+
+  NonlinearGridFunctionCoefficient htc(gf, [](double u) { return 1.0 + 0.5 * u; });
+  mfem::ConstantCoefficient dhtc_dT(0.5);
+  mfem::ConstantCoefficient dTinf_dT(1.0);
+  NonlinearGridFunctionCoefficient Tinf(gf, [](double u) { return u + 1.0; });
+  mfem::GridFunctionCoefficient T(&gf);
+
+  Moose::MFEM::NLBoundaryConvectiveHeatFluxIntegrator integ(htc, dhtc_dT, dTinf_dT, Tinf, T);
+
+  const auto * fe = fespace.GetBE(be);
+  auto * T_be = fespace.GetBdrElementTransformation(be);
+  ASSERT_NE(fe, nullptr);
+  ASSERT_NE(T_be, nullptr);
+
+  mfem::DenseMatrix jacobian_numeric;
+  integ.AssembleElementGrad(*fe, *T_be, elfun, jacobian_numeric);
+
+  mfem::DenseMatrix jacobian_fd(fe->GetDof());
+  jacobian_fd = 0.0;
+
+  const double eps = 1e-7;
+  for (int j = 0; j < fe->GetDof(); ++j)
+  {
+    mfem::Vector elfun_plus(elfun), elfun_minus(elfun);
+    elfun_plus(j) += eps;
+    elfun_minus(j) -= eps;
+
+    gf.SetSubVector(vdofs, elfun_plus);
+    mfem::Vector residual_plus;
+    integ.AssembleElementVector(*fe, *T_be, elfun_plus, residual_plus);
+
+    gf.SetSubVector(vdofs, elfun_minus);
+    mfem::Vector residual_minus;
+    integ.AssembleElementVector(*fe, *T_be, elfun_minus, residual_minus);
+
+    residual_plus -= residual_minus;
+    residual_plus /= (2.0 * eps);
+    jacobian_fd.SetCol(j, residual_plus);
+  }
+
+  jacobian_numeric -= jacobian_fd;
+  EXPECT_NEAR(jacobian_numeric.MaxMaxNorm(), 0.0, 1e-8);
 }
 
 TEST_F(MFEMIntegratedBCTest, MFEMVectorBoundaryIntegratedConstantBC)
