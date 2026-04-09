@@ -35,7 +35,7 @@ EquationSystemProblemOperator::Init(mfem::BlockVector & X)
 void
 EquationSystemProblemOperator::Solve()
 {
-  GetEquationSystem()->FormLinearSystem(_true_x, _true_rhs);
+  GetEquationSystem()->AssembleSystem(_true_x, _true_rhs);
   SolveWithOperator(
       *GetEquationSystem(),
       _true_rhs,
