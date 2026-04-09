@@ -375,11 +375,8 @@ EquationSystem::FormSystemMatrix(mfem::OperatorHandle & op,
 }
 
 void
-EquationSystem::FormLinearSystem(mfem::BlockVector & trueX, mfem::BlockVector & trueRHS)
+EquationSystem::AssembleSystem(mfem::BlockVector & trueX, mfem::BlockVector & trueRHS)
 {
-  if (_non_linear && _solver_requires_gradient && _assembly_level != mfem::AssemblyLevel::LEGACY)
-    mooseError("Nonlinear solves with modern MFEM assembly levels are not currently implemented.");
-
   height = trueX.Size();
   width = trueRHS.Size();
   // Store block offsets
@@ -463,7 +460,12 @@ mfem::Operator &
 EquationSystem::GetGradient(const mfem::Vector & u) const
 {
   if (_non_linear)
+  {
+    if (_assembly_level != mfem::AssemblyLevel::LEGACY)
+      mooseError("MFEM nonlinear solvers that require GetGradient() currently require legacy "
+                 "assembly in EquationSystem.");
     const_cast<EquationSystem *>(this)->FormJacobianMatrix(u);
+  }
   else
     _jacobian = _linear_operator;
 
