@@ -83,8 +83,8 @@ MFEMPetscNonlinearSolver::SetOperator(const mfem::Operator & op)
 void
 MFEMPetscNonlinearSolver::SetLinearSolver(mfem::Solver &)
 {
-  // mfem::PetscNonlinearSolver owns its internal SNES/KSP stack and does not expose
-  // an API for injecting an external mfem::Solver-backed linear solver.
+  mooseError("MFEMPetscNonlinearSolver does not support an external MFEM linear solver. "
+             "Configure PETSc KSP/PC behavior through PETSc options instead.");
 }
 
 void
