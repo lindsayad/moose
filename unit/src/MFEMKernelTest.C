@@ -90,6 +90,24 @@ public:
   }
 };
 
+class TestDiagonalNonlinearKernel : public MFEMKernel
+{
+public:
+  static InputParameters validParams()
+  {
+    auto params = MFEMKernel::validParams();
+    params.addClassDescription("Test-only MFEM kernel with a diagonal nonlinear contribution.");
+    return params;
+  }
+
+  TestDiagonalNonlinearKernel(const InputParameters & parameters) : MFEMKernel(parameters) {}
+
+  mfem::NonlinearFormIntegrator * createNLIntegrator() override
+  {
+    return new ZeroNonlinearIntegrator();
+  }
+};
+
 class TestEquationSystem : public Moose::MFEM::EquationSystem
 {
 public:
@@ -100,11 +118,14 @@ public:
     Init(gridfunctions, cmplx_gridfunctions, assembly_level);
     BuildEquationSystem();
   }
+
+  void setAssemblyLevel(mfem::AssemblyLevel assembly_level) { _assembly_level = assembly_level; }
 };
 }
 
 registerMooseObject("MooseUnitApp", TestOffDiagonalLinearKernel);
 registerMooseObject("MooseUnitApp", TestOffDiagonalNonlinearKernel);
+registerMooseObject("MooseUnitApp", TestDiagonalNonlinearKernel);
 
 class MFEMKernelTest : public MFEMObjectUnitTest
 {
@@ -394,6 +415,48 @@ TEST_F(MFEMKernelTest, AcceptsLinearOffDiagonalKernelWhenBuildingEquationSystem)
   EXPECT_NO_THROW(eqn_system.initAndBuild(_mfem_problem->getProblemData().gridfunctions,
                                           _mfem_problem->getProblemData().cmplx_gridfunctions,
                                           mfem::AssemblyLevel::LEGACY));
+}
+
+TEST_F(MFEMKernelTest, RejectsGetGradientForModernAssemblyWhenGradientIsRequired)
+{
+  InputParameters linear_params = _factory.getValidParams("MFEMDiffusionKernel");
+  linear_params.set<VariableName>("variable") = "test_variable_name";
+  linear_params.set<MFEMScalarCoefficientName>("coefficient") = "1.0";
+
+  InputParameters nonlinear_params = _factory.getValidParams("TestDiagonalNonlinearKernel");
+  nonlinear_params.set<VariableName>("variable") = "test_variable_name";
+
+  auto linear =
+      addSharedObject<MFEMDiffusionKernel>("MFEMDiffusionKernel", "diag_linear", linear_params);
+  auto nonlinear = addSharedObject<TestDiagonalNonlinearKernel>(
+      "TestDiagonalNonlinearKernel", "diag_nonlinear", nonlinear_params);
+
+  TestEquationSystem eqn_system;
+  eqn_system.AddKernel(linear);
+  eqn_system.AddKernel(nonlinear);
+  eqn_system.SetSolverRequiresGradient(true);
+  eqn_system.initAndBuild(_mfem_problem->getProblemData().gridfunctions,
+                          _mfem_problem->getProblemData().cmplx_gridfunctions,
+                          mfem::AssemblyLevel::LEGACY);
+  eqn_system.setAssemblyLevel(mfem::AssemblyLevel::FULL);
+
+  // The GetGradient() guard fires before the vector argument is accessed, so a
+  // default-constructed (empty) vector is sufficient to reach it. Skipping
+  // AssembleSystem avoids putting _h_blocks and _linear_operator into the
+  // mixed-level state that caused teardown failures in earlier iterations of
+  // this test, allowing eqn_system to be stack-allocated and destroyed normally.
+  const mfem::Vector dummy;
+  try
+  {
+    eqn_system.GetGradient(dummy);
+    FAIL() << "Expected GetGradient to reject modern assembly when a gradient is required";
+  }
+  catch (const std::runtime_error & error)
+  {
+    const std::string message(error.what());
+    EXPECT_TRUE(message.find("require GetGradient()") != std::string::npos);
+    EXPECT_TRUE(message.find("require legacy assembly") != std::string::npos);
+  }
 }
 
 #endif
