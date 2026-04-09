@@ -169,22 +169,25 @@ buildMFEMMesh(MooseMesh & mesh, bool fallback, bool first_order)
     }
   }
 
-  // Now use the serial mesh to create a ParMesh
-
-  auto partitioning = getMeshPartitioning(mesh.getMesh());
-  int * partitioning_raw_ptr = partitioning ? partitioning.get() : nullptr;
+  // Compute MFEM's own METIS partitioning on the serial mesh before constructing
+  // the ParMesh. Passing it explicitly means the ParMesh uses exactly this partition
+  // rather than recomputing independently, which lets convertSerialDofMappingsToParallel
+  // (below) use the same array to determine which serial elements are local.
+  int num_procs;
+  MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+  std::unique_ptr<int[]> mfem_partitioning(_mfem_mesh->GeneratePartitioning(num_procs));
 
   auto _mfem_par_mesh =
-      std::make_shared<mfem::ParMesh>(MPI_COMM_WORLD, *_mfem_mesh, partitioning_raw_ptr, 1);
+      std::make_shared<mfem::ParMesh>(MPI_COMM_WORLD, *_mfem_mesh, mfem_partitioning.get());
 
   // If we have a higher-order mesh then we need to figure-out the mapping from the libMesh node ID
   // to the MFEM node ID since this will have changed.
   // No need to change dof mappings if running on a single processor or if a first order element.
   if (mesh.n_processors() > 1 && block_info.order() > 1)
   {
-    convertSerialDofMappingsToParallel(mesh.getMesh(),
-                                       *_mfem_mesh.get(),
+    convertSerialDofMappingsToParallel(*_mfem_mesh.get(),
                                        *_mfem_par_mesh.get(),
+                                       mfem_partitioning.get(),
                                        _libmesh_global_node_id_for_mfem_local_node_id,
                                        _mfem_local_node_id_for_libmesh_global_node_id);
   }
@@ -388,9 +391,9 @@ buildUniqueCornerNodeIDs(const CubitBlockInfo & block_info,
 
 void
 convertSerialDofMappingsToParallel(
-    const MeshBase & libmesh,
     const mfem::Mesh & serial_mesh,
     const mfem::ParMesh & parallel_mesh,
+    const int * partitioning,
     std::map<int, int> & libmesh_global_node_id_for_mfem_local_node_id,
     std::map<int, int> & mfem_local_node_id_for_libmesh_global_node_id)
 {
@@ -400,6 +403,21 @@ convertSerialDofMappingsToParallel(
 
   mooseAssert(serial_fespace != nullptr && parallel_fespace != nullptr, "Nodal FESpace is NULL!");
 
+  // Build the ordered list of serial element indices that belong to this rank.
+  // When ParMesh is constructed with an explicit partitioning array, its local
+  // elements are exactly the serial elements assigned to this rank, in ascending
+  // serial-index order. Reconstructing that list here gives us the correct
+  // serial element index for each parallel local element index.
+  const int my_rank = parallel_mesh.GetMyRank();
+  std::vector<int> local_serial_elements;
+  local_serial_elements.reserve(parallel_mesh.GetNE());
+  for (int i = 0; i < serial_mesh.GetNE(); ++i)
+    if (partitioning[i] == my_rank)
+      local_serial_elements.push_back(i);
+
+  mooseAssert((int)local_serial_elements.size() == parallel_mesh.GetNE(),
+              "Local serial and parallel element counts do not match.");
+
   // Important notes:
   // 1. LibMesh: node id is unique even across multiple processors.
   // 2. MFEM: "local dof": belongs to the processor.
@@ -408,16 +426,13 @@ convertSerialDofMappingsToParallel(
   std::map<int, int> _libmesh_global_node_id_for_mfem_local_node_id;
   std::map<int, int> _mfem_local_node_id_for_libmesh_global_node_id;
 
-  // Match-up the libMesh elements on the processor with the MFEM elements on the ParMesh.
-  int counter = 0;
-  for (auto element_ptr : libmesh.local_element_ptr_range())
+  for (int local_element_id = 0; local_element_id < parallel_mesh.GetNE(); ++local_element_id)
   {
-    const auto global_element_id = element_ptr->id();
-    const auto local_element_id = counter++;
+    const int serial_element_id = local_serial_elements[local_element_id];
 
     // Get the LOCAL dofs of the element for both the serial and ParMesh for this element.
     mfem::Array<int> serial_local_dofs;
-    serial_fespace->GetElementDofs(global_element_id, serial_local_dofs);
+    serial_fespace->GetElementDofs(serial_element_id, serial_local_dofs);
 
     mfem::Array<int> parallel_local_dofs;
     parallel_fespace->GetElementDofs(local_element_id, parallel_local_dofs);
@@ -428,17 +443,10 @@ convertSerialDofMappingsToParallel(
 
     const auto num_local_dofs = serial_local_dofs.Size();
 
-    std::map<int, int> serial_dof_for_parallel_dof;
     std::map<int, int> parallel_dof_for_serial_dof;
 
     for (int i = 0; i < num_local_dofs; i++)
-    {
-      auto parallel_dof = parallel_local_dofs[i];
-      auto serial_dof = serial_local_dofs[i];
-
-      serial_dof_for_parallel_dof[parallel_dof] = serial_dof;
-      parallel_dof_for_serial_dof[serial_dof] = parallel_dof;
-    }
+      parallel_dof_for_serial_dof[serial_local_dofs[i]] = parallel_local_dofs[i];
 
     // Iterate over serial local dofs and update mappings.
     for (auto dof : serial_local_dofs)
@@ -568,31 +576,6 @@ getBlockIDsForBoundaryID(const std::map<int, std::vector<int>> & element_ids_for
   }
 
   return block_ids_for_boundary_id;
-}
-
-std::unique_ptr<int[]>
-getMeshPartitioning(MeshBase & libmesh)
-{
-  // Call allgather because we need all element information on each processor.
-  libmesh.allgather();
-
-  const int num_elements = libmesh.n_elem();
-  if (num_elements < 1)
-  {
-    return nullptr;
-  }
-
-  int * mesh_partitioning = new int[num_elements];
-
-  for (auto element : libmesh.element_ptr_range())
-  {
-    int element_id = element->id();
-
-    mesh_partitioning[element_id] = element->processor_id();
-  }
-
-  // Wrap-up in a unique pointer.
-  return std::unique_ptr<int[]>(mesh_partitioning);
 }
 
 #endif

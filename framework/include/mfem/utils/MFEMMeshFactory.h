@@ -85,19 +85,15 @@ std::vector<int> buildUniqueCornerNodeIDs(const CubitBlockInfo & block_info,
                                           const IDMap & node_ids_for_element_id);
 
 /**
- * Required for converting an MFEMMesh to an MFEMParMesh. This method updates the two-way mappings
- * so that the libMesh global node IDs now correctly map to the LOCAL MFEM dofs for the
- * MFEMParMesh. This method is called internally after creating an MFEMParMesh from an MFEMMesh.
- * NB: failure to call this method will result in the synchronization steps failing.
- *
- * num_procs can be found by calling n_processors() on the MooseMesh object calling this function.
- * FIXME: Is it possible to get this info from the MPI communicator used by the MFEM meshes? I
- * suspect so. Need to look at where those communicators are obtained from.
+ * Updates the two-way mappings between libMesh global node IDs and MFEM local DoF indices so
+ * that they reflect the parallel DoF numbering of the ParMesh rather than the serial one.
+ * The partitioning array (indexed by serial element index, value = owning rank) must be the
+ * same array that was used to construct the ParMesh.
  */
 void convertSerialDofMappingsToParallel(
-    const MeshBase & libmesh,
     const mfem::Mesh & serial_mesh,
     const mfem::ParMesh & parallel_mesh,
+    const int * partitioning,
     std::map<int, int> & libmesh_global_node_id_for_mfem_local_node_id,
     std::map<int, int> & mfem_local_node_id_for_libmesh_global_node_id);
 
@@ -135,11 +131,5 @@ getBlockIDForElementID(const std::map<int, std::vector<int>> & element_ids_for_b
  */
 IDMap getBlockIDsForBoundaryID(const std::map<int, std::vector<int>> & element_ids_for_block_id,
                                const std::map<int, std::vector<int>> & element_ids_for_boundary_id);
-
-/**
- * Returns the libMesh partitioning. The "raw" pointer is wrapped up in a unique
- * pointer.
- */
-std::unique_ptr<int[]> getMeshPartitioning(MeshBase & libmesh);
 
 #endif
