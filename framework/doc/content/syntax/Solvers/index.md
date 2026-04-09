@@ -66,6 +66,6 @@ solver configuration extensible.
 
 ## See Also
 
-- [MFEM solver objects](source/mfem/solvers/MFEMSolverBase.md)
+- [MFEM solver base class](source/mfem/solvers/MFEMSolverBase.md)
 - [MFEM Newton nonlinear solver](source/mfem/solvers/MFEMNewtonNonlinearSolver.md)
 - [MFEM PETSc nonlinear solver](source/mfem/solvers/MFEMPetscNonlinearSolver.md)

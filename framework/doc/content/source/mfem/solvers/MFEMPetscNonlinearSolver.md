@@ -13,7 +13,7 @@ internal PETSc KSP/PC stack rather than using an external MFEM linear solver.
 PETSc options may be supplied through the object parameters, and `petsc_options_prefix` controls
 the prefix applied to the owned SNES object and its sub-objects.
 
-Define this object in the [Solvers](source/mfem/solvers/MFEMSolverBase.md) block.
+Define this object in the [`Solvers`](syntax/Solvers/index.md) block.
 
 !syntax parameters /Solvers/MFEMPetscNonlinearSolver
 

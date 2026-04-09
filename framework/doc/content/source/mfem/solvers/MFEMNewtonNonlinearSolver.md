@@ -9,7 +9,7 @@ Defines and builds an `mfem::NewtonSolver` to solve nonlinear MFEM equation syst
 This solver requires Jacobian information from the MFEM operator and uses the externally configured
 MFEM linear solver for the inner linear solves.
 
-Define this object in the [`Solvers`](source/mfem/solvers/MFEMSolverBase.md) block.
+Define this object in the [`Solvers`](syntax/Solvers/index.md) block.
 
 !syntax parameters /Solvers/MFEMNewtonNonlinearSolver
 

@@ -4,8 +4,8 @@
 
 ## Overview
 
-Action called to add a linear solver to an MFEM problem, parsing content inside a
-[`Solver`](source/mfem/solvers/MFEMSolverBase.md) block in the user input. Only has an effect if the
+Action called to add an MFEM solver object to an MFEM problem, parsing content inside a
+[`Solvers`](syntax/Solvers/index.md) block in the user input. Only has an effect if the
 `Problem` type is set to [`MFEMProblem`](source/mfem/problem/MFEMProblem.md).
 
 ## Example Input File Syntax
