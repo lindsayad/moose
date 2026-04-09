@@ -344,6 +344,9 @@ buildElementAndNodeIDs(MeshBase & libmesh,
       node_ids_for_element_id[element_id] = std::move(element_node_ids);
     }
 
+    // Sort by element ID so the ordering is consistent with the Exodus file order,
+    // regardless of how libmesh iterates after allgather() on a distributed mesh.
+    std::sort(elements_in_block.begin(), elements_in_block.end());
     elements_in_block.shrink_to_fit();
 
     // Add to map.
