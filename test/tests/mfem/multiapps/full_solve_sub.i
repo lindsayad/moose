@@ -65,10 +65,12 @@
 [Functions]
   [exact_solution]
     type = ParsedFunction
+    # Chosen exact solution for the steady Poisson problem, u(x,y) = x^2 + y^2.
     expression = 'x*x + y*y'
   []
   [forcing]
     type = ParsedFunction
+    # For -Delta u = f, this exact solution gives f = -(2 + 2) = -4.
     expression = '-4'
   []
 []
