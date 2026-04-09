@@ -412,9 +412,8 @@ EquationSystem::Mult(const mfem::Vector & sol, mfem::Vector & residual) const
 void
 EquationSystem::ComputeNonlinearResidual(const mfem::Vector & sol, mfem::Vector & residual) const
 {
+  mooseAssert(_non_linear, "Should not be calling this method if our forms are not nonlinear");
   residual = 0.0;
-  if (!_non_linear)
-    return;
 
   const mfem::BlockVector block_solution(const_cast<mfem::Vector &>(sol), _block_true_offsets);
   SetTrialVariablesFromTrueVectors(block_solution);
