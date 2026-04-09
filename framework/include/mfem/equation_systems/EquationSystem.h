@@ -54,8 +54,6 @@ public:
   virtual void ComputeNonlinearResidual(const mfem::Vector & u, mfem::Vector & residual) const;
   /// Get Jacobian at the provided vector of true DoFs of trial variables
   mfem::Operator & GetGradient(const mfem::Vector & u) const override;
-  /// Return the assembled linear operator used by the equation system.
-  mfem::Operator & GetLinearOperator() const { return *_linear_operator; }
 
   /// Update variable from solution vector after solve
   virtual void SetTrialVariablesFromTrueVectors(const mfem::BlockVector & trueX) const;
