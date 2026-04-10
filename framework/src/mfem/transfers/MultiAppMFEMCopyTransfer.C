@@ -67,6 +67,20 @@ MultiAppMFEMCopyTransfer::transfer(MFEMProblem & to_problem, MFEMProblem & from_
   if (numToVar() != numFromVar())
     mooseError("Number of variables transferred must be same in both systems.");
 
+  // This transfer copies local MFEM vectors directly and requires both apps to have
+  // identical local DoF layouts. That is only guaranteed when both apps build their
+  // mfem::ParMesh via the same path: either both via MFEMMesh (native MFEM reader) or
+  // both via LibMesh mesh conversion. Mixing the two paths can produce different METIS
+  // partitions and therefore different local DoF counts.
+  const bool from_is_mfem_mesh = (from_problem.mesh().type() == "MFEMMesh");
+  const bool to_is_mfem_mesh = (to_problem.mesh().type() == "MFEMMesh");
+  if (from_is_mfem_mesh != to_is_mfem_mesh)
+    mooseError(type(),
+               " requires both apps to build their MFEM mesh via the same path. "
+               "Either both should use MFEMMesh or both should use a LibMesh-based mesh "
+               "(e.g. FileMesh). Mixing the two gives different METIS partitions and "
+               "mismatched local DoF counts.");
+
   auto getGF = [&](MFEMProblem & problem, const std::string & name) -> mfem::Vector &
   {
     if (problem.getProblemData().gridfunctions.Has(name))

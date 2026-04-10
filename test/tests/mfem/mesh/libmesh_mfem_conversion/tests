@@ -22,9 +22,8 @@
       capabilities = 'mfem'
       recover = false
       compute_devices = 'cpu cuda'
-      cli_args = 'Mesh/file=../hex-8.e '
-                'Outputs/file_base=libmesh_to_mfem_mesh_hexes '
-                'mfem_app0:Mesh/file=../hex-8.e '
+      cli_args = 'Mesh/file=../hex-8.e
+                 Outputs/file_base=libmesh_to_mfem_mesh_hexes'
     []
     [H1Hex2]
       type = CSVDiff
@@ -35,9 +34,8 @@
       capabilities = 'mfem'
       recover = false
       compute_devices = 'cpu cuda'
-      cli_args = 'Mesh/file=../hex-27.e '
-                'Outputs/file_base=libmesh_to_mfem_mesh_hexes2 '
-                'mfem_app0:Mesh/file=../hex-27.e '
+      cli_args = 'Mesh/file=../hex-27.e
+                 Outputs/file_base=libmesh_to_mfem_mesh_hexes2'
     []
     [H1Tet]
       type = CSVDiff
@@ -48,9 +46,8 @@
       capabilities = 'mfem'
       recover = false
       compute_devices = 'cpu cuda'
-      cli_args = 'Mesh/file=../tet-4.e '
-                'Outputs/file_base=libmesh_to_mfem_mesh_tets '
-                'mfem_app0:Mesh/file=../tet-4.e '
+      cli_args = 'Mesh/file=../tet-4.e
+                 Outputs/file_base=libmesh_to_mfem_mesh_tets'
     []
     [H1Tet2]
       type = CSVDiff
@@ -61,9 +58,8 @@
       capabilities = 'mfem'
       recover = false
       compute_devices = 'cpu cuda'
-      cli_args = 'Mesh/file=../tet-10.e '
-                'Outputs/file_base=libmesh_to_mfem_mesh_tets2 '
-                'mfem_app0:Mesh/file=../tet-10.e '
+      cli_args = 'Mesh/file=../tet-10.e
+                 Outputs/file_base=libmesh_to_mfem_mesh_tets2'
     []
     [H1Pyr]
       type = CSVDiff
@@ -74,9 +70,8 @@
       capabilities = 'mfem'
       recover = false
       compute_devices = 'cpu cuda'
-      cli_args = 'Mesh/file=../pyramid-5.e '
-                'Outputs/file_base=libmesh_to_mfem_mesh_pyramids '
-                'mfem_app0:Mesh/file=../pyramid-5.e '
+      cli_args = 'Mesh/file=../pyramid-5.e
+                 Outputs/file_base=libmesh_to_mfem_mesh_pyramids'
     []
     [H1Wedge]
       type = CSVDiff
@@ -87,22 +82,20 @@
       capabilities = 'mfem'
       recover = false
       compute_devices = 'cpu cuda'
-      cli_args = 'Mesh/file=../wedge-6.e '
-                'Outputs/file_base=libmesh_to_mfem_mesh_wedges '
-                'mfem_app0:Mesh/file=../wedge-6.e '
+      cli_args = 'Mesh/file=../wedge-6.e
+                 Outputs/file_base=libmesh_to_mfem_mesh_wedges'
     []
     [H1Wedge2]
       type = CSVDiff
       input = libmesh_parent.i
       csvdiff = 'libmesh_to_mfem_mesh_wedges2.csv'
-      detail = 'and second order wdges.'
+      detail = 'and second order wedges.'
       abs_zero = 1e-8
       capabilities = 'mfem'
       recover = false
       compute_devices = 'cpu cuda'
-      cli_args = 'Mesh/file=../wedge-18.e '
-                'Outputs/file_base=libmesh_to_mfem_mesh_wedges2 '
-                'mfem_app0:Mesh/file=../wedge-18.e '
+      cli_args = 'Mesh/file=../wedge-18.e
+                 Outputs/file_base=libmesh_to_mfem_mesh_wedges2'
     []
   []
 []

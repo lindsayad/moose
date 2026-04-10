@@ -105,13 +105,6 @@ buildMFEMMesh(MooseMesh & mesh, bool fallback, bool first_order)
   auto block_ids_for_boundary_id =
       getBlockIDsForBoundaryID(element_ids_for_block_id, element_ids_for_boundary_id);
 
-  // FIXME: Alex's libmeshtomfemmesh branch
-  // (https://github.com/idaholab/moose/compare/next...alexanderianblair:platypus-moose:alexanderianblair/libmeshtomfemmesh)
-  // moves some things out of the LibmeshMFEMMesh constructor and into
-  // this function. I guess a benefit to doing that is it makes it
-  // clear what can be achieved with public methods and what still
-  // requires access to protected members.
-
   // 11.
   // Call the correct initializer.
 
