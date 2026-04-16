@@ -197,7 +197,7 @@ public:
    * @param name The name of the parameter to test
    */
   template <typename T>
-  inline bool have_parameter(const std::string & name) const
+  inline bool haveParameter(const std::string & name) const
   {
     return _pars.have_parameter<T>(name);
   }
@@ -422,7 +422,7 @@ template <typename T>
 const T *
 MooseBase::queryParam(const std::string & name) const
 {
-  return have_parameter<T>(name) && isParamValid(name) ? &getParam<T>(name) : nullptr;
+  return haveParameter<T>(name) && isParamValid(name) ? &getParam<T>(name) : nullptr;
 }
 
 template <typename T>
