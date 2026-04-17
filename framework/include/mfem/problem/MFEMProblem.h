@@ -343,17 +343,16 @@ public:
   }
 
   /**
-   * Retrieve an MFEM object from the warehouse by system and name.
+   * Retrieve an MFEM object from the warehouse by type and name.
    */
   template <typename T>
-  T & getMFEMObject(const std::string & system,
-                    const std::string & name,
-                    const THREAD_ID tid = 0) const;
+  T & getMFEMObject(const std::string & name, const THREAD_ID tid = 0) const;
 
   /**
-   * Determine whether an MFEM object with the supplied system and name exists.
+   * Determine whether an MFEM object with the supplied type and name exists.
    */
-  bool hasMFEMObject(const std::string & system, const std::string & name) const;
+  template <typename T>
+  bool hasMFEMObject(const std::string & name, const THREAD_ID tid = 0) const;
 
   /**
    * Enumerates the supported numeric representations for MFEM variables and operators.
@@ -378,10 +377,9 @@ protected:
 
 template <typename T>
 T &
-MFEMProblem::getMFEMObject(const std::string & system,
-                           const std::string & name,
-                           const THREAD_ID tid) const
+MFEMProblem::getMFEMObject(const std::string & name, const THREAD_ID tid) const
 {
+  static const std::string system = T::validParams().getSystemAttributeName();
   std::vector<T *> objs;
   theWarehouse()
       .query()
@@ -390,9 +388,24 @@ MFEMProblem::getMFEMObject(const std::string & system,
       .condition<AttribName>(name)
       .queryInto(objs);
   if (objs.empty())
-    mooseError("Unable to find MFEM object with system '" + system + "' and name '" + name + "'");
+    mooseError("No MFEM object '" + name + "' of type '" + MooseUtils::prettyCppType<T>() + "'");
   mooseAssert(objs.size() == 1, "Shouldn't find more than one object with given system and name");
   return *(objs[0]);
+}
+
+template <typename T>
+bool
+MFEMProblem::hasMFEMObject(const std::string & name, const THREAD_ID tid) const
+{
+  static const std::string system = T::validParams().getSystemAttributeName();
+  std::vector<T *> objs;
+  theWarehouse()
+      .query()
+      .condition<AttribSystem>(system)
+      .condition<AttribThread>(tid)
+      .condition<AttribName>(name)
+      .queryInto(objs);
+  return !objs.empty();
 }
 
 #endif

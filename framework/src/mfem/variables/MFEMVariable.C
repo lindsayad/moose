@@ -36,8 +36,7 @@ MFEMVariable::validParams()
 
 MFEMVariable::MFEMVariable(const InputParameters & parameters)
   : MFEMObject(parameters),
-    _fespace(getMFEMProblem().getMFEMObject<MFEMFESpace>("MFEMFESpace",
-                                                         getParam<MFEMFESpaceName>("fespace"))),
+    _fespace(getMFEMProblem().getMFEMObject<MFEMFESpace>(getParam<MFEMFESpaceName>("fespace"))),
     _gridfunction(buildGridFunction()),
     _time_derivative_name(
         isParamValid("time_derivative")

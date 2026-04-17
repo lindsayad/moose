@@ -49,7 +49,7 @@ void
 MFEMRefinementMarker::initialSetup()
 {
   // fetch const ref to the estimator
-  _estimator = &getMFEMProblem().getMFEMObject<MFEMIndicator>("Indicator", _estimator_name);
+  _estimator = &getMFEMProblem().getMFEMObject<MFEMIndicator>(_estimator_name);
 
   // Check if p-refinement is supported by the fespace supplied with the variable
   if (_max_p_level and !_estimator->getFESpace().PRefinementSupported())
