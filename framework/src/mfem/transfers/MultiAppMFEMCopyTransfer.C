@@ -10,7 +10,6 @@
 #ifdef MOOSE_MFEM_ENABLED
 
 #include "MultiAppMFEMCopyTransfer.h"
-#include "FEProblemBase.h"
 #include "MultiApp.h"
 #include "SystemBase.h"
 #include "MFEMProblem.h"

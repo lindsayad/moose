@@ -17,8 +17,8 @@
 #include "MFEMFunctorMaterial.h"
 #include "MFEMSubMeshTransfer.h"
 #include "MFEMExecutedObject.h"
-#include "Postprocessor.h"
-#include "VectorPostprocessor.h"
+#include "MFEMPostprocessor.h"
+#include "MFEMVectorPostprocessor.h"
 #include "libmesh/string_to_enum.h"
 
 #include <vector>
@@ -55,7 +55,7 @@ MFEMProblem::MFEMProblem(const InputParameters & params)
 void
 MFEMProblem::initialSetup()
 {
-  FEProblemBase::initialSetup();
+  ExternalProblem::initialSetup();
 
   // MFEM indicators create their estimators during addIndicator(); markers still need an explicit
   // setup pass because they are no longer initialized through the libMesh/MOOSE user-object path.
@@ -71,7 +71,7 @@ MFEMProblem::execute(const ExecFlagType & exec_type)
   setCurrentExecuteOnFlag(exec_type);
   executeMFEMObjects(exec_type);
 
-  FEProblemBase::execute(exec_type);
+  ExternalProblem::execute(exec_type);
 }
 
 void
@@ -259,7 +259,7 @@ MFEMProblem::addGridFunction(const std::string & var_type,
   else
   {
     // Add MOOSE variable.
-    FEProblemBase::addVariable(var_type, var_name, parameters);
+    ExternalProblem::addVariable(var_type, var_name, parameters);
 
     // Add MFEM variable indirectly ("gridfunction").
     InputParameters mfem_variable_params = addMFEMFESpaceFromMOOSEVariable(parameters);
@@ -523,7 +523,7 @@ MFEMProblem::addPostprocessor(const std::string & type,
   if (parameters.getSystemAttributeName() == "MFEMExecutedObject")
   {
     checkUserObjectNameCollision(name, "Postprocessor");
-    addObject<MFEMExecutedObject>(type, name, parameters);
+    addObject<MFEMPostprocessor>(type, name, parameters);
     const PostprocessorValue & val = getPostprocessorValueByName(name);
     getCoefficients().declareScalar<mfem::FunctionCoefficient>(
         name, [&val](const mfem::Vector &) -> mfem::real_t { return val; });
@@ -540,10 +540,10 @@ MFEMProblem::addVectorPostprocessor(const std::string & type,
   if (parameters.getSystemAttributeName() == "MFEMExecutedObject")
   {
     checkUserObjectNameCollision(name, "VectorPostprocessor");
-    addObject<MFEMExecutedObject>(type, name, parameters);
+    addObject<MFEMVectorPostprocessor>(type, name, parameters);
   }
   else
-    FEProblemBase::addVectorPostprocessor(type, name, parameters);
+    ExternalProblem::addVectorPostprocessor(type, name, parameters);
 }
 
 InputParameters
@@ -690,7 +690,7 @@ MFEMProblem::addTransfer(const std::string & transfer_name,
   if (parameters.getBase() == "MFEMSubMeshTransfer")
     addObject<MFEMExecutedObject>(transfer_name, name, parameters);
   else
-    FEProblemBase::addTransfer(transfer_name, name, parameters);
+    ExternalProblem::addTransfer(transfer_name, name, parameters);
 }
 
 void
