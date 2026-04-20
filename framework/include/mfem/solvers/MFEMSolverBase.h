@@ -14,6 +14,8 @@
 #include "MFEMObject.h"
 #include "MFEMHyprePatch.h"
 
+class MFEMProblemSolve;
+
 /**
  * Base class for wrapping mfem::Solver-derived classes.
  */
