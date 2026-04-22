@@ -405,36 +405,21 @@ MFEMProblem::addImagComponentToBC(const std::string & kernel_name,
 libMesh::Point
 pointFromMFEMVector(const mfem::Vector & vec)
 {
-  return libMesh::Point(
-      vec.Elem(0), vec.Size() > 1 ? vec.Elem(1) : 0., vec.Size() > 2 ? vec.Elem(2) : 0.);
+  return libMesh::Point(vec(0), vec.Size() > 1 ? vec(1) : 0., vec.Size() > 2 ? vec(2) : 0.);
 }
 
 int
 vectorFunctionDim(const std::string & type, const InputParameters & parameters)
 {
-  if (type == "LevelSetOlssonVortex")
-  {
-    return 2;
-  }
-  else if (type == "ParsedVectorFunction")
-  {
-    if (parameters.isParamSetByUser("expression_z") || parameters.isParamSetByUser("value_z"))
-    {
-      return 3;
-    }
-    else if (parameters.isParamSetByUser("expression_y") || parameters.isParamSetByUser("value_y"))
-    {
-      return 2;
-    }
-    else
-    {
-      return 1;
-    }
-  }
-  else
-  {
+  if (parameters.isParamSetByUser("expression_z") || parameters.isParamSetByUser("value_z"))
     return 3;
-  }
+  if (parameters.isParamSetByUser("expression_y") || parameters.isParamSetByUser("value_y") ||
+      type == "LevelSetOlssonVortex")
+    return 2;
+  if (parameters.isParamSetByUser("expression_x") || parameters.isParamSetByUser("value_x"))
+    return 1;
+
+  return 3;
 }
 
 const std::vector<std::string> SCALAR_FUNCS = {"Axisymmetric2D3DSolutionFunction",
