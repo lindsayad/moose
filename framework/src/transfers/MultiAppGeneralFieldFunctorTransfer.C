@@ -187,7 +187,7 @@ MultiAppGeneralFieldFunctorTransfer::buildKDTrees(const unsigned int var_index)
       else
         from_blocks = Moose::NodeArg::undefined_subdomain_connection;
 
-      // We need to loop overs the nodes at the edge of the domain of definition of the
+      // We need to loop over the nodes at the edge of the domain of definition of the
       // current functor
       if (_extrapolation_behavior == 2) // nearest-node
         for (const auto & node : from_mesh.getMesh().local_node_ptr_range())
