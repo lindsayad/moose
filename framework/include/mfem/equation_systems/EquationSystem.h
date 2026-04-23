@@ -71,9 +71,6 @@ public:
   const std::vector<std::string> & GetTrialVarNames() const { return _trial_var_names; }
   const std::vector<std::string> & GetTestVarNames() const { return _test_var_names; }
 
-  // Set whether the current solve is for an eigenvalue problem
-  void setEigensolve(const bool is_eigensolve) { _is_eigensolve = is_eigensolve; }
-
   // Retrieve the global essential boundary markers
   mfem::Array<int> & getGlobalEssMarkers() { return _global_ess_markers; }
 
@@ -107,6 +104,8 @@ protected:
                                 mfem::Array<int> & global_ess_markers);
   /// Update all essentially constrained true DoF markers and values on boundaries
   virtual void ApplyEssentialBCs();
+  /// Mark external boundaries as essential for eigenproblem BC elimination
+  virtual void ApplyEigenEssentialBCs();
   /// Perform trivial eliminations of coupled variables lacking corresponding test variables
   virtual void EliminateCoupledVariables();
   /// Build linear forms and eliminate constrained DoFs
@@ -241,7 +240,6 @@ protected:
   mfem::Array<int> _block_true_offsets;
   // Boolean indicating if EquationSystem contains nonlinear integrators
   bool _non_linear = false;
-  bool _is_eigensolve;
 
 private:
   friend class EquationSystemProblemOperator;
