@@ -20,6 +20,7 @@ class CovarianceFunctionBase : public MooseObject, public CovarianceInterface
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "CovarianceFunction";
   CovarianceFunctionBase(const InputParameters & parameters);
 
   /// Generates the Covariance Matrix given two sets of points in the parameter space

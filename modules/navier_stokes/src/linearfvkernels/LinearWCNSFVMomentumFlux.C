@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "LinearWCNSFVMomentumFlux.h"
+#include "FEProblemBase.h"
 #include "MooseLinearVariableFV.h"
 #include "NSFVUtils.h"
 #include "NS.h"

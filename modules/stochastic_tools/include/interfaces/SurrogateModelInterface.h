@@ -91,7 +91,7 @@ SurrogateModelInterface::getSurrogateModelByName(const UserObjectName & name) co
   _smi_feproblem.theWarehouse()
       .query()
       .condition<AttribName>(name)
-      .condition<AttribSystem>("SurrogateModel")
+      .condition<AttribSystem>(T::system_attribute_name)
       .queryInto(models);
   if (models.empty())
     mooseError("Unable to find a SurrogateModel object of type " + std::string(typeid(T).name()) +

@@ -15,6 +15,8 @@
 
 #include "libmesh/dof_map.h"
 
+using libMesh::DofMap;
+
 registerMooseObject("MooseApp", ScalarVariable);
 
 InputParameters

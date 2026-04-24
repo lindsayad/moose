@@ -10,6 +10,8 @@
 #include "BoundaryLinearFVFluxIntegral.h"
 #include "LinearFVBoundaryCondition.h"
 #include "LinearFVFluxKernel.h"
+#include "FEProblemBase.h"
+#include "Attributes.h"
 #include <set>
 
 registerMooseObject("MooseApp", BoundaryLinearFVFluxIntegral);
@@ -45,7 +47,7 @@ BoundaryLinearFVFluxIntegral::initialSetup()
   // Kernels are constructed after postprocessors, so we fetch them here.
   auto base_query = _fe_problem.theWarehouse()
                         .query()
-                        .condition<AttribSystem>("LinearFVFluxKernel")
+                        .condition<AttribSystem>(LinearFVFluxKernel::system_attribute_name)
                         .condition<AttribThread>(_tid);
 
   _kernel_objects.clear();
@@ -86,7 +88,7 @@ BoundaryLinearFVFluxIntegral::initialSetup()
   // so we resolve BCs directly from the warehouse.
   auto bc_query = _fe_problem.theWarehouse()
                       .query()
-                      .condition<AttribSystem>("LinearFVBoundaryCondition")
+                      .condition<AttribSystem>(LinearFVBoundaryCondition::system_attribute_name)
                       .condition<AttribThread>(_tid)
                       .condition<AttribVar>(_variable_number)
                       .condition<AttribSysNum>(_system_number);

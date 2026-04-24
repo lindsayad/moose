@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "PiecewiseFunctionTabulate.h"
+#include "FEProblemBase.h"
 #include "PiecewiseBase.h"
 
 registerMooseObject("MooseTestApp", PiecewiseFunctionTabulate);

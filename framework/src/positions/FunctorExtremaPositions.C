@@ -8,6 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "FunctorExtremaPositions.h"
+#include "FEProblemBase.h"
+#include "SubProblem.h"
 #include "libmesh/parallel.h"
 #include "libmesh/parallel_algebra.h"
 #include "libmesh/vector_value.h"

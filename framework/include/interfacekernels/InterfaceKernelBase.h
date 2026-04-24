@@ -29,6 +29,7 @@ class InterfaceKernelBase : public NeighborResidualObject,
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "InterfaceKernel";
 
   InterfaceKernelBase(const InputParameters & parameters);
 

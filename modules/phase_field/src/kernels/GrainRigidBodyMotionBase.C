@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "GrainRigidBodyMotionBase.h"
+#include "libmesh/equation_systems.h"
 
 // MOOSE includes
 #include "GrainTrackerInterface.h"

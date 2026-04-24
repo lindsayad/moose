@@ -19,7 +19,10 @@
 #include "TraceRayBndElement.h"
 
 // MOOSE Includes
+#include "FEProblemBase.h"
 #include "TheWarehouse.h"
+#include "Attributes.h"
+#include "RayTracingSystemNames.h"
 
 // libMesh includes
 #include "libmesh/mesh.h"
@@ -356,7 +359,7 @@ public:
     _fe_problem.theWarehouse()
         .query()
         .condition<AttribRayTracingStudy>(this)
-        .condition<AttribSystem>("RayKernel")
+        .condition<AttribSystem>(RayTracing::RayKernelSystemName)
         .condition<AttribThread>(tid)
         .queryInto(result);
   }
@@ -378,7 +381,7 @@ public:
     _fe_problem.theWarehouse()
         .query()
         .condition<AttribRayTracingStudy>(this)
-        .condition<AttribSystem>("RayBoundaryCondition")
+        .condition<AttribSystem>(RayTracing::RayBoundaryConditionSystemName)
         .condition<AttribBoundaries>(ids)
         .condition<AttribThread>(tid)
         .queryInto(result);
@@ -392,7 +395,7 @@ public:
     _fe_problem.theWarehouse()
         .query()
         .condition<AttribRayTracingStudy>(this)
-        .condition<AttribSystem>("RayBoundaryCondition")
+        .condition<AttribSystem>(RayTracing::RayBoundaryConditionSystemName)
         .condition<AttribThread>(tid)
         .queryInto(result);
   }

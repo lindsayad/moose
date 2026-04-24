@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "CrackGrowthReporterBase.h"
+#include "FEProblemBase.h"
 #include "CrackMeshCut3DUserObject.h"
 #include "VectorPostprocessorInterface.h"
 #include "MathUtils.h"

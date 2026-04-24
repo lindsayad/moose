@@ -24,7 +24,7 @@ SurrogateModel::validParams()
       "The SurrogateTrainer object. If this is specified the trainer data is automatically "
       "gathered and available in this SurrogateModel object.");
   params.registerBase("SurrogateModel");
-  params.registerSystemAttributeName("SurrogateModel");
+  params.registerSystemAttributeName(system_attribute_name);
   return params;
 }
 

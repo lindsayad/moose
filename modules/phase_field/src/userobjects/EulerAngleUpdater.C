@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "EulerAngleUpdater.h"
+#include "FEProblemBase.h"
 #include "GrainTrackerInterface.h"
 #include "GrainForceAndTorqueInterface.h"
 #include "RotationTensor.h"

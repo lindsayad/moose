@@ -28,7 +28,7 @@ ParallelAcquisitionInterface::getParallelAcquisitionFunctionByName(
   _parallelacquisition_feproblem.theWarehouse()
       .query()
       .condition<AttribName>(name)
-      .condition<AttribSystem>("ParallelAcquisitionFunctionBase")
+      .condition<AttribSystem>(ParallelAcquisitionFunctionBase::system_attribute_name)
       .queryInto(models);
 
   if (models.empty())

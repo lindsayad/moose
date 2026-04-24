@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "VolumetricFlowRate.h"
+#include "FEProblemBase.h"
 #include "MathFVUtils.h"
 #include "RhieChowInterpolatorBase.h"
 #include "NSFVUtils.h"

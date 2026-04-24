@@ -10,6 +10,8 @@
 #pragma once
 
 #include "GeneralUserObject.h"
+#include "AuxiliarySystem.h"
+#include "MooseVariable.h"
 #include "PeridynamicsMesh.h"
 
 class GeneralUserObjectBasePD : public GeneralUserObject

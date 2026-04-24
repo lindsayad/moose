@@ -127,7 +127,7 @@ BlockRestrictionDebugOutput::printBlockRestrictionMap() const
   std::vector<UserObject *> userObjects;
   _problem_ptr->theWarehouse()
       .query()
-      .condition<AttribSystem>("UserObject")
+      .condition<AttribSystem>(UserObject::system_attribute_name)
       .condition<AttribThread>(0)
       .queryIntoUnsorted(userObjects);
 

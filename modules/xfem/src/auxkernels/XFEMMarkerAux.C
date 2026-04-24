@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "XFEMMarkerAux.h"
+#include "FEProblemBase.h"
 
 #include "XFEM.h"
 

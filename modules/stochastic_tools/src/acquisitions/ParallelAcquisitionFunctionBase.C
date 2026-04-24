@@ -15,7 +15,7 @@ ParallelAcquisitionFunctionBase::validParams()
   InputParameters params = MooseObject::validParams();
   params.addClassDescription("Base class for parallel acquisition functions");
   params.registerBase("ParallelAcquisitionFunctionBase");
-  params.registerSystemAttributeName("ParallelAcquisitionFunctionBase");
+  params.registerSystemAttributeName(system_attribute_name);
   return params;
 }
 

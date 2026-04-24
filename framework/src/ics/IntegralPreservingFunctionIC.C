@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "IntegralPreservingFunctionIC.h"
+#include "FEProblemBase.h"
 #include "Function.h"
 #include "UserObject.h"
 

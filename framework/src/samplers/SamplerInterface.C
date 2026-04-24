@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "SamplerInterface.h"
+#include "FEProblemBase.h"
 #include "Sampler.h"
 #include "SubProblem.h"
 #include "MooseTypes.h"
@@ -40,9 +41,15 @@ SamplerInterface::getSampler(const std::string & name)
   return _si_feproblem.getSampler(_si_params.get<SamplerName>(name));
 }
 
+Sampler &
+SamplerInterface::getSamplerByNameBase(const SamplerName & name)
+{
+  return _si_feproblem.getSampler(name, _si_tid);
+}
+
 template <>
 Sampler &
 SamplerInterface::getSamplerByName(const SamplerName & name)
 {
-  return _si_feproblem.getSampler(name, _si_tid);
+  return getSamplerByNameBase(name);
 }

@@ -20,6 +20,7 @@ class LinearFVElementalKernel : public LinearFVKernel
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "LinearFVElementalKernel";
 
   /**
    * Class constructor.

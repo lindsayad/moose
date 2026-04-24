@@ -11,6 +11,7 @@
 
 // MOOSE includes
 #include "PointSamplerBase.h"
+#include "Positions.h"
 
 /**
  * Samples one or more functor(s) at points given by a Positions object

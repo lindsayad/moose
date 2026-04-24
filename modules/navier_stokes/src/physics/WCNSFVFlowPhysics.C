@@ -1158,7 +1158,7 @@ WCNSFVFlowPhysics::addRhieChowUserObjects()
   getProblem()
       .theWarehouse()
       .query()
-      .condition<AttribSystem>("UserObject")
+      .condition<AttribSystem>(UserObject::system_attribute_name)
       .condition<AttribThread>(0)
       .queryInto(objs);
   bool have_matching_rc_uo = false;

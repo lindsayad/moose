@@ -37,7 +37,10 @@ SetupTimeStepperAction::act()
   if (TransientBase * transient = dynamic_cast<TransientBase *>(_app.getExecutioner()))
   {
     std::vector<TimeStepper *> timesteppers;
-    _problem->theWarehouse().query().condition<AttribSystem>("TimeStepper").queryInto(timesteppers);
+    _problem->theWarehouse()
+        .query()
+        .condition<AttribSystem>(TimeStepper::system_attribute_name)
+        .queryInto(timesteppers);
 
     // No timestepper(s) were added by the user, so add a default one
     if (timesteppers.empty())
@@ -72,7 +75,7 @@ SetupTimeStepperAction::act()
         std::vector<TimeStepper *> timesteppers;
         _problem->theWarehouse()
             .query()
-            .condition<AttribSystem>("TimeStepper")
+            .condition<AttribSystem>(TimeStepper::system_attribute_name)
             .queryInto(timesteppers);
 
         mooseAssert(timesteppers.size(), "Timesteppers not found");

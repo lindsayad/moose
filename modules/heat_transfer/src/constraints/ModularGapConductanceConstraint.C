@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "ModularGapConductanceConstraint.h"
+#include "FEProblemBase.h"
 #include "GapFluxModelBase.h"
 #include "GapFluxModelPressureDependentConduction.h"
 #include "AutomaticMortarGeneration.h"

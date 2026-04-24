@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "AverageGrainVolume.h"
+#include "FEProblemBase.h"
 #include "FeatureFloodCount.h"
 #include "MooseMesh.h"
 #include "Assembly.h"

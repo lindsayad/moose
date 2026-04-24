@@ -10,6 +10,7 @@
 #pragma once
 
 #include "UserObjectBase.h"
+#include "UserObjectSystemNames.h"
 
 #include "libmesh/parallel.h"
 
@@ -20,6 +21,7 @@ class UserObject : public UserObjectBase
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = Moose::UserObjectSystemName;
 
   UserObject(const InputParameters & params);
 

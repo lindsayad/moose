@@ -10,6 +10,7 @@
 #pragma once
 
 // MOOSE includes
+#include "DependencyResolverInterface.h"
 #include "DistributionInterface.h"
 #include "FunctionInterface.h"
 #include "UserObjectInterface.h"
@@ -153,7 +154,7 @@ public:
   /**
    * @returns the number of the system associated with this object
    */
-  unsigned int systemNumber() const { return _sys.number(); }
+  unsigned int systemNumber() const;
 
   /**
    * Whether or not a threaded copy of this object is needed when obtaining it in

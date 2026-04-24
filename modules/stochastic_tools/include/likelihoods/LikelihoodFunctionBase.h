@@ -19,6 +19,7 @@ class LikelihoodFunctionBase : public MooseObject
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "LikelihoodFunctionBase";
   LikelihoodFunctionBase(const InputParameters & parameters);
 
   /**

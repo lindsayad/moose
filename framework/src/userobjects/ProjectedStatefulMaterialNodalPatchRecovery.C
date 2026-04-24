@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "ProjectedStatefulMaterialNodalPatchRecovery.h"
+#include "FEProblemBase.h"
 #include "ElementUserObject.h"
 #include "MaterialBase.h"
 #include "MathUtils.h"

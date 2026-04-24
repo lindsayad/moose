@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MooseError.h"
+#include "FEProblemBase.h"
 #include "SolutionFunction.h"
 #include "SolutionUserObjectBase.h"
 #include "MooseMesh.h"

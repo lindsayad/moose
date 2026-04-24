@@ -10,6 +10,8 @@
 #pragma once
 
 #include "RhieChowInterpolatorBase.h"
+
+class NonlinearSystemBase;
 #include "CellCenteredMapFunctor.h"
 #include "FaceCenteredMapFunctor.h"
 #include "VectorComponentFunctor.h"

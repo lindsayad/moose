@@ -16,7 +16,7 @@ VariableMappingBase::validParams()
   params += RestartableModelInterface::validParams();
   params.addClassDescription("Base class for mapping objects.");
   params.registerBase("VariableMappingBase");
-  params.registerSystemAttributeName("VariableMappingBase");
+  params.registerSystemAttributeName(system_attribute_name);
   params.addParam<std::vector<VariableName>>("variables",
                                              "The names of the variables which need a mapping.");
   return params;

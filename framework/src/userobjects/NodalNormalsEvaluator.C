@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "NodalNormalsEvaluator.h"
+#include "FEProblemBase.h"
 
 // MOOSE includes
 #include "AuxiliarySystem.h"

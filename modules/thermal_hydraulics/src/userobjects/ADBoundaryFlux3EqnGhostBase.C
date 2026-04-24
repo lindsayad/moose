@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "ADBoundaryFlux3EqnGhostBase.h"
+#include "SubProblem.h"
 #include "ADNumericalFlux3EqnBase.h"
 
 #include "libmesh/elem.h"

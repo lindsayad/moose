@@ -26,6 +26,7 @@ class Split : public MooseObject, public Restartable
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "Split";
 
   Split(const InputParameters & parameters);
   virtual ~Split() = default;

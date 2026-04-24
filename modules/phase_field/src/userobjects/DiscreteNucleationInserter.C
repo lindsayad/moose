@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "DiscreteNucleationInserter.h"
+#include "FEProblemBase.h"
 #include "libmesh/parallel_algebra.h"
 #include "SystemBase.h"
 

@@ -8,6 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "TestSerializedSolution.h"
+#include "libmesh/system.h"
+#include "FEProblemBase.h"
 
 #include "SystemBase.h"
 

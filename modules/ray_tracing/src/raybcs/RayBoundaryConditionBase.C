@@ -26,7 +26,7 @@ RayBoundaryConditionBase::validParams()
                                             "Other RayBCs that this RayBC depends on");
 
   params.registerBase("RayBoundaryCondition");
-  params.registerSystemAttributeName("RayBoundaryCondition");
+  params.registerSystemAttributeName(system_attribute_name);
 
   // We don't currently allow reinits on RayBCs just yet
   params.suppressParameter<bool>("implicit");

@@ -511,19 +511,19 @@ InputParameters::getBase() const
 }
 
 void
-InputParameters::registerSystemAttributeName(const std::string & value)
+InputParameters::registerSystemAttributeName(const char * value)
 {
-  InputParameters::set<std::string>("_moose_warehouse_system_name") = value;
+  InputParameters::set<const char *>("_moose_warehouse_system_name") = value;
   _params["_moose_warehouse_system_name"]._is_private = true;
 }
 
-const std::string &
+const char *
 InputParameters::getSystemAttributeName() const
 {
-  mooseAssert(have_parameter<std::string>("_moose_warehouse_system_name"),
+  mooseAssert(have_parameter<const char *>("_moose_warehouse_system_name"),
               "SystemAttributeName is not available! Call 'registerSystemAttributeName' (usually "
               "in the validParams function) before you try accessing it!");
-  return Parameters::get<std::string>("_moose_warehouse_system_name");
+  return Parameters::get<const char *>("_moose_warehouse_system_name");
 }
 
 void

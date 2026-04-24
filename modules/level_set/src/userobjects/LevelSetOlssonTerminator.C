@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "LevelSetOlssonTerminator.h"
+#include "FEProblemBase.h"
 #include "NonlinearSystem.h"
 
 registerMooseObject("LevelSetApp", LevelSetOlssonTerminator);

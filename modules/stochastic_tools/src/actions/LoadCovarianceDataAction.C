@@ -31,7 +31,10 @@ void
 LoadCovarianceDataAction::act()
 {
   std::vector<SurrogateModel *> objects;
-  _app.theWarehouse().query().condition<AttribSystem>("SurrogateModel").queryInto(objects);
+  _app.theWarehouse()
+      .query()
+      .condition<AttribSystem>(SurrogateModel::system_attribute_name)
+      .queryInto(objects);
   for (auto model_ptr : objects)
   {
     auto * gp_gen = dynamic_cast<GaussianProcessSurrogate *>(model_ptr);

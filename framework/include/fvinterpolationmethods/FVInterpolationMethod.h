@@ -18,6 +18,7 @@ class FVInterpolationMethod : public MooseObject
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "FVInterpolationMethod";
 
   FVInterpolationMethod(const InputParameters & params);
 };

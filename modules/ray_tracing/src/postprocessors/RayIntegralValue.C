@@ -44,7 +44,10 @@ RayIntegralValue::initialize()
   // Look for the IntegralRayKernel by the name provided by the user
   const IntegralRayKernel * integral_ray_kernel = nullptr;
   std::vector<RayKernelBase *> rks;
-  _fe_problem.theWarehouse().query().condition<AttribSystem>("RayKernel").queryInto(rks);
+  _fe_problem.theWarehouse()
+      .query()
+      .condition<AttribSystem>(RayKernelBase::system_attribute_name)
+      .queryInto(rks);
   for (const RayKernelBase * rk : rks)
     if (rk->name() == getParam<std::string>("ray_kernel"))
     {

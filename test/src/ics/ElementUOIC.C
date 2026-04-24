@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "ElementUOIC.h"
+#include "FEProblemBase.h"
 #include "ElementUOProvider.h"
 
 registerMooseObject("MooseTestApp", ElementUOIC);

@@ -53,9 +53,10 @@ LoadModelDataAction<T>::act()
 
   // We fetch the mapping objects and then load the necessary data
   std::vector<T *> objects;
-  static const auto attribute_name = T::validParams().getSystemAttributeName();
-
-  _app.theWarehouse().query().template condition<AttribSystem>(attribute_name).queryInto(objects);
+  _app.theWarehouse()
+      .query()
+      .template condition<AttribSystem>(T::system_attribute_name)
+      .queryInto(objects);
   for (auto object_ptr : objects)
     if (object_ptr->hasModelData())
       load(*object_ptr);

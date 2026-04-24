@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MeshCut2DNucleationBase.h"
+#include "FEProblemBase.h"
 #include "XFEMAppTypes.h"
 #include "XFEM.h"
 

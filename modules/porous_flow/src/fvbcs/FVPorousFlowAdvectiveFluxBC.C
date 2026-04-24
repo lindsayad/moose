@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "FVPorousFlowAdvectiveFluxBC.h"
+#include "FEProblemBase.h"
 #include "PorousFlowDictator.h"
 #include "FVDirichletBC.h"
 

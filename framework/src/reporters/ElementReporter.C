@@ -9,6 +9,7 @@
 
 // MOOSE includes
 #include "ElementReporter.h"
+#include "FEProblemBase.h"
 
 InputParameters
 ElementReporter::validParams()

@@ -15,7 +15,7 @@ InputParameters
 LinearFVElementalKernel::validParams()
 {
   InputParameters params = LinearFVKernel::validParams();
-  params.registerSystemAttributeName("LinearFVElementalKernel");
+  params.registerSystemAttributeName(system_attribute_name);
   return params;
 }
 

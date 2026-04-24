@@ -8,6 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "GeochemistrySpatialReactor.h"
+#include "Attributes.h"
+#include "FEProblemBase.h"
 
 registerMooseObject("GeochemistryApp", GeochemistrySpatialReactor);
 
@@ -484,7 +486,7 @@ GeochemistrySpatialReactor::finalize()
     std::vector<GeochemistrySpatialReactor *> objects;
     _fe_problem.theWarehouse()
         .query()
-        .condition<AttribSystem>("UserObject")
+        .condition<AttribSystem>(UserObject::system_attribute_name)
         .condition<AttribThread>(thrd)
         .condition<AttribName>(name())
         .queryInto(objects);

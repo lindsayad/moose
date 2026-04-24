@@ -102,13 +102,13 @@ ExplicitTimeIntegrator::initialSetup()
           std::vector<FVElementalKernel *> fv_elemental_kernels;
           auto var_query = fv_object_starting_query.clone().template condition<AttribVar>(var_id);
           auto var_query_clone = var_query.clone();
-          var_query.template condition<AttribSystem>("FVElementalKernel")
+          var_query.template condition<AttribSystem>(FVElementalKernel::system_attribute_name)
               .queryInto(fv_elemental_kernels);
           if (fv_elemental_kernels.size())
             continue;
 
           std::vector<FVFluxKernel *> fv_flux_kernels;
-          var_query_clone.template condition<AttribSystem>("FVFluxKernel")
+          var_query_clone.template condition<AttribSystem>(FVFluxKernel::system_attribute_name)
               .queryInto(fv_flux_kernels);
           if (fv_flux_kernels.size())
             continue;

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "Times.h"
+#include "FEProblemBase.h"
 #include "libmesh/parallel_algebra.h"
 
 InputParameters
@@ -136,4 +137,10 @@ Times::finalize()
                         _times.end(),
                         [this](Real l, Real r) { return std::abs(l - r) < _unique_tol; }),
                  _times.end());
+}
+
+Real
+Times::getCurrentTime() const
+{
+  return _fe_problem.time();
 }

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "KokkosBlockSolutionOutput.h"
+#include "FEProblemBase.h"
 
 registerKokkosUserObject("MooseTestApp", KokkosBlockSolutionOutput);
 

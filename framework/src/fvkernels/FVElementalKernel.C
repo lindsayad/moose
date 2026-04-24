@@ -22,7 +22,7 @@ InputParameters
 FVElementalKernel::validParams()
 {
   InputParameters params = FVKernel::validParams();
-  params.registerSystemAttributeName("FVElementalKernel");
+  params.registerSystemAttributeName(system_attribute_name);
   params += MaterialPropertyInterface::validParams();
   return params;
 }

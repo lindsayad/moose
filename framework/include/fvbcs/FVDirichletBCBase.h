@@ -22,6 +22,7 @@ public:
   FVDirichletBCBase(const InputParameters & parameters);
 
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "FVDirichletBC";
 
   virtual ADReal boundaryValue(const FaceInfo & fi, const Moose::StateArg & state) const = 0;
 

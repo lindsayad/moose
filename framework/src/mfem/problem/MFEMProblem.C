@@ -60,7 +60,10 @@ MFEMProblem::initialSetup()
   // MFEM indicators create their estimators during addIndicator(); markers still need an explicit
   // setup pass because they are no longer initialized through the libMesh/MOOSE user-object path.
   std::vector<MFEMRefinementMarker *> markers;
-  theWarehouse().query().condition<AttribSystem>(MFEMRefinementMarker::system_attribute_name).queryInto(markers);
+  theWarehouse()
+      .query()
+      .condition<AttribSystem>(MFEMRefinementMarker::system_attribute_name)
+      .queryInto(markers);
   for (auto marker : markers)
     marker->initialSetup();
 }
@@ -505,7 +508,7 @@ MFEMProblem::addPostprocessor(const std::string & type,
                               const std::string & name,
                               InputParameters & parameters)
 {
-  if (parameters.getSystemAttributeName() == "MFEMExecutedObject")
+  if (parameters.getSystemAttributeName() == MFEMExecutedObject::system_attribute_name)
   {
     checkUserObjectNameCollision(name, "Postprocessor");
     addObject<MFEMPostprocessor>(type, name, parameters);
@@ -522,7 +525,7 @@ MFEMProblem::addVectorPostprocessor(const std::string & type,
                                     const std::string & name,
                                     InputParameters & parameters)
 {
-  if (parameters.getSystemAttributeName() == "MFEMExecutedObject")
+  if (parameters.getSystemAttributeName() == MFEMExecutedObject::system_attribute_name)
   {
     checkUserObjectNameCollision(name, "VectorPostprocessor");
     addObject<MFEMVectorPostprocessor>(type, name, parameters);

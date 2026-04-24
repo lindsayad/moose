@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "INSFEFluidMomentumKernel.h"
+#include "FEProblemBase.h"
 
 registerMooseObject("NavierStokesApp", INSFEFluidMomentumKernel);
 registerMooseObjectRenamed("NavierStokesApp",

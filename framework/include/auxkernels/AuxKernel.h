@@ -28,6 +28,7 @@ class AuxKernelTempl : public AuxKernelBase, public MooseVariableInterface<Compu
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "AuxKernel";
 
   AuxKernelTempl(const InputParameters & parameters);
 

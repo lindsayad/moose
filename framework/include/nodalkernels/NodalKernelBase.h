@@ -33,6 +33,7 @@ public:
    * @param parameters The InputParameters for the object
    */
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "NodalKernel";
 
   NodalKernelBase(const InputParameters & parameters);
 

@@ -9,6 +9,7 @@
 
 #include "ElemSideNeighborLayersTester.h"
 #include "MooseMesh.h"
+#include "FEProblemBase.h"
 
 // invalid_processor_id
 #include "libmesh/dof_object.h"

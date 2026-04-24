@@ -20,6 +20,7 @@ class Constraint : public NeighborResidualObject, protected GeometricSearchInter
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "Constraint";
 
   Constraint(const InputParameters & parameters);
 

@@ -12,6 +12,7 @@
 #include <numeric>
 
 #include "GeneralSensorPostprocessor.h"
+#include "FEProblemBase.h"
 #include "Function.h"
 #include "MooseRandom.h"
 #include "LinearInterpolation.h"

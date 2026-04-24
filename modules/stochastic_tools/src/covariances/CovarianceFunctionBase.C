@@ -19,7 +19,7 @@ CovarianceFunctionBase::validParams()
       "num_outputs", 1, "The number of outputs expected for this covariance function.");
   params.addClassDescription("Base class for covariance functions");
   params.registerBase("CovarianceFunctionBase");
-  params.registerSystemAttributeName("CovarianceFunction");
+  params.registerSystemAttributeName(system_attribute_name);
   return params;
 }
 

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "WCNSFV2PMomentumDriftFlux.h"
+#include "FEProblemBase.h"
 #include "INSFVRhieChowInterpolator.h"
 #include "NS.h"
 #include "SystemBase.h"

@@ -12,6 +12,7 @@
 #include "VaporMixtureFluidProperties.h"
 #include "SinglePhaseFluidProperties.h"
 #include "THMIndicesGasMix.h"
+#include "MooseVariable.h"
 
 class VaporMixtureFluidProperties;
 

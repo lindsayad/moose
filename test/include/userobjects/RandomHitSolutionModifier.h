@@ -12,6 +12,7 @@
 // Moose
 #include "GeneralUserObject.h"
 #include "MooseMesh.h"
+#include "MooseVariable.h"
 
 class RandomHitUserObject;
 

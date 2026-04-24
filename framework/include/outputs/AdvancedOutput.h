@@ -15,6 +15,10 @@
 #include "UserObject.h"
 #include "ExecuteMooseObjectWarehouse.h"
 #include "FileOutput.h"
+#include "Attributes.h"
+#include "Postprocessor.h"
+#include "FEProblemBase.h"
+#include "VectorPostprocessor.h"
 
 // Forward declarations
 class OutputWarehouse;

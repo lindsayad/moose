@@ -1095,7 +1095,7 @@ MooseServer::addObjectsFromWarehouses(const std::string & param_type,
     std::vector<UserObject *> user_objects;
     problem->theWarehouse()
         .query()
-        .condition<AttribSystem>("UserObject")
+        .condition<AttribSystem>(UserObject::system_attribute_name)
         .condition<AttribThread>(0)
         .queryIntoUnsorted(user_objects);
     for (const auto & user_object : user_objects)

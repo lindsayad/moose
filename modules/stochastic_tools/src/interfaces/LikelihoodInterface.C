@@ -27,7 +27,7 @@ LikelihoodInterface::getLikelihoodFunctionByName(const UserObjectName & name) co
   _likelihood_feproblem.theWarehouse()
       .query()
       .condition<AttribName>(name)
-      .condition<AttribSystem>("LikelihoodFunctionBase")
+      .condition<AttribSystem>(LikelihoodFunctionBase::system_attribute_name)
       .queryInto(models);
 
   if (models.empty())

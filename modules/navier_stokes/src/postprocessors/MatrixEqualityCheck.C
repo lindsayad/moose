@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MatrixEqualityCheck.h"
+#include "PetscSupport.h"
 
 #include "MooseUtils.h"
 #include "libmesh/petsc_matrix.h"

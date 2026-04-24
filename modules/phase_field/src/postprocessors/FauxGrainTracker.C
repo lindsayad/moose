@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "FauxGrainTracker.h"
+#include "FEProblemBase.h"
 
 // MOOSE includes
 #include "MooseMesh.h"

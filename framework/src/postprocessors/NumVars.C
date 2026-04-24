@@ -9,6 +9,7 @@
 
 // MOOSE includes
 #include "NumVars.h"
+#include "libmesh/equation_systems.h"
 
 #include "AuxiliarySystem.h"
 #include "NonlinearSystemBase.h"

@@ -11,6 +11,7 @@
 #include "SystemBase.h"
 #include "PetscSupport.h"
 #include "AuxiliarySystem.h"
+#include "FEProblemBase.h"
 
 InputParameters
 BoundsBase::validParams()

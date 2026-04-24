@@ -33,6 +33,7 @@ public:
   BoundaryCondition(const InputParameters & parameters, bool nodal);
 
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "BoundaryCondition";
 
   /**
    * Hook for turning the boundary condition on and off.

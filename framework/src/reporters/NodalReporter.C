@@ -9,6 +9,7 @@
 
 // MOOSE includes
 #include "NodalReporter.h"
+#include "FEProblemBase.h"
 
 InputParameters
 NodalReporter::validParams()

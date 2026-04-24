@@ -17,7 +17,7 @@ LinearFVFluxKernel::validParams()
   params.addParam<bool>("force_boundary_execution",
                         false,
                         "Whether to force execution of this object on all external boundaries.");
-  params.registerSystemAttributeName("LinearFVFluxKernel");
+  params.registerSystemAttributeName(system_attribute_name);
   return params;
 }
 

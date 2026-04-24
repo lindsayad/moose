@@ -11,7 +11,8 @@
 
 #include "ParallelUniqueId.h"
 #include "InputParameters.h"
-#include "FEProblemBase.h"
+
+class FEProblemBase;
 
 // Forward declarations
 class Sampler;
@@ -70,6 +71,12 @@ private:
 
   /// Thread ID
   THREAD_ID _si_tid;
+
+  /**
+   * Returns the base Sampler object by name. Exists so that getSamplerByName<T>
+   * can be defined in this header without requiring a complete FEProblemBase definition.
+   */
+  Sampler & getSamplerByNameBase(const SamplerName & name);
 };
 
 template <typename T>
@@ -83,8 +90,7 @@ template <typename T>
 T &
 SamplerInterface::getSamplerByName(const SamplerName & name)
 {
-  Sampler * base_ptr = &_si_feproblem.getSampler(name, _si_tid);
-  T * obj_ptr = dynamic_cast<T *>(base_ptr);
+  T * obj_ptr = dynamic_cast<T *>(&getSamplerByNameBase(name));
   if (!obj_ptr)
     mooseError("Failed to find a Sampler object with the name '", name, "' for the desired type.");
   return *obj_ptr;

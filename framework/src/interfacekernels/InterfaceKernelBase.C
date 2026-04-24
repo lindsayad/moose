@@ -35,7 +35,7 @@ InterfaceKernelBase::validParams()
   params.declareControllable("enable");
   params.addRequiredCoupledVar("neighbor_var", "The variable on the other side of the interface.");
   params.registerBase("InterfaceKernel");
-  params.registerSystemAttributeName("InterfaceKernel");
+  params.registerSystemAttributeName(system_attribute_name);
   params.addParam<std::vector<AuxVariableName>>(
       "save_in",
       {},

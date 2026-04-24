@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "AverageSectionValueSampler.h"
+#include "MooseVariableFE.h"
 #include "MooseMesh.h"
 #include "SystemBase.h"
 #include "Conversion.h"

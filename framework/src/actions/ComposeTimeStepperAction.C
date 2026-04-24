@@ -39,7 +39,10 @@ ComposeTimeStepperAction::act()
 {
   // Get all of the timesteppers that have been added so far
   std::vector<const TimeStepper *> timesteppers;
-  _problem->theWarehouse().query().condition<AttribSystem>("TimeStepper").queryInto(timesteppers);
+  _problem->theWarehouse()
+      .query()
+      .condition<AttribSystem>(TimeStepper::system_attribute_name)
+      .queryInto(timesteppers);
 
   for (const auto ts : timesteppers)
     if (dynamic_cast<const CompositionDT *>(ts))

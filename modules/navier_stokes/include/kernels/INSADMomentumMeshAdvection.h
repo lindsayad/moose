@@ -10,6 +10,7 @@
 #pragma once
 
 #include "ADKernelValue.h"
+#include "FEProblemBase.h"
 #include "INSADObjectTracker.h"
 
 /**

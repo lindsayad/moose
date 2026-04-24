@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "SolutionUserObjectBase.h"
+#include "FEProblemBase.h"
 
 // MOOSE includes
 #include "ConsoleUtils.h"

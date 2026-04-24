@@ -26,7 +26,7 @@ Sampler::validParams()
 
   params.addParam<unsigned int>("seed", 0, "Random number generator initial seed");
   params.registerBase("Sampler");
-  params.registerSystemAttributeName("Sampler");
+  params.registerSystemAttributeName(system_attribute_name);
 
   // Define the allowable limits for data returned by getSamples/getLocalSamples/getNextLocalRow
   // to prevent system for going over allowable limits. The DenseMatrix object uses unsigned int

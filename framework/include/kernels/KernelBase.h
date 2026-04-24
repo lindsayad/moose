@@ -29,6 +29,7 @@ class KernelBase : public ResidualObject,
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "Kernel";
 
   KernelBase(const InputParameters & parameters);
 

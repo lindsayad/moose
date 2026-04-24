@@ -10,6 +10,7 @@
 #include "PointwiseRenormalizeVector.h"
 #include "MooseError.h"
 #include "NonlinearSystemBase.h"
+#include "FEProblemBase.h"
 
 #include "libmesh/numeric_vector.h"
 #include "libmesh/int_range.h"

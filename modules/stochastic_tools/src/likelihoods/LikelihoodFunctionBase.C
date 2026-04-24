@@ -15,7 +15,7 @@ LikelihoodFunctionBase::validParams()
   InputParameters params = MooseObject::validParams();
   params.addClassDescription("Base class for likelihood functions");
   params.registerBase("LikelihoodFunctionBase");
-  params.registerSystemAttributeName("LikelihoodFunctionBase");
+  params.registerSystemAttributeName(system_attribute_name);
   return params;
 }
 

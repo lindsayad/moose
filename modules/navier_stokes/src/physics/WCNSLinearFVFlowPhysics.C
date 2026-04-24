@@ -630,7 +630,7 @@ WCNSLinearFVFlowPhysics::addRhieChowUserObjects()
   getProblem()
       .theWarehouse()
       .query()
-      .condition<AttribSystem>("UserObject")
+      .condition<AttribSystem>(UserObject::system_attribute_name)
       .condition<AttribThread>(0)
       .queryInto(objs);
   unsigned int num_rc_uo = 0;

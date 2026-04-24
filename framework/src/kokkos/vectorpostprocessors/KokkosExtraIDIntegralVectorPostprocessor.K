@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "KokkosExtraIDIntegralVectorPostprocessor.h"
+#include "FEProblemBase.h"
 
 #include "MooseVariable.h"
 #include "MooseMesh.h"

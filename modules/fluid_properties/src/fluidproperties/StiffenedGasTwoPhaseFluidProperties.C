@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "StiffenedGasTwoPhaseFluidProperties.h"
+#include "FEProblemBase.h"
 #include "StiffenedGasFluidProperties.h"
 
 registerMooseObject("FluidPropertiesApp", StiffenedGasTwoPhaseFluidProperties);

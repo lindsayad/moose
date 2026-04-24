@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "CrackMeshCut3DUserObject.h"
+#include "FEProblemBase.h"
 
 #include "XFEMFuncs.h"
 #include "MooseError.h"

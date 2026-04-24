@@ -19,6 +19,7 @@ class Distribution : public MooseObject, public PerfGraphInterface
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "Distribution";
 
   Distribution(const InputParameters & parameters);
   /**

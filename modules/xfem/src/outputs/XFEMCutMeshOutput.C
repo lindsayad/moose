@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "XFEMCutMeshOutput.h"
+#include "libmesh/equation_systems.h"
 #include "MeshCutUserObjectBase.h"
 
 registerMooseObject("XFEMApp", XFEMCutMeshOutput);

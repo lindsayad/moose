@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MeshInfo.h"
+#include "FEProblemBase.h"
 #include "SubProblem.h"
 #include "libmesh/system.h"
 #include "libmesh/equation_systems.h"

@@ -200,7 +200,7 @@ FEProblemBase::hasKokkosUserObject(const std::string & name) const
   std::vector<UserObjectBase *> objs;
   theWarehouse()
       .query()
-      .condition<AttribSystem>("KokkosUserObject")
+      .condition<AttribSystem>(Moose::Kokkos::UserObject::system_attribute_name)
       .condition<AttribName>(name)
       .queryInto(objs);
   return !objs.empty();

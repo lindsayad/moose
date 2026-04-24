@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "INSFVRhieChowInterpolatorSegregated.h"
+#include "FEProblemBase.h"
 #include "INSFVAttributes.h"
 #include "SubProblem.h"
 #include "MooseMesh.h"

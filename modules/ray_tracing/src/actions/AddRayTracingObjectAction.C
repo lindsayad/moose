@@ -33,7 +33,8 @@ AddRayTracingObjectAction::act()
 
   // Query into UserObjects
   std::vector<UserObject *> uos;
-  auto query = _problem->theWarehouse().query().condition<AttribSystem>("UserObject");
+  auto query =
+      _problem->theWarehouse().query().condition<AttribSystem>(UserObject::system_attribute_name);
 
   // Object has a study: see if it exists
   if (_moose_object_pars.isParamSetByUser("study"))

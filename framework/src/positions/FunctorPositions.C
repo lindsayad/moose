@@ -8,6 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "FunctorPositions.h"
+#include "FEProblemBase.h"
+#include "SubProblem.h"
 
 registerMooseObject("MooseApp", FunctorPositions);
 

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "NodalVoidVolume.h"
+#include "FEProblemBase.h"
 #include "Assembly.h"
 #include "libmesh/parallel_sync.h"
 

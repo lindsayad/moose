@@ -40,7 +40,10 @@ TestRayLots::postExecuteStudy()
     std::size_t same_passes = 0, duplicate_passes = 0;
 
     std::vector<UserObject *> uos;
-    _fe_problem.theWarehouse().query().condition<AttribSystem>("UserObject").queryInto(uos);
+    _fe_problem.theWarehouse()
+        .query()
+        .condition<AttribSystem>(UserObject::system_attribute_name)
+        .queryInto(uos);
     RayTracingStudy * other_study = nullptr;
     for (auto & uo : uos)
       if (auto study = dynamic_cast<RayTracingStudy *>(uo))

@@ -31,6 +31,7 @@ class DiracKernelBase : public ResidualObject,
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "DiracKernel";
 
   DiracKernelBase(const InputParameters & parameters);
 

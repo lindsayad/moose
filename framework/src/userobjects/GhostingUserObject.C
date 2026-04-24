@@ -10,6 +10,7 @@
 #include "GhostingUserObject.h"
 #include "NonlinearSystemBase.h"
 #include "MooseMesh.h"
+#include "FEProblemBase.h"
 
 registerMooseObject("MooseApp", GhostingUserObject);
 

@@ -9,6 +9,7 @@
 
 #include "ChangeOverTimePostprocessor.h"
 #include "MooseUtils.h"
+#include "FEProblemBase.h"
 
 registerMooseObject("MooseApp", ChangeOverTimePostprocessor);
 

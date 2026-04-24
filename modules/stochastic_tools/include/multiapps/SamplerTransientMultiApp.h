@@ -12,6 +12,7 @@
 // MOOSE includes
 #include "TransientMultiApp.h"
 #include "SamplerInterface.h"
+#include "Transfer.h"
 
 #include "StochasticToolsTypes.h"
 

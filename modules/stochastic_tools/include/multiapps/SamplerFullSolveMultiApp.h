@@ -12,6 +12,8 @@
 // MOOSE includes
 #include "FullSolveMultiApp.h"
 #include "SamplerInterface.h"
+#include "ReporterInterface.h"
+#include "Transfer.h"
 
 #include "StochasticToolsTypes.h"
 

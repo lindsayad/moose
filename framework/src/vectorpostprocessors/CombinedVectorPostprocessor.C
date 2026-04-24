@@ -10,6 +10,7 @@
 #include "CombinedVectorPostprocessor.h"
 #include "VectorPostprocessorInterface.h"
 #include "VectorPostprocessor.h"
+#include "FEProblemBase.h"
 
 registerMooseObject("MooseApp", CombinedVectorPostprocessor);
 

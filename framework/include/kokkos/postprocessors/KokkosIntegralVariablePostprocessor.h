@@ -11,6 +11,7 @@
 
 #include "KokkosElementIntegralPostprocessor.h"
 #include "KokkosSideIntegralPostprocessor.h"
+#include "MooseVariableInterface.h"
 
 template <typename Base>
 class KokkosIntegralVariablePostprocessor : public Base, public MooseVariableInterface<Real>

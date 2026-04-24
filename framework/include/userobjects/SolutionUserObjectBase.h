@@ -11,6 +11,7 @@
 
 // MOOSE includes
 #include "GeneralUserObject.h"
+#include "libmesh/equation_systems.h"
 
 // Forward declarations
 namespace libMesh

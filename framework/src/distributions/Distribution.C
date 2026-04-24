@@ -16,7 +16,7 @@ Distribution::validParams()
   InputParameters params = MooseObject::validParams();
   params.addRequiredParam<std::string>("type", "class/type name identifying the distribution");
   params.registerBase("Distribution");
-  params.registerSystemAttributeName("Distribution");
+  params.registerSystemAttributeName(system_attribute_name);
   return params;
 }
 

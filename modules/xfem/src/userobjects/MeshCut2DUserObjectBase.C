@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MeshCut2DUserObjectBase.h"
+#include "FEProblemBase.h"
 #include "MeshCut2DNucleationBase.h"
 #include "CrackFrontDefinition.h"
 

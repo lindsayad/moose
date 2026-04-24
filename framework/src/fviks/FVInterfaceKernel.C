@@ -74,7 +74,7 @@ FVInterfaceKernel::validParams()
   params.addCoupledVar("displacements", "The displacements");
   params.declareControllable("enable");
   params.registerBase("FVInterfaceKernel");
-  params.registerSystemAttributeName("FVInterfaceKernel");
+  params.registerSystemAttributeName(system_attribute_name);
   params.set<bool>("_residual_object") = true;
   return params;
 }

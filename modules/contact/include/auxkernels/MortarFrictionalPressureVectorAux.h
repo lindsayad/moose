@@ -9,7 +9,10 @@
 
 #pragma once
 
+class AutomaticMortarGeneration;
+
 #include "AuxKernel.h"
+#include "FEProblemBase.h"
 
 /**
  * Computes the frictional pressure vector for three-dimensional mortar mechanical contact.

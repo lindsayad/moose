@@ -51,14 +51,14 @@ CheckFVBCAction::act()
         std::vector<FVFluxBC *> flux_bcs;
         std::vector<FVDirichletBCBase *> dirichlet_bcs;
         the_warehouse.query()
-            .template condition<AttribSystem>("FVFluxBC")
+            .template condition<AttribSystem>(FVFluxBC::system_attribute_name)
             .template condition<AttribVar>(var_num)
             .template condition<AttribThread>(0)
             .template condition<AttribSysNum>(var->sys().number())
             .queryInto(flux_bcs);
 
         the_warehouse.query()
-            .template condition<AttribSystem>("FVDirichletBC")
+            .template condition<AttribSystem>(FVDirichletBCBase::system_attribute_name)
             .template condition<AttribVar>(var_num)
             .template condition<AttribThread>(0)
             .template condition<AttribSysNum>(var->sys().number())

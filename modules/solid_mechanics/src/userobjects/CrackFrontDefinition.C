@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "CrackFrontDefinition.h"
+#include "FEProblemBase.h"
 
 // MOOSE includes
 #include "MooseError.h"

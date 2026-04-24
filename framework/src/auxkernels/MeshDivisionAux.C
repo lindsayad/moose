@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MeshDivisionAux.h"
+#include "FEProblemBase.h"
 #include "MeshDivision.h"
 
 registerMooseObject("MooseApp", MeshDivisionAux);

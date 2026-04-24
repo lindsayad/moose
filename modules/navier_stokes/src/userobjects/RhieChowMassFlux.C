@@ -9,6 +9,8 @@
 
 // MOOSE includes
 #include "RhieChowMassFlux.h"
+#include "Attributes.h"
+#include "FEProblemBase.h"
 #include "SubProblem.h"
 #include "MooseMesh.h"
 #include "NS.h"
@@ -153,7 +155,7 @@ RhieChowMassFlux::initialSetup()
                         .query()
                         .template condition<AttribThread>(_tid)
                         .template condition<AttribSysNum>(_p->sys().number())
-                        .template condition<AttribSystem>("LinearFVFluxKernel")
+                        .template condition<AttribSystem>(LinearFVFluxKernel::system_attribute_name)
                         .template condition<AttribName>(getParam<std::string>("p_diffusion_kernel"))
                         .queryInto(flux_kernel);
   if (flux_kernel.size() != 1)
@@ -182,13 +184,14 @@ RhieChowMassFlux::initialSetup()
       for (const auto & force_name : _body_force_kernel_names[dim_i])
       {
         std::vector<LinearFVElementalKernel *> temp_storage;
-        auto base_query_force = _fe_problem.theWarehouse()
-                                    .query()
-                                    .template condition<AttribThread>(_tid)
-                                    .template condition<AttribSysNum>(_vel[dim_i]->sys().number())
-                                    .template condition<AttribSystem>("LinearFVElementalKernel")
-                                    .template condition<AttribName>(force_name)
-                                    .queryInto(temp_storage);
+        auto base_query_force =
+            _fe_problem.theWarehouse()
+                .query()
+                .template condition<AttribThread>(_tid)
+                .template condition<AttribSysNum>(_vel[dim_i]->sys().number())
+                .template condition<AttribSystem>(LinearFVElementalKernel::system_attribute_name)
+                .template condition<AttribName>(force_name)
+                .queryInto(temp_storage);
         if (temp_storage.size() != 1)
           paramError("body_force_kernel_names",
                      "The kernel with the given name: " + force_name +

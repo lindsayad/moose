@@ -9,6 +9,7 @@
 
 // MOOSE includes
 #include "NodalNormalsPreprocessor.h"
+#include "FEProblemBase.h"
 
 #include "Assembly.h"
 #include "AuxiliarySystem.h"

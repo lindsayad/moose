@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "ThermocoupleSensorPostprocessor.h"
+#include "FEProblemBase.h"
 #include "GeneralSensorPostprocessor.h"
 #include "Function.h"
 #include "MooseRandom.h"

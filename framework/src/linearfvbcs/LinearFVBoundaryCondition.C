@@ -30,7 +30,7 @@ LinearFVBoundaryCondition::validParams()
       "variable", "The name of the variable that this boundary condition applies to");
   params.declareControllable("enable");
   params.registerBase("LinearFVBoundaryCondition");
-  params.registerSystemAttributeName("LinearFVBoundaryCondition");
+  params.registerSystemAttributeName(system_attribute_name);
   return params;
 }
 

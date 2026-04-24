@@ -75,6 +75,7 @@
 #include "FVScalarLagrangeMultiplierConstraint.h"
 #include "FVBoundaryScalarLagrangeMultiplierConstraint.h"
 #include "FVFluxKernel.h"
+#include "FVInterfaceKernel.h"
 #include "FVScalarLagrangeMultiplierInterface.h"
 #include "UserObject.h"
 #include "OffDiagonalScalingMatrix.h"
@@ -250,7 +251,7 @@ NonlinearSystemBase::initialSetup()
         std::vector<FVElementalKernel *> fv_elemental_kernels;
         _fe_problem.theWarehouse()
             .query()
-            .template condition<AttribSystem>("FVElementalKernel")
+            .template condition<AttribSystem>(FVElementalKernel::system_attribute_name)
             .template condition<AttribThread>(tid)
             .queryInto(fv_elemental_kernels);
 
@@ -260,7 +261,7 @@ NonlinearSystemBase::initialSetup()
         std::vector<FVFluxKernel *> fv_flux_kernels;
         _fe_problem.theWarehouse()
             .query()
-            .template condition<AttribSystem>("FVFluxKernel")
+            .template condition<AttribSystem>(FVFluxKernel::system_attribute_name)
             .template condition<AttribThread>(tid)
             .queryInto(fv_flux_kernels);
 
@@ -355,21 +356,21 @@ NonlinearSystemBase::timestepSetup()
       std::vector<FVFluxBC *> bcs;
       _fe_problem.theWarehouse()
           .query()
-          .template condition<AttribSystem>("FVFluxBC")
+          .template condition<AttribSystem>(FVFluxBC::system_attribute_name)
           .template condition<AttribThread>(tid)
           .queryInto(bcs);
 
       std::vector<FVInterfaceKernel *> iks;
       _fe_problem.theWarehouse()
           .query()
-          .template condition<AttribSystem>("FVInterfaceKernel")
+          .template condition<AttribSystem>(FVInterfaceKernel::system_attribute_name)
           .template condition<AttribThread>(tid)
           .queryInto(iks);
 
       std::vector<FVFluxKernel *> kernels;
       _fe_problem.theWarehouse()
           .query()
-          .template condition<AttribSystem>("FVFluxKernel")
+          .template condition<AttribSystem>(FVFluxKernel::system_attribute_name)
           .template condition<AttribThread>(tid)
           .queryInto(kernels);
 
@@ -418,21 +419,21 @@ NonlinearSystemBase::customSetup(const ExecFlagType & exec_type)
       std::vector<FVFluxBC *> bcs;
       _fe_problem.theWarehouse()
           .query()
-          .template condition<AttribSystem>("FVFluxBC")
+          .template condition<AttribSystem>(FVFluxBC::system_attribute_name)
           .template condition<AttribThread>(tid)
           .queryInto(bcs);
 
       std::vector<FVInterfaceKernel *> iks;
       _fe_problem.theWarehouse()
           .query()
-          .template condition<AttribSystem>("FVInterfaceKernel")
+          .template condition<AttribSystem>(FVInterfaceKernel::system_attribute_name)
           .template condition<AttribThread>(tid)
           .queryInto(iks);
 
       std::vector<FVFluxKernel *> kernels;
       _fe_problem.theWarehouse()
           .query()
-          .template condition<AttribSystem>("FVFluxKernel")
+          .template condition<AttribSystem>(FVFluxKernel::system_attribute_name)
           .template condition<AttribThread>(tid)
           .queryInto(kernels);
 
@@ -1787,7 +1788,7 @@ NonlinearSystemBase::computeResidualInternal(const std::set<TagID> & tags)
   std::vector<UserObject *> uos;
   _fe_problem.theWarehouse()
       .query()
-      .condition<AttribSystem>("UserObject")
+      .condition<AttribSystem>(UserObject::system_attribute_name)
       .condition<AttribExecOns>(EXEC_PRE_KERNELS)
       .queryInto(uos);
   for (auto & uo : uos)
@@ -2029,7 +2030,7 @@ NonlinearSystemBase::computeResidualAndJacobianInternal(const std::set<TagID> & 
   std::vector<UserObject *> uos;
   _fe_problem.theWarehouse()
       .query()
-      .condition<AttribSystem>("UserObject")
+      .condition<AttribSystem>(UserObject::system_attribute_name)
       .condition<AttribExecOns>(EXEC_PRE_KERNELS)
       .queryInto(uos);
   for (auto & uo : uos)
@@ -2894,7 +2895,7 @@ NonlinearSystemBase::computeJacobianInternal(const std::set<TagID> & tags)
   std::vector<UserObject *> uos;
   _fe_problem.theWarehouse()
       .query()
-      .condition<AttribSystem>("UserObject")
+      .condition<AttribSystem>(UserObject::system_attribute_name)
       .condition<AttribExecOns>(EXEC_PRE_KERNELS)
       .queryInto(uos);
   for (auto & uo : uos)
@@ -3713,7 +3714,7 @@ NonlinearSystemBase::checkKernelCoverage(const std::set<SubdomainID> & mesh_subd
     std::vector<FVElementalKernel *> fv_elemental_kernels;
     _fe_problem.theWarehouse()
         .query()
-        .template condition<AttribSystem>("FVElementalKernel")
+        .template condition<AttribSystem>(FVElementalKernel::system_attribute_name)
         .queryInto(fv_elemental_kernels);
 
     for (auto fv_kernel : fv_elemental_kernels)
@@ -3735,7 +3736,7 @@ NonlinearSystemBase::checkKernelCoverage(const std::set<SubdomainID> & mesh_subd
     std::vector<FVFluxKernel *> fv_flux_kernels;
     _fe_problem.theWarehouse()
         .query()
-        .template condition<AttribSystem>("FVFluxKernel")
+        .template condition<AttribSystem>(FVFluxKernel::system_attribute_name)
         .queryInto(fv_flux_kernels);
 
     for (auto fv_kernel : fv_flux_kernels)
@@ -3751,7 +3752,7 @@ NonlinearSystemBase::checkKernelCoverage(const std::set<SubdomainID> & mesh_subd
     std::vector<FVInterfaceKernel *> fv_interface_kernels;
     _fe_problem.theWarehouse()
         .query()
-        .template condition<AttribSystem>("FVInterfaceKernel")
+        .template condition<AttribSystem>(FVInterfaceKernel::system_attribute_name)
         .queryInto(fv_interface_kernels);
 
     for (auto fvik : fv_interface_kernels)
@@ -3761,7 +3762,7 @@ NonlinearSystemBase::checkKernelCoverage(const std::set<SubdomainID> & mesh_subd
     std::vector<FVFluxBC *> fv_flux_bcs;
     _fe_problem.theWarehouse()
         .query()
-        .template condition<AttribSystem>("FVFluxBC")
+        .template condition<AttribSystem>(FVFluxBC::system_attribute_name)
         .queryInto(fv_flux_bcs);
 
     for (auto fvbc : fv_flux_bcs)

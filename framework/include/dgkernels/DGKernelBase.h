@@ -43,6 +43,7 @@ public:
    * derived kernels
    */
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "DGKernel";
 
   DGKernelBase(const InputParameters & parameters);
 

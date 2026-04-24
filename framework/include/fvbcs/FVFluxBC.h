@@ -29,6 +29,7 @@ public:
   FVFluxBC(const InputParameters & parameters);
 
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "FVFluxBC";
 
   void computeResidual(const FaceInfo & fi) override;
   void computeJacobian(const FaceInfo & fi) override;

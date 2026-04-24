@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "FeatureVolumeVectorPostprocessor.h"
+#include "FEProblemBase.h"
 
 // MOOSE includes
 #include "Assembly.h"

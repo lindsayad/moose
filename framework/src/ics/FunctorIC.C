@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "FunctorIC.h"
+#include "FEProblemBase.h"
 #include "Function.h"
 #include "MooseFunctorArguments.h"
 #include "UserObject.h"

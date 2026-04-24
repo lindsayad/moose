@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "AdjointSolutionUserObject.h"
+#include "libmesh/equation_systems.h"
 
 #include "libmesh/mesh_function.h"
 #include "libmesh/exodusII_io.h"

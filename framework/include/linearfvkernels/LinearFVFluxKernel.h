@@ -20,6 +20,7 @@ class LinearFVFluxKernel : public LinearFVKernel, public FaceArgProducerInterfac
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "LinearFVFluxKernel";
 
   /**
    * Class constructor.

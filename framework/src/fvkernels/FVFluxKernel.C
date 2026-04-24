@@ -23,7 +23,7 @@ FVFluxKernel::validParams()
 {
   InputParameters params = FVKernel::validParams();
   params += TwoMaterialPropertyInterface::validParams();
-  params.registerSystemAttributeName("FVFluxKernel");
+  params.registerSystemAttributeName(system_attribute_name);
   params.addParam<bool>("force_boundary_execution",
                         false,
                         "Whether to force execution of this object on all external boundaries.");

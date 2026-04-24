@@ -8,6 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "SimpleTestShapeElementUserObject.h"
+#include "libmesh/equation_systems.h"
+#include "FEProblemBase.h"
 #include "libmesh/quadrature.h"
 
 registerMooseObject("MooseTestApp", SimpleTestShapeElementUserObject);

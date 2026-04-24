@@ -389,13 +389,11 @@ private:
 class AttribSystem : public Attribute
 {
 public:
-  typedef std::string Key;
-  void setFrom(const Key & k) { _val = k; }
+  typedef const char * Key;
+  void setFrom(Key k) { _val = k; }
 
   AttribSystem(TheWarehouse & w) : Attribute(w, "system") {}
-  AttribSystem(TheWarehouse & w, const std::string & system) : Attribute(w, "system"), _val(system)
-  {
-  }
+  AttribSystem(TheWarehouse & w, const char * system) : Attribute(w, "system"), _val(system) {}
   virtual void initFrom(const MooseObject * obj) override;
   virtual bool isMatch(const Attribute & other) const override;
   virtual bool isEqual(const Attribute & other) const override;
@@ -403,7 +401,7 @@ public:
   clonefunc(AttribSystem);
 
 private:
-  std::string _val;
+  const char * _val = nullptr;
 };
 
 /**

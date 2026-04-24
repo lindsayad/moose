@@ -68,6 +68,7 @@ public:
   FVInterfaceKernel(const InputParameters & parameters);
 
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "FVInterfaceKernel";
 
   /**
    * Get a reference to the subproblem

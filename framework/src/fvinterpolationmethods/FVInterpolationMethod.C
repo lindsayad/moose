@@ -14,7 +14,7 @@ FVInterpolationMethod::validParams()
 {
   InputParameters params = MooseObject::validParams();
   params.registerBase("FVInterpolationMethod");
-  params.registerSystemAttributeName("FVInterpolationMethod");
+  params.registerSystemAttributeName(system_attribute_name);
   params.addClassDescription(
       "Base class for defining face interpolation schemes used by finite volume objects.");
   return params;

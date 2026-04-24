@@ -8,6 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "Attributes.h"
+#include "VectorPostprocessor.h"
+#include "Postprocessor.h"
 
 #include "TaggingInterface.h"
 #include "BoundaryRestrictable.h"
@@ -424,7 +426,12 @@ bool
 AttribSystem::isMatch(const Attribute & other) const
 {
   auto a = dynamic_cast<const AttribSystem *>(&other);
-  return a && (a->_val == _val);
+  if (!a)
+    return false;
+  mooseAssert(!_val || !a->_val || _val == a->_val || std::strcmp(_val, a->_val) != 0,
+              std::string("AttribSystem pointer mismatch with equal content '") + _val +
+                  "' — system_attribute_name constexpr not used for registration or query");
+  return _val == a->_val;
 }
 
 bool

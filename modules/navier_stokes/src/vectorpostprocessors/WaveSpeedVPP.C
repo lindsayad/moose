@@ -9,6 +9,7 @@
 
 // MOOSE includes
 #include "WaveSpeedVPP.h"
+#include "FEProblemBase.h"
 #include "ElementsIntersectedByPlane.h"
 #include "MooseMesh.h"
 #include "HLLCUserObject.h"

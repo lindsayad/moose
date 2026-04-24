@@ -29,6 +29,7 @@ class FVElementalKernel : public FVKernel,
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "FVElementalKernel";
   FVElementalKernel(const InputParameters & parameters);
 
   /// Usually you should not override these functions - they have some

@@ -20,6 +20,7 @@ class ParallelAcquisitionFunctionBase : public MooseObject
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "ParallelAcquisitionFunctionBase";
   ParallelAcquisitionFunctionBase(const InputParameters & parameters);
 
   /**

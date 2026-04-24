@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "EBSDReader.h"
+#include "FEProblemBase.h"
 #include "EBSDMesh.h"
 #include "MooseMesh.h"
 #include "Conversion.h"

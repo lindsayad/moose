@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "TwoPhaseNCGPartialPressureFluidProperties.h"
+#include "FEProblemBase.h"
 #include "IdealGasMixtureFluidProperties.h"
 #include "SinglePhaseFluidProperties.h"
 

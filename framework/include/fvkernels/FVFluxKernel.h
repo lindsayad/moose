@@ -36,6 +36,7 @@ class FVFluxKernel : public FVKernel,
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "FVFluxKernel";
   FVFluxKernel(const InputParameters & params);
 
   void computeResidual() override;

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "LevelSetCutUserObject.h"
+#include "libmesh/system.h"
 #include "SubProblem.h"
 #include "MooseVariable.h"
 #include "libmesh/string_to_enum.h"

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "TimeSequenceFromTimes.h"
+#include "FEProblemBase.h"
 #include "Times.h"
 
 registerMooseObject("MooseApp", TimeSequenceFromTimes);

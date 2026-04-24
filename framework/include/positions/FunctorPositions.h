@@ -11,7 +11,7 @@
 
 // Moose includes
 #include "Positions.h"
-#include "FunctorInterface.h"
+#include "NonADFunctorInterface.h"
 
 /**
  * Positions from groups of three functors

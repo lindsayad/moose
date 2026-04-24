@@ -40,7 +40,7 @@ INSFVVariable::cacheSeparatorBoundaries()
   const auto base_query = this->_subproblem.getMooseApp()
                               .theWarehouse()
                               .query()
-                              .template condition<AttribSystem>("FVFluxBC")
+                              .template condition<AttribSystem>(FVFluxBC::system_attribute_name)
                               .template condition<AttribThread>(_tid);
 
   for (const auto bnd_id : this->_mesh.getBoundaryIDs())

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MaterialCopyUserObject.h"
+#include "SubProblem.h"
 #include "MooseMesh.h"
 
 registerMooseObject("MooseTestApp", MaterialCopyUserObject);

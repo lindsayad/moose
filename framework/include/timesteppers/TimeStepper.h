@@ -23,6 +23,7 @@ class TimeStepper : public MooseObject, public Restartable, public ScalarCouplea
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "TimeStepper";
 
   TimeStepper(const InputParameters & parameters);
   virtual ~TimeStepper();

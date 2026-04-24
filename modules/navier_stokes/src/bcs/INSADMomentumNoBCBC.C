@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "INSADMomentumNoBCBC.h"
+#include "FEProblemBase.h"
 #include "MooseMesh.h"
 #include "INSADObjectTracker.h"
 #include "NS.h"

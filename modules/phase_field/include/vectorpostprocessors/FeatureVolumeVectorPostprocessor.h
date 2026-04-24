@@ -14,6 +14,10 @@
 #include "BoundaryRestrictable.h"
 
 #include <array>
+#include "MooseVariableFEBase.h"
+#include "libmesh/quadrature.h"
+
+using libMesh::QBase;
 
 // Forward Declarations
 class FeatureFloodCount;

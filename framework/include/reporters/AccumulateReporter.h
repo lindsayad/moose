@@ -10,6 +10,7 @@
 #pragma once
 
 #include "GeneralReporter.h"
+#include "FEProblemBase.h"
 
 class AccumulatedValueBase;
 template <typename T>

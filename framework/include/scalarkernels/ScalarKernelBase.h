@@ -20,6 +20,7 @@ class ScalarKernelBase : public ResidualObject, public ScalarCoupleable
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "ScalarKernel";
 
   ScalarKernelBase(const InputParameters & parameters);
 

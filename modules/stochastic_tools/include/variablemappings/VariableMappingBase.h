@@ -24,6 +24,7 @@ class VariableMappingBase : public MooseObject, public RestartableModelInterface
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "VariableMappingBase";
   VariableMappingBase(const InputParameters & parameters);
 
   virtual ~VariableMappingBase() {}

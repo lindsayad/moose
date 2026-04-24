@@ -13,6 +13,7 @@
 #include "MooseMesh.h"
 #include "MooseVariable.h"
 #include "SubProblem.h"
+#include "FEProblemBase.h"
 
 registerMooseObject("MooseApp", ElementalVariableValue);
 

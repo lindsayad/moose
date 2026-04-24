@@ -19,6 +19,7 @@
 #include "TimeKernel.h"
 #include "SwapBackSentinel.h"
 #include "FVTimeKernel.h"
+#include "FVElementalKernel.h"
 #include "ComputeJacobianThread.h"
 
 #include "libmesh/threads.h"
@@ -103,7 +104,7 @@ NonlinearThread::subdomainChanged()
     _fe_problem.theWarehouse()
         .query()
         .template condition<AttribSysNum>(_nl.number())
-        .template condition<AttribSystem>("FVElementalKernel")
+        .template condition<AttribSystem>(FVElementalKernel::system_attribute_name)
         .template condition<AttribSubdomains>(_subdomain)
         .template condition<AttribThread>(_tid)
         .queryInto(_fv_kernels);

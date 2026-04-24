@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MooseVariableFV.h"
+#include "Attributes.h"
 #include "TimeIntegrator.h"
 #include "NonlinearSystemBase.h"
 #include "DisplacedSystem.h"
@@ -875,13 +876,14 @@ MooseVariableFV<OutputType>::determineBoundaryToDirichletBCMap()
   // const lvalue reference results in the query() getting destructed and us holding onto a dangling
   // reference. I think that condition returned by value we would be able to bind to a const lvalue
   // reference here. But as it is we'll bind to a regular lvalue
-  const auto base_query = this->_subproblem.getMooseApp()
-                              .theWarehouse()
-                              .query()
-                              .template condition<AttribSystem>("FVDirichletBC")
-                              .template condition<AttribThread>(_tid)
-                              .template condition<AttribVar>(_var_num)
-                              .template condition<AttribSysNum>(this->_sys.number());
+  const auto base_query =
+      this->_subproblem.getMooseApp()
+          .theWarehouse()
+          .query()
+          .template condition<AttribSystem>(FVDirichletBCBase::system_attribute_name)
+          .template condition<AttribThread>(_tid)
+          .template condition<AttribVar>(_var_num)
+          .template condition<AttribSysNum>(this->_sys.number());
 
   for (const auto bnd_id : this->_mesh.getBoundaryIDs())
   {
@@ -914,7 +916,7 @@ MooseVariableFV<OutputType>::determineBoundaryToFluxBCMap()
   const auto base_query = this->_subproblem.getMooseApp()
                               .theWarehouse()
                               .query()
-                              .template condition<AttribSystem>("FVFluxBC")
+                              .template condition<AttribSystem>(FVFluxBC::system_attribute_name)
                               .template condition<AttribThread>(_tid)
                               .template condition<AttribVar>(_var_num)
                               .template condition<AttribSysNum>(this->_sys.number());

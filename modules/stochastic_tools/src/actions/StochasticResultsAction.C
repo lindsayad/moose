@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "StochasticResultsAction.h"
+#include "FEProblemBase.h"
 #include "ActionWarehouse.h"
 #include "ActionFactory.h"
 #include "Transfer.h"

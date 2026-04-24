@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "NodalPatchRecoveryBase.h"
+#include "FEProblemBase.h"
 #include "MathUtils.h"
 
 #include <Eigen/Dense>

@@ -10,6 +10,7 @@
 #pragma once
 
 #include "GeneralPostprocessor.h"
+#include "MooseVariableFEBase.h"
 
 class VariableResidual : public GeneralPostprocessor
 {

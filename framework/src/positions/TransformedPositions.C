@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "TransformedPositions.h"
+#include "FEProblemBase.h"
 #include "GeometryUtils.h"
 
 registerMooseObject("MooseApp", TransformedPositions);

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "INSFVAdvectionKernel.h"
+#include "FEProblemBase.h"
 #include "NS.h"
 #include "MooseVariableFV.h"
 #include "RelationshipManager.h"

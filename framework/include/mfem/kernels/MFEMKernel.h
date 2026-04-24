@@ -14,6 +14,7 @@
 #include "MFEMObject.h"
 #include "MFEMContainers.h"
 #include "MFEMBlockRestrictable.h"
+#include "KernelBase.h"
 
 /**
  * Class to construct an MFEM integrator to apply to the equation system.
@@ -22,7 +23,7 @@ class MFEMKernel : public MFEMObject, public MFEMBlockRestrictable
 {
 public:
   static InputParameters validParams();
-  static constexpr const char * system_attribute_name = "Kernel";
+  static constexpr const char * system_attribute_name = KernelBase::system_attribute_name;
 
   MFEMKernel(const InputParameters & parameters);
 

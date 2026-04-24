@@ -22,6 +22,7 @@ class SurrogateModel : public MooseObject,
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "SurrogateModel";
   SurrogateModel(const InputParameters & parameters);
 
   static MooseEnum defaultPredictorTypes() { return MooseEnum("real"); }

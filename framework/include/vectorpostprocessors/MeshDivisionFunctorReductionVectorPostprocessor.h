@@ -10,6 +10,7 @@
 #pragma once
 
 #include "SpatialUserObjectFunctor.h"
+#include "MeshDivision.h"
 #include "ElementVectorPostprocessor.h"
 
 /**

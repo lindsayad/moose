@@ -9,6 +9,8 @@
 
 // MOOSE includes
 #include "AnalysisStepUOInterface.h"
+#include "Attributes.h"
+#include "FEProblemBase.h"
 #include "AnalysisStepUserObject.h"
 
 void
@@ -17,7 +19,10 @@ AnalysisStepUOInterface::getAnalysisStepUserObject(const FEProblemBase & fe_prob
                                                    const std::string & name)
 {
   std::vector<const UserObject *> uos;
-  fe_problem.theWarehouse().query().condition<AttribSystem>("UserObject").queryIntoUnsorted(uos);
+  fe_problem.theWarehouse()
+      .query()
+      .condition<AttribSystem>(UserObject::system_attribute_name)
+      .queryIntoUnsorted(uos);
 
   std::vector<const AnalysisStepUserObject *> step_uos;
   for (const auto & uo : uos)

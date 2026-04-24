@@ -15,7 +15,7 @@ UserObject::validParams()
 {
   InputParameters params = UserObjectBase::validParams();
 
-  params.registerSystemAttributeName("UserObject");
+  params.registerSystemAttributeName(system_attribute_name);
 
   return params;
 }

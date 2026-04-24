@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MooseLinearVariableFV.h"
+#include "Attributes.h"
 #include "TimeIntegrator.h"
 #include "NonlinearSystemBase.h"
 #include "DisplacedSystem.h"
@@ -366,13 +367,14 @@ MooseLinearVariableFV<OutputType>::cacheBoundaryBCMap()
   // const lvalue reference results in the query() getting destructed and us holding onto a dangling
   // reference. I think that condition returned by value we would be able to bind to a const lvalue
   // reference here. But as it is we'll bind to a regular lvalue
-  auto base_query = this->_subproblem.getMooseApp()
-                        .theWarehouse()
-                        .query()
-                        .template condition<AttribSystem>("LinearFVBoundaryCondition")
-                        .template condition<AttribThread>(_tid)
-                        .template condition<AttribVar>(_var_num)
-                        .template condition<AttribSysNum>(this->_sys.number());
+  auto base_query =
+      this->_subproblem.getMooseApp()
+          .theWarehouse()
+          .query()
+          .template condition<AttribSystem>(LinearFVBoundaryCondition::system_attribute_name)
+          .template condition<AttribThread>(_tid)
+          .template condition<AttribVar>(_var_num)
+          .template condition<AttribSysNum>(this->_sys.number());
 
   for (const auto bnd_id : this->_mesh.getBoundaryIDs())
   {

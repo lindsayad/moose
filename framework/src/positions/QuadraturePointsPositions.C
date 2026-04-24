@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "QuadraturePointsPositions.h"
+#include "SubProblem.h"
 #include "libmesh/quadrature_gauss.h"
 #include "SetupQuadratureAction.h"
 

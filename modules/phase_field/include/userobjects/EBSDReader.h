@@ -11,6 +11,7 @@
 
 #include "EulerAngleProvider.h"
 #include "EBSDAccessFunctors.h"
+#include "NonlinearSystemBase.h"
 
 /**
  * A GeneralUserObject that reads an EBSD file and stores the centroid

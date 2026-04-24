@@ -65,6 +65,7 @@ public:
   LinearFVBoundaryCondition(const InputParameters & parameters);
 
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "LinearFVBoundaryCondition";
 
   virtual bool hasFaceSide(const FaceInfo & fi, bool fi_elem_side) const override;
 

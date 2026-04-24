@@ -12,6 +12,7 @@
 #endif
 
 #include "FEProblemBase.h"
+#include "UserObjectSystemNames.h"
 #include "AuxiliarySystem.h"
 #include "MaterialPropertyStorage.h"
 #include "MooseEnum.h"
@@ -1099,7 +1100,8 @@ FEProblemBase::initialSetup()
   std::map<int, std::vector<UserObjectBase *>> group_userobjs;
 
   // This replaces all prior updateDependObjects calls on the old user object warehouses.
-  TheWarehouse::Query uo_query = theWarehouse().query().condition<AttribSystem>("UserObject");
+  TheWarehouse::Query uo_query =
+      theWarehouse().query().condition<AttribSystem>(UserObject::system_attribute_name);
   std::vector<UserObjectBase *> userobjs;
   uo_query.queryInto(userobjs);
   groupUserObjects(
@@ -1111,7 +1113,7 @@ FEProblemBase::initialSetup()
 #ifdef MOOSE_KOKKOS_ENABLED
   {
     TheWarehouse::Query uo_query =
-        theWarehouse().query().condition<AttribSystem>("KokkosUserObject");
+        theWarehouse().query().condition<AttribSystem>(Moose::Kokkos::UserObjectSystemName);
     std::vector<UserObjectBase *> userobjs;
     uo_query.queryInto(userobjs);
     groupUserObjects(
@@ -1668,14 +1670,20 @@ FEProblemBase::timestepSetup()
   }
 
   std::vector<UserObject *> userobjs;
-  theWarehouse().query().condition<AttribSystem>("UserObject").queryIntoUnsorted(userobjs);
+  theWarehouse()
+      .query()
+      .condition<AttribSystem>(UserObject::system_attribute_name)
+      .queryIntoUnsorted(userobjs);
   for (auto obj : userobjs)
     obj->timestepSetup();
 
 #ifdef MOOSE_KOKKOS_ENABLED
   {
     std::vector<UserObjectBase *> userobjs;
-    theWarehouse().query().condition<AttribSystem>("KokkosUserObject").queryIntoUnsorted(userobjs);
+    theWarehouse()
+        .query()
+        .condition<AttribSystem>(Moose::Kokkos::UserObjectSystemName)
+        .queryIntoUnsorted(userobjs);
     for (auto obj : userobjs)
       obj->timestepSetup();
   }
@@ -2814,7 +2822,7 @@ FEProblemBase::getDistribution(const std::string & name)
   std::vector<Distribution *> objs;
   theWarehouse()
       .query()
-      .condition<AttribSystem>("Distribution")
+      .condition<AttribSystem>(Distribution::system_attribute_name)
       .condition<AttribName>(name)
       .queryInto(objs);
   if (objs.empty())
@@ -2838,7 +2846,7 @@ FEProblemBase::getSampler(const std::string & name, const THREAD_ID tid)
   std::vector<Sampler *> objs;
   theWarehouse()
       .query()
-      .condition<AttribSystem>("Sampler")
+      .condition<AttribSystem>(Sampler::system_attribute_name)
       .condition<AttribThread>(tid)
       .condition<AttribName>(name)
       .queryInto(objs);
@@ -4667,7 +4675,7 @@ FEProblemBase::getUserObjectBase(const std::string & name, const THREAD_ID tid /
   std::vector<UserObject *> objs;
   theWarehouse()
       .query()
-      .condition<AttribSystem>("UserObject")
+      .condition<AttribSystem>(UserObject::system_attribute_name)
       .condition<AttribThread>(tid)
       .condition<AttribName>(name)
       .queryInto(objs);
@@ -4683,7 +4691,7 @@ FEProblemBase::getPositionsObject(const std::string & name) const
   std::vector<Positions *> objs;
   theWarehouse()
       .query()
-      .condition<AttribSystem>("UserObject")
+      .condition<AttribSystem>(UserObject::system_attribute_name)
       .condition<AttribName>(name)
       .queryInto(objs);
   if (objs.empty())
@@ -4698,7 +4706,7 @@ FEProblemBase::hasUserObject(const std::string & name) const
   std::vector<UserObject *> objs;
   theWarehouse()
       .query()
-      .condition<AttribSystem>("UserObject")
+      .condition<AttribSystem>(UserObject::system_attribute_name)
       .condition<AttribThread>(0)
       .condition<AttribName>(name)
       .queryInto(objs);
@@ -4712,7 +4720,7 @@ FEProblemBase::getFVInterpolationMethod(const InterpolationMethodName & name,
   std::vector<FVInterpolationMethod *> methods;
   theWarehouse()
       .query()
-      .condition<AttribSystem>("FVInterpolationMethod")
+      .condition<AttribSystem>(FVInterpolationMethod::system_attribute_name)
       .condition<AttribThread>(tid)
       .condition<AttribName>(name)
       .queryInto(methods);
@@ -4764,7 +4772,7 @@ FEProblemBase::hasFVInterpolationMethod(const InterpolationMethodName & name) co
   std::vector<FVInterpolationMethod *> methods;
   theWarehouse()
       .query()
-      .condition<AttribSystem>("FVInterpolationMethod")
+      .condition<AttribSystem>(FVInterpolationMethod::system_attribute_name)
       .condition<AttribThread>(0)
       .condition<AttribName>(name)
       .queryInto(methods);
@@ -5003,14 +5011,20 @@ FEProblemBase::customSetup(const ExecFlagType & exec_type)
   }
 
   std::vector<UserObject *> userobjs;
-  theWarehouse().query().condition<AttribSystem>("UserObject").queryIntoUnsorted(userobjs);
+  theWarehouse()
+      .query()
+      .condition<AttribSystem>(UserObject::system_attribute_name)
+      .queryIntoUnsorted(userobjs);
   for (auto obj : userobjs)
     obj->customSetup(exec_type);
 
 #ifdef MOOSE_KOKKOS_ENABLED
   {
     std::vector<UserObjectBase *> userobjs;
-    theWarehouse().query().condition<AttribSystem>("KokkosUserObject").queryIntoUnsorted(userobjs);
+    theWarehouse()
+        .query()
+        .condition<AttribSystem>(Moose::Kokkos::UserObjectSystemName)
+        .queryIntoUnsorted(userobjs);
     for (auto obj : userobjs)
       obj->customSetup(exec_type);
   }
@@ -5183,7 +5197,7 @@ FEProblemBase::joinAndFinalize(TheWarehouse::Query query, bool isgen)
 }
 
 TheWarehouse::Query
-FEProblemBase::getUOQuery(const std::string & system,
+FEProblemBase::getUOQuery(const char * system,
                           const ExecFlagType & type,
                           const Moose::AuxGroup & group) const
 {
@@ -5222,11 +5236,12 @@ FEProblemBase::computeUserObjectByName(const ExecFlagType & type,
 
 #ifdef MOOSE_KOKKOS_ENABLED
   TheWarehouse::Query kokkos_query =
-      getUOQuery("KokkosUserObject", type, group).condition<AttribName>(name);
+      getUOQuery(Moose::Kokkos::UserObjectSystemName, type, group).condition<AttribName>(name);
   getUOExecutionGroups(kokkos_query, execution_groups);
 #endif
 
-  TheWarehouse::Query query = getUOQuery("UserObject", type, group).condition<AttribName>(name);
+  TheWarehouse::Query query =
+      getUOQuery(UserObject::system_attribute_name, type, group).condition<AttribName>(name);
   getUOExecutionGroups(query, execution_groups);
 
   for (const auto execution_group : execution_groups)
@@ -5249,11 +5264,11 @@ FEProblemBase::computeUserObjects(const ExecFlagType & type, const Moose::AuxGro
   std::set<int> execution_groups;
 
 #ifdef MOOSE_KOKKOS_ENABLED
-  TheWarehouse::Query kokkos_query = getUOQuery("KokkosUserObject", type, group);
+  TheWarehouse::Query kokkos_query = getUOQuery(Moose::Kokkos::UserObjectSystemName, type, group);
   getUOExecutionGroups(kokkos_query, execution_groups);
 #endif
 
-  TheWarehouse::Query query = getUOQuery("UserObject", type, group);
+  TheWarehouse::Query query = getUOQuery(UserObject::system_attribute_name, type, group);
   getUOExecutionGroups(query, execution_groups);
 
   for (const auto execution_group : execution_groups)
@@ -5514,7 +5529,7 @@ FEProblemBase::executeSamplers(const ExecFlagType & exec_type)
     std::vector<Sampler *> objects;
     theWarehouse()
         .query()
-        .condition<AttribSystem>("Sampler")
+        .condition<AttribSystem>(Sampler::system_attribute_name)
         .condition<AttribThread>(tid)
         .condition<AttribExecOns>(exec_type)
         .queryInto(objects);

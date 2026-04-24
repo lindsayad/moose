@@ -169,3 +169,9 @@ UserObjectBase::addReporterDependencyHelper(const ReporterName & reporter_name)
 {
   _depend_uo.insert(reporter_name.getObjectName());
 }
+
+unsigned int
+UserObjectBase::systemNumber() const
+{
+  return _sys.number();
+}

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MortarFrictionalPressureVectorAux.h"
+#include "FEProblemBase.h"
 #include "SystemBase.h"
 #include "AutomaticMortarGeneration.h"
 

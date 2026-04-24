@@ -9,6 +9,8 @@
 
 #pragma once
 
+class DisplacedProblem;
+
 #include "ElementUserObject.h"
 #include "NonlinearSystemBase.h"
 #include "AuxiliarySystem.h"

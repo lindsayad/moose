@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "KokkosAuxKernel.h"
+#include "FEProblemBase.h"
 
 #include "AuxiliarySystem.h"
 #include "MaterialBase.h"

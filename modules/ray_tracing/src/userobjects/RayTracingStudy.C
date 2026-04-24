@@ -1251,7 +1251,7 @@ RayTracingStudy::getRayKernels(std::vector<RayKernelBase *> & result, SubdomainI
     auto query = _fe_problem.theWarehouse()
                      .query()
                      .condition<AttribRayTracingStudy>(this)
-                     .condition<AttribSystem>("RayKernel")
+                     .condition<AttribSystem>(RayKernelBase::system_attribute_name)
                      .condition<AttribThread>(tid);
     _threaded_cache_ray_kernel[tid] = query.clone();
   }
@@ -1303,7 +1303,7 @@ RayTracingStudy::getRayBCs(std::vector<RayBoundaryConditionBase *> & result,
     auto query = _fe_problem.theWarehouse()
                      .query()
                      .condition<AttribRayTracingStudy>(this)
-                     .condition<AttribSystem>("RayBoundaryCondition")
+                     .condition<AttribSystem>(RayBoundaryConditionBase::system_attribute_name)
                      .condition<AttribThread>(tid);
     _threaded_cache_ray_bc[tid] = query.clone();
   }

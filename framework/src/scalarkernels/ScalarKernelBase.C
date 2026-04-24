@@ -29,7 +29,7 @@ ScalarKernelBase::validParams()
   params.addParamNamesToGroup("use_displaced_mesh", "Advanced");
 
   params.registerBase("ScalarKernel");
-  params.registerSystemAttributeName("ScalarKernel");
+  params.registerSystemAttributeName(system_attribute_name);
 
   return params;
 }

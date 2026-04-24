@@ -17,7 +17,7 @@ UserObject::validParams()
 {
   InputParameters params = ::UserObjectBase::validParams();
 
-  params.registerSystemAttributeName("KokkosUserObject");
+  params.registerSystemAttributeName(system_attribute_name);
 
   params.addPrivateParam<bool>(MooseBase::kokkos_object_param, true);
 

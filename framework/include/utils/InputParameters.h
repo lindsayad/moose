@@ -746,13 +746,13 @@ public:
    *
    * See the AttribSystem object for use Attribute.h/C.
    */
-  void registerSystemAttributeName(const std::string & value);
+  void registerSystemAttributeName(const char * value);
 
   /**
    * Get the system attribute name if it was registered. Otherwise throw an error.
    * See the AttribSystem object for use Attribute.h/C.
    */
-  const std::string & getSystemAttributeName() const;
+  const char * getSystemAttributeName() const;
 
   /**
    * This method is here to indicate which Moose types a particular Action may build. It takes a

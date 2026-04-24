@@ -33,7 +33,7 @@ AuxKernelTempl<ComputeValueType>::validParams()
   if (typeid(AuxKernelTempl<ComputeValueType>).name() == typeid(ArrayAuxKernel).name())
     params.registerBase("ArrayAuxKernel");
 
-  params.registerSystemAttributeName("AuxKernel");
+  params.registerSystemAttributeName(system_attribute_name);
 
   return params;
 }

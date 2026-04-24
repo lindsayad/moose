@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "AdvectiveFluxCalculatorBase.h"
+#include "FEProblemBase.h"
 #include "Conversion.h" // for stringify
 
 #include "libmesh/string_to_enum.h"

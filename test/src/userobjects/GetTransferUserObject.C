@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "GetTransferUserObject.h"
+#include "FEProblemBase.h"
 #include "libmesh/quadrature.h"
 #include "MultiAppTransfer.h"
 

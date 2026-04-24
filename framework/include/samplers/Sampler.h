@@ -16,6 +16,7 @@
 #include "SetupInterface.h"
 #include "DistributionInterface.h"
 #include "PerfGraphInterface.h"
+#include "FEProblemBase.h"
 #include "SamplerInterface.h"
 #include "MultiApp.h"
 #include "VectorPostprocessorInterface.h"
@@ -57,6 +58,7 @@ public:
   };
 
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "Sampler";
   Sampler(const InputParameters & parameters);
 
   // The public members define the API that is exposed to application developers that are using

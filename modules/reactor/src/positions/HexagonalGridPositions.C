@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "HexagonalGridPositions.h"
+#include "FEProblemBase.h"
 #include "HexagonalLatticeUtils.h"
 
 registerMooseObject("ReactorApp", HexagonalGridPositions);

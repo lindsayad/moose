@@ -25,7 +25,7 @@ RayKernelBase::validParams()
                                             "Other RayKernels that this RayKernel depends on");
 
   params.registerBase("RayKernel");
-  params.registerSystemAttributeName("RayKernel");
+  params.registerSystemAttributeName(system_attribute_name);
 
   // Allows for a RayKernel to request that it needs a reinit on its segment
   // We have this so that for RayKernels that still need qps and weights but do not

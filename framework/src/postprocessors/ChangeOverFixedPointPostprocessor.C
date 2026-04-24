@@ -10,6 +10,7 @@
 // moose includes
 #include "ChangeOverFixedPointPostprocessor.h"
 #include "Transient.h"
+#include "FEProblemBase.h"
 
 registerMooseObject("MooseApp", ChangeOverFixedPointPostprocessor);
 

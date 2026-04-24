@@ -8,6 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "SideFVFluxBCIntegral.h"
+#include "Attributes.h"
+#include "FEProblemBase.h"
 #include "FVFluxBC.h"
 
 #include "metaphysicl/raw_type.h"
@@ -40,7 +42,7 @@ SideFVFluxBCIntegral::initialSetup()
   // in the initialization step.
   auto base_query = _fe_problem.theWarehouse()
                         .query()
-                        .condition<AttribSystem>("FVFluxBC")
+                        .condition<AttribSystem>(FVFluxBC::system_attribute_name)
                         .condition<AttribThread>(_tid);
 
   // Fetch the mentioned boundary conditions

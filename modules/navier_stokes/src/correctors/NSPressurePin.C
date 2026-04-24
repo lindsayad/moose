@@ -8,6 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "NSPressurePin.h"
+#include "libmesh/system.h"
+#include "FEProblemBase.h"
 #include "SubProblem.h"
 #include "SystemBase.h"
 #include "NS.h"

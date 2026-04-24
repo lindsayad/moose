@@ -29,7 +29,7 @@ MappingInterface::getMappingByName(const UserObjectName & name) const
   _smi_feproblem.theWarehouse()
       .query()
       .condition<AttribName>(name)
-      .condition<AttribSystem>("VariableMappingBase")
+      .condition<AttribSystem>(VariableMappingBase::system_attribute_name)
       .queryInto(models);
   if (models.empty())
     mooseError("Unable to find a Mapping object with the name '" + name + "'");

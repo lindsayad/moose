@@ -27,7 +27,7 @@ Constraint::validParams()
   params.addParamNamesToGroup("use_displaced_mesh", "Advanced");
 
   params.registerBase("Constraint");
-  params.registerSystemAttributeName("Constraint");
+  params.registerSystemAttributeName(system_attribute_name);
 
   return params;
 }

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "SolutionContainer.h"
+#include "FEProblemBase.h"
 #include "NonlinearSystemBase.h"
 
 registerMooseObject("StochasticToolsApp", SolutionContainer);

@@ -41,6 +41,7 @@
 #include "RestartableEquationSystems.h"
 #include "SolutionInvalidity.h"
 #include "PetscSupport.h"
+#include "UserObjectSystemNames.h"
 
 #include "libmesh/enum_quadrature_type.h"
 #include "libmesh/equation_systems.h"
@@ -1357,19 +1358,7 @@ public:
    * @return Reference to the user object
    */
   template <class T>
-  T & getUserObject(const std::string & name, unsigned int tid = 0) const
-  {
-    std::vector<T *> objs;
-    theWarehouse()
-        .query()
-        .condition<AttribSystem>("UserObject")
-        .condition<AttribThread>(tid)
-        .condition<AttribName>(name)
-        .queryInto(objs);
-    if (objs.empty())
-      mooseError("Unable to find user object with name '" + name + "'");
-    return *(objs[0]);
-  }
+  T & getUserObject(const std::string & name, unsigned int tid = 0) const;
 
   /**
    * Get the user object by its name
@@ -1397,18 +1386,7 @@ public:
    * @return const reference to the Kokkos user object
    */
   template <class T>
-  const T & getKokkosUserObject(const std::string & name) const
-  {
-    std::vector<T *> objs;
-    theWarehouse()
-        .query()
-        .condition<AttribSystem>("KokkosUserObject")
-        .condition<AttribName>(name)
-        .queryInto(objs);
-    if (objs.empty())
-      mooseError("Unable to find Kokkos user object with name '" + name + "'");
-    return *(objs[0]);
-  }
+  const T & getKokkosUserObject(const std::string & name) const;
 
   /**
    * Check if there if a Kokkos user object of given name
@@ -2995,9 +2973,8 @@ private:
    */
   static SolverParams makeLinearSolverParams();
 
-  TheWarehouse::Query getUOQuery(const std::string & system,
-                                 const ExecFlagType & type,
-                                 const Moose::AuxGroup & group) const;
+  TheWarehouse::Query
+  getUOQuery(const char * system, const ExecFlagType & type, const Moose::AuxGroup & group) const;
 
   void getUOExecutionGroups(TheWarehouse::Query & query, std::set<int> & execution_groups) const;
 
@@ -3821,3 +3798,34 @@ FEProblemBase::getKokkosFunction(const std::string & name)
   return *ret;
 }
 #endif
+
+template <class T>
+T &
+FEProblemBase::getUserObject(const std::string & name, unsigned int tid) const
+{
+  std::vector<T *> objs;
+  theWarehouse()
+      .query()
+      .condition<AttribSystem>(Moose::UserObjectSystemName)
+      .condition<AttribThread>(tid)
+      .condition<AttribName>(name)
+      .queryInto(objs);
+  if (objs.empty())
+    mooseError("Unable to find user object with name '" + name + "'");
+  return *(objs[0]);
+}
+
+template <class T>
+const T &
+FEProblemBase::getKokkosUserObject(const std::string & name) const
+{
+  std::vector<T *> objs;
+  theWarehouse()
+      .query()
+      .condition<AttribSystem>(Moose::Kokkos::UserObjectSystemName)
+      .condition<AttribName>(name)
+      .queryInto(objs);
+  if (objs.empty())
+    mooseError("Unable to find Kokkos user object with name '" + name + "'");
+  return *(objs[0]);
+}

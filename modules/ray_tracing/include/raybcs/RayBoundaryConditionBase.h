@@ -12,6 +12,7 @@
 // Local Includes
 #include "RayTracingObject.h"
 #include "Ray.h"
+#include "RayTracingSystemNames.h"
 
 // MOOSE Includes
 #include "Restartable.h"
@@ -31,6 +32,7 @@ public:
   virtual ~RayBoundaryConditionBase();
 
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = RayTracing::RayBoundaryConditionSystemName;
 
   /**
    * Called on a Ray on the boundary to apply the Ray boundary condition.

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "libmesh/libmesh_config.h"
+#include "FEProblemBase.h"
 
 #ifdef LIBMESH_HAVE_FPARSER
 

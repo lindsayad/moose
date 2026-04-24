@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "InterfaceMeshCutUserObjectBase.h"
+#include "FEProblemBase.h"
 #include "XFEMMovingInterfaceVelocityBase.h"
 
 InputParameters

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "NodePositions.h"
+#include "SubProblem.h"
 
 #include "libmesh/parallel_algebra.h"
 

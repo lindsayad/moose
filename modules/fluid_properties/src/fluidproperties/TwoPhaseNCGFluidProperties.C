@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "TwoPhaseNCGFluidProperties.h"
+#include "FEProblemBase.h"
 
 InputParameters
 TwoPhaseNCGFluidProperties::validParams()

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MatrixEigenvalueCheck.h"
+#include "libmesh/petsc_solver_exception.h"
 
 #include <petscmat.h>
 #include <slepceps.h>

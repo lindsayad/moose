@@ -15,6 +15,7 @@
 #include "KokkosDispatcher.h"
 
 #include "UserObjectBase.h"
+#include "UserObjectSystemNames.h"
 
 namespace Moose::Kokkos
 {
@@ -23,6 +24,7 @@ class UserObject : public ::UserObjectBase
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = Moose::Kokkos::UserObjectSystemName;
 
   UserObject(const InputParameters & params);
 

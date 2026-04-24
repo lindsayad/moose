@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "INSADMomentumViscous.h"
+#include "FEProblemBase.h"
 #include "Assembly.h"
 #include "SystemBase.h"
 #include "INSADObjectTracker.h"

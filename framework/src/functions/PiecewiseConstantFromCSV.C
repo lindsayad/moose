@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "PiecewiseConstantFromCSV.h"
+#include "FEProblemBase.h"
 
 registerMooseObject("MooseApp", PiecewiseConstantFromCSV);
 

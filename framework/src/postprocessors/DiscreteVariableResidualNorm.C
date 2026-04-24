@@ -10,6 +10,7 @@
 #include "DiscreteVariableResidualNorm.h"
 #include "MooseVariableFieldBase.h"
 #include "NonlinearSystemBase.h"
+#include "FEProblemBase.h"
 
 #include "libmesh/dof_map.h"
 

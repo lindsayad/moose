@@ -9,6 +9,7 @@
 
 // MOOSE includes
 #include "NumPositions.h"
+#include "FEProblemBase.h"
 #include "Positions.h"
 
 registerMooseObject("MooseApp", NumPositions);

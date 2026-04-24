@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "AbaqusUExternalDB.h"
+#include "FEProblemBase.h"
 #include "AbaqusUtils.h"
 #include "AnalysisStepUserObject.h"
 

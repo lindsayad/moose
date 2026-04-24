@@ -28,6 +28,7 @@ class Damper : public MooseObject,
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "Damper";
 
   Damper(const InputParameters & parameters);
 

@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MeshCutLevelSetAux.h"
+#include "FEProblemBase.h"
 #include "InterfaceMeshCutUserObjectBase.h"
 
 registerMooseObject("XFEMApp", MeshCutLevelSetAux);

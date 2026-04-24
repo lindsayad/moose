@@ -15,12 +15,13 @@
 #include "MFEMBoundaryRestrictable.h"
 #include "MFEMContainers.h"
 #include "Function.h"
+#include "BoundaryCondition.h"
 
 class MFEMBoundaryCondition : public MFEMObject, public MFEMBoundaryRestrictable
 {
 public:
   static InputParameters validParams();
-  static constexpr const char * system_attribute_name = "BoundaryCondition";
+  static constexpr const char * system_attribute_name = BoundaryCondition::system_attribute_name;
 
   MFEMBoundaryCondition(const InputParameters & parameters);
   virtual ~MFEMBoundaryCondition() = default;

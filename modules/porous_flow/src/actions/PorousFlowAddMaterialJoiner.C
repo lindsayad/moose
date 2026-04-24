@@ -43,7 +43,7 @@ PorousFlowAddMaterialJoiner::act()
     std::vector<UserObject *> userobjects;
     _problem->theWarehouse()
         .query()
-        .condition<AttribSystem>("UserObject")
+        .condition<AttribSystem>(UserObject::system_attribute_name)
         .condition<AttribThread>(0)
         .queryInto(userobjects);
     for (auto & userobject : userobjects)

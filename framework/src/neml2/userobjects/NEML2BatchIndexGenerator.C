@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "NEML2BatchIndexGenerator.h"
+#include "FEProblemBase.h"
 #include "NEML2Utils.h"
 
 registerMooseObject("MooseApp", NEML2BatchIndexGenerator);

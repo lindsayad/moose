@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "PorousFlowAddBCAction.h"
+#include "FEProblemBase.h"
 #include "PorousFlowDictator.h"
 #include "NonlinearSystemBase.h"
 

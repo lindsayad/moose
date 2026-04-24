@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "Moose.h"
+#include "FEProblemBase.h"
 #include "MooseError.h"
 #include "OptimizeSolve.h"
 #include "OptimizationAppTypes.h"

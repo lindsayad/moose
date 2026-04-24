@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "GeneralUserObjectBasePD.h"
+#include "FEProblemBase.h"
 #include "PeridynamicsMesh.h"
 
 InputParameters

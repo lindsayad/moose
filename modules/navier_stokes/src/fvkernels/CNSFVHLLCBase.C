@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "CNSFVHLLCBase.h"
+#include "FEProblemBase.h"
 #include "NS.h"
 #include "HLLCUserObject.h"
 #include "SinglePhaseFluidProperties.h"

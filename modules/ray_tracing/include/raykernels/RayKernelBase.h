@@ -11,6 +11,7 @@
 
 // Local Includes
 #include "RayTracingObject.h"
+#include "RayTracingSystemNames.h"
 
 // MOOSE includes
 #include "CoupleableMooseVariableDependencyIntermediateInterface.h"
@@ -18,6 +19,7 @@
 #include "RandomInterface.h"
 #include "MaterialPropertyInterface.h"
 #include "Restartable.h"
+#include "FEProblemBase.h"
 
 /**
  * Base object for the RayKernel syntax
@@ -36,6 +38,7 @@ public:
   virtual ~RayKernelBase();
 
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = RayTracing::RayKernelSystemName;
 
   /**
    * Called on each segment of a Ray

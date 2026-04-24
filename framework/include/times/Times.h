@@ -32,7 +32,7 @@ public:
   };
 
   /// Get the current time
-  Real getCurrentTime() const { return _fe_problem.time(); }
+  Real getCurrentTime() const;
 
   /// Getter for a single time at a known index
   Real getTimeAtIndex(unsigned int index) const;

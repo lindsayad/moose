@@ -8,6 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MaskedGrainForceAndTorque.h"
+#include "SubProblem.h"
+#include "FEProblemBase.h"
 
 registerMooseObject("PhaseFieldApp", MaskedGrainForceAndTorque);
 

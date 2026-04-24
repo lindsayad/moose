@@ -24,7 +24,7 @@ KernelBase::validParams()
   params += BlockRestrictable::validParams();
   params += MaterialPropertyInterface::validParams();
   params += GeometricSearchInterface::validParams();
-  params.registerSystemAttributeName("Kernel");
+  params.registerSystemAttributeName(system_attribute_name);
 
   params.addParam<std::vector<AuxVariableName>>(
       "save_in",

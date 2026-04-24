@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "HexagonalGridDivision.h"
+#include "FEProblemBase.h"
 #include "MooseMesh.h"
 #include "HexagonalLatticeUtils.h"
 #include "Positions.h"

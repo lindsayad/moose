@@ -383,8 +383,8 @@ MFEMProblem::getMFEMObject(const std::string & name, const THREAD_ID tid) const
   theWarehouse()
       .query()
       .condition<AttribSystem>(T::system_attribute_name)
-      .condition<AttribThread>(tid)
-      .condition<AttribName>(name)
+      .template condition<AttribThread>(tid)
+      .template condition<AttribName>(name)
       .queryInto(objs);
   if (objs.empty())
     mooseError("No MFEM object '" + name + "' of type '" + MooseUtils::prettyCppType<T>() + "'");
@@ -400,8 +400,8 @@ MFEMProblem::hasMFEMObject(const std::string & name, const THREAD_ID tid) const
   theWarehouse()
       .query()
       .condition<AttribSystem>(T::system_attribute_name)
-      .condition<AttribThread>(tid)
-      .condition<AttribName>(name)
+      .template condition<AttribThread>(tid)
+      .template condition<AttribName>(name)
       .queryInto(objs);
   return !objs.empty();
 }

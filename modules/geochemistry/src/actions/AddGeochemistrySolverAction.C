@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "AddGeochemistrySolverAction.h"
+#include "FEProblemBase.h"
 #include "GeochemicalModelDefinition.h"
 #include "GeochemistryReactorBase.h"
 #include "NearestNodeNumber.h"

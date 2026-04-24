@@ -36,7 +36,7 @@ GatherRCDataElementThread::subdomainChanged()
 
   auto queries = _fe_problem.theWarehouse()
                      .query()
-                     .template condition<AttribSystem>("FVElementalKernel")
+                     .template condition<AttribSystem>(FVElementalKernel::system_attribute_name)
                      .template condition<AttribSysNum>(this->_nl_system_num)
                      .template condition<AttribThread>(_tid)
                      .template condition<AttribSubdomains>(_subdomain);

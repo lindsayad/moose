@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "OptimizationReporterBase.h"
+#include "FEProblemBase.h"
 #include "OptimizationReporterTest.h"
 #include "libmesh/petsc_vector.h"
 

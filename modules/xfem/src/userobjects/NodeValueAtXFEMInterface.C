@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "NodeValueAtXFEMInterface.h"
+#include "FEProblemBase.h"
 #include "MooseVariableFE.h"
 #include "XFEM.h"
 #include "InterfaceMeshCutUserObjectBase.h"

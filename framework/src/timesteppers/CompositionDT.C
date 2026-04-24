@@ -234,7 +234,7 @@ CompositionDT::getTimeSteppers()
   std::vector<TimeStepper *> time_steppers;
   _fe_problem.theWarehouse()
       .query()
-      .condition<AttribSystem>("TimeStepper")
+      .condition<AttribSystem>(TimeStepper::system_attribute_name)
       .queryInto(time_steppers);
 
   // Remove CompositionDT from time_steppers vector to avoid recursive call

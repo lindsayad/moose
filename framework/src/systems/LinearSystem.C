@@ -124,7 +124,7 @@ LinearSystem::initialSetup()
     std::vector<LinearFVElementalKernel *> fv_elemental_kernels;
     _fe_problem.theWarehouse()
         .query()
-        .template condition<AttribSystem>("LinearFVElementalKernel")
+        .template condition<AttribSystem>(LinearFVElementalKernel::system_attribute_name)
         .template condition<AttribThread>(tid)
         .queryInto(fv_elemental_kernels);
 
@@ -134,7 +134,7 @@ LinearSystem::initialSetup()
     std::vector<LinearFVFluxKernel *> fv_flux_kernels;
     _fe_problem.theWarehouse()
         .query()
-        .template condition<AttribSystem>("LinearFVFluxKernel")
+        .template condition<AttribSystem>(LinearFVFluxKernel::system_attribute_name)
         .template condition<AttribThread>(tid)
         .queryInto(fv_flux_kernels);
 
@@ -144,7 +144,7 @@ LinearSystem::initialSetup()
     std::vector<LinearFVBoundaryCondition *> fv_bcs;
     _fe_problem.theWarehouse()
         .query()
-        .template condition<AttribSystem>("LinearFVBoundaryCondition")
+        .template condition<AttribSystem>(LinearFVBoundaryCondition::system_attribute_name)
         .template condition<AttribThread>(tid)
         .queryInto(fv_bcs);
 
@@ -316,11 +316,12 @@ LinearSystem::containsTimeKernel()
 {
   // Right now, FV kernels are in TheWarehouse so we have to use that.
   std::vector<LinearFVKernel *> kernels;
-  auto base_query = _fe_problem.theWarehouse()
-                        .query()
-                        .template condition<AttribSysNum>(this->number())
-                        .template condition<AttribSystem>("LinearFVKernel")
-                        .queryInto(kernels);
+  auto base_query =
+      _fe_problem.theWarehouse()
+          .query()
+          .template condition<AttribSysNum>(this->number())
+          .template condition<AttribSystem>(LinearFVElementalKernel::system_attribute_name)
+          .queryInto(kernels);
 
   bool contains_time_kernel = false;
   for (const auto kernel : kernels)

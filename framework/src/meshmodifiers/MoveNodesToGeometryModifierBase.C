@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MoveNodesToGeometryModifierBase.h"
+#include "SubProblem.h"
 #include "MooseMesh.h"
 #include "libmesh/mesh_base.h"
 

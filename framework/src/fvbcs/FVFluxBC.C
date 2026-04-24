@@ -18,7 +18,7 @@ FVFluxBC::validParams()
 {
   InputParameters params = FVBoundaryCondition::validParams();
   params += TwoMaterialPropertyInterface::validParams();
-  params.registerSystemAttributeName("FVFluxBC");
+  params.registerSystemAttributeName(system_attribute_name);
 
   // FVFluxBCs always rely on Boundary MaterialData
   params.set<Moose::MaterialDataType>("_material_data_type") = Moose::BOUNDARY_MATERIAL_DATA;

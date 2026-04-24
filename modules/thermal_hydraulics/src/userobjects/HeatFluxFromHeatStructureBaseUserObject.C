@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "HeatFluxFromHeatStructureBaseUserObject.h"
+#include "FEProblemBase.h"
 
 InputParameters
 HeatFluxFromHeatStructureBaseUserObject::validParams()

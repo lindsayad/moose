@@ -10,6 +10,7 @@
 #pragma once
 
 #include "KokkosNodalPostprocessor.h"
+#include "MooseVariableInterface.h"
 
 class KokkosNodalVariablePostprocessor : public Moose::Kokkos::NodalPostprocessor,
                                          public MooseVariableInterface<Real>

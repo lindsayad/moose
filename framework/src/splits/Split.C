@@ -69,7 +69,7 @@ Split::validParams()
                                             "PETSc option values for the FieldSplit solver");
 
   params.registerBase("Split");
-  params.registerSystemAttributeName("Split");
+  params.registerSystemAttributeName(system_attribute_name);
   return params;
 }
 

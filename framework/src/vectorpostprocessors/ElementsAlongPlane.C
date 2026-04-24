@@ -9,6 +9,7 @@
 
 // MOOSE includes
 #include "ElementsAlongPlane.h"
+#include "FEProblemBase.h"
 #include "ElementsIntersectedByPlane.h"
 #include "MooseMesh.h"
 

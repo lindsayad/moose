@@ -51,7 +51,7 @@ DiracKernelBase::validParams()
 
   params.addParamNamesToGroup("use_displaced_mesh drop_duplicate_points", "Advanced");
   params.declareControllable("enable");
-  params.registerSystemAttributeName("DiracKernel");
+  params.registerSystemAttributeName(system_attribute_name);
 
   return params;
 }

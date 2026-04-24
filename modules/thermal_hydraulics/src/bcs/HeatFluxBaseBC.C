@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "HeatFluxBaseBC.h"
+#include "FEProblemBase.h"
 #include "HeatFluxFromHeatStructureBaseUserObject.h"
 #include "THMIndicesVACE.h"
 #include "Assembly.h"

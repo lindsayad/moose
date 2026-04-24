@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "VectorMemoryUsage.h"
+#include "FEProblemBase.h"
 #include "MemoryUtils.h"
 #include <algorithm>
 

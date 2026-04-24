@@ -8,6 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "TheWarehouse.h"
+#include "MooseVariableFEBase.h"
+#include "Coupleable.h"
 
 #include "Attributes.h"
 #include "MooseObject.h"

@@ -11,7 +11,7 @@
 
 // Moose includes
 #include "Times.h"
-#include "FunctorInterface.h"
+#include "NonADFunctorInterface.h"
 
 /**
  * Times created by evaluating a functor

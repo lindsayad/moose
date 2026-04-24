@@ -9,7 +9,10 @@
 
 #pragma once
 
+class AutomaticMortarGeneration;
+
 #include "AuxKernel.h"
+#include "FEProblemBase.h"
 
 /**
  * Transforms a Cartesian Lagrange multiplier vector, typically employed for mortar mechanical
