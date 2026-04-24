@@ -16,7 +16,7 @@ MFEMExecutedObject::validParams()
 {
   InputParameters params = MFEMObject::validParams();
   params += SetupInterface::validParams();
-  params.registerSystemAttributeName("MFEMExecutedObject");
+  params.registerSystemAttributeName(system_attribute_name);
   params.addPrivateParam<std::vector<std::string>>("_mfem_dependency_param_names", {});
   params.set<ExecFlagEnum>("execute_on", true) = EXEC_TIMESTEP_END;
   params.addClassDescription("Base class for executed MFEM objects.");

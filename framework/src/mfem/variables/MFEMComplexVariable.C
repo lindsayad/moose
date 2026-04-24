@@ -17,7 +17,7 @@ MFEMComplexVariable::validParams()
   params.addClassDescription(
       "Class for adding complex MFEM variables to the problem (`mfem::ParComplexGridFunction`s).");
   params.registerBase("MooseVariableBase");
-  params.registerSystemAttributeName("MooseVariableBase");
+  params.registerSystemAttributeName(system_attribute_name);
 
   return params;
 }

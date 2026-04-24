@@ -17,7 +17,7 @@ MFEMIndicator::validParams()
 {
   InputParameters params = MFEMObject::validParams();
   params.registerBase("Indicator");
-  params.registerSystemAttributeName("Indicator");
+  params.registerSystemAttributeName(system_attribute_name);
 
   params.addRequiredParam<VariableName>("variable", "Variable to perform amr with");
   params.addRequiredParam<std::string>("kernel", "Kernel to perform amr with");

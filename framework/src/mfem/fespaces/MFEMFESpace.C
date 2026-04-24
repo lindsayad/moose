@@ -17,7 +17,7 @@ MFEMFESpace::validParams()
 {
   InputParameters params = MFEMObject::validParams();
   params.registerBase("MFEMFESpace");
-  params.registerSystemAttributeName("MFEMFESpace");
+  params.registerSystemAttributeName(system_attribute_name);
   MooseEnum ordering("NODES VDIM", "VDIM", false);
   params.addParam<MooseEnum>("ordering", ordering, "Ordering style to use for vector DoFs.");
   params.addParam<int>("vdim", 1, "The number of degrees of freedom per basis function.");

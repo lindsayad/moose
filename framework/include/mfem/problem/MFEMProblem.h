@@ -379,11 +379,10 @@ template <typename T>
 T &
 MFEMProblem::getMFEMObject(const std::string & name, const THREAD_ID tid) const
 {
-  static const std::string system = T::validParams().getSystemAttributeName();
   std::vector<T *> objs;
   theWarehouse()
       .query()
-      .condition<AttribSystem>(system)
+      .condition<AttribSystem>(T::system_attribute_name)
       .condition<AttribThread>(tid)
       .condition<AttribName>(name)
       .queryInto(objs);
@@ -397,11 +396,10 @@ template <typename T>
 bool
 MFEMProblem::hasMFEMObject(const std::string & name, const THREAD_ID tid) const
 {
-  static const std::string system = T::validParams().getSystemAttributeName();
   std::vector<T *> objs;
   theWarehouse()
       .query()
-      .condition<AttribSystem>(system)
+      .condition<AttribSystem>(T::system_attribute_name)
       .condition<AttribThread>(tid)
       .condition<AttribName>(name)
       .queryInto(objs);

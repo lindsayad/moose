@@ -19,7 +19,7 @@ MFEMRefinementMarker::validParams()
 {
   InputParameters params = MFEMObject::validParams();
   params.registerBase("Marker");
-  params.registerSystemAttributeName("Marker");
+  params.registerSystemAttributeName(system_attribute_name);
 
   params.addRequiredParam<std::string>("indicator", "Estimator to use");
   params.addRangeCheckedParam<Real>("threshold",

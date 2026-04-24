@@ -27,7 +27,7 @@ MFEMVariable::validParams()
   params.addClassDescription(
       "Class for adding MFEM variables to the problem (`mfem::ParGridFunction`s).");
   params.registerBase("MooseVariableBase");
-  params.registerSystemAttributeName("MooseVariableBase");
+  params.registerSystemAttributeName(system_attribute_name);
   params.addParam<VariableName>(
       "time_derivative",
       "Optional name to assign to the time derivative of the variable in transient problems.");

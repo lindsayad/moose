@@ -21,7 +21,7 @@ MFEMKernel::validParams()
   InputParameters params = MFEMObject::validParams();
   params += MFEMBlockRestrictable::validParams();
   params.registerBase("Kernel");
-  params.registerSystemAttributeName("Kernel");
+  params.registerSystemAttributeName(system_attribute_name);
   params.addParam<VariableName>("variable",
                                 "Variable labelling the weak form this kernel is added to");
   return params;

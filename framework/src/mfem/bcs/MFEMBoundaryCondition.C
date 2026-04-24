@@ -23,7 +23,7 @@ MFEMBoundaryCondition::validParams()
 
   params.addClassDescription("Base class for applying boundary conditions to MFEM problems.");
   params.registerBase("BoundaryCondition");
-  params.registerSystemAttributeName("BoundaryCondition");
+  params.registerSystemAttributeName(system_attribute_name);
   params.addParam<VariableName>("variable", "Variable on which to apply the boundary condition");
   return params;
 }

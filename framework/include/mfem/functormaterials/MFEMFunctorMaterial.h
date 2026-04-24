@@ -22,6 +22,7 @@ class MFEMFunctorMaterial : public MFEMObject,
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "FunctorMaterial";
 
   MFEMFunctorMaterial(const InputParameters & parameters);
   virtual ~MFEMFunctorMaterial();

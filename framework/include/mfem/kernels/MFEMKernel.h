@@ -22,6 +22,7 @@ class MFEMKernel : public MFEMObject, public MFEMBlockRestrictable
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "Kernel";
 
   MFEMKernel(const InputParameters & parameters);
 

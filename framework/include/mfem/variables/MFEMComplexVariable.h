@@ -12,6 +12,7 @@ class MFEMComplexVariable : public MFEMObject
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "MooseVariableBase";
 
   MFEMComplexVariable(const InputParameters & parameters);
 

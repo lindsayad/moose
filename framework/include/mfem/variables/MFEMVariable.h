@@ -21,6 +21,7 @@ class MFEMVariable : public MFEMObject
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "MooseVariableBase";
 
   MFEMVariable(const InputParameters & parameters);
 

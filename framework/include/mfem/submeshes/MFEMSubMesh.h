@@ -21,6 +21,7 @@ class MFEMSubMesh : public MFEMObject
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "MFEMSubMesh";
 
   MFEMSubMesh(const InputParameters & parameters);
 

@@ -17,7 +17,7 @@ MFEMSubMesh::validParams()
 {
   InputParameters params = MFEMObject::validParams();
   params.registerBase("MFEMSubMesh");
-  params.registerSystemAttributeName("MFEMSubMesh");
+  params.registerSystemAttributeName(system_attribute_name);
   return params;
 }
 

@@ -21,6 +21,7 @@ class MFEMSolverBase : public MFEMObject
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "MFEMSolverBase";
 
   MFEMSolverBase(const InputParameters & parameters);
 

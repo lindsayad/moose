@@ -22,7 +22,7 @@ MFEMFunctorMaterial::validParams()
   params.addClassDescription(
       "Base class for declaration of material properties to add to MFEM problems.");
   params.registerBase("FunctorMaterial");
-  params.registerSystemAttributeName("FunctorMaterial");
+  params.registerSystemAttributeName(system_attribute_name);
   params.addPrivateParam<bool>("_neighbor", false);
   params.addPrivateParam<bool>("_interface", false);
   return params;

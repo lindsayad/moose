@@ -21,6 +21,7 @@ class MFEMFESpace : public MFEMObject
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "MFEMFESpace";
 
   MFEMFESpace(const InputParameters & parameters);
 

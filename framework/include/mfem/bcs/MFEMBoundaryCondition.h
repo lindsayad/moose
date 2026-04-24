@@ -20,6 +20,7 @@ class MFEMBoundaryCondition : public MFEMObject, public MFEMBoundaryRestrictable
 {
 public:
   static InputParameters validParams();
+  static constexpr const char * system_attribute_name = "BoundaryCondition";
 
   MFEMBoundaryCondition(const InputParameters & parameters);
   virtual ~MFEMBoundaryCondition() = default;
