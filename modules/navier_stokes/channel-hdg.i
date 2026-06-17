@@ -2,7 +2,7 @@ mu = 1.1
 rho = 1.1
 Vin = 1.0
 
-width = 1		# channel half-width
+width = 1 # channel half-width
 length = 10
 
 k = FIRST
@@ -17,12 +17,12 @@ alpha = 6
     dim = 2
     xmin = 0
     xmax = ${length}
-    ymin = ${fparse -width}
+    ymin = '${fparse -width}'
     ymax = ${width}
     nx = 100
     ny = 20
 
-#     elem_type = TRI6
+    #     elem_type = TRI6
     elem_type = QUAD9
   []
 []
@@ -41,15 +41,15 @@ alpha = 6
     order = ${k_minus_one}
   []
   [vel_bar_x]
-    family = SIDE_HIERARCHIC
+    family = LAGRANGE
     order = ${k}
   []
   [vel_bar_y]
-    family = SIDE_HIERARCHIC
+    family = LAGRANGE
     order = ${k}
   []
   [pressure_bar]
-    family = SIDE_HIERARCHIC
+    family = LAGRANGE
     order = ${k}
   []
 []
@@ -256,33 +256,42 @@ alpha = 6
   []
 []
 
+[Preconditioning]
+  [sc]
+    type = StaticCondensation
+    petsc_options_iname = '-pc_type -pc_factor_shift_type'
+    petsc_options_value = 'lu       NONZERO'
+  []
+[]
+
 [Executioner]
   type = Steady
-  solve_type = 'NEWTON'
-  petsc_options_iname = '-pc_type -pc_factor_shift_type'
-  petsc_options_value = 'lu       NONZERO'
+  solve_type = 'PJFNK'
+  petsc_options_iname = '-ksp_type'
+  petsc_options_value = 'preonly'
   nl_rel_tol = 1e-10
+  line_search = 'none'
 []
 
 [Postprocessors]
   [inlet_mass_flow]
     type = ConstantPostprocessor
-    value = ${fparse -2*rho*Vin*width}
+    value = '${fparse -2*rho*Vin*width}'
   []
-#   [outlet_mass_flow]
-#     type     = SideMassFluxIntegral
-#     boundary = 'right'
-#   []
+  #   [outlet_mass_flow]
+  #     type     = SideMassFluxIntegral
+  #     boundary = 'right'
+  #   []
 
   [Umax]
     type = ElementExtremeValue
     variable = vel_x
   []
 
-#   [mass_balance_check]
-#     type = FunctionValuePostprocessor
-#     function = mass_balance
-#   []
+  #   [mass_balance_check]
+  #     type = FunctionValuePostprocessor
+  #     function = mass_balance
+  #   []
 []
 
 # [Functions]
@@ -295,6 +304,7 @@ alpha = 6
 # []
 
 [Outputs]
+  print_linear_residuals = false
   exodus = true
   csv = true
   perf_graph = true
