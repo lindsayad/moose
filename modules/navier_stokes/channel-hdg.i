@@ -2,6 +2,7 @@ mu = 1.1
 rho = 1.1
 Vin = 1.0
 gamma = 1e4
+nu = '${fparse mu / rho}'
 
 width = 1 # channel half-width
 length = 10
@@ -128,7 +129,7 @@ alpha = 6
     type = MassMatrixHDG
     variable = pressure_bar
     matrix_tags = 'mass'
-    density = '${fparse -1/gamma}'
+    density = '${fparse -1/(gamma+nu)}'
   []
 []
 
@@ -298,7 +299,7 @@ alpha = 6
     variable = pressure_bar
     matrix_tags = 'mass'
     boundary = 'left right top bottom'
-    density = '${fparse -1/gamma}'
+    density = '${fparse -1/(gamma+nu)}'
   []
   [u_jump_walls]
     type = MassFluxPenaltyBC
@@ -401,9 +402,9 @@ alpha = 6
     []
     [u]
       vars = 'vel_bar_x vel_bar_y'
-      # petsc_options = '-ksp_converged_reason'
-      petsc_options_iname = '-pc_type -ksp_type -ksp_rtol -ksp_gmres_restart -ksp_pc_side -pc_factor_mat_solver_type -ksp_max_it -ksp_atol -ksp_norm_type'
-      petsc_options_value = 'lu       gmres     1e-2      300                right        mumps                      300         1e-8      unpreconditioned'
+      petsc_options = '-ksp_converged_reason'
+      petsc_options_iname = '-pc_type -ksp_type -ksp_rtol -ksp_gmres_restart -ksp_pc_side -ksp_max_it -ksp_atol -ksp_norm_type   -pc_factor_mat_solver_type'
+      petsc_options_value = 'lu       gmres     1e-2      300                right        300         1e-8      unpreconditioned mumps'
     []
     [p]
       vars = 'pressure_bar'
