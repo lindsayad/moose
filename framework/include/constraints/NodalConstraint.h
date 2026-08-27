@@ -64,7 +64,9 @@ public:
 
 protected:
   /**
-   * Retain an element on a distributed mesh and add its DoFs to the ghosting list.
+   * Retain an element on a distributed mesh and add its DoFs to the ghosting list. Retains the
+   * element on both the mesh this constraint is bound to and the undisplaced mesh, since
+   * send-list augmentation always resolves ghosted elements against the undisplaced mesh.
    */
   void addRetainedGhostedElem(dof_id_type elem_id);
 

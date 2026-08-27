@@ -60,9 +60,20 @@ NodalConstraint::NodalConstraint(const InputParameters & parameters)
 void
 NodalConstraint::addRetainedGhostedElem(const dof_id_type elem_id)
 {
-  Elem * const elem = _mesh.elemPtr(elem_id);
-  if (auto * const distributed_mesh = dynamic_cast<libMesh::DistributedMesh *>(&_mesh.getMesh()))
-    distributed_mesh->add_extra_ghost_elem(elem);
+  auto retain_on = [elem_id](MooseMesh & mesh)
+  {
+    Elem * const elem = mesh.elemPtr(elem_id);
+    if (auto * const distributed_mesh = dynamic_cast<libMesh::DistributedMesh *>(&mesh.getMesh()))
+      distributed_mesh->add_extra_ghost_elem(elem);
+  };
+
+  retain_on(_mesh);
+  // SystemBase::augmentSendList() always resolves ghosted elements against the undisplaced mesh
+  // (DisplacedSystem::augmentSendList() forwards to the undisplaced system's augmentSendList()),
+  // regardless of whether this constraint itself is bound to the displaced mesh. Retain the
+  // element on the undisplaced mesh as well so it is not deleted there as a remote element.
+  if (&_mesh != &_fe_problem.mesh())
+    retain_on(_fe_problem.mesh());
 
   _subproblem.addGhostedElem(elem_id);
 }
