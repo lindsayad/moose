@@ -3317,7 +3317,6 @@ FEProblemBase::addConstraint(const std::string & c_name,
   {
     parameters.set<SubProblem *>("_subproblem") = _displaced_problem.get();
     parameters.set<SystemBase *>("_sys") = &_displaced_problem->solverSys(nl_sys_num);
-    _reinit_displaced_face = true;
   }
   else
   {

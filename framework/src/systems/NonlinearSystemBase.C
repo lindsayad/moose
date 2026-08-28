@@ -610,6 +610,14 @@ NonlinearSystemBase::addConstraint(const std::string & c_name,
   _constraints.addObject(constraint);
   postAddResidualObject(*constraint);
 
+  if (_fe_problem.getDisplacedProblem() && parameters.get<bool>("use_displaced_mesh"))
+  {
+    if (dynamic_cast<NodalConstraint *>(constraint.get()))
+      _fe_problem._reinit_displaced_elem = true;
+    else
+      _fe_problem._reinit_displaced_face = true;
+  }
+
   if (!_fe_problem.useHashTableMatrixAssembly())
     if (constraint && constraint->addCouplingEntriesToJacobian())
       addImplicitGeometricCouplingEntriesToJacobian(true);
