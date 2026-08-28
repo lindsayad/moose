@@ -1,10 +1,9 @@
 [Mesh]
-  # Alex: Exodus uses geometric mapping for comparisons by default. Renumbering should not affect that comparison
   [gen]
     type = GeneratedMeshGenerator
     dim = 2
-    nx = 10
-    ny = 10
+    nx = 2
+    ny = 2
   []
 []
 
@@ -21,17 +20,17 @@
 []
 
 [BCs]
-  [left]
-    type = DirichletBC
+  [neumann]
+    type = NeumannBC
     variable = u
-    boundary = left
-    value = 1
+    boundary = 'left bottom'
+    value = -1
   []
   [right]
     type = DirichletBC
     variable = u
     boundary = right
-    value = 0
+    value = 1
   []
 []
 
@@ -51,8 +50,6 @@
     type = EqualValueBoundaryConstraint
     variable = u
     secondary = top
-    # Corner of the top boundary. Locating the primary node by coordinate keeps the constraint
-    # independent of the node numbering, which differs between replicated and distributed meshes.
     primary_node_coord = '1 1 0'
     penalty = 1e7
   []
@@ -61,11 +58,8 @@
 [Executioner]
   type = Steady
   solve_type = NEWTON
-  # Even though this problem is linear, the tolerances below control how far both the linear and
-  # nonlinear solves proceed. They are tightened well past the exodiff comparison tolerance so
-  # that the converged solution is independent of the processor count and of the mesh mode.
-  l_tol = 1e-10
-  nl_rel_tol = 1e-12
+  petsc_options_iname = '-ksp_norm_type -pc_type -pc_factor_mat_solver_type'
+  petsc_options_value = 'preconditioned lu       mumps'
 []
 
 [Outputs]

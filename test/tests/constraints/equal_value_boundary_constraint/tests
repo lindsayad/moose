@@ -28,14 +28,24 @@
                   "with adaptivity."
   []
   [evbc_primary_element_ghosting]
-    type = Exodiff
-    input = 'evbc_primary_element_ghosting.i'
-    exodiff = 'evbc_primary_element_ghosting_out.e'
-    abs_zero = 1e-9
     requirement = "The system shall obtain the same equal value boundary constraint solution, with "
                   "the primary node located by its coordinates, for any number of processors and on "
                   "either a replicated or a distributed mesh, retaining the elements needed by the "
-                  "constraint when remote elements are deleted."
+                  "constraint when remote elements are deleted when the constraint is on an"
+    [undisplaced]
+      type = Exodiff
+      input = 'evbc_primary_element_ghosting.i'
+      exodiff = 'evbc_primary_element_ghosting_out.e'
+      abs_zero = 1e-9
+      detail = 'undisplaced mesh or'
+    []
+    [displaced]
+      type = Exodiff
+      input = 'evbc_primary_element_ghosting_displaced.i'
+      exodiff = 'evbc_primary_element_ghosting_displaced_out.e'
+      abs_zero = 1e-9
+      detail = 'a displaced mesh.'
+    []
   []
   [set_primary_and_coord_error]
     type = RunException
