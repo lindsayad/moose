@@ -59,8 +59,11 @@ private:
   void ghostPrimary();
 
   /**
-   * Get the primary node ID by searching for the node with coordinates
-   * matching _primary_node_coord on the secondary node set
+   * Get the primary node ID by searching for the node with coordinates matching
+   * primary_node_coord. If 'primary_boundary' is given, the match is restricted to that
+   * boundary. Otherwise, if the coordinate is ambiguous mesh-wide, the match is narrowed down
+   * using membership in the secondary node set, which is deprecated in favor of
+   * 'primary_boundary'.
    */
   dof_id_type getPrimaryNodeIDByCoord() const;
 };

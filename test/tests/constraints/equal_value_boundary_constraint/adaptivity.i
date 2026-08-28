@@ -53,7 +53,7 @@
   [y_top]
     type = EqualValueBoundaryConstraint
     variable = 'diffused'
-    primary = '45'
+    primary_node_id = '45'
     secondary = 'top'
     penalty = 10e6
   []

@@ -20,3 +20,7 @@
     use_displaced_mesh = true
   []
 []
+
+[Outputs]
+  hide = 'disp_x disp_y'
+[]

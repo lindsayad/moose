@@ -54,9 +54,15 @@ EqualValueBoundaryConstraint::validParams()
   params.addParam<unsigned int>(
       "primary",
       "The ID of the primary node. If no ID is provided, first node of secondary set is chosen.");
+  params.deprecateParam("primary", "primary_node_id", "01/01/2027");
   params.addParam<Point>("primary_node_coord", "Coordinates of the primary node to locate.");
+  params.addParam<BoundaryName>(
+      "primary_boundary",
+      "The boundary associated with the primary side, used to disambiguate the primary node when "
+      "'primary_node_coord' matches more than one coincident mesh node (e.g. across a mesh "
+      "break).");
   params.addParam<std::vector<unsigned int>>("secondary_node_ids", "The IDs of the secondary node");
-  params.addParam<BoundaryName>("secondary", "The boundary ID associated with the secondary side");
+  params.addParam<BoundaryName>("secondary", "The boundary associated with the secondary side");
   params.addRequiredParam<Real>("penalty", "The penalty used for the boundary term");
   return params;
 }
@@ -125,9 +131,9 @@ void
 EqualValueBoundaryConstraint::pickPrimaryNode()
 {
   // user provided nothing
-  if (isParamValid("primary") && isParamValid("primary_node_coord"))
-    mooseError(
-        "Both 'primary' and 'primary_node_coord' parameters are set. They are mutually exclusive.");
+  if (isParamValid("primary_node_id") && isParamValid("primary_node_coord"))
+    mooseError("Both 'primary_node_id' and 'primary_node_coord' parameters are set. They are "
+               "mutually exclusive.");
 
   dof_id_type primary_node_id = Node::invalid_id;
 
@@ -135,8 +141,8 @@ EqualValueBoundaryConstraint::pickPrimaryNode()
   if (isParamValid("primary_node_coord"))
     primary_node_id = getPrimaryNodeIDByCoord();
   // user provided primary node id
-  else if (isParamValid("primary"))
-    primary_node_id = getParam<unsigned int>("primary");
+  else if (isParamValid("primary_node_id"))
+    primary_node_id = getParam<unsigned int>("primary_node_id");
   // no primary node provided, so we pick one from secondary nodes
   else
   {
@@ -171,44 +177,79 @@ dof_id_type
 EqualValueBoundaryConstraint::getPrimaryNodeIDByCoord() const
 {
   const Real eps = libMesh::TOLERANCE;
-  std::unordered_set<dof_id_type> local_primary_node_ids;
   const auto & primary_node_coord = getParam<Point>("primary_node_coord");
 
-  // Gather local candidates
-  for (const auto & bnd_node : *_mesh.getBoundaryNodeRange())
+  auto gatherGlobal = [this](const std::unordered_set<dof_id_type> & local)
   {
-    if ((*(bnd_node->_node) - primary_node_coord).norm() < eps)
-    {
-      // The primary node we found should belong to the secondary node set
-      //
-      // Note that we do not immediately break once a match is found because in theory, although it
-      // is extremely unlikely, there could be multiple coinciding nodes on the secondary boundary
-      // that match the provided coordinates. In that case, we would like to emit a meaning error
-      // message.
-      if (std::find(_connected_nodes.begin(), _connected_nodes.end(), bnd_node->_node->id()) !=
-          _connected_nodes.end())
-        local_primary_node_ids.insert(bnd_node->_node->id());
-    }
+    const std::vector<dof_id_type> local_vec(local.begin(), local.end());
+    std::vector<std::vector<dof_id_type>> gathered;
+    _mesh.comm().allgather(local_vec, gathered);
+    std::unordered_set<dof_id_type> global;
+    for (const auto & vec : gathered)
+      global.insert(vec.begin(), vec.end());
+    return global;
+  };
+
+  if (isParamValid("primary_boundary"))
+  {
+    const auto primary_bnd_id = _mesh.getBoundaryID(getParam<BoundaryName>("primary_boundary"));
+    std::unordered_set<dof_id_type> local_matches;
+    for (const auto & bnd_node : *_mesh.getBoundaryNodeRange())
+      if (bnd_node->_bnd_id == primary_bnd_id &&
+          (*(bnd_node->_node) - primary_node_coord).norm() < eps)
+      {
+        local_matches.insert(bnd_node->_node->id());
+#ifndef DEBUG
+        // A single boundary should not contain two coincident nodes, so the first match found
+        // is expected to be the only one; skip scanning the rest of the range. In debug builds
+        // we keep scanning instead, so a violation of that assumption is still caught by the
+        // ambiguity check below rather than silently ignored.
+        break;
+#endif
+      }
+
+    const auto global_matches = gatherGlobal(local_matches);
+    if (global_matches.empty())
+      mooseError(
+          "Couldn't find a node on 'primary_boundary' for the specified primary_node_coord.");
+    if (global_matches.size() > 1)
+      mooseError(
+          "Multiple nodes on 'primary_boundary' found for the specified primary_node_coord.");
+    return *global_matches.begin();
   }
 
-  // Gather all candidates from all ranks
-  const std::vector<dof_id_type> local_node_vec(local_primary_node_ids.begin(),
-                                                local_primary_node_ids.end());
-  std::vector<std::vector<dof_id_type>> gathered_node_vecs;
-  _mesh.comm().allgather(local_node_vec, gathered_node_vecs);
+  // No 'primary_boundary' given: gather every boundary node at this coordinate
+  // mesh-wide
+  std::unordered_set<dof_id_type> local_all, local_secondary;
+  for (const auto & bnd_node : *_mesh.getBoundaryNodeRange())
+    if ((*(bnd_node->_node) - primary_node_coord).norm() < eps)
+    {
+      const auto id = bnd_node->_node->id();
+      local_all.insert(id);
+      if (std::find(_connected_nodes.begin(), _connected_nodes.end(), id) != _connected_nodes.end())
+        local_secondary.insert(id);
+    }
 
-  // Deduplicate
-  std::unordered_set<dof_id_type> global_primary_node_ids;
-  for (const auto & vec : gathered_node_vecs)
-    global_primary_node_ids.insert(vec.begin(), vec.end());
-
-  // Make sure we found one and exactly one
-  if (global_primary_node_ids.size() == 0)
+  const auto global_all = gatherGlobal(local_all);
+  if (global_all.empty())
     mooseError("Couldn't find a node ID for the specified primary_node_coord.");
-  else if (global_primary_node_ids.size() > 1)
-    mooseError("Multiple nodes found for the specified primary_node_coord.");
+  if (global_all.size() == 1)
+    return *global_all.begin();
 
-  return *global_primary_node_ids.begin();
+  // Multiple matching nodes found
+
+  const auto global_secondary = gatherGlobal(local_secondary);
+  if (global_secondary.size() == 1)
+  {
+    mooseDeprecated(
+        "Multiple nodes were found for the specified 'primary_node_coord'; the match was "
+        "narrowed down using membership in the secondary node set, which is deprecated. Use "
+        "'primary_boundary' to disambiguate instead.");
+    return *global_secondary.begin();
+  }
+
+  mooseError("Multiple nodes found for the specified primary_node_coord. Use 'primary_boundary' to "
+             "disambiguate.");
 }
 
 void

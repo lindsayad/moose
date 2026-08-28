@@ -108,7 +108,7 @@
   [disp_y]
     type = EqualValueBoundaryConstraint
     variable = disp_y
-    primary = '65'
+    primary_node_id = '65'
     secondary = '3'
     penalty = 1e18
   []

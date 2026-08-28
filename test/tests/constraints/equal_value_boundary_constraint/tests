@@ -6,7 +6,7 @@
     input = 'equal_value_boundary_constraint_test.i'
     exodiff = 'out.e'
     abs_zero = 1e-9
-    cli_args = "Constraints/y_top/primary=45"
+    cli_args = "Constraints/y_top/primary_node_id=45"
     requirement = "The system shall include the ability to constrain the values on a boundary to a value "
                   "at a prescribed node base on the node ID."
   []
@@ -50,8 +50,8 @@
   [set_primary_and_coord_error]
     type = RunException
     input = 'equal_value_boundary_constraint_test.i'
-    expect_err = "Both 'primary' and 'primary_node_coord' parameters are set. They are mutually exclusive."
-    cli_args = "Constraints/y_top/primary=45 Constraints/y_top/primary_node_coord='0.3333333333333 1.0 0.0'"
+    expect_err = "Both 'primary_node_id' and 'primary_node_coord' parameters are set. They are mutually exclusive."
+    cli_args = "Constraints/y_top/primary_node_id=45 Constraints/y_top/primary_node_coord='0.3333333333333 1.0 0.0'"
     requirement = "The system shall report an error when both node ID and node coordinates are set."
   []
   [error_not_find_node_id]

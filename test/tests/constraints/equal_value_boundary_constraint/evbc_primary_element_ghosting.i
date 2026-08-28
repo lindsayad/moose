@@ -50,6 +50,7 @@
     type = EqualValueBoundaryConstraint
     variable = u
     secondary = top
+    primary_boundary = right
     primary_node_coord = '1 1 0'
     penalty = 1e7
   []
