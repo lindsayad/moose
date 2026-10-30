@@ -1,5 +1,4 @@
 [Mesh]
-  use_displaced_mesh = false
   [./msh]
     type = GeneratedMeshGenerator
     dim = 3
@@ -118,11 +117,10 @@
   [../]
   # bulk materials
   [./stress]
-    type = ComputeLagrangianLinearElasticStress
-    objective_rate = rashid
+    type = ADComputeFiniteStrainElasticStress
   [../]
   [./elasticity_tensor]
-    type = ComputeIsotropicElasticityTensor
+    type = ADComputeIsotropicElasticityTensor
     youngs_modulus = 200e4
     poissons_ratio = 0.3
   [../]
@@ -134,9 +132,9 @@
       [./all]
         strain = FINITE
         add_variables = true
-        new_system = true
-        kinematic_approximation = rashid_eigen
-        generate_output = 'cauchy_stress_xx cauchy_stress_yy cauchy_stress_zz cauchy_stress_xy cauchy_stress_yz cauchy_stress_xz'
+        use_finite_deform_jacobian = true
+        use_automatic_differentiation = true
+        generate_output = 'stress_xx stress_yy stress_zz stress_xy stress_yz stress_xz'
       [../]
     [../]
   [../]

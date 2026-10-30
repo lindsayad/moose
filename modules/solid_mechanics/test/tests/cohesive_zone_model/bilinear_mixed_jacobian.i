@@ -1,5 +1,4 @@
 [Mesh]
-  use_displaced_mesh = false
   [msh]
     type = GeneratedMeshGenerator
     dim = 2

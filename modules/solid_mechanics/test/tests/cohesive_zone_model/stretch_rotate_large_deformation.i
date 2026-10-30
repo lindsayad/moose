@@ -6,7 +6,6 @@
 # The mesh is composed of two, single-elemnt blocks
 
 [Mesh]
-  use_displaced_mesh = false
   [./msh]
   type = GeneratedMeshGenerator
   dim = 3
@@ -149,11 +148,9 @@
       [./all]
         strain = FINITE
         add_variables = true
-        new_system = true
-        # exact under the finite rigid rotation this test applies (the default linear
-        # approximation is only first-order accurate in the rotation increment)
-        kinematic_approximation = rashid_eigen
-        generate_output = 'cauchy_stress_xx cauchy_stress_yy cauchy_stress_zz cauchy_stress_xy cauchy_stress_yz cauchy_stress_xz'
+        use_finite_deform_jacobian = true
+        use_automatic_differentiation = true
+        generate_output = 'stress_xx stress_yy stress_zz stress_xy stress_yz stress_xz'
       [../]
     [../]
   [../]
@@ -162,11 +159,10 @@
 
 [Materials]
   [./stress]
-    type = ComputeLagrangianLinearElasticStress
-    objective_rate = rashid
+    type = ADComputeFiniteStrainElasticStress
   [../]
   [./elasticity_tensor]
-    type = ComputeIsotropicElasticityTensor
+    type = ADComputeIsotropicElasticityTensor
     youngs_modulus = 1e3
     poissons_ratio = 0.3
   [../]

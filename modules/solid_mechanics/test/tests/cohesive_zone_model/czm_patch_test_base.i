@@ -4,7 +4,6 @@
 # Quadratic convergence is always expected.
 
 [Mesh]
-  use_displaced_mesh = false
   [msh]
     type = FileMeshGenerator
     file = patch_mesh.e
@@ -37,8 +36,8 @@
       [all]
         strain = FINITE
         add_variables = true
-        new_system = true
-        kinematic_approximation = rashid_eigen
+        use_finite_deform_jacobian = true
+        use_automatic_differentiation = true
       []
     []
   []
@@ -95,6 +94,7 @@
     type = FunctionDirichletBC
     boundary = 'z1'
     variable = disp_z
+    use_displaced_mesh = true
     function = stretch
   []
 
@@ -152,11 +152,10 @@
 
 [Materials]
   [stress]
-    type = ComputeLagrangianLinearElasticStress
-    objective_rate = rashid
+    type = ADComputeFiniteStrainElasticStress
   []
   [elasticity_tensor]
-    type = ComputeElasticityTensor
+    type = ADComputeElasticityTensor
     fill_method = symmetric9
     C_ijkl = '1.684e5 0.176e5 0.176e5 1.684e5 0.176e5 1.684e5 0.754e5 0.754e5 0.754e5'
   []
