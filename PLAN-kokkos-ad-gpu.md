@@ -21,8 +21,8 @@ the residual gap but regresses two q8 Jacobians, so report them to the user befo
    `final-phi.patch` (stage 2 contracts `cq[0] * phi` unconditionally). The object probe gives
    ad8disp R&J 168 registers with it, 234 without (base 164). Restoring a zero term to steer the
    register allocator is a workaround. First look at the SASS of both cubins in `runs/obj-13e/`
-   (`final`, `final-phi`) for the cause, e.g. a changed unroll of the q loop. `live_defs.py`
-   fails on this cubin (see "Profiling setup").
+   (`final`, `final-phi`) for the cause. The peak is in the hook's dual multiply (see "Step 13e
+   findings").
 2. Rebuild and test: `build_and_test.sbatch <moose dir> '<AD regex>' cuda`. Expect 34 pass.
 3. Sweep the decision cases into `profiles/nsys-v26c` with `VARIANTS_FILTER`. Compare with
    `launch_compare.py profiles/nsys-v24/launches.txt profiles/nsys-v26c/launches.txt 0`.
@@ -179,7 +179,11 @@ Loop names (step 8b): profiles up to `nsys-v12` and `ncu-v11` use the old names.
   `evaluateADTerms` skips) 164, `contract` 234, `s1` (stage 2 written as before) 168, `s2` (stage 1
   without skips) 234, `final` 234, `final-phi` (final with the stage 2 value term) 168,
   `final-store` (final with all four planes stored) 234. So skipping the zero value term in stage
-  2 alone costs 66 registers.
+  2 alone costs 66 registers. `live_defs.py` (fixed for >99 registers) puts the peak of both in
+  the hook's dual multiply (`dualnumber.h:262 <- :478`, `KokkosADMatDiffusion.h:38`), not in
+  stage 2: 108 of 228 live registers come from that line in `final`, 14 of 165 in `final-phi`.
+  So the stage 2 change alters how nvcc schedules the dual multiply. Compare the two schedules
+  next.
 - Dead end: reordering stage 1 to t-outer, k-inner. It is not the register cause, and the original
   order is restored.
 - Dead end: build 14666 failed 25 AD tests with an illegal address. Cause: an unbraced `if` inside
@@ -466,9 +470,8 @@ Details: `moose-stack-build/PLAN-kokkos-known-failures.md`.
   --job-name=object-variants`. `~/.claude/skills/gpu-local-memory/scripts/ptx_local_sites.py [--kind entry|func] <ptx> <regex>`
   (skill `gpu-local-memory`) lists the runtime-indexed local sites of one entry or outlined `.func`.
 - Register peaks: `~/.claude/skills/gpu-register-pressure/scripts/live_defs.py <cubin> <regex>`
-  (skill `gpu-register-pressure`) lists the registers live at the peak by defining source line. It
-  fails with `no life-range header` on long Kokkos kernel names (step 13e). Match the mangled name,
-  e.g. `23ResidualAndJacobianLoopELb1E` for the displaced R&J.
+  (skill `gpu-register-pressure`) lists the registers live at the peak by defining source line. Match the
+  mangled name, e.g. `23ResidualAndJacobianLoopELb1E` for the displaced R&J.
 - `scripts/ncu_sass_phases.py <csv>` splits the stall samples and op counts of one kernel at
   `BAR.SYNC`. `scripts/ncu_sass_hot.py <csv> [n]` lists the hottest SASS lines. Make the CSV with
   `ncu --import <rep> --page source --csv --print-source sass --launch-count 1`.
