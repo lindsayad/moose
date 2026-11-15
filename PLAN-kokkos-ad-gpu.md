@@ -1,7 +1,7 @@
 # Handoff: Kokkos AD GPU work on PR #34088 (arco, updated 2026-11-12)
 
-Status: branch at `a94736bf66c` (steps 0-10b, 12-13c), pushed to the fork. Next: step 13e. Updated
-2026-11-14.
+Status: branch at `a94736bf66c` (steps 0-10b, 12-13c), pushed to the fork. Next: step 13e (continued),
+with the fix uncommitted in the working tree. Updated 2026-11-14.
 Git tracks this document on the feature branch. Commit it alone with a `PLAN:` subject, and drop
 those commits before the merge. Relative paths outside the MOOSE tree, such as `profiles/`,
 `scripts/`, `patches/`, `ptx/`, `logs/`, `runs/`, and `archive/`, are under `moose-stack-build/`
@@ -14,29 +14,25 @@ Branch `kokkos-reference-configuration` in `/ibmstor/scratch/lindad/projects/moo
 is idaholab/moose#34088. NamjaeChoi left a performance review on it. Answer it with measurements
 once the design work below is final. Do not reply yet.
 
-**Next: step 13e**: find the cause of the AD residual gap with ncu. AD `ResidualLoop` takes
-1.40x the hand-coded time at hex8-q8 and 1.44x at hex27-q27 (`nsys-v24`). The team sizes match and
-AD uses fewer registers (48 vs 54).
-1. The main-tree build is the rejected 13c probe. Rebuild `a94736bf66c`:
-   `build_and_test.sbatch <moose dir> '<AD regex>' cuda`. Expect 33 pass.
-2. Add `handdisp_h27`, `handsdisp_h27`, `ad3disp_h27`, and `ad3sdisp_h27` to
-   `test/tests/kokkos/profiling/pr34088/sweep.sbatch`. Copy the `h27` arguments, plus the `disp`
-   or `sdisp` arguments. That file is untracked.
-3. Run ncu on `ResidualLoop` for `hand_q8|ad3_q8|hand_h27|ad3_h27` into `profiles/ncu-v19`, with
-   `NCU_KERNELS='ResidualLoop.*Kokkos(AD)?Diffusion'`. Compare instructions, shared and global
-   load/store bytes, stall reasons, and achieved occupancy with `ncu_table.sh` and
-   `ncu_metrics.sh`.
-4. Hypotheses from code reading:
-   - AD stores 4 terms + 1 pad per qp. The hand-coded path stores 3 + 1.
-   - `contractADTerms` reads the test function value even when the value term is zero
-     (`KokkosADDiffusion` has no value hook). The hand-coded path skips it (`has_value`).
-   - The ratio falls with the qp count at 8 test functions (q8 1.40, q27 1.22, q64 1.14). This
-     points to a cost per element, not per qp.
-5. If the cause is clear and its fix is in the AD residual path (for example, skip absent terms at
-   compile time), fix it and measure a full `nsys-v26` sweep.
+**Next: step 13e, continued.** The cause of the AD residual gap is measured (see "Step 13e
+findings"). The fix is in the working tree, uncommitted (`patches/step13e/final.patch`). It closes
+the residual gap but regresses two q8 Jacobians, so report them to the user before committing.
+1. Apply the stage 2 value term back: `git apply` the difference between `final.patch` and
+   `final-phi.patch` (stage 2 contracts `cq[0] * phi` unconditionally). The object probe gives
+   ad8disp R&J 168 registers with it, 234 without (base 164). Restoring a zero term to steer the
+   register allocator is a workaround. First look at the SASS of both cubins in `runs/obj-13e/`
+   (`final`, `final-phi`) for the cause, e.g. a changed unroll of the q loop. `live_defs.py`
+   fails on this cubin (see "Profiling setup").
+2. Rebuild and test: `build_and_test.sbatch <moose dir> '<AD regex>' cuda`. Expect 34 pass.
+3. Sweep the decision cases into `profiles/nsys-v26c` with `VARIANTS_FILTER`. Compare with
+   `launch_compare.py profiles/nsys-v24/launches.txt profiles/nsys-v26c/launches.txt 0`.
+4. ad3_q8 R&J is +9.8% with fewer registers (127 -> 96). Run ncu on
+   `ResidualAndJacobianLoop.*KokkosADDiffusion` for `ad3_q8` (before: `nsys-v24` build, after: the
+   fix) and compare blocks/SM, L1 hit rate, and the carveout, as in step 8a.
+5. Report the result and any regression to the user. Commit on approval.
 
-Exit: a measured cause of the gap, recorded in this document. Then either a commit that closes the
-gap at q8 and `h27`, or a measured reason why the gap is inherent.
+Exit: the residual fix committed with every q8 and `h27` launch within the commit rule, or with
+regressions the user accepts.
 
 The step 13d reply draft is done except for these steps. It must change after 13e-13h:
 - Rename "hardware constants" (`KokkosADAssembly.h:36` section).
@@ -156,6 +152,40 @@ Loop names (step 8b): profiles up to `nsys-v12` and `ncu-v11` use the old names.
 ## Working notes
 
 (empty)
+
+## Step 13e findings (step open)
+
+- Cause (`ncu-v19`, `ResidualLoop`, `scripts/ncu_sass_phases.py` splits stall samples at
+  `BAR.SYNC`): AD has more occupancy (61 vs 54%), 13% fewer instructions, and equal DRAM bytes. Its
+  long-scoreboard stall per issue doubles (q8 23.2 vs 11.9, h27 22.7 vs 9.4). The qp evaluation
+  phase is close (q8 7737 vs 7147 samples). The contraction phase carries the gap (q8 8300 vs
+  5279, h27 9918 vs 6788): one more `LDG` and `LDS` per qp and a `DMUL` per (i, qp). These are
+  the absent value term of `KokkosADDiffusion`: the `getPhi` global load, the shared load of its
+  zero coefficient, and the multiply. The libraries have no line info, so the mapping is by
+  instruction counts per phase.
+- Fix (`patches/step13e/final.patch`, in the working tree): `hasADTerm<Object, slots>(t)`
+  (`KokkosADAssembly.h`) is true when the hook of term t exists. An absent term is zero in both
+  instantiations, so its chain and geometry derivatives are zero too. `evaluateADTerms`, Jacobian
+  stage 1, stage 2, and `contractADTerms` (now taking the shape function as callables) skip it.
+  The scratch layout is unchanged.
+- `nsys-v26` (full sweep, an earlier variant of the fix): AD `ResidualLoop` ad3_q8 0.137 -> 0.113 ms
+  (hand 0.105), ad3_h27 0.125 -> 0.089 (hand 0.089), ad8_q8 -9%, displaced -3 to -5%. Reference
+  R&J ad3_q27 -7.7%, ad3_h27 -11.5%. Regressions: ad8disp_q8 R&J +71% (1.933 -> 3.316 ms, 164 ->
+  234 registers), ad3_q8 R&J +8.8% (127 -> 96 registers), seeded J +1.5%. `nsys-v26b` (decision
+  cases) reproduces them. New `h27` baselines: ad3sdisp_h27 seeded J 29.04 ms, handsdisp_h27 J +
+  displacement J 12.08 ms.
+- ad8disp R&J registers, object probes of `KokkosADMatDiffusion.K` (`patches/step13e/`,
+  `runs/obj-13e/`, displaced instantiation): base 164, full 234, `eval` (only the
+  `evaluateADTerms` skips) 164, `contract` 234, `s1` (stage 2 written as before) 168, `s2` (stage 1
+  without skips) 234, `final` 234, `final-phi` (final with the stage 2 value term) 168,
+  `final-store` (final with all four planes stored) 234. So skipping the zero value term in stage
+  2 alone costs 66 registers.
+- Dead end: reordering stage 1 to t-outer, k-inner. It is not the register cause, and the original
+  order is restored.
+- Dead end: build 14666 failed 25 AD tests with an illegal address. Cause: an unbraced `if` inside
+  `if constexpr (!displaced) for (...)` took the `else`, so the displaced block ran with a null
+  `chain()`. Brace every `if` added inside an unbraced `if`/`else` branch. compute-sanitizer and
+  cuda-gdb did not stop on the fault ("CUDA initialized before the Sanitizer"). Cause unknown.
 
 ## Steps 12-13c results (summary)
 
@@ -309,7 +339,7 @@ Steps 0-13c: done. Steps 13d-13i added 2026-11-14 after the user's review of the
     4296312543. The headings use old line numbers: `:36` is the thread at `KokkosADAssembly.h:38`,
     `:71` is at `:120`, and `:588` is at `KokkosResidualObject.h:550`. End every post with the
     Claude Code trailer.
-13e. ncu cause of the AD residual gap at q8 and `h27`. See "Next".
+13e. Cause measured, fix uncommitted. See "Next" and "Step 13e findings".
 13f. Team size from evidence. Sweep the Kokkos team size 64/128/256 (an environment override of
     `TeamGroup::target_team_size` in a probe build) on the q8 and `h27` variants. Compare with
     Kokkos `team_size_recommended`. It returns an occupancy-optimal size that ignores
@@ -318,8 +348,12 @@ Steps 0-13c: done. Steps 13d-13i added 2026-11-14 after the user's review of the
     Kokkos `team_size_max` already queries), scratch bytes per element-group, and the SM limits.
     Exit: a committed team-size rule with no fixed 128, and a sweep where no q8 or `h27` launch is
     slower than `nsys-v26`, or a regression reported to the user.
-13g. Replace `TeamGroup::half_warp` with a backend trait: reals per shared-memory wavefront (bank
-    count x bank width / `sizeof(Real)`), 16 on NVIDIA. Also derive from it the odd-stride padding
+13g. Replace `TeamGroup::half_warp` with a backend trait: reals per shared-memory bank row (bank
+    count x bank width / `sizeof(Real)`), 16 on NVIDIA. Do not say "wavefront": it is not a Kokkos
+    term, AMD uses it for its warp, and ncu uses it for one shared-memory access pass. Kokkos has
+    only `Impl::CudaTraits::WarpSize`, `Impl::HIPTraits::WarpSize`, and `vector_length_max()`.
+    Fix the "shared memory wavefront" comments too (`KokkosPrecomputeHooks.h`, `align_groups`).
+    Confirm the trait name with the user. Also derive from it the odd-stride padding
     of `qpSize` (`+ 1`, `| 1u`). Kokkos has no bank query. HIP `WarpSize` is 64 on CDNA and 32 on
     RDNA. Exit: no hard-coded 16 or bank assumption outside the trait, the AD tests pass, and the
     results are unchanged on the H200.
@@ -398,7 +432,8 @@ Details: `moose-stack-build/PLAN-kokkos-known-failures.md`.
   <out dir> nsys|ncu`. Filter with `VARIANTS_FILTER`, `NCU_KERNELS`, `NCU_COUNT`. Latest full sweep:
   `profiles/nsys-v24` (step 13b4, the branch head). `nsys-v25` is the rejected 13c probe.
   The `VARIANTS_FILTER` for decision cases is `'(hand|ad3|ad8)(disp|sdisp)?_(q8|h27)'`.
-  Upstream: `nsys-up1`. Latest ncu: `ncu-v18`. Next: `nsys-v26`, `ncu-v19`.
+  Upstream: `nsys-up1`. Latest ncu: `ncu-v19`. Step 13e: `nsys-v26`,
+  `nsys-v26b`. Next: `nsys-v26c`, `ncu-v20`.
   Build `launches.txt` with `launch_table.sh <dir>/*.nsys-rep`.
 - Tables in `scripts/`: `step_table.sh <dir>` (per-step summary), `ratio_table.sh <adN>
   <label>=<dir>...` (AD/hand ratio per sweep, `FIELD=residual|jacobian`), `launch_table.sh <nsys-rep>...`
@@ -431,7 +466,12 @@ Details: `moose-stack-build/PLAN-kokkos-known-failures.md`.
   --job-name=object-variants`. `~/.claude/skills/gpu-local-memory/scripts/ptx_local_sites.py [--kind entry|func] <ptx> <regex>`
   (skill `gpu-local-memory`) lists the runtime-indexed local sites of one entry or outlined `.func`.
 - Register peaks: `~/.claude/skills/gpu-register-pressure/scripts/live_defs.py <cubin> <regex>`
-  (skill `gpu-register-pressure`) lists the registers live at the peak by defining source line.
+  (skill `gpu-register-pressure`) lists the registers live at the peak by defining source line. It
+  fails with `no life-range header` on long Kokkos kernel names (step 13e). Match the mangled name,
+  e.g. `23ResidualAndJacobianLoopELb1E` for the displaced R&J.
+- `scripts/ncu_sass_phases.py <csv>` splits the stall samples and op counts of one kernel at
+  `BAR.SYNC`. `scripts/ncu_sass_hot.py <csv> [n]` lists the hottest SASS lines. Make the CSV with
+  `ncu --import <rep> --page source --csv --print-source sass --launch-count 1`.
 - `scripts/hang_stack.sh <exe> <input dir> <delay s> -- <args>` prints the thread stacks of a run
   that is still running after the delay.
 
@@ -448,6 +488,6 @@ See the auto-memory `arco-hpc-moose-build`. In short:
   lines of the full make log (`MAKE_LOG`). Run module jobs one at a time: they share libraries.
   `BUILD_METHOD=dbg` and `REPEAT=n` select dbg and repeat. The login shell exports
   `METHOD=dbg`, so scripts must not read `METHOD`. Write logs to `moose-stack-build/logs/`.
-- AD regex: `'kokkos.*(ad_|current_configuration|function_dirichlet)'`. Expected: 33 pass with
+- AD regex: `'kokkos.*(ad_|current_configuration|function_dirichlet)'`. Expected: 34 pass with
   `cuda`. Whole `kokkos` dir: 189 pass, only the known failures. Filter logs for ` error`,
   `FAILED`, and `Ran `.
