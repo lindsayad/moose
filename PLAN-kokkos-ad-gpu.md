@@ -14,23 +14,25 @@ Branch `kokkos-reference-configuration` in `/ibmstor/scratch/lindad/projects/moo
 is idaholab/moose#34088. NamjaeChoi left a performance review on it. Answer it with measurements
 once the design work below is final. Do not reply yet.
 
-**Next: step 13f3**: the team-size rule. First, get the user's choice (asked 2026-11-16, see
-"Open question"). Then:
-- Autotuning: per (loop, object, shape), time the candidate team sizes on the first launches and
-  keep the fastest. Take the candidates from the `scripts/team_model.py` occupancy model: one team
-  size per distinct (resident warps, driver carveout) point, without lane padding where possible.
-  Code: `groupedTeamLaunch` (`framework/src/kokkos/base/KokkosResidualObject.K`, about line 100)
-  and `TeamGroup::target_team_size`.
-- Static rule: pick the team size from the four terms of "Step 13f2 result". It cannot know the
-  per-kernel L1 slope, so it fixes the L1-versus-warps trade by heuristic.
-Exit: a committed rule with no fixed `target_team_size = 128`, and a decision-case sweep where no
-launch is slower than `nsys-v26c`, or a regression reported to the user.
-
-### Open question
-
-- Step 13f3 (asked 2026-11-16): static rule or runtime autotuning? The agent recommends
-  autotuning, because the L1 slope of the cycles per instruction is per kernel and per sparsity
-  pattern, and no launch attribute gives it.
+**Next: step 13f3**: runtime team-size autotuning (user, 2026-11-16). Per (loop, object, shape),
+time the candidate team sizes on the first launches and keep the fastest for the run.
+- Candidates come from device queries only (warp size, `team_size_max`), never from sm_90
+  constants: element-group counts whose team sizes give distinct resident-warp counts, limited by
+  `scratch_size_max(0)`.
+- Lane padding: `groupedTeamLaunch` packs whole element-groups, and the scratch cap stops hand q8
+  J at 25 element-groups of 8 Kokkos threads (1600 B each), so 200 threads run as 7 warps with 24
+  idle lanes. The cap is `scratch_size_max(0)` = `sharedMemPerBlock` (48 KB) minus team-reduce
+  space for 1024 threads = 40936 B. Kokkos launches any total up to 48 KB
+  (`check_shmem_request`), so with the real team size, 28 element-groups (224 threads, 46.6 KB
+  total) fit. Fix: compute the cap from the actual team size, and prefer whole-warp teams. Above
+  48 KB per team needs the `cudaFuncAttributeMaxDynamicSharedMemorySize` opt-in, which Kokkos
+  does not set.
+- Code: `groupedTeamLaunch` (`framework/src/kokkos/base/KokkosResidualObject.K`, about line 100)
+  and `TeamGroup::target_team_size` (`KokkosDispatcher.h:59`).
+- Determinism: the team size changes which elements share a team. Results already vary between
+  runs through atomics (`set_reproducible_residual(false)`). Check that the tests still pass.
+Exit: a committed autotuner with no fixed `target_team_size = 128`, and a decision-case sweep where
+no launch is slower than `nsys-v26c`, or a regression reported to the user.
 
 The step 13d reply draft is done except for these steps. It must change after 13e-13h:
 - Rename "hardware constants" (`KokkosADAssembly.h:36` section).
@@ -61,8 +63,10 @@ Loop names (step 8b): profiles up to `nsys-v12` and `ncu-v11` use the old names.
 
 ### Decisions
 
-- Step 13f (user, 2026-11-16): no static model fits the team-size sweep. Find the missing term
-  with ncu (13f2) before choosing a static rule or runtime autotuning (13f3).
+- Step 13f3 (user, 2026-11-16): runtime autotuning, not a static rule. Reason: the L1 slope of the
+  cycles per instruction differs per kernel and per sparsity pattern, and no launch attribute
+  gives it. The tuner must not depend on H200 constants, and an object author must not need to do
+  anything for it.
 - Decision cases (user, 2026-11-14): report and accept or reject changes on hex8-q8 and hex27-q27
   (`*_q8` and `*_h27` variants) only. Use hex8-q27 and hex8-q64 only to check that nothing breaks
   or slows down badly. They do not decide a step. `sweep.sbatch` has `hand`, `ad3`, and their
