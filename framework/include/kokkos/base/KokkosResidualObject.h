@@ -856,15 +856,26 @@ ResidualObject::assembleADTerms(const Object & object,
       kokkosSystem(_kokkos_var.sys()).getVariableScalingFactor(_kokkos_var.var());
 
   // Shape function value and reference gradient of an FE type at a quadrature point
-  auto shape = [&](const unsigned int fe, const unsigned int i, const unsigned int qp)
+  auto phi = [&](const unsigned int fe, const unsigned int i, const unsigned int qp) -> Real
   {
-    const Real phi = side == libMesh::invalid_uint
-                         ? assembly.getPhi(elem.subdomain, elem.type, fe)(i, qp)
-                         : assembly.getPhiFace(elem.subdomain, elem.type, fe)(side)(i, qp);
-    const Real3 ref = side == libMesh::invalid_uint
-                          ? assembly.getGradPhi(elem.subdomain, elem.type, fe)(i, qp)
-                          : assembly.getGradPhiFace(elem.subdomain, elem.type, fe)(side)(i, qp);
-    return ::Kokkos::pair<Real, Real3>(phi, ref);
+    return side == libMesh::invalid_uint
+               ? assembly.getPhi(elem.subdomain, elem.type, fe)(i, qp)
+               : assembly.getPhiFace(elem.subdomain, elem.type, fe)(side)(i, qp);
+  };
+  auto grad_phi = [&](const unsigned int fe, const unsigned int i, const unsigned int qp) -> Real3
+  {
+    return side == libMesh::invalid_uint
+               ? assembly.getGradPhi(elem.subdomain, elem.type, fe)(i, qp)
+               : assembly.getGradPhiFace(elem.subdomain, elem.type, fe)(side)(i, qp);
+  };
+
+  // Contract the term set at a quadrature point with test function i
+  auto contract = [&](const Real * const terms, const unsigned int i, const unsigned int qp)
+  {
+    return contractADTerms<Object, slots>(
+        terms,
+        [&] { return phi(ife, i, qp); },
+        [&] { return grad_phi(ife, i, qp); });
   };
 
   // With one slice, each thread sums the quadrature points of its test functions alone
@@ -875,10 +886,7 @@ ResidualObject::assembleADTerms(const Object & object,
               {
                 Real local_re = 0;
                 for (unsigned int qp = 0; qp < n_qps; ++qp)
-                {
-                  const auto psi = shape(ife, i, qp);
-                  local_re += contractADTerms(&scratch(qp * qp_size), psi.first, psi.second);
-                }
+                  local_re += contract(&scratch(qp * qp_size), i, qp);
                 accumulateTaggedElementalResidual(local_re * scaling_factor, elem.id, i);
               });
 
@@ -917,7 +925,8 @@ ResidualObject::assembleADTerms(const Object & object,
                     {
                       const auto q = qj / n_jdofs;
                       const auto j = qj % n_jdofs;
-                      const auto trial = shape(jfe, j, qp_begin + q);
+                      const auto trial_phi = phi(jfe, j, qp_begin + q);
+                      const auto trial_grad = grad_phi(jfe, j, qp_begin + q);
                       const Real * const derivatives = &scratch((qp_begin + q) * qp_size);
                       Real c[term_size] = {0, 0, 0, 0};
 
@@ -931,10 +940,10 @@ ResidualObject::assembleADTerms(const Object & object,
                         if (block.gradient)
                           for (unsigned int k = 0; k < AD_GRADIENT_SLOTS; ++k)
                             for (unsigned int t = 0; t < term_size; ++t)
-                              c[t] += d[term_size * k + t] * trial.second(k);
+                              c[t] += d[term_size * k + t] * trial_grad(k);
                         else
                           for (unsigned int t = 0; t < term_size; ++t)
-                            c[t] += d[t] * trial.first;
+                            c[t] += d[t] * trial_phi;
                       }
 
                       for (unsigned int t = 0; t < term_size; ++t)
@@ -951,13 +960,16 @@ ResidualObject::assembleADTerms(const Object & object,
                         const auto j = ij % n_jdofs;
                         Real local_ke = 0;
 
+                        // The Jacobian contracts every term, also the zero term of an absent hook:
+                        // skipping it here raises the register count of the displaced
+                        // instantiation by about 40% through the schedule of the hook evaluation
                         for (unsigned int q = 0; q < n_chunk_qps; ++q)
                         {
-                          const auto test = shape(ife, i, qp_begin + q);
                           const Real * const cq = planes + q * n_jdofs + j;
-                          local_ke += cq[0] * test.first + cq[plane] * test.second(0) +
-                                      cq[2 * plane] * test.second(1) +
-                                      cq[3 * plane] * test.second(2);
+                          const Real test_phi = phi(ife, i, qp_begin + q);
+                          const Real3 test_grad = grad_phi(ife, i, qp_begin + q);
+                          local_ke += cq[0] * test_phi + cq[plane] * test_grad(0) +
+                                      cq[2 * plane] * test_grad(1) + cq[3 * plane] * test_grad(2);
                         }
 
                         accumulateTaggedElementalMatrix(
@@ -983,10 +995,7 @@ ResidualObject::assembleADTerms(const Object & object,
               {
                 const auto i = k % n_idofs;
                 for (unsigned int qp = k / n_idofs; qp < n_qps; qp += n_slices)
-                {
-                  const auto psi = shape(ife, i, qp);
-                  partial += contractADTerms(&scratch(qp * qp_size), psi.first, psi.second);
-                }
+                  partial += contract(&scratch(qp * qp_size), i, qp);
               });
 
     team.team_barrier();

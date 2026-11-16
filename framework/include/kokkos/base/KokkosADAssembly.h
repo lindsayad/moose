@@ -186,6 +186,20 @@ struct HasADResidualGrad<
 ///@}
 
 /**
+ * Whether the residual hooks of a pointwise AD residual object contribute term t of a term set:
+ * the value coefficient (t = 0) or a component of the gradient coefficient (t = 1, 2, 3). The term
+ * of an absent hook is zero, so the residual contraction skips it. The scratch still holds every
+ * term, which the Jacobian contraction reads.
+ */
+template <typename Object, unsigned int slots>
+KOKKOS_INLINE_FUNCTION constexpr bool
+hasADTerm(const unsigned int t)
+{
+  return t == 0 ? HasADResidualValue<Object, slots>::value
+                : HasADResidualGrad<Object, slots>::value;
+}
+
+/**
  * Evaluate the residual hooks of a pointwise AD residual object at one quadrature point and store
  * the JxW-weighted coefficients and their derivatives with respect to the true slots into scratch.
  * The instantiation carrying the displacement derivatives evaluates the hooks with intermediate
@@ -293,15 +307,28 @@ evaluateADTerms(const Object & object,
 }
 
 /**
- * Contract the coefficients of one term set at a quadrature point with a shape function
+ * Contract the coefficients of one term set at a quadrature point with a shape function. The
+ * shape function value and gradient are callables, so that the terms of an absent hook read
+ * neither the scratch nor the shape function.
  * @param terms The term set: value coefficient followed by the gradient coefficient
- * @param phi The shape function value
- * @param grad_phi The shape function gradient matching the gradient coefficient
+ * @param phi The callable returning the shape function value
+ * @param grad_phi The callable returning the shape function gradient matching the gradient
+ * coefficient
  */
-KOKKOS_INLINE_FUNCTION Real
-contractADTerms(const Real * terms, const Real phi, const Real3 & grad_phi)
+template <typename Object, unsigned int slots, typename Phi, typename GradPhi>
+KOKKOS_FORCEINLINE_FUNCTION Real
+contractADTerms(const Real * terms, Phi && phi, GradPhi && grad_phi)
 {
-  return terms[0] * phi + terms[1] * grad_phi(0) + terms[2] * grad_phi(1) + terms[3] * grad_phi(2);
+  Real result = 0;
+  if constexpr (hasADTerm<Object, slots>(0))
+    result += terms[0] * phi();
+  if constexpr (hasADTerm<Object, slots>(1))
+  {
+    const Real3 g = grad_phi();
+    for (unsigned int k = 0; k < 3; ++k)
+      result += terms[1 + k] * g(k);
+  }
+  return result;
 }
 
 } // namespace Moose::Kokkos
