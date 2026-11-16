@@ -1,7 +1,7 @@
 # Handoff: Kokkos AD GPU work on PR #34088 (arco, updated 2026-11-12)
 
-Status: branch at `90483c49ecd` (steps 0-10b, 12-13c, 13e, 13f, 13f2), not pushed. Next: step 13f3, after
-the user chooses a static rule or runtime autotuning. Updated 2026-11-16.
+Status: branch at `90483c49ecd` (steps 0-10b, 12-13c, 13e, 13f, 13f2), not pushed. Next: step 13m1
+(element COO prototype), then 13m2, then 13f3. Updated 2026-11-16.
 Git tracks this document on the feature branch. Commit it alone with a `PLAN:` subject, and drop
 those commits before the merge. Relative paths outside the MOOSE tree, such as `profiles/`,
 `scripts/`, `patches/`, `ptx/`, `logs/`, `runs/`, and `archive/`, are under `moose-stack-build/`
@@ -14,7 +14,40 @@ Branch `kokkos-reference-configuration` in `/ibmstor/scratch/lindad/projects/moo
 is idaholab/moose#34088. NamjaeChoi left a performance review on it. Answer it with measurements
 once the design work below is final. Do not reply yet.
 
-**Next: step 13f3**: runtime team-size autotuning (user, 2026-11-16). Per (loop, object, shape),
+**Next: step 13m1**: prototype element COO Jacobian assembly and decide go or no-go (user,
+2026-11-16: adopt it only if it is faster and its memory cost is not significant).
+- Cause: every Jacobian entry runs `Matrix::find` (`KokkosMatrix.h:151`, the bisection of
+  `Utils::find`, `KokkosUtils.h:40`) over the CSR row, then an atomic add. The search loop is
+  19-35% of stall samples and 13-24% of instructions in every q8 and `h27` J launch, hand-coded
+  and AD (`ncu-v21`, `ncu-v21r` at team 128). Its dependent global loads also cause the L1
+  sensitivity of "Step 13f2 result".
+- Design: each element-group writes its dense local matrix to its own slot of a COO value array:
+  no search and no atomic. `MatSetValuesCOO` sums repeated (i, j) entries. `Matrix::create`
+  (`KokkosMatrix.K`) already preallocates by COO, from `System::buildCooIndices`
+  (`KokkosSystem.K:304`). Slot of entry (e, i, j) of a block: block offset + (e x n_i + i) x n_j
+  + j, so the address is computed, not stored.
+- Prototype scope: the u block of `KokkosDiffusion` and `KokkosADDiffusion` only, through
+  `accumulateTaggedElementalMatrix` (`KokkosResidualObject.h:552`). The prototype can be a probe
+  patch in `patches/step13m/`. First action: read `Matrix::create`, `Matrix::close`, and
+  `System::buildCooIndices`, and find how nodal BCs (`matrix.zero(row)`, `KokkosResidualObject.h`
+  `accumulateTaggedNodalMatrix`) and constraints (`getLocalConstraints`) write the CSR values.
+- Measure, against `nsys-v26c`: J launch time plus the `MatSetValuesCOO` time of `Matrix::close`
+  (nsys CUDA trace) on hand_q8, ad3_q8, hand_h27, ad3_h27. Memory: COO values + PETSc's COO
+  permutation (`MatSetPreallocationCOO`), against the CSR values. Estimate for the 64^3 HEX8 u
+  block: 262144 elements x 64 entries = 16.8 M values (134 MB) + permutation, against 7.2 M CSR
+  values (58 MB).
+Exit: a table of J + close time and device memory for the four cases, and a go or no-go reported
+to the user. "Significant memory" is the user's call: report the ratio to the CSR values and to
+the total device memory of the run.
+
+**Step 13m2** (after a go): element COO for every Kokkos matrix writer. Writers:
+`KokkosResidualObject.h` (elemental, nodal, vector nodal, constraint rows), `KokkosKernel.h`,
+`KokkosTimeDerivative.h`, the vector kernels, the integrated and nodal BCs, `KokkosNodalKernel.h`,
+`KokkosLinearFVFluxKernel.h`, and `KokkosLinearSystemContributionObject.h`. The COO pattern then
+depends on which objects write which blocks and tags. Nodal BC rows that set (not add) values need
+their own design. Exit: the `kokkos` dir 189 pass, and the decision cases no slower than 13m1.
+
+**Step 13f3** (after 13m2): runtime team-size autotuning (user, 2026-11-16). Per (loop, object, shape),
 time the candidate team sizes on the first launches and keep the fastest for the run.
 - Candidates come from device queries only (warp size, `team_size_max`), never from sm_90
   constants: element-group counts whose team sizes give distinct resident-warp counts, limited by
@@ -63,6 +96,11 @@ Loop names (step 8b): profiles up to `nsys-v12` and `ncu-v11` use the old names.
 
 ### Decisions
 
+- Step 13m (user, 2026-11-16): the CSR search is in scope, because it affects performance and
+  possibly the data layout and the programming model. An agent, not the user, had marked it out of
+  scope. Adopt element COO assembly if it is faster and its memory cost is not significant. Do it
+  before 13f3, because the search causes the L1 sensitivity that 13f3 tunes. Rejected for now: an
+  element-to-CSR index map (keeps the atomics, ~1 GB for the 4-variable SMP case).
 - Step 13f3 (user, 2026-11-16): runtime autotuning, not a static rule. Reason: the L1 slope of the
   cycles per instruction differs per kernel and per sparsity pattern, and no launch attribute
   gives it. The tuner must not depend on H200 constants, and an object author must not need to do
@@ -412,7 +450,9 @@ Steps 0-13c: done. Steps 13d-13i added 2026-11-14 after the user's review of the
 13f. Done, no commit (`nsys-v27-t64/128/256`). See "Step 13f sweep result". The exit (a committed
     rule) moved to 13f3, because no static model fits the sweep.
 13f2. Done, no commit (`ncu-v21`, `ncu-v21r`). See "Step 13f2 result".
-13f3. Team-size rule (see "Next"). Design inputs: registers per thread (`cudaFuncGetAttributes`,
+13m1. Element COO prototype and go or no-go (see "Next").
+13m2. Element COO for every matrix writer (see "Next").
+13f3. Team-size autotuning (see "Next"). Re-measure the L1 terms after 13m2. Design inputs: registers per thread (`cudaFuncGetAttributes`,
     which Kokkos `team_size_max` queries), scratch bytes per element-group, the SM limits, and the
     13f2 terms.
 13g. Replace `TeamGroup::half_warp` with a per-backend trait `reals_per_shmem_bank_row` (user name,
@@ -436,10 +476,6 @@ Steps 0-13c: done. Steps 13d-13i added 2026-11-14 after the user's review of the
     (proposed `ElemThreads`). Exit: `git grep -i -w group` in `framework/*/kokkos` gives no bare
     "group", and the `kokkos` dir 189 pass.
 
-Out of scope: each matrix entry costs a CSR search (`Matrix::find`) and an atomic, in hand-coded
-and AD kernels alike. The search is the hottest SASS line of the q8 hand J (14-30% of stall
-samples, step 13f2). A per-pattern map from element entries to value indices would help both.
-Open a separate issue for it.
 
 ## Hand-coded loop findings (code reading, not measured)
 
