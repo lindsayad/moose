@@ -1,6 +1,6 @@
 # Handoff: Kokkos AD GPU work on PR #34088 (arco, updated 2026-11-12)
 
-Status: branch at `90483c49ecd` (steps 0-10b, 12-13c, 13e), not pushed. Next: step 13f. Updated
+Status: branch at `90483c49ecd` (steps 0-10b, 12-13c, 13e, 13f sweep), not pushed. Next: step 13f2. Updated
 2026-11-16.
 Git tracks this document on the feature branch. Commit it alone with a `PLAN:` subject, and drop
 those commits before the merge. Relative paths outside the MOOSE tree, such as `profiles/`,
@@ -14,18 +14,19 @@ Branch `kokkos-reference-configuration` in `/ibmstor/scratch/lindad/projects/moo
 is idaholab/moose#34088. NamjaeChoi left a performance review on it. Answer it with measurements
 once the design work below is final. Do not reply yet.
 
-**Next: step 13f**: derive the team size from evidence, not a fixed `target_team_size = 128`.
-1. Add an environment override of `TeamGroup::target_team_size` (`KokkosDispatcher.h`) in a probe
-   build only. Sweep 64/128/256 on the decision cases (`VARIANTS_FILTER` below) into
-   `profiles/nsys-v27-t<size>`.
-2. Compare with Kokkos `team_size_recommended`. It ignores element-groups, so it cannot be used as
-   is.
-3. Design: choose the element-groups per team from an occupancy model. Inputs: registers per thread
-   (`cudaFuncGetAttributes`, which `team_size_max` already queries), scratch bytes per
-   element-group, and the SM limits.
-
-Exit: a committed team-size rule with no fixed 128, and a decision-case sweep where no launch is
-slower than `nsys-v26c`, or a regression reported to the user.
+**Next: step 13f2**: find the missing term of the team-size model with ncu (user, 2026-11-16:
+ncu first, then choose a static rule or runtime autotuning).
+1. Build the probe: `sbatch scripts/patch_build_test.sbatch <moose> - <abs path of
+   patches/step13f/team-size-probe.patch> <AD regex> cuda`. It leaves the patch applied. Reverse
+   it with `git apply -R` after the ncu jobs.
+2. `ncu-v21`: with `MOOSE_KOKKOS_TEAM_SIZE=128` and `=256`, profile `hand_q8` and `handsdisp_q8`
+   (`NCU_KERNELS='JacobianLoop'`; handsdisp_q8 runs both `KokkosDiffusion` and
+   `KokkosCoefDiffusion` J) and `handdisp_q8` J. Compare L1 hit rate, carveout
+   (`launch__shared_mem_config_size`), DRAM bytes, achieved occupancy, and stall reasons.
+3. Answer: why does hand_q8 J gain 20% at 200 threads while `KokkosCoefDiffusion` J, same shape,
+   does not? Why does handdisp_q8 J lose 35%?
+Exit: a model term, with ncu numbers, that predicts the sign of every change in "Step 13f sweep
+result". Then ask the user to choose a static rule or runtime autotuning for step 13f3.
 
 The step 13d reply draft is done except for these steps. It must change after 13e-13h:
 - Rename "hardware constants" (`KokkosADAssembly.h:36` section).
@@ -56,6 +57,8 @@ Loop names (step 8b): profiles up to `nsys-v12` and `ncu-v11` use the old names.
 
 ### Decisions
 
+- Step 13f (user, 2026-11-16): no static model fits the team-size sweep. Find the missing term
+  with ncu (13f2) before choosing a static rule or runtime autotuning (13f3).
 - Decision cases (user, 2026-11-14): report and accept or reject changes on hex8-q8 and hex27-q27
   (`*_q8` and `*_h27` variants) only. Use hex8-q27 and hex8-q64 only to check that nothing breaks
   or slows down badly. They do not decide a step. `sweep.sbatch` has `hand`, `ad3`, and their
@@ -148,6 +151,31 @@ Loop names (step 8b): profiles up to `nsys-v12` and `ncu-v11` use the old names.
 ## Working notes
 
 (empty)
+
+## Step 13f sweep result (no commit, `nsys-v27-t64/128/256`)
+
+Tables: `python3 -I scripts/team_compare.py t128=profiles/nsys-v27-t128/launches.txt
+t64=... t256=... --skip 'Dirichlet|ElementCompute'` (times), and `scripts/team_model.py
+<label>=<sweep log>:<launches.txt>...` (modeled H200 occupancy: CUDA blocks/SM and limit, warps/SM,
+shared KB/SM, ms). Probe: `patches/step13f/team-size-probe.patch` (`MOOSE_KOKKOS_TEAM_SIZE` target,
+`MOOSE_KOKKOS_TEAM_PRINT` prints one `TEAMPROBE` line per dispatcher: league, team, scratch bytes,
+Kokkos `team_size_max` and `team_size_recommended`). `sweep.sbatch` greps `TEAMPROBE`.
+
+- `nsys-v27-t128` repeats `nsys-v26c` within 1%.
+- The target does not reach scratch-capped launches: every seeded loop, every `h27` Jacobian, and
+  the AD q8 R&J (ad3 104 = 13 element-groups at 40.8 KB, ad8 72) are capped by
+  `scratch_size_max(0)` at 64, 128, and 256 alike, except where 64 cuts below the cap.
+- Residual loops: 64 (q8) or 54-108 (`h27`) is best. 64 is 2-5% faster than 128 at q8. 256 is the
+  slowest for every residual loop (+2 to +17%).
+- AD q8 R&J at 64: ad3 +16%, ad3disp +10%, ad8 +5%. Shared memory per SM rises 163 -> 204 KB.
+- Hand q8 Jacobians at 200 (target 256): hand_q8 J -20% (0.873 -> 0.698 ms, 208 -> 160 KB/SM).
+  `KokkosCoefDiffusion` J has the same shape (200 threads, 63 registers, 40008 B) and is +2%.
+  handdisp_q8 J +24-35% at 200 (5 -> 3 blocks/SM, 130 -> 120 KB, warps 20 -> 21).
+- Kokkos `team_size_recommended` is 128 for every launch. It treats the team scratch as fixed,
+  while ours grows with the element-group count, so it cannot be used as is
+  (`cuda_deduce_block_size`, `petsc/arch-moose/include/Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp`).
+- The L1 carveout (step 8a) explains the AD q8 R&J loss and the hand_q8 J gain. It does not
+  explain the two contradictions above, so no static model fits yet.
 
 ## Step 13e result (`90483c49ecd`, `nsys-v26c`)
 
@@ -327,14 +355,14 @@ Steps 0-13c: done. Steps 13d-13i added 2026-11-14 after the user's review of the
     `:71` is at `:120`, and `:588` is at `KokkosResidualObject.h:550`. End every post with the
     Claude Code trailer.
 13e. Done (`90483c49ecd`, `nsys-v26c`). See "Step 13e result".
-13f. Team size from evidence. Sweep the Kokkos team size 64/128/256 (an environment override of
-    `TeamGroup::target_team_size` in a probe build) on the q8 and `h27` variants. Compare with
-    Kokkos `team_size_recommended`. It returns an occupancy-optimal size that ignores
-    element-groups, so it cannot be used as is. Design: choose the element-groups per team from an
-    occupancy model. Inputs: the kernel registers per thread (`cudaFuncGetAttributes`, which
-    Kokkos `team_size_max` already queries), scratch bytes per element-group, and the SM limits.
-    Exit: a committed team-size rule with no fixed 128, and a sweep where no q8 or `h27` launch is
-    slower than `nsys-v26c`, or a regression reported to the user.
+13f. Done, no commit (`nsys-v27-t64/128/256`). See "Step 13f sweep result". The exit (a committed
+    rule) moved to 13f3, because no static model fits the sweep.
+13f2. ncu of the contradictions (see "Next").
+13f3. Team-size rule: a static model with the 13f2 term, or runtime autotuning per (loop, object,
+    shape) (user choice after 13f2). Design inputs: registers per thread (`cudaFuncGetAttributes`,
+    which Kokkos `team_size_max` queries), scratch bytes per element-group, the SM limits, and the
+    13f2 term. Exit: a committed rule with no fixed `target_team_size = 128`, and a decision-case
+    sweep where no launch is slower than `nsys-v26c`, or a regression reported to the user.
 13g. Replace `TeamGroup::half_warp` with a per-backend trait `reals_per_shmem_bank_row` (user name,
     2026-11-16): bank count x bank width / `sizeof(Real)`, 16 on NVIDIA. A CPU backend has no banks,
     so it gives a value that makes the alignment and padding no-ops. Do not say "wavefront": it is not a Kokkos
@@ -421,8 +449,7 @@ Details: `moose-stack-build/PLAN-kokkos-known-failures.md`.
   `profiles/nsys-v26` (an earlier 13e variant). Branch head: `nsys-v26c` (decision cases only).
   `nsys-v24` is step 13b4. `nsys-v25` is the rejected 13c probe.
   The `VARIANTS_FILTER` for decision cases is `'(hand|ad3|ad8)(disp|sdisp)?_(q8|h27)'`.
-  Upstream: `nsys-up1`. Latest ncu: `ncu-v20` (ad3_q8 R&J at `90483c49ecd`). Next: `nsys-v27`,
-  `ncu-v21`.
+  Upstream: `nsys-up1`. Latest ncu: `ncu-v20` (ad3_q8 R&J at `90483c49ecd`). Team-size sweeps: `nsys-v27-t64/128/256`. Next: `nsys-v28`, `ncu-v21`.
   Build `launches.txt` with `launch_table.sh <dir>/*.nsys-rep`.
 - Tables in `scripts/`: `step_table.sh <dir>` (per-step summary), `ratio_table.sh <adN>
   <label>=<dir>...` (AD/hand ratio per sweep, `FIELD=residual|jacobian`), `launch_table.sh <nsys-rep>...`
