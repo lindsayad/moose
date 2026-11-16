@@ -199,6 +199,10 @@ Full results: `archive/step12-13c-results.md`. Per-launch numbers: `profiles/nsy
   1.04-3.6x slower). Causes: CUDA caps a vector at 32 lanes, and NVVM outlines the vector closure as
   a `.func`, which moves the AD datum to a 680 B stack. Do not retry without a team layout that
   keeps several elements per team at 64 qps and inlines the vector loop. Patches: `patches/step13c/`.
+  The rejection holds on the decision cases alone (`nsys-v25` vs `nsys-v24`, 2026-11-16): ad3_h27
+  R 2.94x, R&J 1.34x, ad3_q8 R&J 1.29x, ad8_q8 R&J 1.25x, ad3sdisp_q8 J 1.42x, ad8sdisp_q8 J 1.66x.
+  Only ad3_q8 R improved (0.94x). The 32-lane cap mattered only at 64 qps. The outlined closure
+  and the serial reduction per test function cause the q8 and `h27` losses.
 - 13b4 (`a94736bf66c`, `nsys-v24`): `resetTransform` per precompute qp. Hand reference J 83 -> 63
   registers. Open: q8 reference J +10-23% (L1 carveout, see "Open performance items"). Dead ends:
   resetting only `_cached_qp`, or a `bool` validity flag. Writing constants to the cache is what
