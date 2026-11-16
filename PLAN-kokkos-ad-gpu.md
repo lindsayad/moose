@@ -1,7 +1,7 @@
 # Handoff: Kokkos AD GPU work on PR #34088 (arco, updated 2026-11-12)
 
-Status: branch at `90483c49ecd` (steps 0-10b, 12-13c, 13e, 13f, 13f2), not pushed. Next: step 13m1
-(element COO prototype), then 13m2, then 13f3. Updated 2026-11-16.
+Status: branch at `90483c49ecd` (steps 0-10b, 12-13c, 13e, 13f, 13f2, 13m1), not pushed. Next: the
+user's go or no-go on element COO, then 13m2 or 13f3. Updated 2026-11-16.
 Git tracks this document on the feature branch. Commit it alone with a `PLAN:` subject, and drop
 those commits before the merge. Relative paths outside the MOOSE tree, such as `profiles/`,
 `scripts/`, `patches/`, `ptx/`, `logs/`, `runs/`, and `archive/`, are under `moose-stack-build/`
@@ -14,33 +14,13 @@ Branch `kokkos-reference-configuration` in `/ibmstor/scratch/lindad/projects/moo
 is idaholab/moose#34088. NamjaeChoi left a performance review on it. Answer it with measurements
 once the design work below is final. Do not reply yet.
 
-**Next: step 13m1**: prototype element COO Jacobian assembly and decide go or no-go (user,
-2026-11-16: adopt it only if it is faster and its memory cost is not significant).
-- Cause: every Jacobian entry runs `Matrix::find` (`KokkosMatrix.h:151`, the bisection of
-  `Utils::find`, `KokkosUtils.h:40`) over the CSR row, then an atomic add. The search loop is
-  19-35% of stall samples and 13-24% of instructions in every q8 and `h27` J launch, hand-coded
-  and AD (`ncu-v21`, `ncu-v21r` at team 128). Its dependent global loads also cause the L1
-  sensitivity of "Step 13f2 result".
-- Design: each element-group writes its dense local matrix to its own slot of a COO value array:
-  no search and no atomic. `MatSetValuesCOO` sums repeated (i, j) entries. `Matrix::create`
-  (`KokkosMatrix.K`) already preallocates by COO, from `System::buildCooIndices`
-  (`KokkosSystem.K:304`). Slot of entry (e, i, j) of a block: block offset + (e x n_i + i) x n_j
-  + j, so the address is computed, not stored.
-- Prototype scope: the u block of `KokkosDiffusion` and `KokkosADDiffusion` only, through
-  `accumulateTaggedElementalMatrix` (`KokkosResidualObject.h:552`). The prototype can be a probe
-  patch in `patches/step13m/`. First action: read `Matrix::create`, `Matrix::close`, and
-  `System::buildCooIndices`, and find how nodal BCs (`matrix.zero(row)`, `KokkosResidualObject.h`
-  `accumulateTaggedNodalMatrix`) and constraints (`getLocalConstraints`) write the CSR values.
-- Measure, against `nsys-v26c`: J launch time plus the `MatSetValuesCOO` time of `Matrix::close`
-  (nsys CUDA trace) on hand_q8, ad3_q8, hand_h27, ad3_h27. Memory: COO values + PETSc's COO
-  permutation (`MatSetPreallocationCOO`), against the CSR values. Estimate for the 64^3 HEX8 u
-  block: 262144 elements x 64 entries = 16.8 M values (134 MB) + permutation, against 7.2 M CSR
-  values (58 MB).
-Exit: a table of J + close time and device memory for the four cases, and a go or no-go reported
-to the user. "Significant memory" is the user's call: report the ratio to the CSR values and to
-the total device memory of the run.
+**Next: get the user's go or no-go on element COO (step 13m1 result below), then step 13m2.**
+Ask: is +256 MiB (q8) / +364 MiB (`h27`) of device memory per matrix tag acceptable for a 6-24%
+faster Jacobian assembly? On a go, start 13m2. On a no-go, record the reason in "Decisions" and
+start 13f3. Do not start either step before the answer.
 
-**Step 13m2** (after a go): element COO for every Kokkos matrix writer. Writers:
+**Step 13m2** (after a go): element COO for every Kokkos matrix writer. Start from
+`patches/step13m/elem-coo-probe.patch` (see "Step 13m1 result"). Writers:
 `KokkosResidualObject.h` (elemental, nodal, vector nodal, constraint rows), `KokkosKernel.h`,
 `KokkosTimeDerivative.h`, the vector kernels, the integrated and nodal BCs, `KokkosNodalKernel.h`,
 `KokkosLinearFVFluxKernel.h`, and `KokkosLinearSystemContributionObject.h`. The COO pattern then
@@ -197,6 +177,36 @@ Loop names (step 8b): profiles up to `nsys-v12` and `ncu-v11` use the old names.
 ## Working notes
 
 (empty)
+
+## Step 13m1 result (no commit, `nsys-v28-csr` vs `nsys-v28-coo`, one binary)
+
+Cause addressed: `Matrix::find` (`KokkosMatrix.h:151`), the CSR bisection before each atomic add,
+is 19-35% of stall samples in every q8 and `h27` J launch (`ncu-v21`, `ncu-v21r`).
+Probe: `patches/step13m/elem-coo-probe.patch`, reversed out of the tree. `MOOSE_KOKKOS_ELEM_COO=1`
+appends one COO slot per (element, i, j) of the (var 0, var 0) block after the CSR entries
+(`buildCooIndices`, invalid DOFs get -1). Volume writes with no constraint and no nodal BC row do
+`matrix.elemSlot(elem, i, j) +=`, with no search and no atomic. Writers: `assemblePrecomputed`
+(`!isSide()`), AD `assembleADTerms` stage 2, and the `KokkosKernel.h` displacement J. Other writes
+keep the CSR path, and `MatSetValuesCOO` sums both. The `kokkos` dir passes 189 with it on (job
+15965). Newton residuals are equal to 7 digits in all four cases. `sweep.sbatch` greps `ELEMCOO`.
+
+Per Jacobian, ms (J launch + `MatSetValuesCOO` kernel + memsets):
+
+| case | J CSR -> COO | COO kernel | memset | total CSR -> COO | change |
+|---|---|---|---|---|---|
+| hand_q8 | 0.908 -> 0.690 | 0.080 -> 0.172 | 0.060 -> 0.089 | 1.049 -> 0.950 | -9.4% |
+| ad3_q8 | 1.249 -> 1.044 | 0.080 -> 0.168 | 0.059 -> 0.089 | 1.389 -> 1.301 | -6.3% |
+| hand_h27 | 3.683 -> 2.627 | 0.189 -> 0.279 | 0.091 -> 0.134 | 3.964 -> 3.039 | -23.3% |
+| ad3_h27 | 5.218 -> 3.763 | 0.189 -> 0.280 | 0.092 -> 0.134 | 5.499 -> 4.178 | -24.0% |
+
+Memory (device, one matrix tag): each slot costs 16 B, the value plus PETSc's 8 B `perm` entry
+(`MatSetPreallocationCOO_SeqAIJ`). That matches `cudaMemGetInfo` exactly.
+- q8: 16.78 M slots for 7.19 M CSR nonzeros (2.33x). +256 MiB, 1672 -> 1928 MiB used (+15%).
+- `h27`: 23.89 M slots for 16.97 M CSR nonzeros (1.41x). +364 MiB, 1786 -> 2150 MiB (+20%).
+- The ratio is n_d^2 per element over the CSR nonzeros per element: HEX8 64/27, HEX27 729/518.
+  Each extra matrix tag pays it again. Every coupled block of a multi-variable system pays it too.
+- The larger value array doubles the `MatSetValuesCOO` time at q8 and raises the zero fill. The J
+  gain still dominates.
 
 ## Step 13f2 result (no commit, `ncu-v21-t128/t256` J, `ncu-v21r-t64/128/256` R and AD R&J)
 
@@ -450,7 +460,7 @@ Steps 0-13c: done. Steps 13d-13i added 2026-11-14 after the user's review of the
 13f. Done, no commit (`nsys-v27-t64/128/256`). See "Step 13f sweep result". The exit (a committed
     rule) moved to 13f3, because no static model fits the sweep.
 13f2. Done, no commit (`ncu-v21`, `ncu-v21r`). See "Step 13f2 result".
-13m1. Element COO prototype and go or no-go (see "Next").
+13m1. Done, no commit (`nsys-v28-csr/coo`). See "Step 13m1 result". Go or no-go open (user).
 13m2. Element COO for every matrix writer (see "Next").
 13f3. Team-size autotuning (see "Next"). Re-measure the L1 terms after 13m2. Design inputs: registers per thread (`cudaFuncGetAttributes`,
     which Kokkos `team_size_max` queries), scratch bytes per element-group, the SM limits, and the
@@ -538,7 +548,7 @@ Details: `moose-stack-build/PLAN-kokkos-known-failures.md`.
   `profiles/nsys-v26` (an earlier 13e variant). Branch head: `nsys-v26c` (decision cases only).
   `nsys-v24` is step 13b4. `nsys-v25` is the rejected 13c probe.
   The `VARIANTS_FILTER` for decision cases is `'(hand|ad3|ad8)(disp|sdisp)?_(q8|h27)'`.
-  Upstream: `nsys-up1`. Latest ncu: `ncu-v21-t*` and `ncu-v21r-t*` (team-size probe). Team-size sweeps: `nsys-v27-t64/128/256`. Next: `nsys-v28`, `ncu-v22`.
+  Upstream: `nsys-up1`. Latest ncu: `ncu-v21-t*` and `ncu-v21r-t*` (team-size probe). Team-size sweeps: `nsys-v27-t64/128/256`. Element COO A/B: `nsys-v28-csr/coo`. Next: `nsys-v29`, `ncu-v22`.
   Build `launches.txt` with `launch_table.sh <dir>/*.nsys-rep`.
 - Tables in `scripts/`: `step_table.sh <dir>` (per-step summary), `ratio_table.sh <adN>
   <label>=<dir>...` (AD/hand ratio per sweep, `FIELD=residual|jacobian`), `launch_table.sh <nsys-rep>...`
