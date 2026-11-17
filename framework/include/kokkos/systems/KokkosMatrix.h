@@ -98,6 +98,19 @@ public:
     return _val[idx];
   }
   /**
+   * Get an entry by its offset within its row
+   * @param i The row index local to this process
+   * @param offset The offset from the start of the row, for example from
+   * System::getElemCsrOffset()
+   * @returns The writeable reference of the entry
+   */
+  KOKKOS_FUNCTION PetscScalar & rowEntry(PetscInt i, unsigned int offset) const
+  {
+    KOKKOS_ASSERT(_row_ptr[i] + offset < _row_ptr[i + 1]);
+
+    return _val[_row_ptr[i] + offset];
+  }
+  /**
    * Assign a scalar value uniformly
    * @param scalar The scalar value to be assigned
    */

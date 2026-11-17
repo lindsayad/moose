@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "KokkosSystem.h"
+#include "KokkosUtils.h"
 
 #include "MooseMesh.h"
 #include "FEProblemBase.h"
@@ -40,6 +41,9 @@ System::System(SystemBase & system)
 
   if (!dynamic_cast<AuxiliarySystem *>(&_system))
     setupSparsity();
+
+  _elem_csr_maps.create(_num_vars, _num_vars);
+  _elem_csr_maps.copyToDevice();
 }
 
 void
@@ -298,6 +302,64 @@ System::setupSparsity()
 
   _sparsity.col_idx = col_idx;
   _sparsity.row_ptr = row_ptr;
+
+  for (const auto row : make_range(row_ptr.size() - 1))
+    _max_row_columns = std::max(_max_row_columns, row_ptr[row + 1] - row_ptr[row]);
+}
+
+void
+System::requestElemCsrMap(const unsigned int ivar, const unsigned int jvar)
+{
+  auto & map = _elem_csr_maps(ivar, jvar);
+
+  if (map.isAlloc() || !_sparsity.row_ptr.isAlloc() || _max_row_columns >= invalid_csr_offset ||
+      _var_is_scalar[ivar] || _var_is_scalar[jvar])
+    return;
+
+  using index_type = std::decay_t<decltype(map)>::unsigned_index_type;
+  const auto n_elems = kokkosMesh().getNumLocalElements();
+  const auto n_idofs = _max_dofs_per_elem[ivar];
+  const auto n_jdofs = _max_dofs_per_elem[jvar];
+  const std::uint64_t n_entries = std::uint64_t(n_elems) * n_idofs * n_jdofs;
+
+  if (!n_entries || n_entries > std::numeric_limits<index_type>::max())
+    return;
+
+  map.createDevice(n_jdofs, n_idofs, n_elems);
+
+  const auto row_dofs = _local_elem_dof_index[ivar];
+  const auto col_dofs = _local_elem_dof_index[jvar];
+  const auto local_to_global = _local_to_global_dof_index;
+  const auto row_ptr = _sparsity.row_ptr;
+  const auto col_idx = _sparsity.col_idx;
+  const auto invalid = invalid_csr_offset;
+
+  // The search is the one of Matrix::find(), so a mapped write lands where a searched one would
+  ::Kokkos::parallel_for(
+      ::Kokkos::RangePolicy<ExecSpace, ::Kokkos::IndexType<std::uint64_t>>(0, n_entries),
+      KOKKOS_LAMBDA(const std::uint64_t k) {
+        const unsigned int j = k % n_jdofs;
+        const unsigned int i = (k / n_jdofs) % n_idofs;
+        const dof_id_type elem = k / (std::uint64_t(n_jdofs) * n_idofs);
+        const auto row = row_dofs(i, elem);
+        const auto col = col_dofs(j, elem);
+        auto offset = invalid;
+
+        if (row != libMesh::DofObject::invalid_id && col != libMesh::DofObject::invalid_id)
+        {
+          const auto begin = col_idx.data() + row_ptr[row];
+          const auto end = col_idx.data() + row_ptr[row + 1];
+          const auto target = Utils::find(PetscInt(local_to_global[col]), begin, end);
+
+          if (target != end)
+            offset = target - begin;
+        }
+
+        map(j, i, elem) = offset;
+      });
+  ::Kokkos::fence();
+
+  _elem_csr_maps.copyToDevice();
 }
 
 void

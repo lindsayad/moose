@@ -17,6 +17,8 @@
 
 #include "libmesh/communicator.h"
 
+#include <limits>
+
 class MooseMesh;
 class SystemBase;
 
@@ -332,6 +334,42 @@ public:
     return _matrices[tag](row, col);
   }
 
+  /**
+   * Build the element-to-CSR map of a variable block once, so that the Jacobian writers of the
+   * block skip the column search. Every matrix tag shares the sparsity, so one map serves all.
+   * A block of a scalar variable gets no map, and neither does any block when a row has more
+   * columns than a map entry can address.
+   * @param ivar The row variable number
+   * @param jvar The column variable number
+   */
+  void requestElemCsrMap(unsigned int ivar, unsigned int jvar);
+
+  /**
+   * Get the position of an element matrix entry within its CSR row through the element-to-CSR map
+   * @param elem The contiguous element ID
+   * @param i The element-local DOF index of the row variable
+   * @param j The element-local DOF index of the column variable
+   * @param ivar The row variable number
+   * @param jvar The column variable number
+   * @returns The offset from the start of the row, or -1 if the block or the element has no map
+   * entry
+   */
+  KOKKOS_FUNCTION int getElemCsrOffset(ContiguousElementID elem,
+                                       unsigned int i,
+                                       unsigned int j,
+                                       unsigned int ivar,
+                                       unsigned int jvar) const
+  {
+    const auto & map = _elem_csr_maps(ivar, jvar);
+
+    if (!map.isAlloc() || elem >= map.n(2))
+      return -1;
+
+    const auto offset = map(j, i, elem);
+
+    return offset == invalid_csr_offset ? -1 : offset;
+  }
+
 #endif
 
 protected:
@@ -476,6 +514,25 @@ private:
    * Matrix sparsity pattern data
    */
   Sparsity _sparsity;
+
+  /**
+   * Largest number of columns of a sparsity row
+   */
+  PetscInt _max_row_columns = 0;
+
+  /**
+   * Map entry of an element matrix entry outside the sparsity, for example of an inactive variable
+   */
+  static constexpr uint16_t invalid_csr_offset = std::numeric_limits<uint16_t>::max();
+
+  /**
+   * Element-to-CSR map of each (row variable, column variable) block, built on request. Entry
+   * (j, i, elem) holds the offset of element matrix entry (i, j) of a local element within its CSR
+   * row. A row offset takes half the memory of a position in the value array, and the writer reads
+   * the row start, which the Kokkos threads of a row share. The column DOF is fastest, so the
+   * Kokkos threads of an element read consecutive entries.
+   */
+  Array2D<Array3D<uint16_t>> _elem_csr_maps;
 };
 
 #ifdef MOOSE_KOKKOS_SCOPE

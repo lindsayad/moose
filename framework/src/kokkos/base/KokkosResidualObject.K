@@ -136,6 +136,9 @@ ResidualObject::dispatchPrecomputed(DispatcherBase & dispatcher,
   if (!n_items)
     return;
 
+  if (family != PrecomputeFamily::Residual)
+    requestElemCsrMaps(columns);
+
   const auto & assembly = kokkosAssembly();
   const auto & sys = kokkosSystem(_kokkos_var.sys());
   const auto n_elem_types = kokkosMesh().getNumLocalElementTypes();
@@ -188,6 +191,14 @@ ResidualObject::dispatchPrecomputed(DispatcherBase & dispatcher,
   layout.slices = std::max(1u, std::min(group_size, layout.groupSize()) / max_entries);
 
   dispatcher.parallelForTeams(launch);
+}
+
+void
+ResidualObject::requestElemCsrMaps(const std::vector<unsigned int> & columns)
+{
+  // The Jacobian writers address the rows of the first component
+  for (const auto jvar : columns)
+    kokkosSystem(_kokkos_var.sys()).requestElemCsrMap(_kokkos_var.var(), jvar);
 }
 
 void
@@ -278,6 +289,12 @@ ResidualObject::dispatchADTeams(DispatcherBase & dispatcher,
   {
     const auto & assembly = kokkosAssembly();
     const auto n_elem_types = kokkosMesh().getNumLocalElementTypes();
+
+    std::vector<unsigned int> columns;
+    for (const auto & block : table.hostBlocks())
+      if (block.sys == _kokkos_var.sys())
+        columns.push_back(block.var);
+    requestElemCsrMaps(columns);
 
     for (const auto & block : table.hostBlocks())
     {
@@ -378,6 +395,7 @@ ResidualObject::dispatchDisplacementJacobian(const ThreadID n_items, const unsig
         !problem.areCoupled(_kokkos_var.var(), disp.var(c), residual_sys))
       continue;
 
+    requestElemCsrMaps({disp.var(c)});
     _displacement_component = c;
     _displacement_jacobian_dispatcher->parallelForTeams(launch);
   }

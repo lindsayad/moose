@@ -456,6 +456,13 @@ private:
                            const std::vector<unsigned int> & columns);
 
   /**
+   * Build the element-to-CSR maps of the Jacobian blocks of this object's variable and the given
+   * column variables
+   * @param columns The column variable numbers
+   */
+  void requestElemCsrMaps(const std::vector<unsigned int> & columns);
+
+  /**
    * Tags this object operates on
    */
   ///@{
@@ -567,6 +574,21 @@ ResidualObject::accumulateTaggedElementalMatrix(const Real local_ke,
   auto col_global = sys.localToGlobalDofIndex(col);
   auto row_constraints = sys.getLocalConstraints(row);
   auto col_constraints = sys.getLocalConstraints(col);
+
+  // Without constraints, the element-to-CSR map gives the entry position without a column search
+  if (!row_constraints.size() && !col_constraints.size())
+    if (const auto offset = sys.getElemCsrOffset(elem, i, j, ivar, jvar); offset != -1)
+    {
+      for (unsigned int t = 0; t < _matrix_tags.size(); ++t)
+      {
+        auto tag = _matrix_tags[t];
+
+        if (sys.isMatrixTagActive(tag) && !sys.hasNodalBCMatrixTag(row, tag))
+          ::Kokkos::atomic_add(&sys.getMatrix(tag).rowEntry(row, offset), local_ke);
+      }
+
+      return;
+    }
 
   for (unsigned int t = 0; t < _matrix_tags.size(); ++t)
   {
