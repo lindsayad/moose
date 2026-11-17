@@ -16,7 +16,8 @@ once the design work below is final. Do not reply yet.
 
 **Next: get the user's go or no-go on element COO (step 13m1 result below), then step 13m2.**
 Ask: is +256 MiB (q8) / +364 MiB (`h27`) of device memory per matrix tag acceptable for a 6-24%
-faster Jacobian assembly? On a go, start 13m2. On a no-go, record the reason in "Decisions" and
+faster Jacobian assembly? Also ask whether to probe the element-to-CSR index map instead (see
+"Search and atomic split"): it removes the search alone, at 4 B per slot shared by every tag. On a go, start 13m2. On a no-go, record the reason in "Decisions" and
 start 13f3. Do not start either step before the answer.
 
 **Step 13m2** (after a go): element COO for every Kokkos matrix writer. Start from
@@ -207,6 +208,25 @@ Memory (device, one matrix tag): each slot costs 16 B, the value plus PETSc's 8 
   Each extra matrix tag pays it again. Every coupled block of a multi-variable system pays it too.
 - The larger value array doubles the `MatSetValuesCOO` time at q8 and raises the zero fill. The J
   gain still dominates.
+
+Search and atomic split (`ncu-v21` / `ncu-v21r` team 128, CSR build, `scripts/ncu_csr_split.py`):
+
+| J launch | search stall samples | search warp inst | atomic stall samples | L2 red % of peak |
+|---|---|---|---|---|
+| hand_q8 | 22% | 22% | 0.1% | 5.9% |
+| ad3_q8 | 40% | 32% | 0.1% | 4.2% |
+| ad3_h27 | 31% | 22% | 0.1% | 1.4% |
+
+- The atomic is a native `REDG.E.ADD.F64`. It returns nothing, so no warp waits on it, and the L2
+  reduction units stay below 6% of peak. The search costs time: the stall is on the compare after
+  each dependent `LD.E.64` of a column index.
+- So the search and the atomic are separable costs: an index map removes the search only, and
+  coloring removes the atomic only. The 13m decision rejected the index map because it "keeps the
+  atomics". This data shows the atomics are nearly free, so that reason is weak. Index map memory:
+  4 B per slot (int32 CSR position), built once from the sparsity and shared by every tag, against
+  16 B per slot per tag for element COO. It also leaves `MatSetValuesCOO` and the zero fill
+  unchanged. Unmeasured: the extra coalesced index load per entry.
+- `ncu-v21r-t128/hand_h27` holds residual launches only.
 
 ## Step 13f2 result (no commit, `ncu-v21-t128/t256` J, `ncu-v21r-t64/128/256` R and AD R&J)
 
@@ -583,6 +603,8 @@ Details: `moose-stack-build/PLAN-kokkos-known-failures.md`.
 - Register peaks: `~/.claude/skills/gpu-register-pressure/scripts/live_defs.py <cubin> <regex>`
   (skill `gpu-register-pressure`) lists the registers live at the peak by defining source line. Match the
   mangled name, e.g. `23ResidualAndJacobianLoopELb1E` for the displaced R&J.
+- `scripts/ncu_csr_split.py <csv>` splits the stall samples of a Jacobian launch into the CSR
+  search, the matrix atomic, and the rest.
 - `scripts/ncu_sass_phases.py <csv>` splits the stall samples and op counts of one kernel at
   `BAR.SYNC`. `scripts/ncu_sass_hot.py <csv> [n]` lists the hottest SASS lines. Make the CSV with
   `ncu --import <rep> --page source --csv --print-source sass --launch-count 1`.
