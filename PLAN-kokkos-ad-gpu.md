@@ -1,7 +1,8 @@
 # Handoff: Kokkos AD GPU work on PR #34088 (arco, updated 2026-11-12)
 
-Status: branch at `90483c49ecd` (steps 0-10b, 12-13c, 13e, 13f, 13f2, 13m1), not pushed. Next: the
-user's choice between the index map and element COO, then 13m2 or 13f3. Updated 2026-11-16.
+Status: branch at `90483c49ecd` (steps 0-10b, 12-13c, 13e, 13f, 13f2, 13m1), not pushed. 13m2 code
+is in patches, not committed: it waits on the user's decision about two regressions. Updated
+2026-11-16.
 Git tracks this document on the feature branch. Commit it alone with a `PLAN:` subject, and drop
 those commits before the merge. Relative paths outside the MOOSE tree, such as `profiles/`,
 `scripts/`, `patches/`, `ptx/`, `logs/`, `runs/`, and `archive/`, are under `moose-stack-build/`
@@ -14,24 +15,26 @@ Branch `kokkos-reference-configuration` in `/ibmstor/scratch/lindad/projects/moo
 is idaholab/moose#34088. NamjaeChoi left a performance review on it. Answer it with measurements
 once the design work below is final. Do not reply yet.
 
-**Next: get the user's choice for step 13m2 (see "Step 13m1 result").** Options: the
-element-to-CSR index map (agent recommendation: fastest in all four cases, +66/+92 MiB once for all
-tags), element COO, or neither. Record the answer in "Decisions", then start 13m2, or 13f3 on
-"neither". Do not start either step before the answer.
+**Next: get the user's decision on the step 13m2 regressions (see "Step 13m2 result").** Options:
+1. Commit the uint16 version now and list both regressions as open items (agent recommendation:
+   every other J launch is 10-36% faster than `nsys-v26c`).
+2. First do step 13m3: find the ad8disp_q8 register rise and the 4-5% gap to the probe, then commit.
+Record the answer in "Decisions". To commit: `git apply
+../moose-stack-build/patches/step13m/map-u16-offset.patch`, rerun `build_and_test.sbatch <moose>
+kokkos cuda` (189 pass), commit, then start 13m3 or 13f3.
 
-**Step 13m2** (after the choice; written for the index map): element-to-CSR map for the Kokkos
-matrix writers. Start from `patches/step13m/elem-map-probe.patch`, which also holds the COO probe:
-drop the COO parts and the `MOOSE_KOKKOS_ELEM_MAP` switch.
-- Map every (ivar, jvar) block that a coupled pair can write, not only var 0. Side writes
-  (`KokkosIntegratedBC.h`, `KokkosVectorIntegratedBC.h`) use the element DOFs, so the same map
-  serves them. Keep `Matrix::find` for constraint rows, scalar columns, nodal writes, and
-  `KokkosLinearSystemContributionObject.h`.
-- Memory: 4 B per (element, i, j) per mapped block. For 4 coupled variables on HEX8 that is
-  262144 x 32^2 x 4 B = 1.07 GB, above the 0.92 GB of CSR values. Map only the blocks that an
-  active object writes, or ask the user, before the SMP case.
-- Writers: `KokkosResidualObject.h` (`accumulateTaggedElementalMatrix`), `KokkosKernel.h`,
-  `KokkosTimeDerivative.h`, the vector kernels, and the integrated BCs.
-Exit: the `kokkos` dir 189 pass, and the decision cases no slower than `nsys-v29-map`.
+**Step 13m3** (if the user chooses it): ad8disp_q8 R&J registers 164 -> 222 (1.41x), and the
+decision-case J launches 4-5% slower than the probe `nsys-v29-map`.
+- First action: `object_variants.sbatch` on `KokkosADMatDiffusion` (test app source, needs
+  `runs/branch-exp/test/build/header_symlinks`) for base vs `map-u16-offset.patch`, with
+  `live_defs.py` on the displaced `ResidualAndJacobianLoop` (`23ResidualAndJacobianLoopELb1E`).
+- Hypothesis for the gap (unmeasured): the probe read the map from `Matrix` members. The patch
+  reads `System::_elem_csr_maps(ivar, jvar)`, a nested `Array2D`, so each write loads the inner
+  array descriptor (pointer, strides, size) from global memory. Probe: hoist the descriptor to
+  the dispatch (one `Array3D` per block in the functor or the datum), or keep the probe's
+  per-`Matrix` copy of the block's map.
+Exit: ad8disp_q8 R&J no slower than `nsys-v26c`, and the four decision cases within 1% of
+`nsys-v29-map`, or a cause reported to the user.
 
 **Step 13f3** (after 13m2): runtime team-size autotuning (user, 2026-11-16). Per (loop, object, shape),
 time the candidate team sizes on the first launches and keep the fastest for the run.
@@ -82,6 +85,9 @@ Loop names (step 8b): profiles up to `nsys-v12` and `ncu-v11` use the old names.
 
 ### Decisions
 
+- Step 13m2 (user, 2026-11-16): the element-to-CSR index map. Rejected: ELLPACK (colleague's
+  proposal). ELLPACK is a matrix-vector product layout and keeps the column search in each row.
+  The map removes the search with any value layout, and PETSc GPU matrices take CSR or COO.
 - Step 13m (user, 2026-11-16): the CSR search is in scope, because it affects performance and
   possibly the data layout and the programming model. An agent, not the user, had marked it out of
   scope. Adopt element COO assembly if it is faster and its memory cost is not significant. Do it
@@ -183,6 +189,25 @@ Loop names (step 8b): profiles up to `nsys-v12` and `ncu-v11` use the old names.
 ## Working notes
 
 (empty)
+
+## Step 13m2 result (no commit, `nsys-v30` uint16, `nsys-v31` uint32)
+
+Patches (each against `90483c49ecd`, each passes `kokkos` 189):
+`patches/step13m/map-u16-offset.patch` (keep) and `map-u32-index.patch`.
+- Design: `System::_elem_csr_maps(ivar, jvar)`, an `Array3D` indexed (j, i, elem), shared by every
+  matrix tag. `System::requestElemCsrMap` builds a block on device on first request, with the
+  `Utils::find` search of `Matrix::find`. Requests: `dispatchPrecomputed` (Jacobian families),
+  `dispatchADTeams` (slots > 0, blocks of the object's system), `dispatchDisplacementJacobian`.
+  `accumulateTaggedElementalMatrix` takes the map when the row and the column have no
+  constraints, and `find` otherwise or without a map.
+- uint16 offset in the row (`Matrix::rowEntry(row, offset)`) against uint32 CSR position: within
+  1-2% on every J launch. Keep uint16: half the memory (4 coupled HEX8 variables: 0.54 GB).
+- Against `nsys-v26c` (uint16): every J launch 0.64-0.91x, except ad8disp_q8 R&J 1.41x (registers
+  164 -> 222, the same in uint32) and handsdisp_h27 `DisplacementJacobianLoop` 1.06x (registers
+  128 -> 118). Largest gains: ad3sdisp_q8 seeded J 11.38 -> 7.50 ms, ad3sdisp_h27 30.2 -> 22.1 ms.
+- Against the probe `nsys-v29-map` (ms per Jacobian, J + COO + memset): hand_q8 0.815 -> 0.872,
+  ad3_q8 1.190 -> 1.215, hand_h27 2.846 -> 2.968, ad3_h27 3.973 -> 4.167. Cause unknown (see
+  13m3).
 
 ## Step 13m1 result (no commit, `nsys-v29-csr/coo/map`, one binary)
 
@@ -479,7 +504,8 @@ Steps 0-13c: done. Steps 13d-13i added 2026-11-14 after the user's review of the
     rule) moved to 13f3, because no static model fits the sweep.
 13f2. Done, no commit (`ncu-v21`, `ncu-v21r`). See "Step 13f2 result".
 13m1. Done, no commit (`nsys-v29-csr/coo/map`). See "Step 13m1 result". Choice open (user).
-13m2. Index map (or element COO) for the matrix writers (see "Next").
+13m2. Done, no commit (`nsys-v30`, `nsys-v31`). See "Step 13m2 result". Commit waits on the user.
+13m3. ad8disp_q8 register rise and the gap to the probe (see "Next"), if the user chooses it.
 13f3. Team-size autotuning (see "Next"). Re-measure the L1 terms after 13m2. Design inputs: registers per thread (`cudaFuncGetAttributes`,
     which Kokkos `team_size_max` queries), scratch bytes per element-group, the SM limits, and the
     13f2 terms.
@@ -566,7 +592,7 @@ Details: `moose-stack-build/PLAN-kokkos-known-failures.md`.
   `profiles/nsys-v26` (an earlier 13e variant). Branch head: `nsys-v26c` (decision cases only).
   `nsys-v24` is step 13b4. `nsys-v25` is the rejected 13c probe.
   The `VARIANTS_FILTER` for decision cases is `'(hand|ad3|ad8)(disp|sdisp)?_(q8|h27)'`.
-  Upstream: `nsys-up1`. Latest ncu: `ncu-v21-t*` and `ncu-v21r-t*` (team-size probe). Team-size sweeps: `nsys-v27-t64/128/256`. Element COO and index map: `nsys-v29-csr/coo/map` (`nsys-v28` repeats CSR/COO). Next: `nsys-v30`, `ncu-v22`.
+  Upstream: `nsys-up1`. Latest ncu: `ncu-v21-t*` and `ncu-v21r-t*` (team-size probe). Team-size sweeps: `nsys-v27-t64/128/256`. Element COO and index map: `nsys-v29-csr/coo/map` (`nsys-v28` repeats CSR/COO). Step 13m2: `nsys-v30` (uint16), `nsys-v31` (uint32). Next: `nsys-v32`, `ncu-v22`.
   Build `launches.txt` with `launch_table.sh <dir>/*.nsys-rep`.
 - Tables in `scripts/`: `step_table.sh <dir>` (per-step summary), `ratio_table.sh <adN>
   <label>=<dir>...` (AD/hand ratio per sweep, `FIELD=residual|jacobian`), `launch_table.sh <nsys-rep>...`
