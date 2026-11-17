@@ -1,7 +1,7 @@
 # Handoff: Kokkos AD GPU work on PR #34088 (arco, updated 2026-11-12)
 
 Status: branch at `90483c49ecd` (steps 0-10b, 12-13c, 13e, 13f, 13f2, 13m1), not pushed. Next: the
-user's go or no-go on element COO, then 13m2 or 13f3. Updated 2026-11-16.
+user's choice between the index map and element COO, then 13m2 or 13f3. Updated 2026-11-16.
 Git tracks this document on the feature branch. Commit it alone with a `PLAN:` subject, and drop
 those commits before the merge. Relative paths outside the MOOSE tree, such as `profiles/`,
 `scripts/`, `patches/`, `ptx/`, `logs/`, `runs/`, and `archive/`, are under `moose-stack-build/`
@@ -14,19 +14,24 @@ Branch `kokkos-reference-configuration` in `/ibmstor/scratch/lindad/projects/moo
 is idaholab/moose#34088. NamjaeChoi left a performance review on it. Answer it with measurements
 once the design work below is final. Do not reply yet.
 
-**Next: get the user's go or no-go on element COO (step 13m1 result below), then step 13m2.**
-Ask: is +256 MiB (q8) / +364 MiB (`h27`) of device memory per matrix tag acceptable for a 6-24%
-faster Jacobian assembly? Also ask whether to probe the element-to-CSR index map instead (see
-"Search and atomic split"): it removes the search alone, at 4 B per slot shared by every tag. On a go, start 13m2. On a no-go, record the reason in "Decisions" and
-start 13f3. Do not start either step before the answer.
+**Next: get the user's choice for step 13m2 (see "Step 13m1 result").** Options: the
+element-to-CSR index map (agent recommendation: fastest in all four cases, +66/+92 MiB once for all
+tags), element COO, or neither. Record the answer in "Decisions", then start 13m2, or 13f3 on
+"neither". Do not start either step before the answer.
 
-**Step 13m2** (after a go): element COO for every Kokkos matrix writer. Start from
-`patches/step13m/elem-coo-probe.patch` (see "Step 13m1 result"). Writers:
-`KokkosResidualObject.h` (elemental, nodal, vector nodal, constraint rows), `KokkosKernel.h`,
-`KokkosTimeDerivative.h`, the vector kernels, the integrated and nodal BCs, `KokkosNodalKernel.h`,
-`KokkosLinearFVFluxKernel.h`, and `KokkosLinearSystemContributionObject.h`. The COO pattern then
-depends on which objects write which blocks and tags. Nodal BC rows that set (not add) values need
-their own design. Exit: the `kokkos` dir 189 pass, and the decision cases no slower than 13m1.
+**Step 13m2** (after the choice; written for the index map): element-to-CSR map for the Kokkos
+matrix writers. Start from `patches/step13m/elem-map-probe.patch`, which also holds the COO probe:
+drop the COO parts and the `MOOSE_KOKKOS_ELEM_MAP` switch.
+- Map every (ivar, jvar) block that a coupled pair can write, not only var 0. Side writes
+  (`KokkosIntegratedBC.h`, `KokkosVectorIntegratedBC.h`) use the element DOFs, so the same map
+  serves them. Keep `Matrix::find` for constraint rows, scalar columns, nodal writes, and
+  `KokkosLinearSystemContributionObject.h`.
+- Memory: 4 B per (element, i, j) per mapped block. For 4 coupled variables on HEX8 that is
+  262144 x 32^2 x 4 B = 1.07 GB, above the 0.92 GB of CSR values. Map only the blocks that an
+  active object writes, or ask the user, before the SMP case.
+- Writers: `KokkosResidualObject.h` (`accumulateTaggedElementalMatrix`), `KokkosKernel.h`,
+  `KokkosTimeDerivative.h`, the vector kernels, and the integrated BCs.
+Exit: the `kokkos` dir 189 pass, and the decision cases no slower than `nsys-v29-map`.
 
 **Step 13f3** (after 13m2): runtime team-size autotuning (user, 2026-11-16). Per (loop, object, shape),
 time the candidate team sizes on the first launches and keep the fastest for the run.
@@ -80,8 +85,8 @@ Loop names (step 8b): profiles up to `nsys-v12` and `ncu-v11` use the old names.
 - Step 13m (user, 2026-11-16): the CSR search is in scope, because it affects performance and
   possibly the data layout and the programming model. An agent, not the user, had marked it out of
   scope. Adopt element COO assembly if it is faster and its memory cost is not significant. Do it
-  before 13f3, because the search causes the L1 sensitivity that 13f3 tunes. Rejected for now: an
-  element-to-CSR index map (keeps the atomics, ~1 GB for the 4-variable SMP case).
+  before 13f3, because the search causes the L1 sensitivity that 13f3 tunes. The user then asked
+  to probe the element-to-CSR index map too (13m1), after ncu showed the atomics are nearly free.
 - Step 13f3 (user, 2026-11-16): runtime autotuning, not a static rule. Reason: the L1 slope of the
   cycles per instruction differs per kernel and per sparsity pattern, and no launch attribute
   gives it. The tuner must not depend on H200 constants, and an object author must not need to do
@@ -179,35 +184,35 @@ Loop names (step 8b): profiles up to `nsys-v12` and `ncu-v11` use the old names.
 
 (empty)
 
-## Step 13m1 result (no commit, `nsys-v28-csr` vs `nsys-v28-coo`, one binary)
+## Step 13m1 result (no commit, `nsys-v29-csr/coo/map`, one binary)
 
-Cause addressed: `Matrix::find` (`KokkosMatrix.h:151`), the CSR bisection before each atomic add,
-is 19-35% of stall samples in every q8 and `h27` J launch (`ncu-v21`, `ncu-v21r`).
-Probe: `patches/step13m/elem-coo-probe.patch`, reversed out of the tree. `MOOSE_KOKKOS_ELEM_COO=1`
-appends one COO slot per (element, i, j) of the (var 0, var 0) block after the CSR entries
-(`buildCooIndices`, invalid DOFs get -1). Volume writes with no constraint and no nodal BC row do
-`matrix.elemSlot(elem, i, j) +=`, with no search and no atomic. Writers: `assemblePrecomputed`
-(`!isSide()`), AD `assembleADTerms` stage 2, and the `KokkosKernel.h` displacement J. Other writes
-keep the CSR path, and `MatSetValuesCOO` sums both. The `kokkos` dir passes 189 with it on (job
-15965). Newton residuals are equal to 7 digits in all four cases. `sweep.sbatch` greps `ELEMCOO`.
+Probe: `patches/step13m/elem-map-probe.patch`, reversed out of the tree. Both variants cover the
+(var 0, var 0) volume writes with no constraint and no nodal BC row: `assemblePrecomputed`
+(`!isSide()`), AD `assembleADTerms` stage 2, the `KokkosKernel.h` displacement J. Other writes keep
+`Matrix::find`.
+- `MOOSE_KOKKOS_ELEM_COO=1`: one COO slot per (element, i, j) after the CSR entries
+  (`buildCooIndices`), written by plain `+=`. `MatSetValuesCOO` sums the copies.
+- `MOOSE_KOKKOS_ELEM_MAP=1`: `setupSparsity` stores the uint32 CSR position per (element, i, j),
+  and the write is `atomic_add(&_val[map])`. Built on the host by bisection, once per run.
+- Each passes the `kokkos` dir 189 (jobs 15965, 15984). Newton residuals are equal in all runs.
+- `sweep.sbatch` greps the `ELEMCOO` line (sizes, `cudaMemGetInfo`). Per-Jacobian cost table:
+  `scripts/assembly_cost.py 'JacobianLoop.*Diffusion' csr=nsys-v29-csr coo=... map=... -- <cases>`.
 
-Per Jacobian, ms (J launch + `MatSetValuesCOO` kernel + memsets):
+ms per Jacobian (J launch + `MatSetValuesCOO` kernel + memsets):
 
-| case | J CSR -> COO | COO kernel | memset | total CSR -> COO | change |
-|---|---|---|---|---|---|
-| hand_q8 | 0.908 -> 0.690 | 0.080 -> 0.172 | 0.060 -> 0.089 | 1.049 -> 0.950 | -9.4% |
-| ad3_q8 | 1.249 -> 1.044 | 0.080 -> 0.168 | 0.059 -> 0.089 | 1.389 -> 1.301 | -6.3% |
-| hand_h27 | 3.683 -> 2.627 | 0.189 -> 0.279 | 0.091 -> 0.134 | 3.964 -> 3.039 | -23.3% |
-| ad3_h27 | 5.218 -> 3.763 | 0.189 -> 0.280 | 0.092 -> 0.134 | 5.499 -> 4.178 | -24.0% |
+| case | CSR | element COO | index map | map vs CSR |
+|---|---|---|---|---|
+| hand_q8 | 1.067 | 0.942 | 0.815 | -24% |
+| ad3_q8 | 1.424 | 1.319 | 1.190 | -16% |
+| hand_h27 | 3.961 | 3.045 | 2.846 | -28% |
+| ad3_h27 | 5.498 | 4.164 | 3.973 | -28% |
 
-Memory (device, one matrix tag): each slot costs 16 B, the value plus PETSc's 8 B `perm` entry
-(`MatSetPreallocationCOO_SeqAIJ`). That matches `cudaMemGetInfo` exactly.
-- q8: 16.78 M slots for 7.19 M CSR nonzeros (2.33x). +256 MiB, 1672 -> 1928 MiB used (+15%).
-- `h27`: 23.89 M slots for 16.97 M CSR nonzeros (1.41x). +364 MiB, 1786 -> 2150 MiB (+20%).
-- The ratio is n_d^2 per element over the CSR nonzeros per element: HEX8 64/27, HEX27 729/518.
-  Each extra matrix tag pays it again. Every coupled block of a multi-variable system pays it too.
-- The larger value array doubles the `MatSetValuesCOO` time at q8 and raises the zero fill. The J
-  gain still dominates.
+- J launch alone: the map is 1-2% faster than COO. COO also doubles the `MatSetValuesCOO` kernel at
+  q8 and raises the zero fill. The map leaves both unchanged. No other launch changed.
+- Memory, device used MiB: CSR 1672 (q8) / 1786 (`h27`), COO +256 / +364 per matrix tag (16 B per
+  slot: value + PETSc `perm`), map +66 / +92 once (4 B per slot, shared by every tag).
+- COO duplicates each assembled entry once per element that holds both DOFs: 64/27 per interior
+  HEX8 row, 729/518 for HEX27.
 
 Search and atomic split (`ncu-v21` / `ncu-v21r` team 128, CSR build, `scripts/ncu_csr_split.py`):
 
@@ -217,15 +222,8 @@ Search and atomic split (`ncu-v21` / `ncu-v21r` team 128, CSR build, `scripts/nc
 | ad3_q8 | 40% | 32% | 0.1% | 4.2% |
 | ad3_h27 | 31% | 22% | 0.1% | 1.4% |
 
-- The atomic is a native `REDG.E.ADD.F64`. It returns nothing, so no warp waits on it, and the L2
-  reduction units stay below 6% of peak. The search costs time: the stall is on the compare after
-  each dependent `LD.E.64` of a column index.
-- So the search and the atomic are separable costs: an index map removes the search only, and
-  coloring removes the atomic only. The 13m decision rejected the index map because it "keeps the
-  atomics". This data shows the atomics are nearly free, so that reason is weak. Index map memory:
-  4 B per slot (int32 CSR position), built once from the sparsity and shared by every tag, against
-  16 B per slot per tag for element COO. It also leaves `MatSetValuesCOO` and the zero fill
-  unchanged. Unmeasured: the extra coalesced index load per entry.
+- The atomic is a native `REDG.E.ADD.F64`: no return value, so no warp waits on it. The search
+  stalls on the compare after each dependent `LD.E.64` of a column index.
 - `ncu-v21r-t128/hand_h27` holds residual launches only.
 
 ## Step 13f2 result (no commit, `ncu-v21-t128/t256` J, `ncu-v21r-t64/128/256` R and AD R&J)
@@ -480,8 +478,8 @@ Steps 0-13c: done. Steps 13d-13i added 2026-11-14 after the user's review of the
 13f. Done, no commit (`nsys-v27-t64/128/256`). See "Step 13f sweep result". The exit (a committed
     rule) moved to 13f3, because no static model fits the sweep.
 13f2. Done, no commit (`ncu-v21`, `ncu-v21r`). See "Step 13f2 result".
-13m1. Done, no commit (`nsys-v28-csr/coo`). See "Step 13m1 result". Go or no-go open (user).
-13m2. Element COO for every matrix writer (see "Next").
+13m1. Done, no commit (`nsys-v29-csr/coo/map`). See "Step 13m1 result". Choice open (user).
+13m2. Index map (or element COO) for the matrix writers (see "Next").
 13f3. Team-size autotuning (see "Next"). Re-measure the L1 terms after 13m2. Design inputs: registers per thread (`cudaFuncGetAttributes`,
     which Kokkos `team_size_max` queries), scratch bytes per element-group, the SM limits, and the
     13f2 terms.
@@ -568,7 +566,7 @@ Details: `moose-stack-build/PLAN-kokkos-known-failures.md`.
   `profiles/nsys-v26` (an earlier 13e variant). Branch head: `nsys-v26c` (decision cases only).
   `nsys-v24` is step 13b4. `nsys-v25` is the rejected 13c probe.
   The `VARIANTS_FILTER` for decision cases is `'(hand|ad3|ad8)(disp|sdisp)?_(q8|h27)'`.
-  Upstream: `nsys-up1`. Latest ncu: `ncu-v21-t*` and `ncu-v21r-t*` (team-size probe). Team-size sweeps: `nsys-v27-t64/128/256`. Element COO A/B: `nsys-v28-csr/coo`. Next: `nsys-v29`, `ncu-v22`.
+  Upstream: `nsys-up1`. Latest ncu: `ncu-v21-t*` and `ncu-v21r-t*` (team-size probe). Team-size sweeps: `nsys-v27-t64/128/256`. Element COO and index map: `nsys-v29-csr/coo/map` (`nsys-v28` repeats CSR/COO). Next: `nsys-v30`, `ncu-v22`.
   Build `launches.txt` with `launch_table.sh <dir>/*.nsys-rep`.
 - Tables in `scripts/`: `step_table.sh <dir>` (per-step summary), `ratio_table.sh <adN>
   <label>=<dir>...` (AD/hand ratio per sweep, `FIELD=residual|jacobian`), `launch_table.sh <nsys-rep>...`
@@ -604,7 +602,9 @@ Details: `moose-stack-build/PLAN-kokkos-known-failures.md`.
   (skill `gpu-register-pressure`) lists the registers live at the peak by defining source line. Match the
   mangled name, e.g. `23ResidualAndJacobianLoopELb1E` for the displaced R&J.
 - `scripts/ncu_csr_split.py <csv>` splits the stall samples of a Jacobian launch into the CSR
-  search, the matrix atomic, and the rest.
+  search, the matrix atomic, and the rest. `scripts/assembly_cost.py` sums J + `MatSetValuesCOO`
+  + memset time per Jacobian from nsys SQLite. Export with `nsys export -t sqlite -f true -o
+  <x>.sqlite <x>.nsys-rep`. With `-q` in a loop it wrote nothing.
 - `scripts/ncu_sass_phases.py <csv>` splits the stall samples and op counts of one kernel at
   `BAR.SYNC`. `scripts/ncu_sass_hot.py <csv> [n]` lists the hottest SASS lines. Make the CSV with
   `ncu --import <rep> --page source --csv --print-source sass --launch-count 1`.
